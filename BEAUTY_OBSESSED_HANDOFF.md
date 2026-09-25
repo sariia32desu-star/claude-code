@@ -242,8 +242,8 @@ Useful function names (search for them; line numbers drift): `getBodyBaseAppeal`
 | 7 | The prologue at home | Done |
 | 8 | Meeting Jaewon | Done |
 | 9 | The clothing choice at Jaewon's (bug fixes + variants) | Done |
-| 10 | The city sees her | **NEXT** |
-| 11 | Upscale access | |
+| 10 | The city sees her | Done |
+| 11 | Upscale access | **NEXT** |
 | 12 | The buffs: her face, her eye, her draw | |
 | 13 | The ritual and the mirror | |
 | 14 | Evolution: staying radiant | |
@@ -378,7 +378,9 @@ Anchor as shipped: `Your closet\'s better. You\'d never say it out loud. / The j
 
 ---
 
-## 10. Step 10: The City Sees Her
+## 10. Step 10: The City Sees Her (DONE)
+
+**As shipped:** the `walk_to_*` scenes were orphaned (travel always lands on `outside_*`), so they were deleted along with the older Jack chain (`bargain_entrance` / `jack_intro` / `jack_tour`). "Go inside" now plays each store's intro on the first visit (`bargain_threads_entrance`, `urban_edge_entrance`, `noir_entrance`) and the browse scene after. The outfit-aware street reaction (`getStreetReaction(store)`) shows in the `outside_*` scene on arrival only (`isStreetArrival`). Helpers: `proseItemName`, `getWornOutfitPhrase`, `getWornBOPiece`, `capFirst`. Staff flags: `boUrbanStaffNoticed`, `boNoirStaffNoticed`. The Noir street woman carries a quilted designer bag (no fur coat in June).
 
 ### 10A. Duplicate scene definitions (bug), DONE
 The dead first copies of `walk_to_bargain`, `walk_to_urban`, `walk_to_noir` were deleted (along with the dead `urban_entrance` / `maya_help` scenes only they reached). Each walk now has one live definition.

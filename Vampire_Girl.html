@@ -16608,7 +16608,7 @@
             try {
             gameState = JSON.parse(JSON.stringify(saveData.gameState));
             // Renamed store scenes (Urban Edge and Noir Boutique have no named owners)
-            var _renamedScenes = { maya_browse: 'urban_edge_return', maya_helps: 'urban_edge_help', maya_help: 'urban_edge_help', urban_entrance: 'urban_edge_entrance', vivienne_browse: 'noir_browse', vivienne_recommend: 'noir_recommend' };
+            var _renamedScenes = { maya_browse: 'urban_edge_return', maya_helps: 'urban_edge_help', maya_help: 'urban_edge_help', urban_entrance: 'urban_edge_entrance', bargain_entrance: 'bargain_threads_entrance', jack_intro: 'jack_interaction', jack_tour: 'jack_shows_around', walk_to_bargain: 'outside_bargain_threads', walk_to_urban: 'outside_urban_edge', walk_to_noir: 'outside_noir_boutique', vivienne_browse: 'noir_browse', vivienne_recommend: 'noir_recommend' };
             if (_renamedScenes[saveData.currentScene]) saveData.currentScene = _renamedScenes[saveData.currentScene];
             if (_renamedScenes[gameState.previousScene]) gameState.previousScene = _renamedScenes[gameState.previousScene];
             currentScene = saveData.currentScene;
@@ -49209,6 +49209,80 @@ audioSystem.playSFX('buttonClick');
             return worn === ids.length;
         }
 
+        // Prose name for one worn item: lowercased, with "Jaewon's " dropped.
+        function proseItemName(item) {
+            return String((item && item.name) || '').replace(/^jaewon’s |^jaewon's /i, '').toLowerCase();
+        }
+
+        // "your black satin mini dress" / "your black tank top and skinny jeans"
+        function getWornOutfitPhrase() {
+            var o = gameState.currentOutfit || {};
+            if (o.dress) return 'your ' + proseItemName(o.dress);
+            if (o.top && o.bottom) return 'your ' + proseItemName(o.top) + ' and ' + proseItemName(o.bottom);
+            if (o.top) return 'your ' + proseItemName(o.top);
+            if (o.bottom) return 'your ' + proseItemName(o.bottom);
+            return 'what you\'ve got on';
+        }
+
+        function capFirst(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : t; }
+
+        // First worn collection piece people would see (dress, top, bottom, shoes), or null.
+        function getWornBOPiece() {
+            var o = gameState.currentOutfit || {};
+            var slots = ['dress', 'top', 'bottom', 'footwear'];
+            for (var i = 0; i < slots.length; i++) {
+                if (o[slots[i]] && typeof isBOItem === 'function' && isBOItem(o[slots[i]])) return o[slots[i]];
+            }
+            return null;
+        }
+
+        // Scenes inside each store. Stepping out of one of these onto the store's
+        // own street isn't an arrival, so the street reaction stays quiet.
+        var STORE_INTERIOR_SCENES = {
+            bargain: ['bargain_threads_entrance', 'jack_interaction', 'jack_shows_around', 'bargain_threads_browse', 'jack_browse', 'bargain_checkout', 'bargain_threads_fitting'],
+            urban:   ['urban_edge_entrance', 'urban_edge_help', 'urban_edge_browse', 'urban_edge_return', 'urban_checkout', 'urban_edge_fitting'],
+            noir:    ['noir_entrance', 'noir_recommend', 'noir_browse', 'noir_checkout', 'noir_boutique_fitting']
+        };
+        function isStreetArrival(store, outsideId) {
+            var prev = (typeof previousScene !== 'undefined') ? previousScene : null;
+            if (!prev || prev === outsideId) return false;
+            return STORE_INTERIOR_SCENES[store].indexOf(prev) === -1;
+        }
+
+        // Step 10B: how the street reacts to what she's wearing when she arrives at a store.
+        // Three bands off her appeal tier; style coherence and her collection add a line.
+        function getStreetReaction(store) {
+            var tierIdx = appealTierIndex(getAppealTier().id);
+            var band = tierIdx <= 1 ? 'low' : (tierIdx <= 3 ? 'mid' : 'high');
+            var ph = getWornOutfitPhrase();
+            var t;
+            if (store === 'bargain') {
+                if (band === 'low') t = 'A guy smoking by the bus stop glances at you, then goes back to his phone. Nobody else looks twice at ' + ph + '.';
+                else if (band === 'mid') t = 'A guy smoking by the bus stop looks up as you pass. Then looks again.\n\n' + capFirst(ph) + ' gets you a second glance here and there. Enough to notice.';
+                else t = 'A guy smoking by the bus stop forgets about his cigarette. Two women on the bench stop talking.\n\nIn ' + ph + ', you\'re the best-dressed thing on this block by a mile, and the whole block knows it.';
+            } else if (store === 'urban') {
+                if (band === 'low') t = 'Everyone on this street dresses to be seen. In ' + ph + ', you aren\'t. People step around you like you\'re part of the sidewalk.';
+                else if (band === 'mid') t = 'You catch a few glances. A guy with a coffee does a double-take, then keeps walking.\n\n' + capFirst(ph) + ' holds its own on a street like this.';
+                else t = 'Heads turn. A guy with a coffee stops mid-sip. Two girls coming out of the tattoo parlor look you over, then look at each other.\n\n' + capFirst(ph) + ' does exactly what it\'s supposed to.';
+            } else {
+                if (band === 'low') t = 'A few glances your way. Some lingering. In ' + ph + ', you stand out here, and not in a good way.\n\nA woman with a quilted designer bag gives you a disapproving look.';
+                else if (band === 'mid') t = 'A few glances your way. In ' + ph + ', you pass.\n\nA woman with a quilted designer bag looks you over, decides you\'re nobody she needs to know, and moves on.';
+                else t = 'Glances your way. Then more than glances.\n\nA woman with a quilted designer bag looks you over, slower than she means to. The disapproval never shows up. She\'s trying to work out who you are.';
+            }
+            if (band !== 'low') {
+                var coh = calculateStyleCoherence().label;
+                if (coh === 'Coordinated') t += ' Everything you\'ve got on works together, and people can tell.';
+                else if (coh === 'Clashing') t += ' The pieces fight each other a little. You catch it in a couple of the looks.';
+            }
+            // BEAUTY OBSESSED: the shoes, then the bag, then her
+            if (band === 'high' && isBeautyObsessed() && getWornBOPiece()) {
+                var o = gameState.currentOutfit;
+                var first = (o.footwear && isBOItem(o.footwear)) ? 'your shoes' : 'your ' + proseItemName(getWornBOPiece());
+                t += '\n\nSomeone at the crosswalk clocks ' + first + ' first, then ' + (gameState.flags.designerBackpack ? 'the bag, then you.' : 'you.');
+            }
+            return t;
+        }
+
         // The four looks she can pull straight out of her bag at Jaewon's (Step 9D).
         var BO_JAEWON_LOOKS = {
             satin:  ['bo_satin_black_mini_dress', 'bo_satin_black_heels'],
@@ -49957,7 +50031,7 @@ audioSystem.playSFX('buttonClick');
         // When traveling to a location, use the outside scene instead of going directly inside
         const sceneToOutsideScene = {
             // Clothing stores - entrance scenes
-            'bargain_entrance': 'outside_bargain_threads',
+            'bargain_threads_entrance': 'outside_bargain_threads',
             'urban_edge_entrance': 'outside_urban_edge',
             'noir_entrance': 'outside_noir_boutique',
             
@@ -50116,7 +50190,7 @@ audioSystem.playSFX('buttonClick');
                         name: "Bargain Threads",
                         icon: '<img src="Images/icons/t-shirt.png" class="icon" alt="shirt">',
                         description: "Budget clothing store run by Jack. Affordable basics.",
-                        scene: "bargain_entrance",
+                        scene: "bargain_threads_entrance",
                         available: true
                     },
                     urban_edge: {
@@ -55978,9 +56052,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 
                 // Clothing Stores
                 'bargain_threads': 'Images/locations/bargain-threads.png',
-                'bargain_entrance': 'Images/locations/bargain-threads.png',
-                'jack_intro': 'Images/locations/bargain-threads.png',
-                'jack_tour': 'Images/locations/bargain-threads.png',
+                'bargain_threads_entrance': 'Images/locations/bargain-threads.png',
+                'jack_interaction': 'Images/locations/bargain-threads.png',
+                'jack_shows_around': 'Images/locations/bargain-threads.png',
                 'jack_browse': 'Images/locations/bargain-threads.png',
                 'urban_edge': 'Images/locations/urban-edge.png',
                 'urban_edge_return': 'Images/locations/urban-edge.png',
@@ -62588,44 +62662,6 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             // Tutorial scenes removed - players go directly to commercial_district_street
 
             // BARGAIN THREADS - Complete sequence
-            bargain_entrance: {
-                text: 'You push open the door to Bargain Threads.\n\nA bell chimes overhead.\n\nThe store is... empty.\n\nCompletely empty.\n\nOverhead strips buzz. Racks of cheap clothes stretch in neat, lifeless rows. Everything organized but soulless. Dead air, dead silence, not a customer in sight.\n\nJust you.\n\nAnd him.\n\nBehind the counter, a man looks up from his phone.\n\nMid-forties. Balding. Slightly overweight. Stained shirt.\n\nHis eyes lock onto you.\n\nThey travel. Slowly. Down your body. Up again. Lingering on your chest. Your legs. How the dress clings.\n\n<em>Hungry</em>.\n\nYou feel his gaze like hands on your skin.\n\nHe licks his lips.\n\n"Well, well," he says. Voice rough. "New customer."\n\nHis smile doesn\'t reach his eyes.',
-                onEnter: () => {
-                    gameState.flags.metJack = true;
-                    advanceTime(TIME_COSTS.QUICK_ACTION);
-                    updateStatus();
-                },
-                choices: [
-                    { text: "\"Just looking.\"", nextScene: "jack_intro" },
-                    { text: "Ignore him and browse", nextScene: "jack_intro" },
-                    { text: "\"You the owner?\"", nextScene: "jack_intro" }
-                ]
-            },
-
-            jack_intro: {
-                text: '"Jack," he says. Doesn\'t offer a handshake. Just keeps staring.\n\n"I own the place. Been here ten years."\n\nHis eyes drop to your chest again. Stay there.\n\n"You look like you need something. Something... <em>special</em>."\n\nHow he says it makes your skin crawl.\n\n"We got all kinds of stuff. Real cheap. Great deals for a girl like you."\n\nHe leans forward on the counter.\n\n"I can help you find what you need. Personal service."\n\nHis grin widens.\n\n"What do you say, sweetheart?"',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.SHORT_TALK);
-                    updateStatus();
-                },
-                choices: [
-                    { text: "\"I\'ll browse on my own, thanks.\"", nextScene: "jack_browse" },
-                    { text: "\"Sure, show me around.\"", nextScene: "jack_tour" }
-                ]
-            },
-
-            jack_tour: {
-                text: 'Jack\'s grin widens. He steps out from behind the counter.\n\nCloser now. You can smell his cologne. Cheap. Overpowering.\n\n"This way, sweetheart."\n\nHis hand hovers near your lower back. Doesn\'t quite touch. But close enough.\n\nHe leads you through the racks.\n\n"Got basics here. Jeans. Shirts. Nothing fancy."\n\nThen his voice drops. Gets quieter.\n\n"But we got some <em>interesting</em> stuff too. Underwear section."\n\nHis eyes gleam.\n\n"Bet you\'d look real good in some of these."\n\nHe picks up a lace set. Holds it up.\n\n"Try this on. Dressing room\'s right there."\n\nHe points. His smile is predatory.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.CONVERSATION);
-                    updateStatus();
-                },
-                choices: [
-                    { text: "\"I\'ll just browse from here.\"", nextScene: "jack_browse" },
-                    { text: "\"Thanks for the tour.\"", nextScene: "jack_browse" }
-                ]
-            },
-
             jack_browse: {
                 text: 'You move away from Jack and start looking through the racks on your own.\n\nHe watches from behind the counter. You can feel his eyes following you.\n\nThe selection is basic. Cheap clothes, nothing fancy. But affordable. Very affordable.\n\nRacks of cotton tees, denim, hoodies. A clearance bin near the back with stuff that didn\'t sell.',
                 onEnter: () => {
@@ -133991,17 +134027,22 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     let desc = 'You\'re in the Commercial District. You can see Bargain Threads right here.\n\nThe storefront is unassuming, faded awning, dusty windows with hand-written sale signs. "AFFORDABLE FASHION" in peeling letters.\n\nThe sidewalk here is cracked. A few weeds push through the concrete. Not the nicest part of the commercial district.';
 
                     
+                    if (gameState.flags._streetReaction === 'bargain') desc += '\n\n' + getStreetReaction('bargain');
+
                     return desc;
                 },
                 onEnter: () => {
                     gameState.currentLocationId = "outside_bargain_threads";
+                    // Step 10B: the street reacts to her outfit when she arrives (not when she steps back out)
+                    gameState.flags._streetReaction = isStreetArrival('bargain', 'outside_bargain_threads') ? 'bargain' : null;
                     updateStatus();
                 },
                 choices: function() {
                     const nearby = getNearbyLocations();
                     const choices = [];
                     
-                    choices.push({ text: "Go inside Bargain Threads", nextScene: "jack_browse" });
+                    // First visit plays Jack's intro; after that, straight to the racks
+                    choices.push({ text: "Go inside Bargain Threads", nextScene: gameState.flags.metJack ? "jack_browse" : "bargain_threads_entrance" });
                     
                     // Add nearby locations
                     addNearbyTileChoices(choices, nearby, { excludeIds: ['bargain_threads'], maxTime: 15 });
@@ -134019,17 +134060,22 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     let desc = 'You\'re outside Urban Edge. Glass storefront, brushed metal logo, a mannequin in a leather jacket posed mid-stride behind the window.\n\nBass thumps faintly through the door. A girl walks out carrying a bag, phone already up, texting with one hand. A guy holds the door for his girlfriend and they disappear inside.\n\nThis stretch of the commercial district runs younger. Coffee shops, streetwear brands, a tattoo parlor two doors down.';
 
                     
+                    if (gameState.flags._streetReaction === 'urban') desc += '\n\n' + getStreetReaction('urban');
+
                     return desc;
                 },
                 onEnter: () => {
                     gameState.currentLocationId = "outside_urban_edge";
+                    // Step 10B: the street reacts to her outfit when she arrives (not when she steps back out)
+                    gameState.flags._streetReaction = isStreetArrival('urban', 'outside_urban_edge') ? 'urban' : null;
                     updateStatus();
                 },
                 choices: function() {
                     const nearby = getNearbyLocations();
                     const choices = [];
                     
-                    choices.push({ text: "Go inside Urban Edge", nextScene: "urban_edge_return" });
+                    // First visit plays the store intro; after that, the return-visit floor
+                    choices.push({ text: "Go inside Urban Edge", nextScene: gameState.flags.visitedUrbanEdge ? "urban_edge_return" : "urban_edge_entrance" });
                     
                     // Add nearby locations
                     addNearbyTileChoices(choices, nearby, { excludeIds: ['urban_edge'], maxTime: 15 });
@@ -134047,17 +134093,22 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     let desc = 'You\'re standing outside Noir Boutique. Black awning, gold trim, window displays rotated with the season.\n\nA woman in a long coat pushes through the door carrying two bags. A couple walks in behind her, the guy holding the door with one hand and his girlfriend\'s waist with the other.\n\nThrough the glass you can see staff moving between racks, customers browsing, the warm glow of the interior lighting.\n\nLuxury cars line the curb. The sidewalk smells faintly of someone\'s perfume.';
 
                     
+                    if (gameState.flags._streetReaction === 'noir') desc += '\n\n' + getStreetReaction('noir');
+
                     return desc;
                 },
                 onEnter: () => {
                     gameState.currentLocationId = "outside_noir_boutique";
+                    // Step 10B: the street reacts to her outfit when she arrives (not when she steps back out)
+                    gameState.flags._streetReaction = isStreetArrival('noir', 'outside_noir_boutique') ? 'noir' : null;
                     updateStatus();
                 },
                 choices: function() {
                     const nearby = getNearbyLocations();
                     const choices = [];
                     
-                    choices.push({ text: "Go inside Noir Boutique", nextScene: "noir_browse" });
+                    // First visit plays the store intro; after that, straight to the floor
+                    choices.push({ text: "Go inside Noir Boutique", nextScene: gameState.flags.visitedNoirBoutique ? "noir_browse" : "noir_entrance" });
                     
                     // Add nearby locations
                     addNearbyTileChoices(choices, nearby, { excludeIds: ['noir_boutique'], maxTime: 15 });
@@ -156253,8 +156304,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             // NOIR BOUTIQUE - Complete sequence
             noir_entrance: {
-                text: 'You push through the glass door and the street noise cuts off behind you.\n\nNoir Boutique hits you in layers. The air first. Something floral and warm, piped through the vents. Then the carpet, thick enough that your footsteps disappear.\n\nThe place is alive. A woman in a camel coat browses silk blouses near the window, tilting one toward the light. Two friends in heels pick through a rack of evening dresses, murmuring to each other. A man in a fitted suit sits in a leather armchair near the back, scrolling his phone while his girlfriend tries things on behind a curtain.\n\nStaff move between customers. Three that you can count. All in black. All polished. A tall girl adjusts a mannequin display. A guy with a sharp jawline carries a garment bag toward the fitting rooms. A third, the one closest to the entrance, notices you and starts walking over.\n\nShe\'s maybe twenty-five. Hair pulled back tight. Small gold earrings. Heels that click on the marble border between carpet sections.\n\n"Welcome to Noir Boutique," she says. Warm, professional. "First time with us?"\n\nHer eyes sweep your outfit. Quick, trained. She doesn\'t react, but you can feel the assessment.\n\n"Take your time. Everything on the floor is current season. Let me know if you\'d like a fitting room."',
+                text: () => 'You push through the glass door and the street noise cuts off behind you.\n\nNoir Boutique hits you in layers. The air first. Something floral and warm, piped through the vents. Then the carpet, thick enough that your footsteps disappear.\n\nThe place is alive. A woman in a camel coat browses silk blouses near the window, tilting one toward the light. Two friends in heels pick through a rack of evening dresses, murmuring to each other. A man in a fitted suit sits in a leather armchair near the back, scrolling his phone while his girlfriend tries things on behind a curtain.\n\nStaff move between customers. Three that you can count. All in black. All polished. A tall girl adjusts a mannequin display. A guy with a sharp jawline carries a garment bag toward the fitting rooms. A third, the one closest to the entrance, notices you and starts walking over.\n\nShe\'s maybe twenty-five. Hair pulled back tight. Small gold earrings. Heels that click on the marble border between carpet sections.\n\n"Welcome to Noir Boutique," she says. Warm, professional. "First time with us?"\n\n' + (gameState.flags._boStaffLine === 'noir'
+                    ? 'Her eyes sweep your outfit. Quick, trained. They stop on your ' + proseItemName(getWornBOPiece()) + ', then come back up to your face.\n\n"That\'s a beautiful piece," she says. "It isn\'t one of ours. I\'m a little jealous."\n\nFrom a girl at Noir Boutique, you\'re pretty sure that\'s a compliment.'
+                    : 'Her eyes sweep your outfit. Quick, trained. She doesn\'t react, but you can feel the assessment.') + '\n\n"Take your time. Everything on the floor is current season. Let me know if you\'d like a fitting room."',
                 onEnter: () => {
+                    // BEAUTY OBSESSED (Step 10D): a staffer clocks a collection piece, once
+                    gameState.flags._boStaffLine = null;
+                    if (isBeautyObsessed() && getWornBOPiece() && !gameState.flags.boNoirStaffNoticed) {
+                        gameState.flags.boNoirStaffNoticed = true;
+                        gameState.flags._boStaffLine = 'noir';
+                    }
                     gameState.flags.visitedNoirBoutique = true;
                     advanceTime(TIME_COSTS.QUICK_ACTION);
                     tryDressCodeReaction('noir_entrance');
@@ -156572,82 +156631,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             
             // Placeholder shopping scenes
             // Walking to stores with random encounters
-            walk_to_bargain: {
-                text: 'You head toward Bargain Threads. Three blocks away.\n\nThe sidewalk is busy. People brush past you. Some glance, most don\'t.\n\nA woman with a stroller. A businessman on his phone. A group of teenagers laughing.\n\nNobody pays you much attention in your rumpled party dress. You\'re just another person on the street.\n\nThe walk takes about ten minutes. Your thirst climbs slightly.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.WALK_MEDIUM);
-                    gameState.thirst += 2;
-                    
-                    // Random encounter based on appeal
-                    const appeal = calculateTotalAppeal();
-                    const encounterChance = Math.random() * 100;
-                    
-                    if (appeal >= 240 && encounterChance < 30) {
-                        gameState.flags.streetEncounter = 'high_appeal';
-                    } else if (appeal >= 180 && encounterChance < 15) {
-                        gameState.flags.streetEncounter = 'medium_appeal';
-                    } else {
-                        gameState.flags.streetEncounter = 'none';
-                    }
-                    
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Arrive at Bargain Threads", nextScene: "bargain_threads_entrance" }
-                ]
-            },
-
-            walk_to_urban: {
-                text: 'You make your way to Urban Edge. Five blocks away.\n\nThe streets are crowded. People everywhere. Shopping bags. Coffee cups. Conversations.\n\nYou catch a few glances. Nothing major. Your current outfit is... acceptable. Not eye-catching.\n\nOne guy does a double-take as you pass. But he keeps walking.\n\nThe walk takes about ten minutes.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.WALK_MEDIUM);
-                    gameState.thirst += 2;
-                    
-                    const appeal = calculateTotalAppeal();
-                    const encounterChance = Math.random() * 100;
-                    
-                    if (appeal >= 240 && encounterChance < 30) {
-                        gameState.flags.streetEncounter = 'high_appeal';
-                    } else if (appeal >= 180 && encounterChance < 15) {
-                        gameState.flags.streetEncounter = 'medium_appeal';
-                    } else {
-                        gameState.flags.streetEncounter = 'none';
-                    }
-                    
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Arrive at Urban Edge", nextScene: "urban_edge_entrance" }
-                ]
-            },
-
-            walk_to_noir: {
-                text: 'You walk toward Noir Boutique. Seven blocks away. Upscale area.\n\nThe people here dress better. Designer bags. Expensive watches. Confident strides.\n\nA few glances your way. Some lingering. Your basic outfit stands out here; and not in a good way.\n\nA woman in a fur coat gives you a disapproving look.\n\nThe walk takes about fifteen minutes.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.WALK_MEDIUM);
-                    gameState.thirst += 2;
-                    
-                    const appeal = calculateTotalAppeal();
-                    const encounterChance = Math.random() * 100;
-                    
-                    if (appeal >= 240 && encounterChance < 30) {
-                        gameState.flags.streetEncounter = 'high_appeal';
-                    } else if (appeal >= 180 && encounterChance < 15) {
-                        gameState.flags.streetEncounter = 'medium_appeal';
-                    } else {
-                        gameState.flags.streetEncounter = 'none';
-                    }
-                    
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Arrive at Noir Boutique", nextScene: "noir_entrance" }
-                ]
-            },
-
             // Bargain Threads - Full sequence
             bargain_threads_entrance: {
-                text: 'You push open the door. A bell chimes.\n\nThe store is empty. Completely empty.\n\nCeiling lights buzz overhead. Racks of cheap clothes stretch in neat rows. Everything\'s organized but... lifeless. Silent. Empty.\n\nJust you.\n\nAnd him.\n\nBehind the counter, a man looks up. Mid-forties. Balding. Slightly overweight.\n\nHis eyes lock onto you immediately.\n\nThey travel. Down. Up. Lingering.\n\n<em>Hungry</em>.\n\nYou feel his gaze like fingers on your skin. The rumpled party dress. Your exposed legs. The fabric clinging.\n\nHe licks his lips.\n\n"Well, well," he says. Voice rough. "First time here, sweetheart?"\n\nHis smile doesn\'t reach his eyes.',
+                text: () => 'You push open the door. A bell chimes.\n\nThe store is empty. Completely empty.\n\nCeiling lights buzz overhead. Racks of cheap clothes stretch in neat rows. Everything\'s organized but... lifeless. Silent. Empty.\n\nJust you.\n\nAnd him.\n\nBehind the counter, a man looks up. Mid-forties. Balding. Slightly overweight.\n\nHis eyes lock onto you immediately.\n\nThey travel. Down. Up. Lingering.\n\n<em>Hungry</em>.\n\nYou feel his gaze like fingers on your skin. ' + (function() {
+                    const o = gameState.currentOutfit;
+                    const cv = getSceneClothingVars();
+                    if (o.dress) return 'The ' + proseItemName(o.dress) + '. Your exposed legs. The fabric clinging.';
+                    if (cv.isSkirt) return 'The ' + proseItemName(o.top) + '. The ' + proseItemName(o.bottom) + '. Your exposed legs.';
+                    if (o.top && o.bottom) return 'The ' + proseItemName(o.top) + '. Your hips in the ' + proseItemName(o.bottom) + '. The fabric clinging.';
+                    return 'Your body. The fabric clinging.';
+                })() + '\n\nHe licks his lips.\n\n"Well, well," he says. Voice rough. "First time here, sweetheart?"\n\nHis smile doesn\'t reach his eyes.',
                 onEnter: () => {
                     gameState.flags.metJack = true;
                     advanceTime(TIME_COSTS.QUICK_ACTION);
@@ -156685,7 +156678,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
 
             bargain_threads_browse: {
-                text: 'You move away from Jack. Start browsing the racks.\n\nHe watches. You can feel his eyes.\n\nBut the selection is here. Cheap clothes. Basic stuff. Nothing fancy.\n\nBut affordable. And you need something better than this dress.',
+                text: () => 'You move away from Jack. Start browsing the racks.\n\nHe watches. You can feel his eyes.\n\nBut the selection is here. Cheap clothes. Basic stuff. Nothing fancy.\n\n' + (isBeautyObsessed()
+                    ? 'But affordable. Nothing here comes close to what\'s in your bag.'
+                    : 'But affordable. And you need something better than ' + (gameState.currentOutfit.dress ? 'this dress' : 'what you\'ve got on') + '.'),
                 onEnter: () => {
                     advanceTime(TIME_COSTS.BROWSE);
                     updateStatus();
@@ -156693,7 +156688,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: [
                     { text: '<img src="Images/icons/shopping-bags.png" class="icon" alt="shopping"> Browse the racks', action: () => openShopping('bargain_threads') },
                     { text: 'Use the changing stall', nextScene: 'bargain_threads_fitting' },
-                    { text: 'Leave the store', nextScene: 'after_shopping_bargain' }
+                    { text: 'Leave the store', nextScene: 'bargain_checkout' }
                 ]
             },
 
@@ -156779,8 +156774,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             // Urban Edge - Entrance
             urban_edge_entrance: {
-                text: 'You push through the door and the bass hits first. Something with a beat, playing loud enough to feel in your chest but not so loud you can\'t think.\n\nUrban Edge runs deeper than it looks from outside. Exposed brick on one wall, concrete on the other. Track lighting angled at the displays. Graffiti art behind the register, framed and intentional.\n\nPeople everywhere. A girl in a denim jacket flips through a rack of mini skirts. Two guys debate over bomber jackets near the back. A woman with box braids holds a leather skirt up against her waist, checking herself in a full-length mirror.\n\nStaff weave through the floor in matching black tees with the store logo. A guy with rolled sleeves refolds a display table of crop tops. A girl with short silver hair rings up a customer at the counter, laughing at something he said.\n\nAnother staffer spots you. She\'s maybe twenty-two, nose ring, confident walk.\n\n"Hey, welcome in," she says. Casual. "First time? Lmk if you need anything. Fitting rooms are in the back."\n\nShe\'s already moving on to the next thing. No hovering.',
+                text: () => 'You push through the door and the bass hits first. Something with a beat, playing loud enough to feel in your chest but not so loud you can\'t think.\n\nUrban Edge runs deeper than it looks from outside. Exposed brick on one wall, concrete on the other. Track lighting angled at the displays. Graffiti art behind the register, framed and intentional.\n\nPeople everywhere. A girl in a denim jacket flips through a rack of mini skirts. Two guys debate over bomber jackets near the back. A woman with box braids holds a leather skirt up against her waist, checking herself in a full-length mirror.\n\nStaff weave through the floor in matching black tees with the store logo. A guy with rolled sleeves refolds a display table of crop tops. A girl with short silver hair rings up a customer at the counter, laughing at something he said.\n\nAnother staffer spots you. She\'s maybe twenty-two, nose ring, confident walk.\n\n"Hey, welcome in," she says. Casual. "First time? Lmk if you need anything. Fitting rooms are in the back."\n\n' + (gameState.flags._boStaffLine === 'urban'
+                    ? 'Then her eyes catch on your ' + proseItemName(getWornBOPiece()) + '. "Okay, wait. Where\'d you get that?"\n\nYou tell her it\'s yours. Been yours for a while.\n\n"Rude," she says, grinning. "It\'s perfect."\n\n'
+                    : '') + 'She\'s already moving on to the next thing. No hovering.',
                 onEnter: () => {
+                    // BEAUTY OBSESSED (Step 10D): a staffer clocks a collection piece, once
+                    gameState.flags._boStaffLine = null;
+                    if (isBeautyObsessed() && getWornBOPiece() && !gameState.flags.boUrbanStaffNoticed) {
+                        gameState.flags.boUrbanStaffNoticed = true;
+                        gameState.flags._boStaffLine = 'urban';
+                    }
                     gameState.flags.visitedUrbanEdge = true;
                     advanceTime(TIME_COSTS.QUICK_ACTION);
                     updateStatus();
@@ -156811,7 +156814,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: [
                     { text: '<img src="Images/icons/shopping-bags.png" class="icon" alt="shopping"> Browse the racks', action: () => openShopping('urban_edge') },
                     { text: 'Use the fitting room', nextScene: 'urban_edge_fitting' },
-                    { text: 'Leave the store', nextScene: 'after_shopping_urban' }
+                    { text: 'Leave the store', nextScene: 'urban_checkout' }
                 ]
             },
 
@@ -197789,9 +197792,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             'hospital_lobby': { redirect: 'outside_hospital', name: 'the hospital' },
             'hospital_emergency_room': { redirect: 'outside_hospital', name: 'the hospital' },
             // Bargain Threads — block at the door, not mid-browse
-            'bargain_entrance': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
-            'jack_intro': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
-            'jack_tour': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
+            'bargain_threads_entrance': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
+            'jack_interaction': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
+            'jack_shows_around': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
             'jack_browse': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
             // Urban Edge — block at the door, not mid-browse
             'urban_edge_entrance': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
