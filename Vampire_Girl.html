@@ -49164,6 +49164,66 @@ audioSystem.playSFX('buttonClick');
             o.dress = null;
         }
 
+        // Takes off whatever's in one outfit slot and puts it in the bag (keeping its
+        // cleanliness), unless an item with that id is already there. Jaewon's own
+        // borrowed pieces go back to her wardrobe instead.
+        function stashWornSlot(slot) {
+            var o = gameState.currentOutfit;
+            if (!o || !o[slot]) return;
+            var worn = o[slot];
+            o[slot] = null;
+            if (worn.owner === 'jaewon') {
+                initializeJaewonWardrobe();
+                var jw = gameState.wardrobes.jaewon;
+                var wi = jw.findIndex(function(i) { return i.id === worn.id; });
+                if (wi !== -1) jw[wi].currentlyBorrowed = false;
+                return;
+            }
+            var catFor = { bra: 'bras', panties: 'panties', top: 'tops', bottom: 'bottoms', dress: 'dresses', outerwear: 'outerwear', footwear: 'footwear' };
+            if (!gameState.inventory.clothing.some(function(i) { return i.id === worn.id; })) {
+                worn.category = catFor[slot] || worn.category;
+                worn.owned = true;
+                if (worn.cleanliness === undefined) worn.cleanliness = 100;
+                gameState.inventory.clothing.push(worn);
+            }
+        }
+
+        // Story-scene outfit change: moves her real copies out of the bag and into
+        // their slots. A dress takes off the top and bottom; a top or bottom takes
+        // off the dress. Whatever gets displaced goes back in the bag. Underwear
+        // is never touched unless an id asks for it. Pieces she's already wearing
+        // count as worn. Returns true when every id ends up on her.
+        function wearFromBag(ids) {
+            var o = gameState.currentOutfit;
+            var inv = gameState.inventory.clothing;
+            var slotFor = { bras: 'bra', panties: 'panties', tops: 'top', bottoms: 'bottom', dresses: 'dress', outerwear: 'outerwear', footwear: 'footwear' };
+            var worn = 0;
+            ids.forEach(function(id) {
+                var alreadyOn = Object.keys(slotFor).some(function(c) { var sl = slotFor[c]; return o[sl] && o[sl].id === id; });
+                if (alreadyOn) { worn++; return; }
+                var item = inv.find(function(i) { return i.id === id; });
+                if (!item) return;
+                var slot = slotFor[item.category];
+                if (!slot) return;
+                if (slot === 'dress') { stashWornSlot('top'); stashWornSlot('bottom'); }
+                if (slot === 'top' || slot === 'bottom') stashWornSlot('dress');
+                stashWornSlot(slot);
+                inv.splice(inv.indexOf(item), 1);
+                o[slot] = item;
+                worn++;
+            });
+            if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
+            return worn === ids.length;
+        }
+
+        // The four looks she can pull straight out of her bag at Jaewon's (Step 9D).
+        var BO_JAEWON_LOOKS = {
+            satin:  ['bo_satin_black_mini_dress', 'bo_satin_black_heels'],
+            garden: ['bo_cream_halter_tank_top', 'bo_white_flared_mini_skirt', 'bo_blue_orchid_heels'],
+            denim:  ['bo_denim_halter_crop_top', 'bo_denim_booty_shorts', 'bo_denim_platform_heels'],
+            cozy:   ['bo_sherpa_hoodie_dress', 'bo_blue_orchid_heels']
+        };
+
         // Clothing Descriptions Database for Starting Clothes
         const startingClothingDescriptions = {
             'basic_jeans': 'Standard blue jeans. Practical and boring.',
@@ -157241,45 +157301,89 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
             
             jaewon_just_change: {
-                text: '"Could I just... change? I don\'t think I have energy for a shower."\n\n"Of course. Bathroom\'s through there."\n\nYou grab your backpack.\n\nThe bathroom is tiny. But private.\n\nYou change quickly. Into your skinny jeans and tank top.\n\nBetter than the party dress. But still not great.\n\nWhen you emerge, Jaewon\'s made tea.\n\n"Feel better?"\n\n"A bit. Thanks."',
+                text: function() {
+                    if (isBeautyObsessed()) {
+                        // BEAUTY OBSESSED: Garden Party, ninety seconds, four by six
+                        return '"Could I just... change? I don\'t think I have energy for a shower."\n\n"Of course. Bathroom\'s through there."\n\nYou grab your backpack.\n\nThe bathroom is tiny. Four by six, if that. But private.\n\nYou don\'t even have to think about it. The cream halter, the white flared mini, the blue orchid heels.\n\nNinety seconds, start to finish. You tug the skirt a quarter inch lower on your hips and check the mirror.\n\nPerfect.\n\nWhen you emerge, Jaewon\'s made tea. She looks up, then looks again.\n\n"You did that in <em>my</em> bathroom? I can barely turn around in there."\n\n"Practice."\n\nShe laughs and hands you a mug. "Feel better?"\n\n"A bit. Thanks."';
+                    }
+                    return '"Could I just... change? I don\'t think I have energy for a shower."\n\n"Of course. Bathroom\'s through there."\n\nYou grab your backpack.\n\nThe bathroom is tiny. But private.\n\nYou change quickly. Into your skinny jeans and tank top.\n\nBetter than the party dress. But still not great.\n\nWhen you emerge, Jaewon\'s made tea.\n\n"Feel better?"\n\n"A bit. Thanks."';
+                },
                 onEnter: () => {
                     gameState.thirst = Math.min(80, gameState.thirst + 3);
+                    // Actually change (was prose only)
+                    if (isBeautyObsessed()) {
+                        wearFromBag(BO_JAEWON_LOOKS.garden);
+                    } else {
+                        wearFromBag(['skinny_jeans', 'black_tank']);
+                    }
                     advanceTime(TIME_COSTS.CHANGE_CLOTHES);
                     updateStatus();
                 },
-                choices: [
-                    { text: "Try on Jaewon\'s clothes", nextScene: "jaewon_clothes_check" },
-                    { text: "Wear your own clothes instead", nextScene: "own_clothes_check" }
-                ]
+                choices: function() {
+                    return [
+                        { text: "Try on Jaewon\'s clothes", nextScene: "jaewon_clothes_check" },
+                        { text: isBeautyObsessed() ? "Pick a different look from your bag" : "Wear your own clothes instead", nextScene: "own_clothes_check" }
+                    ];
+                }
             },
             
             jaewon_clothes_check: {
                 finalImage: "",
-                text: 'You examine what Jaewon left:\n\n<strong>A fitted V-neck tee.</strong> Heathered charcoal. Actually nice quality.\n\n<strong>High-waist skinny jeans.</strong> Dark indigo. They look like they\'d fit well.\n\n<strong>A cropped leather jacket.</strong> Black with silver hardware. Cool.\n\nIt\'s kind of her. Really kind.\n\nAnd to be honest, these are <em>way</em> nicer than anything in your backpack. Jaewon has good taste.\n\nYou could wear her outfit... or go with something of your own.',
+                text: function() {
+                    if (isBeautyObsessed()) {
+                        // BEAUTY OBSESSED: her taste lines up with Jaewon's, and the jacket's the find
+                        return 'You examine what Jaewon left:\n\n<strong>A fitted V-neck tee.</strong> Heathered charcoal. Better quality than it looks.\n\n<strong>High-waist skinny jeans.</strong> Dark indigo. Good cut. She knows what she\'s doing.\n\n<strong>A cropped leather jacket.</strong> Black with silver hardware.\n\nYou pick up the jacket and hold it out at arm\'s length.\n\n<em>Oh.</em> That\'s the find. It goes with the satin dress. It goes with the denim. It goes with half the bag.\n\nThirty-two pieces packed, and you didn\'t bring a single layer.\n\nIt\'s sweet of her. Really sweet.\n\nYou could wear her outfit, borrow just the jacket, or go with one of your own looks.';
+                    }
+                    return 'You examine what Jaewon left:\n\n<strong>A fitted V-neck tee.</strong> Heathered charcoal. Actually nice quality.\n\n<strong>High-waist skinny jeans.</strong> Dark indigo. They look like they\'d fit well.\n\n<strong>A cropped leather jacket.</strong> Black with silver hardware. Cool.\n\nIt\'s kind of her. Really kind.\n\nAnd to be honest, these are <em>way</em> nicer than anything in your backpack. Jaewon has good taste.\n\nYou could wear her outfit... or go with something of your own.';
+                },
                 onEnter: () => {
                     gameState.thirst = Math.min(80, gameState.thirst + 3);
                     updateStatus();
                 },
-                choices: [
-                    { text: "Wear Jaewon\'s outfit (fitted tee, jeans, leather jacket)", nextScene: "wear_jaewon_clothes" },
-                    { text: "Wear your sundress (best option from your bag)", nextScene: "wear_own_best" },
-                    { text: "Wear something else from your backpack", nextScene: "wear_own_other" }
-                ]
+                choices: function() {
+                    if (isBeautyObsessed()) {
+                        return [
+                            { text: "Wear Jaewon\'s outfit (fitted tee, jeans, leather jacket)", nextScene: "wear_jaewon_clothes" },
+                            { text: "Wear Jaewon\'s jacket over your own look", nextScene: "wear_bo_with_jacket" },
+                            { text: "Wear one of your own looks", nextScene: "own_clothes_check" }
+                        ];
+                    }
+                    return [
+                        { text: "Wear Jaewon\'s outfit (fitted tee, jeans, leather jacket)", nextScene: "wear_jaewon_clothes" },
+                        { text: "Wear your sundress (best option from your bag)", nextScene: "wear_own_best" },
+                        { text: "Wear something else from your backpack", nextScene: "wear_own_other" }
+                    ];
+                }
             },
             
             own_clothes_check: {
                 finalImage: "", // Clear any previous images
-                text: 'You dump your backpack\'s contents onto the bathroom counter and take inventory:\n\n<strong>Your Clothing Options:</strong>\n• Basic jeans and a plain t-shirt (comfortable, unremarkable)\n• Black leggings and an oversized sweater (cozy, not attention-grabbing)\n• Skinny jeans and a tank top (casual, slightly form-fitting)\n• Joggers and a hoodie (athletic, practical)\n• A simple sundress (feminine but plain, no wow factor)\n\nYou stare at the pile. All basic. All functional. Errand clothes. You wouldn\'t turn a single head in any of this.\n\nThe party dress you just took off, despite being rumpled and torn, at least had <em>something</em>. It was short, showed off your legs, hinted at your figure. But it also looked like you\'d been through hell.\n\nIf you\'re serious about feeding. about finding someone willing to sleep with you. you might need to invest in better clothes. Something that actually flatters your body. Shows off the assets you know you have.\n\nBut that means spending money. Money you need for rent, for survival.\n\nFor now, though, you need to wear <em>something</em>.',
+                text: () => isBeautyObsessed()
+                    // BEAUTY OBSESSED: a closet's worth of looks and nowhere to hang them
+                    ? 'You dump your backpack onto the bathroom counter.\n\nIt keeps coming.\n\nThe diamond cutout dress, which still makes you a little dizzy. The pink sequin co-ord. The satin corset top, your favorite thing you own. The denim halter and the lace-up booty shorts that go with it.\n\nThree full lace sets, folded into their own pouch.\n\nYou packed a closet into a backpack, and it all came out uncreased.\n\nThere are more options on this counter than in Jaewon\'s whole wardrobe. And nowhere in this apartment to hang a single one of them.\n\nFor now, though, you need to wear <em>something</em>.'
+                    : 'You dump your backpack\'s contents onto the bathroom counter and take inventory:\n\n<strong>Your Clothing Options:</strong>\n• Basic jeans and a plain t-shirt (comfortable, unremarkable)\n• Black leggings and an oversized sweater (cozy, not attention-grabbing)\n• Skinny jeans and a tank top (casual, slightly form-fitting)\n• Joggers and a hoodie (athletic, practical)\n• A simple sundress (feminine but plain, no wow factor)\n\nYou stare at the pile. All basic. All functional. Errand clothes. You wouldn\'t turn a single head in any of this.\n\nThe party dress you just took off, despite being rumpled and torn, at least had <em>something</em>. It was short, showed off your legs, hinted at your figure. But it also looked like you\'d been through hell.\n\nIf you\'re serious about feeding. about finding someone willing to sleep with you. you might need to invest in better clothes. Something that actually flatters your body. Shows off the assets you know you have.\n\nBut that means spending money. Money you need for rent, for survival.\n\nFor now, though, you need to wear <em>something</em>.',
                 onEnter: () => {
                     gameState.thirst = Math.min(80, gameState.thirst + 3);
                     updateStatus();
                 },
-                choices: [
-                    { text: "Wear the skinny jeans and tank top (best you\'ve got)", nextScene: "wear_own_best" },
-                    { text: "Wear the sundress", nextScene: "wear_sundress" },
-                    { text: "Wear the leggings and sweater (comfortable)", nextScene: "wear_comfy" },
-                    { text: "Just put the party dress back on; it\'s your only sexy option", nextScene: "wear_party_dress_again" }
-                ]
+                choices: function() {
+                    if (isBeautyObsessed()) {
+                        const _pick = (look) => () => { gameState.flags._boLook = look; };
+                        return [
+                            { text: "The satin dress again (Little Black Satin)", nextScene: "wear_bo_look", effect: _pick('satin') },
+                            { text: "Garden Party (cream halter, white flared mini, orchid heels)", nextScene: "wear_bo_look", effect: _pick('garden') },
+                            { text: "Double Denim (halter crop, booty shorts, platform mules)", nextScene: "wear_bo_look", effect: _pick('denim') },
+                            { text: "Something cozy (sherpa hoodie dress, orchid heels)", nextScene: "wear_bo_look", effect: _pick('cozy') },
+                            { text: "Pick from your bag yourself", nextScene: "wear_own_other" }
+                        ];
+                    }
+                    return [
+                        { text: "Wear the skinny jeans and tank top (best you\'ve got)", nextScene: "wear_skinny_tank" },
+                        { text: "Wear the sundress", nextScene: "wear_sundress" },
+                        { text: "Wear the leggings and sweater (comfortable)", nextScene: "wear_comfy" },
+                        { text: "Just put the party dress back on; it\'s your only sexy option", nextScene: "wear_party_dress_again" }
+                    ];
+                }
             },
             
             wear_jaewon_clothes: {
@@ -157287,6 +157391,18 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     const isEvil = (gameState.karma || 0) <= -1000;
                     const isAngelic = (gameState.karma || 0) >= 1000;
+
+                    // BEAUTY OBSESSED: her jeans are good, the jacket's the real find
+                    if (isBeautyObsessed()) {
+                        const open = 'You pull on the clothes Jaewon left.\n\nHer jeans are good. Dark indigo, high-waisted, a cut that makes your butt look <em>great</em>. The tee\'s better quality than it looks, soft and heavy, the V-neck sitting right at your collarbone.\n\nYour closet\'s better. You\'d never say it out loud.\n\nThe jacket\'s the real find. Cropped, black, silver zippers. You packed thirty-two pieces, and not one of them was a layer.\n\nYou look in the mirror and start dressing the jacket in your head. Over the satin dress. Over the denim. Over the corset top with the micro skirt.\n\nIt goes with everything in your bag.';
+                        if (isEvil) {
+                            return open + '\n\nYou open the door.\n\nJaewon looks up from the couch. Her face brightens.\n\n"Those look better on you than they do on me," she says.\n\n"The jacket\'s amazing," you say, and you mean that part.\n\n"Keep them."\n\n"What?"\n\n"Seriously. Keep them."\n\n"Jaewon, I can\'t just take your clothes."\n\n"You can." She shrugs. "Consider it a housewarming gift."\n\n"Thank you," you say.\n\nShe nods, pleased with herself.\n\n<em>Good jacket. Free. And she\'s happy about it.</em>\n\nYou sit on the couch and let her talk about tomorrow like you\'ve lived here for years.';
+                        }
+                        if (isAngelic) {
+                            return open + '\n\nYou think about Jaewon in the other room, who let you into her home an hour after meeting you, who left these clothes like it was nothing, who hasn\'t once made you feel like a burden.\n\nYou already know you\'re going to say no when she offers to let you keep them.\n\nYou open the door.\n\nJaewon looks up from the couch, and something in her face shifts when she sees you. A quiet, uncomplicated happiness.\n\n"Those look better on you than they do on me," she says softly.\n\nYou feel your face get warm. "The jacket\'s perfect. I didn\'t pack a single thing to wear over anything."\n\n"Keep them."\n\n"What? No." You shake your head. "Jaewon, no. You\'ve already done so much."\n\n"I mean it." She holds up a hand. "I never wear that jacket. And those jeans have been sitting in my closet since last winter." She pauses. "I\'d honestly feel better knowing they were going to someone who actually looks like that in them."\n\nYou look at her. She means it. She\'s decided a thing, and she\'s waiting for you to catch up.\n\n"You have to let me do something for you," you say. "At some point. When I actually have anything to offer."\n\nShe grins. "Deal. Now stop arguing and sit down."\n\nYou sit. There\'s something almost unbearably kind about this whole day, and you don\'t quite know what to do with it except feel it.';
+                        }
+                        return open + '\n\nYou stand there a moment longer than you need to.\n\nThe outfit\'s hers. The jacket already feels like yours.\n\nYou take a breath. Open the door.\n\nJaewon looks up from the couch.\n\nShe goes still for a second, really looking at you, and then a smile breaks across her face. Quiet and real.\n\n"Those look better on you than they do on me," she says.\n\nYou look down at yourself. "The jacket\'s the best thing in this apartment. No offense."\n\nShe laughs. "None taken. Keep them."\n\nYou look up. "What?"\n\n"Seriously. Keep them."\n\n"Jaewon, I can\'t just—"\n\n"You can." Her voice is easy, certain. "I mean it. They\'re yours now. Consider it a housewarming gift."\n\n"Thank you," you finally say.\n\nShe just nods, like it\'s nothing.';
+                    }
 
                     if (isEvil) {
                         return 'You pull on the clothes Jaewon left.\n\nThe jeans hug your legs perfectly. Dark indigo, high-waisted. They make your butt look <em>great</em>.\n\nThe fitted tee is soft, quality cotton. The V-neck shows just a hint of collarbone.\n\nThe leather jacket completes it. Cropped, with silver zippers.\n\nYou look in the mirror.\n\nYou look <em>good</em>.\n\nBetter than good. You look like someone who belongs here. Just a few hours ago you had nothing. Now you\'re in clean clothes in someone else\'s apartment.\n\nYou open the door.\n\nJaewon looks up from the couch. Her face brightens.\n\n"Those look better on you than they do on me," she says.\n\n"You think so?" You glance down at yourself. "They fit really well, actually."\n\n"Keep them."\n\n"What?"\n\n"Seriously. Keep them."\n\n"Jaewon, I can\'t just take your clothes."\n\n"You can." She shrugs. "Consider it a housewarming gift."\n\n"Thank you," you say.\n\nShe nods, pleased with herself.\n\nYou sit on the couch. The clothes are comfortable. The apartment is warm. Jaewon is already talking about tomorrow like you\'ve lived here for years.\n\nYou let her.';
@@ -157299,11 +157415,12 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     return 'You pull on the clothes Jaewon left.\n\nThe jeans hug your legs perfectly. Dark indigo, high-waisted. They make your butt look <em>great</em>.\n\nThe fitted tee is soft, quality cotton. The V-neck shows just a hint of collarbone.\n\nThe leather jacket completes it. Cropped, with silver zippers. It makes the whole outfit look intentional. Cool.\n\nYou look in the mirror.\n\nActually... you look <em>good</em>.\n\nWay better than anything you own. You turn slightly. Check the back. Yeah.\n\nYou stand there a moment longer than you need to.\n\nIt\'s stupid, probably. It\'s just clothes. But yesterday you had nothing, and today you\'re standing in someone else\'s bathroom wearing an outfit that actually fits, and something about that feels larger than it should.\n\nYou take a breath. Open the door.\n\nThe hallway feels shorter than you remember. Three steps and you\'re at the living room.\n\nJaewon looks up from the couch.\n\nShe goes still for just a second\u2014really looking at you\u2014and then this smile breaks across her face. Quiet. Genuine. A smile that isn\'t performing anything.\n\n"Those look better on you than they do on me," she says.\n\nYou look down at yourself. "They fit really well, actually."\n\n"Keep them."\n\nYou look up. "What?"\n\n"Seriously. Keep them."\n\n"Jaewon, I can\'t just\u2014"\n\n"You can." Her voice is easy, certain. "I mean it. They\'re yours now. Consider it a housewarming gift."\n\n"Thank you," you finally say.\n\nShe just nods, like it\'s nothing.';
                 },
                 onEnter: () => {
-                    // Put the dress she's wearing in the bag
+                    // Put whatever she's wearing in the bag (she keeps her own underwear)
                     stashWornDress();
+                    stashWornSlot('top');
+                    stashWornSlot('bottom');
+                    stashWornSlot('outerwear');
                     // Equip Jaewon's gifted items—NO owner field, these belong to Kelsie now
-                    gameState.currentOutfit.bra = { id: "basic_white_bra", name: "Basic White Bra", appeal: 1 };
-                    gameState.currentOutfit.panties = { id: "basic_white_panties", name: "Basic White Panties", appeal: 1 };
                     gameState.currentOutfit.top = { id: "jaewon_fitted_tee", name: "Jaewon\'s Fitted V-Neck Tee", category: "tops", appeal: 18, owned: true };
                     gameState.currentOutfit.bottom = { id: "jaewon_high_waist_jeans", name: "Jaewon\'s High-Waist Skinny Jeans", category: "bottoms", appeal: 22, owned: true };
                     gameState.currentOutfit.outerwear = { id: "jaewon_leather_jacket", name: "Jaewon\'s Cropped Leather Jacket", category: "outerwear", appeal: 16, owned: true };
@@ -157327,13 +157444,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             wear_own_best: {
                 text: 'You slip on the sundress.\n\nLight blue. Small white flowers. Falls just above your knees.\n\nYou look in the mirror.\n\nCute. Feminine. Modest.\n\nInnocent.\n\nAnd... comfortable. Like yourself.\n\nIt\'s not fancy, but it\'s clean. It\'s <em>yours</em>.\n\nAfter everything that\'s happened, that matters.\n\nYou adjust it. Make sure it sits right.\n\nIt\'ll work just fine.',
                 onEnter: () => {
-                    stashWornDress();
-                    gameState.currentOutfit.bra = { id: "basic_white_bra", name: "Basic White Bra", appeal: 1 };
-                    gameState.currentOutfit.panties = { id: "basic_white_panties", name: "Basic White Panties", appeal: 1 };
-                    gameState.currentOutfit.dress = { id: "sundress", name: "Simple Sundress", appeal: 33 };
-                    gameState.currentOutfit.top = null;
-                    gameState.currentOutfit.bottom = null;
-                    gameState.currentOutfit.outerwear = null;
+                    // The real sundress from her bag; her own underwear stays on
+                    wearFromBag(['sundress']);
+                    stashWornSlot('outerwear');
                     updateStatus();
                 },
                 choices: [
@@ -157344,13 +157457,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             wear_sundress: {
                 text: 'You slip on the sundress.\n\nLight blue. Small white flowers. Falls just above your knees.\n\nYou look in the mirror.\n\nCute. Feminine. Modest.\n\nInnocent.\n\nAnd... comfortable. Like yourself.\n\nIt\'s not fancy, but it\'s clean. It\'s <em>yours</em>.\n\nAfter everything that\'s happened, that matters.\n\nYou adjust it. Make sure it sits right.\n\nIt\'ll work just fine.',
                 onEnter: () => {
-                    // Automatically wear basic white underwear
-                    gameState.currentOutfit.bra = { id: "basic_white_bra", name: "Basic White Bra", appeal: 1 };
-                    gameState.currentOutfit.panties = { id: "basic_white_panties", name: "Basic White Panties", appeal: 1 };
-                    gameState.currentOutfit.dress = { id: "sundress", name: "Simple Sundress", appeal: 33 };
-                    gameState.currentOutfit.top = null;
-                    gameState.currentOutfit.bottom = null;
-                    gameState.currentOutfit.outerwear = null;
+                    // The real sundress from her bag (stashes the worn dress); her own underwear stays on
+                    wearFromBag(['sundress']);
+                    stashWornSlot('outerwear');
                     updateStatus();
                 },
                 choices: [
@@ -157359,14 +157468,12 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
             
             wear_comfy: {
-                text: 'You pull on the black leggings and oversized sweater.\n\nComfortable. Cozy.\n\nThe leggings show off your legs. Your butt.\n\nBut the sweater hides everything else.\n\nYou look in the mirror.\n\nToo casual. Too covered.\n\nNot going to attract anyone like this.\n\nBut at least you\'re warm.',
+                text: 'You pull on the black leggings and your black tank, then the oversized sweater over it.\n\nComfortable. Cozy.\n\nThe leggings show off your legs. Your butt.\n\nBut the sweater hides everything else.\n\nYou look in the mirror.\n\nToo casual. Too covered.\n\nNot going to attract anyone like this.\n\nBut at least you\'re warm.',
                 onEnter: () => {
-                    // Automatically wear basic white underwear
-                    gameState.currentOutfit.bra = { id: "basic_white_bra", name: "Basic White Bra", appeal: 1 };
-                    gameState.currentOutfit.panties = { id: "basic_white_panties", name: "Basic White Panties", appeal: 1 };
-                    gameState.currentOutfit.top = { name: "Oversized Sweater", appeal: 3 };
-                    gameState.currentOutfit.bottom = { name: "Black Leggings", appeal: 5 };
-                    gameState.currentOutfit.outerwear = null;
+                    // Real pieces from her bag. The sweater's outerwear, so the tank goes
+                    // under it (a bra under outerwear alone counts as visible underwear).
+                    // A top or bottom going on stashes the dress. Her own underwear stays on.
+                    wearFromBag(['black_leggings', 'black_tank', 'oversized_sweater']);
                     updateStatus();
                 },
                 choices: [
@@ -157377,14 +157484,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             wear_party_dress_again: {
                 text: 'You look at the rumpled party dress.\n\nIt\'s a mess. Torn. Wrinkled.\n\nBut it\'s also the only sexy thing you own.\n\nShort enough to show legs. Fitted enough to hint at curves. Low-cut enough to draw eyes.\n\nYou put it back on.\n\nThe heels too.\n\nYou look in the mirror.\n\nMessy. But sexy.\n\nIt\'ll work. It has to.',
                 onEnter: () => {
-                    // Keep the same underwear as before (basic white set)
-                    gameState.currentOutfit.bra = { id: "basic_white_bra", name: "Basic White Bra", appeal: 1 };
-                    gameState.currentOutfit.panties = { id: "basic_white_panties", name: "Basic White Panties", appeal: 1 };
-                    gameState.currentOutfit.dress = { id: "party_dress", name: "Rumpled Black Dress", appeal: 5 };
-                    gameState.currentOutfit.top = null;
-                    gameState.currentOutfit.bottom = null;
-                    gameState.currentOutfit.outerwear = null;
-                    gameState.currentOutfit.footwear = { id: "basic_black_heels", name: "Basic Black Heels", appeal: 3, comfort: 1, mobility: 1, terrain: ["street", "park"], noise: 2, tags: ["edgy", "minimalist", "fit:structured", "material:synthetic"] };
+                    // The same party dress back on (from the bag if she took it off).
+                    // Her own underwear and shoes stay as they are.
+                    wearFromBag(['party_dress']);
+                    stashWornSlot('outerwear');
                     updateStatus();
                 },
                 choices: [
@@ -157392,6 +157495,76 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 ]
             },
             
+            // Bug fix (Step 9A): "skinny jeans and tank top" used to put on the sundress
+            wear_skinny_tank: {
+                text: 'You pull on the skinny jeans and the black tank.\n\nThe jeans hug your legs. The tank\'s plain, but it sits close enough to show you\'ve got a figure under it.\n\nYou look in the mirror.\n\nCasual. A little basic.\n\nBut it\'s clean, and it\'s the best thing in the bag.\n\nIt\'ll do.',
+                onEnter: () => {
+                    wearFromBag(['skinny_jeans', 'black_tank']);
+                    stashWornSlot('outerwear');
+                    updateStatus();
+                },
+                choices: [
+                    { text: "Head back to the living room", nextScene: "jaewon_apartment_chat" }
+                ]
+            },
+
+            // BEAUTY OBSESSED (Step 9E): one of her looks, straight out of the bag.
+            // gameState.flags._boLook is set by the own_clothes_check choice and cleared on Continue.
+            wear_bo_look: {
+                finalImage: "",
+                text: function() {
+                    const look = gameState.flags._boLook || 'satin';
+                    const o = gameState.currentOutfit;
+                    const key = o.dress || o.top;
+                    const syn = key ? getSynergyFlavorText(key) : null;
+                    const body = bodyTypeDescriptor();
+                    let t;
+                    if (look === 'garden') {
+                        t = 'The cream halter, the white flared mini, the blue orchid heels.\n\nGarden Party. Soft and bright, and the skirt moves every time you do.\n\n' + (syn || 'The halter sits on ' + body + ' like it was cut for you.') + '\n\nYou put this one together two summers ago. It\'s never once let you down.';
+                    } else if (look === 'denim') {
+                        t = 'The denim halter crop, the lace-up booty shorts, the denim platform mules.\n\nDouble Denim. A whole lot of leg and a little bit of stomach.\n\n' + (syn || 'The shorts sit low and tight on ' + body + ', and the laces do the rest.') + '\n\nYou turn around to check the back. Yeah. That\'s yours.';
+                    } else if (look === 'cozy') {
+                        t = 'The camel sherpa hoodie dress and the blue orchid heels.\n\nSoft as a blanket, and still short enough to show off your legs.\n\n' + (syn || 'It drapes over ' + body + ' and still somehow looks planned.') + '\n\nAfter the morning you\'ve had, you\'ve earned soft.';
+                    } else {
+                        t = 'The satin dress goes back on. The heels too.\n\nIt still looks incredible, and you know it. Last night didn\'t leave a mark on it.\n\n' + (syn || 'The satin slides over ' + body + ' and catches the light every time you move.') + '\n\nLittle Black Satin. Still your favorite.';
+                    }
+                    return t;
+                },
+                onEnter: () => {
+                    const look = gameState.flags._boLook || 'satin';
+                    wearFromBag(BO_JAEWON_LOOKS[look] || BO_JAEWON_LOOKS.satin);
+                    advanceTime(TIME_COSTS.CHANGE_CLOTHES);
+                    updateStatus();
+                },
+                choices: [
+                    { text: "Head back to the living room", nextScene: "jaewon_apartment_chat", effect: () => { gameState.flags._boLook = null; } }
+                ]
+            },
+
+            // BEAUTY OBSESSED (Step 9E): she keeps her look on and takes only the jacket.
+            wear_bo_with_jacket: {
+                finalImage: "",
+                text: function() {
+                    const w = getBOLookWords();
+                    const satin = gameState.currentOutfit.dress && gameState.currentOutfit.dress.id === 'bo_satin_black_mini_dress';
+                    return 'You leave ' + w.dress + ' right where it is and take only the jacket.\n\nIt slides on like it was waiting for you. Cropped, black, silver zippers catching the light.' + (satin ? ' Black leather over black satin.' : '') + '\n\nYou look in the mirror. Your own look with one borrowed piece, and it reads like a whole new outfit.\n\nYou open the door.\n\nJaewon looks up from the couch. Her eyebrows go up.\n\n"Okay, that\'s unfair," she says. "I\'ve had that jacket two years. It\'s never once looked like that on me."\n\n"I\'ll give it back tonight."\n\n"Keep it."\n\n"Jaewon—"\n\n"Keep it." She points at you with her mug. "It\'s yours now. It was clearly waiting for you."\n\n"Thank you," you say, and you mean it more than she knows.';
+                },
+                onEnter: () => {
+                    stashWornSlot('outerwear');
+                    gameState.currentOutfit.outerwear = { id: "jaewon_leather_jacket", name: "Jaewon\'s Cropped Leather Jacket", category: "outerwear", appeal: 16, owned: true };
+                    // Remove it from Jaewon's wardrobe permanently; it's Kelsie's now
+                    initializeJaewonWardrobe();
+                    const jaewonW = gameState.wardrobes.jaewon;
+                    const idx = jaewonW.findIndex(i => i.id === 'jaewon_leather_jacket');
+                    if (idx !== -1) jaewonW.splice(idx, 1);
+                    gameState.flags.jaewonGaveOutfit = true;
+                    updateStatus();
+                },
+                choices: [
+                    { text: '<img src="Images/icons/check-mark.png" class="icon" alt="continue"> Continue', nextScene: "jaewon_apartment_chat" }
+                ]
+            },
+
             wear_own_other: {
                 text: 'You look at your backpack, considering your options.\n\nTime to see what you have and pick something that works.',
                 onEnter: () => {
