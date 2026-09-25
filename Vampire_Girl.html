@@ -19490,6 +19490,7 @@ audioSystem.playSFX('buttonClick');
                     suggestions.forEach(function(s) {
                         html += '<div style="color:#ccaa88;margin:2px 0;"><img src="Images/icons/dress-code-hint.png" class="icon" alt="hint" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"> <strong>' + s.venue + '</strong> is nearby. Try something ' + s.styles;
                         if (s.minAppeal > 0) html += ' (appeal ' + s.minAppeal + '+)';
+                        if (s.note) html += '<br><span style="color:#ffb3e6;">' + s.note + '</span>';
                         html += '</div>';
                     });
                     dcEl.innerHTML = html;
@@ -36640,6 +36641,12 @@ audioSystem.playSFX('buttonClick');
         }
 
         // Smart outfit suggestion for clothing inventory
+        // BEAUTY OBSESSED: the upscale doors take her collection
+        function _boDoorNote() {
+            if (!isBeautyObsessed() || !ownsBOPieces()) return '';
+            return 'Any dress from your collection except the sherpa hoodie dress gets you past the door, and so does a collection top with a collection bottom.';
+        }
+
         function getLocationOutfitSuggestion() {
             var locId = gameState.currentLocationId || '';
             var scene = gameState.currentScene || '';
@@ -36650,7 +36657,7 @@ audioSystem.playSFX('buttonClick');
             if (locId === 'outside_lucius_lounge' || locId === 'downtown_district_street') {
                 var checkLL = checkDressCode('lucius_lounge');
                 if (checkLL && !checkLL.fitsIn) {
-                    suggestions.push({ venue: "Lucius\' Lounge", styles: 'glamorous, provocative, or edgy', minAppeal: 60 });
+                    suggestions.push({ venue: "Lucius\' Lounge", styles: 'glamorous, provocative, or edgy', minAppeal: 60, note: _boDoorNote() });
                 }
                 var checkHB = checkDressCode('hunt_hardy_bar');
                 if (checkHB && checkHB.standsOut) {
@@ -36662,7 +36669,7 @@ audioSystem.playSFX('buttonClick');
                 }
                 var checkRH = checkDressCode('luxury_hotel_lobby');
                 if (checkRH && (!checkRH.fitsIn || checkRH.underDressed)) {
-                    suggestions.push({ venue: "The Regency Hotel", styles: 'elegant or professional', minAppeal: 60 });
+                    suggestions.push({ venue: "The Regency Hotel", styles: 'elegant or professional', minAppeal: 60, note: _boDoorNote() });
                 }
             }
             if (locId === 'outside_hardy_bar') {
@@ -36680,7 +36687,7 @@ audioSystem.playSFX('buttonClick');
             if (locId === 'outside_luxury_hotel') {
                 var checkRH2 = checkDressCode('luxury_hotel_lobby');
                 if (checkRH2 && (!checkRH2.fitsIn || checkRH2.underDressed)) {
-                    suggestions.push({ venue: "The Regency Hotel", styles: 'elegant or professional', minAppeal: 60 });
+                    suggestions.push({ venue: "The Regency Hotel", styles: 'elegant or professional', minAppeal: 60, note: _boDoorNote() });
                 }
             }
             if (locId === 'outside_noir_boutique' || locId === 'commercial_district_street' || locId === 'commercial_street') {
@@ -42004,52 +42011,65 @@ audioSystem.playSFX('buttonClick');
             return hour >= 7 && hour < 22; // 7 AM - 10 PM
         }
         
-        function isWearingNoirBoutique() {
-            // Check if wearing at least one Noir Boutique item OR an Urban Edge dress
-            const outfit = gameState.currentOutfit;
-            
+        // Upscale door check for Lucius' Lounge and the Regency Hotel.
+        // Returns { ok, via } where via is 'beauty', 'noir', 'urban', or 'jaewon'.
+        function meetsUpscaleDressCode() {
+            const outfit = gameState.currentOutfit || {};
+
+            // BEAUTY OBSESSED: any collection dress flagged upscale (every dress but the
+            // sherpa), or a collection top worn with a collection bottom
+            const _boDef = (it) => (it && typeof getBOItemDef === 'function') ? getBOItemDef(it.id) : null;
+            if (outfit.dress && _boDef(outfit.dress) && _boDef(outfit.dress).upscale) return { ok: true, via: 'beauty' };
+            if (outfit.top && outfit.bottom && _boDef(outfit.top) && _boDef(outfit.bottom)) return { ok: true, via: 'beauty' };
+
             // Urban Edge dresses
-            const urbanEdgeDresses = [
-                'mesh_club_dress', 'bodycon_dress', 'wrap_dress', 'skater_dress',
-                // Jaewon's dresses (Urban Edge quality)
-                'jaewon_wrap_dress', 'jaewon_knit_dress', 'jaewon_floral_midi'
-            ];
-            
-            // Check if wearing an Urban Edge dress
-            if (outfit.dress && urbanEdgeDresses.some(dressId => outfit.dress.id === dressId)) {
-                return true;
-            }
-            
+            const urbanEdgeDresses = ['mesh_club_dress', 'bodycon_dress', 'wrap_dress', 'skater_dress'];
+            // Jaewon's dresses (Urban Edge quality)
+            const jaewonDresses = ['jaewon_wrap_dress', 'jaewon_knit_dress', 'jaewon_floral_midi'];
+
+            // At least one Noir Boutique piece, anywhere on her. Ids checked against
+            // shopInventories.noir_boutique. (Urban Edge also sells a statement_ring and
+            // leather_pants under the same ids, so neither counts here.)
             const noirItems = [
                 // Underwear
-                'luxury_lace', 'silk_burgundy', 'corset_set',
+                'luxury_lace_bra', 'luxury_lace_panties', 'silk_burgundy_bra', 'silk_burgundy_panties', 'corset_bra', 'corset_panties',
                 // Tops
-                'silk_cami', 'designer_bodysuit', 'backless_top',
+                'silk_cami', 'backless_top',
                 // Bottoms
                 'designer_jeans', 'pencil_skirt', 'slit_skirt',
                 // Dresses
-                'cocktail_dress', 'evening_gown', 'little_black_dress', 'silk_slip_dress',
+                'cocktail_dress', 'evening_gown', 'little_black_dress', 'silk_slip_dress', 'designer_bodysuit',
                 // Outerwear
                 'designer_coat', 'fur_trim_jacket',
                 // Footwear
                 'designer_heels', 'knee_boots',
                 // Headwear
                 'wide_brim_hat',
-                // Accessories
-                'diamond_earrings', 'pearl_necklace', 'statement_ring'
+                // Jewelry
+                'diamond_earrings', 'pearl_necklace', 'diamond_ring'
             ];
-            
-            // Check each outfit slot
-            if (outfit.dress && noirItems.includes(outfit.dress.id)) return true;
-            if (outfit.underwear && noirItems.includes(outfit.underwear.id)) return true;
-            if (outfit.top && noirItems.includes(outfit.top.id)) return true;
-            if (outfit.bottom && noirItems.includes(outfit.bottom.id)) return true;
-            if (outfit.outerwear && noirItems.includes(outfit.outerwear.id)) return true;
-            if (outfit.footwear && noirItems.includes(outfit.footwear.id)) return true;
-            if (outfit.headwear && noirItems.includes(outfit.headwear.id)) return true;
-            if (outfit.accessories && noirItems.includes(outfit.accessories.id)) return true;
-            
-            return false;
+            const slots = ['bra', 'panties', 'top', 'bottom', 'dress', 'outerwear', 'footwear', 'headwear', 'neckwear', 'earrings', 'rings'];
+            if (slots.some(sl => outfit[sl] && noirItems.includes(outfit[sl].id))) return { ok: true, via: 'noir' };
+
+            if (outfit.dress && urbanEdgeDresses.includes(outfit.dress.id)) return { ok: true, via: 'urban' };
+            if (outfit.dress && jaewonDresses.includes(outfit.dress.id)) return { ok: true, via: 'jaewon' };
+
+            return { ok: false, via: null };
+        }
+
+        // Kept so every existing caller keeps working
+        function isWearingNoirBoutique() {
+            return meetsUpscaleDressCode().ok;
+        }
+
+        // True when she owns any collection piece (worn, carried, or stored).
+        function ownsBOPieces() {
+            if (typeof isBOItem !== 'function') return false;
+            const o = gameState.currentOutfit || {};
+            if (Object.keys(o).some(k => o[k] && isBOItem(o[k]))) return true;
+            if ((gameState.inventory.clothing || []).some(isBOItem)) return true;
+            const w = gameState.wardrobes || {};
+            return Object.keys(w).some(k => Array.isArray(w[k]) && w[k].some(isBOItem));
         }
         
         function getSeductionBonus() {
@@ -100712,7 +100732,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         
                         // Tell them what they need
                         desc += '<strong>Requirements to enter:</strong>\n';
-                        desc += (hasNoirClothes ? '<span style="color: #66ff66;">✓</span>' : '<span style="color: #ff6666;">✗</span>') + ' Urban Edge dress or Noir Boutique clothing\n';
+                        desc += (hasNoirClothes ? '<span style="color: #66ff66;">✓</span>' : '<span style="color: #ff6666;">✗</span>') + (isBeautyObsessed() ? ' Urban Edge dress, Noir Boutique clothing, or a look from your collection\n' : ' Urban Edge dress or Noir Boutique clothing\n');
                         desc += (hygieneOk ? '<span style="color: #66ff66;">✓</span>' : '<span style="color: #ff6666;">✗</span>') + ' Good hygiene (70+)\n';
                         desc += (hairOk ? '<span style="color: #66ff66;">✓</span>' : '<span style="color: #ff6666;">✗</span>') + ' Hair brushed and styled\n';
                         desc += (makeupOk ? '<span style="color: #66ff66;">✓</span>' : '<span style="color: #ff6666;">✗</span>') + ' Makeup applied';
@@ -101069,7 +101089,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     var desc = '';
 
                     // ── Page 1: Entry ──
-                    desc += 'The bouncer unhooks the velvet rope. You step through.\n\n';
+                    // BEAUTY OBSESSED: his once-over stops at the dress
+                    if (meetsUpscaleDressCode().via === 'beauty') desc += 'The bouncer looks you over. His eyes stop at the ' + (gameState.currentOutfit.dress ? 'dress' : 'outfit') + ', and he unhooks the velvet rope and steps aside.\n\n';
+                    else desc += 'The bouncer unhooks the velvet rope. You step through.\n\n';
                     desc += 'Bass hits you in the ribs before your eyes adjust. The door swings shut behind you and the street goes silent, swallowed by a wall of sound that climbs through the floor and settles in your chest.\n\n';
                     desc += 'Your eyes adjust. The dark isn\'t dark. It\'s colored. Purple wash. Blue strobes cutting through haze. Pink accents tracing the bar and the booths.\n\nEverything pulses.';
 
@@ -101136,7 +101158,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     var desc = '';
 
                     // ── Page 1: Entry ──
-                    desc += 'The bouncer waves you through. Inside, the first thing that registers is the quiet.\n\n';
+                    // BEAUTY OBSESSED: his once-over stops at the dress
+                    if (meetsUpscaleDressCode().via === 'beauty') desc += 'The bouncer looks you over. His eyes stop at the ' + (gameState.currentOutfit.dress ? 'dress' : 'outfit') + ', and he steps aside. Inside, the first thing that registers is the quiet.\n\n';
+                    else desc += 'The bouncer waves you through. Inside, the first thing that registers is the quiet.\n\n';
                     desc += 'The lights are up. Soft amber. Without the crowd, the space opens in every direction. High ceilings arching overhead, polished hardwood floors, deep burgundy leather booths lining the walls.\n\n';
                     desc += 'It\'s bigger than you expected. And prettier. Designed by someone who understood that money looks best when it isn\'t trying.';
 
@@ -139389,6 +139413,11 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const hasNoirClothes = isWearingNoirBoutique();
                     
                     let desc = 'You\'re in Downtown. The Regency Hotel towers above you.\n\nValet parking out front. Luxury cars coming and going. Doorman in uniform.\n\nEverything about this place screams wealth.\n\nThe entrance is marked by elegant gold-trimmed doors. Well-dressed guests flow in and out.';
+
+                    // BEAUTY OBSESSED: one practiced glance and a nod
+                    if (hasNoirClothes && meetsUpscaleDressCode().via === 'beauty') {
+                        desc += '\n\nThe doorman takes in the ' + (gameState.currentOutfit.dress ? 'dress' : 'outfit') + ' with one practiced glance and gives you a small nod.';
+                    }
 
                     if (!hasNoirClothes) {
                         desc += '\n\nThe doorman gives you a professional once-over. His expression is polite but firm.\n\n"I\'m sorry, ma\'am. The Regency maintains a dress code. You\'ll need designer attire from Noir Boutique or at minimum an evening dress from Urban Edge."\n\nYou need proper high-end clothing to enter.';

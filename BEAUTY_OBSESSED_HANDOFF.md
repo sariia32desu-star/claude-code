@@ -243,8 +243,8 @@ Useful function names (search for them; line numbers drift): `getBodyBaseAppeal`
 | 8 | Meeting Jaewon | Done |
 | 9 | The clothing choice at Jaewon's (bug fixes + variants) | Done |
 | 10 | The city sees her | Done |
-| 11 | Upscale access | **NEXT** |
-| 12 | The buffs: her face, her eye, her draw | |
+| 11 | Upscale access | Done |
+| 12 | The buffs: her face, her eye, her draw | **NEXT** |
 | 13 | The ritual and the mirror | |
 | 14 | Evolution: staying radiant | |
 | 15 | UI and Tips & Guide | |
@@ -396,7 +396,9 @@ The live walks hardcode "Your basic outfit stands out here" and "In your rumpled
 
 ---
 
-## 11. Step 11: Upscale Access
+## 11. Step 11: Upscale Access (DONE)
+
+**As shipped:** `meetsUpscaleDressCode()` returns `{ ok, via }` (checks beauty first). Noir ids fixed to the catalog and checked across bra, panties, top, bottom, dress, outerwear, footwear, headwear, neckwear, earrings, rings. `statement_ring` dropped from the list (Urban Edge sells the same id) and replaced by `diamond_ring`. Door lines in `lucius_lounge_first_night` / `_first_day` and `outside_luxury_hotel`; the Lucius rejection checklist names her collection; `ownsBOPieces()` and `_boDoorNote()` add a note to the Lucius and Regency outfit suggestions.
 
 ### 11A. Replace the whitelist
 Move the logic of `isWearingNoirBoutique()` into `meetsUpscaleDressCode()`, returning `{ ok, via }` where `via` is `'noir'`, `'urban'`, `'jaewon'`, or `'beauty'`. Keep `isWearingNoirBoutique()` as a wrapper (`return meetsUpscaleDressCode().ok;`) so all call sites keep working.
@@ -539,7 +541,7 @@ New helpers still to build: `meetsUpscaleDressCode()` (11), `trySmearMakeup(sour
 | 5 | `jaewon_just_change` changes nothing | Fixed (Step 9) |
 | 6 | Two of three prologue packing arrays omit `cleanliness` | Fixed (Step 6) |
 | 7 | `walk_to_*` scenes defined twice | Fixed (before Step 10) |
-| 8 | `isWearingNoirBoutique()` checks nonexistent ids and an `underwear` slot | Step 11B |
+| 8 | `isWearingNoirBoutique()` checks nonexistent ids and an `underwear` slot | Fixed (Step 11) |
 | 9 | Quiet and Sharp Eyes missing from `TRAITS` | Fixed (extra) |
 | 10 | Set badge reported only the first ensemble an item belonged to | Fixed (Step 2) |
 | 11 | `wear_sundress` overwrites the worn dress without stashing it | Fixed (Step 9) |
