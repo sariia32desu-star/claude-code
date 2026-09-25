@@ -101240,6 +101240,21 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     
                     // Inside descriptions by time
                     let desc = '';
+
+                    // BEAUTY OBSESSED: the bouncer's once-over on a regular visit
+                    if (gameState.flags._luciusJustArrived && meetsUpscaleDressCode().via === 'beauty') {
+                        var _lw = getBOLookWords().dress;
+                        var _lDay = (gameState.time && gameState.time.day) || 1;
+                        var _lPool = (isNightTime || timeOfDay === 'evening') ? [
+                            'The bouncer looks you over on your way in. His eyes stop at ' + _lw + ', and the rope comes off its hook before you reach it.\n\n',
+                            'The bouncer knows you by now. He still gives ' + _lw + ' a second look before he steps aside.\n\n',
+                            '"Evening." The bouncer\'s eyes drop to ' + _lw + ' and come back up slower. He unhooks the rope.\n\n'
+                        ] : [
+                            'The bouncer glances up from his phone, clocks ' + _lw + ', and waves you through.\n\n',
+                            'The bouncer looks you over out of habit. His eyes catch on ' + _lw + ' for a second, then he nods you in.\n\n'
+                        ];
+                        desc += _lPool[_lDay % _lPool.length];
+                    }
                     
                     if (isNightTime) {
                         if (hour > 23) {
@@ -101402,6 +101417,14 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     return desc.split('[[PAGE]]').map(function(p){ return p.replace(/^[\n]+|[\n]+$/g, ''); }).filter(function(p){ return p.length > 0; });
                 },
                 onEnter: () => {
+                    // Door check: a failed entry leaves her on the street side of the rope,
+                    // so the bouncer's refusal (parts) and the Leave-only choices both show.
+                    if (!gameState.flags._insideLuciusLounge) {
+                        var _dOk = isWearingNoirBoutique() && gameState.hygiene >= 70
+                            && (gameState.bodyState.hairGroom === 'styled' || gameState.bodyState.hairGroom === 'salon')
+                            && gameState.bodyState.makeup === true;
+                        if (!_dOk) { gameState.flags._luciusJustArrived = false; return; }
+                    }
                     // ── First-visit redirect ──
                     if (!gameState.flags.visitedLuciusLounge) {
                         var _nClothes = isWearingNoirBoutique();
@@ -101459,6 +101482,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                             return;
                         }
                     }
+                    // A fresh arrival (not a return from inside) is who the bouncer sees.
+                    gameState.flags._luciusJustArrived = !gameState.flags._insideLuciusLounge;
                     gameState.flags._insideLuciusLounge = true;
                 },
                 choices: function() {
@@ -139912,7 +139937,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     }
 
                     if (!hasNoirClothes) {
-                        desc += '\n\nThe doorman gives you a professional once-over. His expression is polite but firm.\n\n"I\'m sorry, ma\'am. The Regency maintains a dress code. You\'ll need designer attire from Noir Boutique or at minimum an evening dress from Urban Edge."\n\nYou need proper high-end clothing to enter.';
+                        desc += '\n\nThe doorman gives you a professional once-over. His expression is polite but firm.\n\n"I\'m sorry, ma\'am. The Regency maintains a dress code, and what you\'re wearing isn\'t adequate for our establishment."\n\nYou need proper high-end clothing to enter.';
                     }
 
                     
