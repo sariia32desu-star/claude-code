@@ -45413,7 +45413,7 @@ audioSystem.playSFX('buttonClick');
             }
             // Face privilege: strength-XP penalty from the face she GREW UP with (not the current one).
             var _startFace = (ba.startingFacialBeauty) || ba.facialBeauty || 'ordinary';
-            if (_startFace === 'gorgeous' || _startFace === 'pretty') {
+            if ((_startFace === 'gorgeous' || _startFace === 'pretty') && !(typeof hasTrait === 'function' && hasTrait('pretty_face'))) {
                 faceInner += _bpRow('Born beautiful (strength XP)', _startFace === 'gorgeous' ? '\u221210% (easier upbringing)' : '\u22125% (easier upbringing)', '#ff8866');
             }
             if (typeof hasTrait === 'function' && hasTrait('pretty_face')) {
@@ -48035,6 +48035,8 @@ audioSystem.playSFX('buttonClick');
         // pretty -5%, ordinary none. Reads startingFacialBeauty, never the current face, so
         // raising her looks later at Godpeia carries no penalty (no privileged upbringing).
         function getStartingFaceStrengthMultiplier() {
+            // Beauty Obsessed: thirteen years of work, not an easy ride. No face-privilege penalty.
+            if (typeof hasTrait === 'function' && hasTrait('pretty_face')) return 1.0;
             var start = (gameState.bodyAppearance && gameState.bodyAppearance.startingFacialBeauty) || 'ordinary';
             if (start === 'gorgeous') return 0.90;
             if (start === 'pretty') return 0.95;
@@ -211013,7 +211015,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                             {
                                 id: 'face_gorgeous',
                                 label: 'Continue',
-                                text: 'A photographer at the mall asks Margaret about a portfolio shoot. Twice.\n\nThe flip side: beauty like this clears obstacles before you reach them. You never had to be strong, so you never became it. (−10% Strength XP.)',
+                                resultHeading: 'Gorgeous',
+                                text: 'A photographer at the mall asks Margaret about a portfolio shoot. Twice.',
                                 karma: 0, corruption: 0,
                                 facialBeauty: 'gorgeous',
                                 result: 'Margaret says no to the photographer both times. You\'re the one who wanted to say yes.\n\nShe spends the whole drive home reminding you that grades last longer than cheekbones, and you stare at your reflection in the window the entire way.'
@@ -216230,7 +216233,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 statParts.push('<span style="color:#ff69b4">+' + _faA[choice.facialBeauty] + ' <img src="Images/icons/sparkle.png" style="width:14px;height:14px;vertical-align:middle;"> Appeal (' + choice.facialBeauty.charAt(0).toUpperCase() + choice.facialBeauty.slice(1) + ')</span>');
                 if (choice.facialBeauty === 'gorgeous') {
                     statParts.push('<span style="color:#b0e0a0">+20 Allure, strongest first impressions &amp; earnings. Downside: unforgettable (witnesses describe you, faster police recognition)</span>');
-                    statParts.push('<span style="color:#ff8866;font-weight:600;">\u221210% Strength XP (grew up privileged)</span>');
+                    // Beauty Obsessed: she worked for this face, so no face-privilege strength penalty
+                    if (!ccIsBO()) statParts.push('<span style="color:#ff8866;font-weight:600;">\u221210% Strength XP (grew up privileged)</span>');
                 } else {
                     statParts.push('<span style="color:#b0e0a0">+10 Allure, favorable first impressions, solid all-rounder</span>');
                     statParts.push('<span style="color:#ff8866;font-weight:600;">\u22125% Strength XP (grew up a little privileged)</span>');
@@ -216314,7 +216318,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             setTimeout(function() {
                 ccOpenCinematic(bodyChunks, resultText, statHtml, {
                     isLast: isLast,
-                    chosenLabel: typeof choice.label === 'function' ? choice.label() : choice.label,
+                    chosenLabel: choice.resultHeading || (typeof choice.label === 'function' ? choice.label() : choice.label),
                     karmaChange: choice.karma || 0,
                     onUndo: function() {
                         ccRevertChoice();
