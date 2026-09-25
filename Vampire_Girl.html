@@ -43593,15 +43593,14 @@ audioSystem.playSFX('buttonClick');
             return boVal('makeupAppeal', 20);
         }
 
-        // Every "makeup smears" moment runs through here. Her own makeup rolls
-        // against her tier's smear resistance first. Returns true if it smeared.
+        // Every "makeup smears" moment runs through here. Any makeup on her face
+        // (her own or Godpeia premium) rolls against her tier's smear resistance
+        // first. Returns true if it smeared.
         function trySmearMakeup(source) {
             var bs = gameState.bodyState;
             if (!bs || !bs.makeup || bs.makeup === 'smeared') return false;
-            if (bs.makeup === true) {
-                var resist = boVal('smearResist', 0);
-                if (resist > 0 && Math.random() < resist) return false;
-            }
+            var resist = boVal('smearResist', 0);
+            if (resist > 0 && Math.random() < resist) return false;
             bs.makeup = 'smeared';
             return true;
         }
@@ -45492,7 +45491,8 @@ audioSystem.playSFX('buttonClick');
                 var _bo = getBOEvolutionData();
                 faceInner += _bpRow('Tier', _bo.name, '#ffb3e6');
                 faceInner += _bpRow('Base appeal', '+' + _bo.baseAppeal + ' on top of your face', '#88ff88');
-                faceInner += _bpRow('Your own makeup', '+' + _bo.makeupAppeal + (_bo.smearResist > 0 ? ', shrugs off ' + Math.round(_bo.smearResist * 100) + '% of smears' : '') + ', on in 5 min', '#88ff88');
+                faceInner += _bpRow('Your own makeup', '+' + _bo.makeupAppeal + ', on in 5 min', '#88ff88');
+                if (_bo.smearResist > 0) faceInner += _bpRow('Smear resistance', Math.round(_bo.smearResist * 100) + '% (any makeup, Godpeia included)', '#88ff88');
                 faceInner += _bpRow('Allure floor', '+' + _bo.allureFloor, '#88ff88');
                 faceInner += _bpRow('First impressions', '+' + _bo.firstImpression, '#88ff88');
                 faceInner += _bpRow('Coordinated at', Math.round(_bo.coherenceAt * 100) + '% (usually 75%)', '#88ff88');
@@ -215170,7 +215170,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         id: 'pretty_face',
                         name: 'Beauty Obsessed',
                         startBonus: '+2 Charisma Levels, +15 Base Appeal. Starts with her 32-piece collection, a designer backpack (50 slots), and her makeup bag.',
-                        passive: 'Immaculate: +15 base appeal. Your own makeup lands harder (+28). Grooming flaws hit at half strength. A daily routine leaves a fresh-skin glow. Evolves as you stay radiant.',
+                        passive: 'Immaculate: +15 base appeal. Your own makeup lands harder (+28). Grooming flaws hit at half strength, and a short nap won\'t wreck your hair. A daily routine leaves a fresh-skin glow. Evolves as you stay radiant.',
                         apply: function() {
                             gameState.charisma += 2;
                             // Worn outfit and designer backpack (Beauty Obsessed overhaul, Step 6)
@@ -215184,28 +215184,28 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                                 minDays: 0,
                                 baseAppeal: 15, makeupAppeal: 28, allureFloor: 6, firstImpression: 3, ritualGlow: 6,
                                 tipBonus: 0.08, smearResist: 0, coherenceAt: 0.70, bonusCharisma: 0,
-                                passive: 'Immaculate: +15 base appeal. Your own makeup lands harder (+28). Grooming flaws hit at half strength. A daily routine leaves a fresh-skin glow. Evolves as you stay radiant.'
+                                passive: 'Immaculate: +15 base appeal. Your own makeup lands harder (+28). Grooming flaws hit at half strength, and a short nap won\'t wreck your hair. A daily routine leaves a fresh-skin glow. Evolves as you stay radiant.'
                             },
                             2: {
                                 name: 'Polished',
                                 minDays: 7,
                                 baseAppeal: 20, makeupAppeal: 30, allureFloor: 9, firstImpression: 4, ritualGlow: 7,
                                 tipBonus: 0.10, smearResist: 0.20, coherenceAt: 0.70, bonusCharisma: 1,
-                                passive: 'Polished: +20 base appeal. Your own makeup gives +30 and shrugs off 20% of smears. Grooming flaws hit at half strength. Your routine glows brighter, and your allure, first impressions, and tips all climb. Keep staying radiant.'
+                                passive: 'Polished: +20 base appeal. Your own makeup gives +30, and any makeup on your face shrugs off 20% of smears. Grooming flaws hit at half strength, and a short nap won\'t wreck your hair. Your routine glows brighter, and your allure, first impressions, and tips all climb. Keep staying radiant.'
                             },
                             3: {
                                 name: 'Flawless',
                                 minDays: 21,
                                 baseAppeal: 25, makeupAppeal: 32, allureFloor: 12, firstImpression: 5, ritualGlow: 8,
                                 tipBonus: 0.12, smearResist: 0.40, coherenceAt: 0.65, bonusCharisma: 1,
-                                passive: 'Flawless: +25 base appeal. Your own makeup gives +32 and holds through 40% of smears. Your looks read as Coordinated more easily. Grooming flaws hit at half strength. Keep staying radiant.'
+                                passive: 'Flawless: +25 base appeal. Your own makeup gives +32, and any makeup on your face holds through 40% of smears. Your looks read as Coordinated more easily. Grooming flaws hit at half strength, and a short nap won\'t wreck your hair. Keep staying radiant.'
                             },
                             4: {
                                 name: 'Iconic',
                                 minDays: 45,
                                 baseAppeal: 30, makeupAppeal: 35, allureFloor: 15, firstImpression: 6, ritualGlow: 10,
                                 tipBonus: 0.15, smearResist: 0.60, coherenceAt: 0.65, bonusCharisma: 1, relationshipMult: 1.10,
-                                passive: 'Iconic: +30 base appeal. Your own makeup gives +35, a match for Godpeia, and holds through 60% of smears. Grooming flaws hit at half strength. While you look the part, people warm to you faster.'
+                                passive: 'Iconic: +30 base appeal. Your own makeup gives +35, a match for Godpeia, and any makeup on your face holds through 60% of smears. Grooming flaws hit at half strength, and a short nap won\'t wreck your hair. While you look the part, people warm to you faster.'
                             }
                         }
                     }
