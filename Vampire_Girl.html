@@ -62794,7 +62794,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     let t = '';
 
                     if (k >= 1000) {
-                        return 'She\'s still smiling. Just barely. The blush hasn\'t quite faded and she keeps pressing the outside of the pocket where she put the money, like she needs to make sure it\'s real.\n\nThe panic that was eating her alive ten minutes ago is gone. What\'s left is this stunned, wrung-out quiet. Relief sitting heavy on her shoulders, the good kind of heavy.\n\nShe lets out a long breath. Scrubs at her face with both hands.\n\n"Okay." A shaky laugh. "I\'m a mess. I know I\'m a mess. I look like I\'ve been crying in an alley for two hours because I literally have been crying in an alley for two hours."\n\nShe digs through her bag and comes up with a battered pack of gum. Holds it out.\n\n"Here. You just gave me five hundred dollars and this is all I can offer you, so."\n\nYou take a piece. She watches you while you unwrap it, and now that she\'s not drowning, her eyes sharpen. Gentle, but paying attention. Looking at you properly for the first time.\n\n' + (isBeautyObsessed()
+                        return 'She\'s still smiling. Just barely. The blush hasn\'t quite faded and she keeps pressing the outside of the pocket where she put the money, like she needs to make sure it\'s real.\n\nThe panic that was eating her alive ten minutes ago is gone. What\'s left is this stunned, wrung-out quiet. Relief sitting heavy on her shoulders, a good heavy.\n\nShe lets out a long breath. Scrubs at her face with both hands.\n\n"Okay." A shaky laugh. "I\'m a mess. I know I\'m a mess. I look like I\'ve been crying in an alley for two hours because I literally have been crying in an alley for two hours."\n\nShe digs through her bag and comes up with a battered pack of gum. Holds it out.\n\n"Here. You just gave me five hundred dollars and this is all I can offer you, so."\n\nYou take a piece. She watches you while you unwrap it, and now that she\'s not drowning, her eyes sharpen. Gentle, but paying attention. Looking at you properly for the first time.\n\n' + (isBeautyObsessed()
                             ? (gameState.flags.boFixedFaceAtHome
                                 ? 'The satin dress. The designer backpack. A face that\'s perfectly done.\n\nEvery piece of it looks expensive. None of it belongs in an alley.'
                                 : 'The satin dress. The designer backpack. Smudged mascara on a face that\'s somehow still gorgeous anyway.\n\nEvery piece of it looks expensive. None of it belongs in an alley.')
@@ -143306,7 +143306,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (getHairLengthTier().id === 'very_long') {
                         out.push({ text: '<span style="color:#888;">(Your hair\'s already as long as it goes.)</span>', nextScene: 'godpeia_salon_extensions' });
                     } else {
-                        out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Add length, all the way ($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.extensions) + ')', action: () => godpeiaExtensions() });
+                        out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Add length, down to your waist ($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.extensions) + ')', action: () => godpeiaExtensions() });
                     }
                     out.push({ text: '<img src="Images/icons/door.png" class="icon" alt="back"> Not today', nextScene: 'godpeia_salon' });
                     return out;
@@ -156887,7 +156887,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             // NOIR BOUTIQUE - Complete sequence
             noir_entrance: {
-                text: () => 'You push through the glass door and the street noise cuts off behind you.\n\nNoir Boutique hits you in layers. The air first. Something floral and warm, piped through the vents. Then the carpet, thick enough that your footsteps disappear.\n\nThe place is alive. A woman in a camel coat browses silk blouses near the window, tilting one toward the light. Two friends in heels pick through a rack of evening dresses, murmuring to each other. A man in a fitted suit sits in a leather armchair near the back, scrolling his phone while his girlfriend tries things on behind a curtain.\n\nStaff move between customers. Three that you can count. All in black. All polished. A tall girl adjusts a mannequin display. A guy with a sharp jawline carries a garment bag toward the fitting rooms. A third, the one closest to the entrance, notices you and starts walking over.\n\nShe\'s maybe twenty-five. Hair pulled back tight. Small gold earrings. Heels that click on the marble border between carpet sections.\n\n"Welcome to Noir Boutique," she says. Warm, professional. "First time with us?"\n\n' + (gameState.flags._boStaffLine === 'noir'
+                text: () => 'You push through the glass door and the street noise cuts off behind you.\n\nNoir Boutique hits you in layers. The air first. Something floral and warm, piped through the vents. Then the carpet, thick enough that your footsteps disappear.\n\nThe place is alive. A woman in a linen blazer browses silk blouses near the window, tilting one toward the light.\n\nTwo friends in heels pick through a rack of evening dresses, murmuring to each other. A man in a fitted suit sits in a leather armchair near the back, scrolling his phone while his girlfriend tries things on behind a curtain.\n\nStaff move between customers. Three that you can count. All in black. All polished. A tall girl adjusts a mannequin display. A guy with a sharp jawline carries a garment bag toward the fitting rooms. A third, the one closest to the entrance, notices you and starts walking over.\n\nShe\'s maybe twenty-five. Hair pulled back tight. Small gold earrings. Heels that click on the marble border between carpet sections.\n\n"Welcome to Noir Boutique," she says. Warm, professional. "First time with us?"\n\n' + (gameState.flags._boStaffLine === 'noir'
                     ? 'Her eyes sweep your outfit. Quick, trained. They stop on your ' + proseItemName(getWornBOPiece()) + ', then come back up to your face.\n\n"That\'s a beautiful piece," she says. "It isn\'t one of ours. I\'m a little jealous."\n\nFrom a girl at Noir Boutique, you\'re pretty sure that\'s a compliment.'
                     : 'Her eyes sweep your outfit. Quick, trained. She doesn\'t react, but you can feel the assessment.') + '\n\n"Take your time. Everything on the floor is current season. Let me know if you\'d like a fitting room."',
                 onEnter: () => {
@@ -157629,7 +157629,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (helped) {
                         part1 += 'She pulls out her phone as you reach the mouth of the alley. Dials a number. You watch her press it to her ear, jaw tight, fingers curled around the cash in her pocket.\n\n"Hi, yes, I\'m calling about the manual transfer for Taofa. Room 614." A pause. "I have the money. I\'m on my way to deposit it right now, can you hold the window?" Another pause, longer. Then her whole face changes. "You can? Oh my God. Thank you. Thank you so much."\n\nShe hangs up and presses the back of her hand to her mouth.\n\n"They\'re holding it," she says, mostly to herself. "I\'ll hit the bank on my break and make the deposit. He\'s going to be okay."\n\nShe blinks hard, decides not to start crying again, and pockets the phone.';
                     } else {
-                        part1 += 'Her phone buzzes as you reach the mouth of the alley. She checks it, jaw tight, thumbs out a quick reply, and pushes it back into her pocket.\n\n"Still working on the money," she says, catching your look. "I\'ll sort it. I always do." She says it lightly, but the worry sits right underneath, and she carries it the way she carries everything. Like it\'s hers alone to hold.';
+                        part1 += 'Her phone buzzes as you reach the mouth of the alley. She checks it, jaw tight, thumbs out a quick reply, and pushes it back into her pocket.\n\n"Still working on the money," she says, catching your look. "I\'ll sort it. I always do." She says it lightly, but the worry sits right underneath, and she carries it like she carries everything. Like it\'s hers alone to hold.';
                     }
 
                     let part2 = 'The bus stop is a bent sign and a bench missing a slat. You don\'t wait long.\n\nThe bus wheezes up half-empty, all scratched plastic and flat daylight through smeared windows. Jaewon taps her card for both of you before you can reach for anything.\n\n';
@@ -157678,7 +157678,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (k >= 1000) {
                         t += 'Something in you unknots. After the morning you\'ve had, after your own mother put you out on the street, you\'re standing in a warm room that belongs to someone who decided, for no reason at all, to be kind to you.\n\nYou have to look at the floor for a second.';
                     } else if (isEvil) {
-                        t += '<em>One main room and a bedroom. One door in, one window out, four floors up. She lives alone. No roommate, no partner, nobody who checks in on her.</em>\n\nYou catalogue it on the way to the couch.\n\n<em>And not one second of hesitation about bringing a stranger into all of it.</em>\n\nYou set that thought down somewhere you don\'t have to look at it.';
+                        t += '<em>One main room and a bedroom. One door in, one window out, four floors up. She lives alone. No roommate, no partner, nobody who checks in on her.</em>\n\nYou catalogue it as you head for the couch.\n\n<em>And not one second of hesitation about bringing a stranger into all of it.</em>\n\nYou set that thought down somewhere you don\'t have to look at it.';
                     } else {
                         t += 'You stop just inside the door. It\'s the first time you\'ve stopped moving since your mother threw you out this morning, and now that you have, the whole weight of the day lands on you at once.\n\nYou\'re off the street. For the first time today, you\'re somewhere with a lock on the door.';
                     }
@@ -157951,7 +157951,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
             
             wear_comfy: {
-                text: 'You pull on the black leggings and your black tank, then the oversized sweater over it.\n\nComfortable. Cozy.\n\nThe leggings show off your legs. Your butt.\n\nBut the sweater hides everything else.\n\nYou look in the mirror.\n\nToo casual. Too covered.\n\nNot going to attract anyone like this.\n\nBut at least you\'re warm.',
+                text: 'You pull on the black leggings and your black tank, then the oversized sweater over it.\n\nComfortable. Cozy.\n\nThe leggings show off your legs. Your butt.\n\nBut the sweater hides everything else.\n\nYou look in the mirror.\n\nToo casual. Too covered.\n\nNot going to attract anyone like this.\n\nBut at least it\'s soft.',
                 onEnter: () => {
                     // Real pieces from her bag. The sweater's outerwear, so the tank goes
                     // under it (a bra under outerwear alone counts as visible underwear).
@@ -212463,7 +212463,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         label: 'Take it slow. Stick with your people.',
                         text: function() {
                             return 'You notice it. You\'d have to be blind not to. You just don\'t do much with it.\n\n'
-                                + (ccIsBO() ? 'You still dress the way you always have' : 'You still wear your old hoodie')
+                                + (ccIsBO() ? 'You keep the same look you\'ve had since eighth grade' : 'You still wear your old hoodie')
                                 + ' and still eat lunch with the same three people. When the juniors wave you over, you wave back and keep walking.';
                         },
                         karma: 50,
