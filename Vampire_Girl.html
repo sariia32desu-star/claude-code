@@ -214293,7 +214293,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
 
         // ── TRAITS SYSTEM ──────────────────────────────────────────────
-        const TRAIT_POINTS_MAX = 11;
         
         const TRAITS = {
             athlete: {
@@ -214301,12 +214300,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 name: 'Athlete',
                 icon: 'Images/icons/person-running.png',
                 color: '#ff9944',
-                description: 'Before everything changed, Kelsie\'s body was a weapon she\'d trained since childhood.',
                 subtypes: {
                     gymnast: {
                         id: 'gymnast',
                         name: 'Gymnast',
-                        backstory: 'Competitive gymnastics since five years old. Thirteen years of it. Balance beams, uneven bars, floor routines that pushed her body past what anyone thought possible.<br><br>By sixteen she could hold a handstand longer than most people could hold a conversation.<br><br>Her coaches called her fearless. They meant reckless. She meant <em>precise</em>.',
                         startBonus: '+5 Strength',
                         passive: 'Acrobatic Dodge: 20% dodge. On dodge: free counter-strike (30% ATK). +10% crit chance. Combat thirst reduced at higher tiers. Evolves with training.',
                         apply: function() {
@@ -214367,7 +214364,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     taekwondo: {
                         id: 'taekwondo',
                         name: 'Taekwondo Practitioner',
-                        backstory: 'First kick at five. Black belt by sixteen.<br><br>Her mother worried about the bruises. The long hours. The way Kelsie\'s eyes changed when she sparred; focused, calm, a little bit frightening.<br><br>Thirteen years of discipline turned her body into something between a weapon and a prayer. Her sparring partners worried more than her mother did.',
                         startBonus: '+5 Strength',
                         passive: 'Martial Counter: Defending gives 25% counter-attack chance (50% dmg). Evolves with training, unlocking new combat techniques and granting Skill Points each session. As a Black Belt, all techniques through Tornado Kick are already mastered.',
                         apply: function() {
@@ -214425,7 +214421,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     track: {
                         id: 'track',
                         name: 'Track Athlete',
-                        backstory: 'She started running at five. Her legs just wouldn\'t stop.<br><br>Fastest girl in the district by middle school. State-level in the 200m by junior year. Thirteen years of sprints and interval training and wind in her ears.<br><br>Nobody at school could catch her. Nobody since has, either.',
                         startBonus: '+5 Strength Levels',
                         passive: '100% flee chance in combat, always. Vampire Speed travel costs 50% less thirst. Travel time reduced by 25%. Evolves with training.',
                         apply: function() {
@@ -214470,7 +214465,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     volleyball: {
                         id: 'volleyball',
                         name: 'Volleyball Player',
-                        backstory: 'Hitting a ball against the garage wall at five. Club leagues by seven. Youngest starter on a nationally-ranked travel team by twelve.<br><br>Thirteen years of competitive volleyball. Reading the court, tracking the ball, anticipating every play before it happens. Her reaction time is inhuman.<br><br>Her coaches called it "court vision"; the ability to process a dozen moving bodies at once. She can predict where you\'re going before you know yourself. And when she swings, she swings <em>twice</em>.',
                         startBonus: '+5 Strength Levels',
                         passive: 'Court Vision: All attacks guaranteed to strike twice. Blood Flurry gains a bonus strike. 20% chance to dodge enemy attacks. Evolves with training.',
                         apply: function() {
@@ -214524,12 +214518,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 name: 'Social Butterfly',
                 icon: 'Images/icons/sparkle.png',
                 color: '#ff69b4',
-                description: 'Nobody forgot her. Rooms changed when she walked into them.',
                 subtypes: {
                     class_president: {
                         id: 'class_president',
                         name: 'Class President',
-                        backstory: 'Student council three years running. Won twice. Lost once and handled it with more grace than the winner.<br><br>People follow the person they trust, not the person they like. She figured that out early.<br><br>She could stand in front of two hundred students and make them believe the bake sale actually mattered. Imagine what she could do with real stakes.',
                         startBonus: '+2 Charisma Levels',
                         passive: 'Natural Leader: +25% relationship point gains with all NPCs',
                         apply: function() {
@@ -214539,7 +214531,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     theater_kid: {
                         id: 'theater_kid',
                         name: 'Theater Kid',
-                        backstory: 'Four years of drama club. She could cry on command by sophomore year. Not the ugly kind; the cinematic kind. Single tear rolling down the cheek at precisely the right moment.<br><br>The difference between lying and acting is just the audience\'s awareness. Both require the same skill.<br><br>She has that skill.',
                         startBonus: '+2 Charisma Levels',
                         passive: 'Performance Mask: Illusion thirst cost reduced by 30%. Bonus charisma XP from seduction encounters',
                         apply: function() {
@@ -214549,7 +214540,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     party_girl: {
                         id: 'party_girl',
                         name: 'Party Girl',
-                        backstory: 'She knew every bouncer, every after-party, every shortcut through the alley to the next good time.<br><br>While her classmates were sneaking sips of beer at house parties, she was getting into clubs downtown with a fake ID and a smile that made questions disappear.<br><br>She doesn\'t regret any of it. She does have stories she\'ll never tell.',
                         startBonus: '+1 Charisma Level, +500 Corruption',
                         passive: 'Nightlife Veteran: Bar/Lounge seduction success +15%. Ruby\'s Diner tips increased by 20%',
                         apply: function() {
@@ -214564,12 +214554,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 name: 'Street Smart',
                 icon: 'Images/icons/eye.png',
                 color: '#88ddff',
-                description: 'She grew up knowing which blocks to avoid, which eyes to never meet, and how to disappear when you need to.',
                 subtypes: {
                     survivor: {
                         id: 'survivor',
                         name: 'Survivor',
-                        backstory: 'Her neighborhood wasn\'t kind. She learned young that the world doesn\'t owe you safety. You take it.<br><br>She could read a room for exits before she could read for pleasure. She slept light because she had to.<br><br>Quiet alertness. The kind you develop in your bones when you grow up knowing bad things happen to people who aren\'t paying attention.',
                         startBonus: '+15 Mental Health (start at 45)',
                         passive: 'Hardened Psyche: Mental health cannot drop below 20. Fatigue gains reduced by 15%',
                         apply: function() {
@@ -214579,7 +214567,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     thug: {
                         id: 'thug',
                         name: 'Thug',
-                        backstory: 'She learned to fight in alleys and parking lots. No mats, no referee, no rules.<br><br>The same hands that lifted wallets on the subway could break a nose before someone finished flinching. She got good at both.<br><br>By fifteen she had a reputation. People crossed the street when she was in a mood.',
                         startBonus: '+2 Strength',
                         passive: 'Dirty Fighter: First attack each combat deals 20% bonus damage. +5% critical hit chance. Suspicion gain from stealing reduced by 30%',
                         apply: function() {
@@ -214589,7 +214576,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     guardian: {
                         id: 'guardian',
                         name: 'Guardian',
-                        backstory: 'She walked the younger kids home. Stood between them and trouble when she could\'ve just kept walking.<br><br>She showed up. Every time. Paying attention to who needed help before they had to ask.<br><br>Her neighborhood respected that. Even the dangerous people left her alone.',
                         startBonus: '+1 Charisma Level',
                         passive: 'Protective Instinct: Positive karma gains increased by 20%. Mental health losses from negative events reduced by 30%',
                         apply: function() {
@@ -214603,12 +214589,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 name: 'Bookworm',
                 icon: 'Images/icons/open-book.png',
                 color: '#aaddff',
-                description: 'While other kids were at parties, she was three chapters deep into something that would change how she sees the world.',
                 subtypes: {
                     medical_reader: {
                         id: 'medical_reader',
                         name: 'Medical Reader',
-                        backstory: 'She read Gray\'s Anatomy cover to cover at fourteen. Not for class. Because she wanted to know where the arteries were.<br><br>The carotid. The femoral. The brachial. She memorized them the way other girls memorized lyrics.<br><br>Her mother found the diagrams taped above her desk and asked if she wanted to be a doctor. She said maybe. What she meant was: <em>I want to understand how things bleed.</em>',
                         startBonus: 'Pure passive, no stat boosts',
                         passive: 'Anatomical Knowledge: Grab & Drain and feral drain heal 50% more HP and drain 25% more thirst. Blood bags +10 HP / -10 thirst. Blood Bank discount',
                         apply: function() {
@@ -214618,7 +214602,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     occult_enthusiast: {
                         id: 'occult_enthusiast',
                         name: 'Occult Enthusiast',
-                        backstory: 'Folklore. Mythology. The supernatural. She devoured everything she could find. Slavic strigoi, Chinese jiangshi, the Balkan dhampir.<br><br>She read Bram Stoker at eleven and thought it was patronizing. She read academic papers on porphyria and ergotism and the real-world origins of vampiric legends.<br><br>She thought it was all fiction. It wasn\'t.',
                         startBonus: 'Starts with 2 Skill Points',
                         passive: 'Arcane Intuition: Skill point gain rate increased by 25%.',
                         apply: function() {
@@ -214629,7 +214612,6 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     true_crime: {
                         id: 'true_crime',
                         name: 'True Crime Obsessive',
-                        backstory: 'Every podcast. Every documentary. Every court transcript she could get her hands on.<br><br>She knows how killers get caught. The DNA on a cigarette butt. The cell tower ping. The one witness who remembered the wrong car color but the right license plate.<br><br>She knows the patterns. She knows the mistakes. More importantly; she knows how to not make them.',
                         startBonus: 'Pure passive, no stat boosts',
                         passive: 'Forensic Awareness: Suspicion gain from ALL sources reduced by 40%. Compulsion thirst cost reduced by 20%',
                         apply: function() {
@@ -214643,12 +214625,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 name: 'Resilient',
                 icon: 'Images/icons/shield.png',
                 color: '#88ff88',
-                description: 'Everything that should have broken you made you quieter, steadier, harder to kill.',
                 subtypes: {
                     resilient: {
                         id: 'resilient',
                         name: 'Resilient',
-                        backstory: 'Bad things happened. More than should happen to anyone her age. But something in Kelsie refused to break.<br><br>She decided, quietly, that whatever the world does to her, it doesn\'t get to decide who she is. Without fanfare. Just a decision.<br><br>She cried. She bled. She got back up. Every time. She\'s <em>stubborn</em> like that.',
                         startBonus: '+20 Mental Health (start at 50)',
                         passive: 'Inner Fortress: MH gains from all sources +25%. MH losses from negative events -20%',
                         apply: function() {
@@ -214662,12 +214642,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 name: 'Beauty Obsessed',
                 icon: 'Images/icons/mirror.png',
                 color: '#ffaadd',
-                description: 'While the other girls train for a sport, you train for the mirror. Thirteen years of it.',
                 subtypes: {
                     pretty_face: {
                         id: 'pretty_face',
                         name: 'Beauty Obsessed',
-                        backstory: 'You\'re five, standing on the bathroom counter in Margaret\'s heels, lipstick smeared past the edges of your mouth, turning your face to find which side the light likes better. The left. It\'s always going to be the left.<br><br>Soccer lasts a week. Dance lasts two. Swim ends the day you see what chlorine does to your hair. Every practice you quit, you go home and practice in front of the mirror instead.<br><br>Thirteen years later, the routine fills the whole counter. Cleanser, toner, the serum you\'d die before skipping. Your closet holds looks, planned down to the shoes.<br><br>The athletes have built bodies that can do things. You\'ve built one people can\'t stop looking at, and you know exactly what it cost.',
                         startBonus: '+2 Charisma Levels, +15 Base Appeal. Starts with her 32-piece collection, a designer backpack (50 slots), and her makeup bag.',
                         passive: 'Immaculate: +15 base appeal. Your own makeup lands harder (+28). Grooming flaws hit at half strength. A daily routine leaves a fresh-skin glow. Evolves as you stay radiant.',
                         apply: function() {
@@ -215758,7 +215736,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             if (choice.facialBeauty) ccState.facialBeauty = choice.facialBeauty;
             if (choice.height) ccState.height = choice.height;
 
-            // Track trait selection (in-depth creation has no TP limit)
+            // Track trait selection
             if (choice.trait) {
                 ccState.selectedTraits.push(choice.trait);
             }
@@ -216578,7 +216556,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 }
             }
 
-            // Apply traits selected during in-depth creation (no TP limit)
+            // Apply traits selected during character creation
             if (ccState.selectedTraits && ccState.selectedTraits.length > 0) {
                 gameState.traits = {
                     selectedTraits: [...ccState.selectedTraits],
