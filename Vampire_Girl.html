@@ -43633,6 +43633,82 @@ audioSystem.playSFX('buttonClick');
         }
         // -- END STEP 13 RITUAL --------------------------------------------
 
+        // -- STEP 14: STAYING RADIANT --------------------------------------
+        // Each rollover she ended the day at Alluring+ (yesterday's Fresh Skin
+        // counted) adds one lifetime radiant day. Crossing a tier's minDays pays
+        // bonusCharisma, posts a notification, and queues a one-time beat for the
+        // next mirror or home scene (bo_tier_beat), which then shows the popup.
+        function processBORadiantDay() {
+            if (!isBeautyObsessed() || !gameState.time) return;
+            var appeal = calculateTotalAppeal();
+            if (gameState.boRitualDay === gameState.time.day - 1) appeal += boVal('ritualGlow', 6);
+            if (!appealTierAtLeast('alluring', appeal)) return;
+            gameState.boRadiantDays = (gameState.boRadiantDays || 0) + 1;
+            var evos = TRAITS.pretty_face.subtypes.pretty_face.evolutions;
+            var oldTier = gameState.boTier || 1;
+            var newTier = getBOTier();
+            if (newTier <= oldTier) return;
+            for (var t = oldTier + 1; t <= newTier; t++) {
+                gameState.charisma = (gameState.charisma || 0) + (evos[t].bonusCharisma || 0);
+            }
+            gameState.boTier = newTier;
+            var summary = {
+                2: 'Seven days radiant. Base appeal, your own makeup, and your routine glow all climb, and any makeup on your face shrugs off smears.',
+                3: 'Twenty-one days radiant. Your makeup holds through almost half of what the city throws at it, and your looks read as Coordinated more easily.',
+                4: 'Forty-five days radiant. Your makeup rivals Godpeia\'s, and while you look the part, people warm to you faster.'
+            };
+            setTimeout(function() {
+                showNotification('<img src="Images/icons/mirror.png" class="icon" alt=""> <strong style="color:#ffb3e6;">' + evos[newTier].name + '.</strong> ' + summary[newTier] + ' <span style="color:#88ff88;">Charisma +' + (newTier - oldTier) + '</span>');
+            }, 1500);
+        }
+        // Lowest tier she's reached whose beat she hasn't seen yet (0 = none).
+        function getPendingBOTierBeat() {
+            if (!isBeautyObsessed() || !gameState.flags) return 0;
+            var tier = gameState.boTier || 1;
+            for (var t = 2; t <= tier; t++) {
+                if (!gameState.flags['boSeenTier' + t]) return t;
+            }
+            return 0;
+        }
+        // Where the beat can land: home, a bathroom mirror, or the apartment mirror.
+        var BO_TIER_BEAT_SPOTS = ['own_apartment_mirror', 'jaewon_apartment_living_room', 'jaewon_apartment_bedroom'];
+        function isBOTierBeatSpot(sceneId) {
+            if (BO_TIER_BEAT_SPOTS.indexOf(sceneId) !== -1) return true;
+            // Mirror locations that aren't the middle of a shift or a hunt.
+            return MIRROR_SCENES.indexOf(sceneId) !== -1 && /bathroom|restroom|apartment/.test(sceneId);
+        }
+        function getBOTierBeatParas(tier) {
+            if (tier === 2) {
+                return [
+                    'Twice this week, strangers have stopped you to ask what you use on your skin. A woman at a crosswalk typed your whole answer into her phone.',
+                    'You walk past the mirror without looking, and it takes you a second to notice you did it. You used to check every window, every dark phone screen.',
+                    'You don\'t need to anymore. You already know what it\'ll show you.'
+                ];
+            }
+            if (tier === 3) {
+                return [
+                    'This month you\'ve been caught in the rain without an umbrella, sweated through a heat wave on a packed bus, and stayed out until the sky went gray.',
+                    'Your makeup came home with you every time.',
+                    'You lean into the mirror to take it off and find the wing exactly where you drew it. Your face holds now, whatever the city does to it.'
+                ];
+            }
+            var hair = String(getHairColorLabel((gameState.bodyAppearance && gameState.bodyAppearance.hairColor) || 'black')).toLowerCase();
+            var paras = [
+                'Earlier, two girls at the next table were talking about someone they keep seeing around the city. ' + capFirst(hair) + ' hair, a face you don\'t forget, always dressed like she\'s on her way somewhere better.',
+                '"I see her everywhere," one of them said. "I don\'t even know her name."',
+                'It took you until the check came to realize they meant you.'
+            ];
+            var tone = (typeof getKarmaTone === 'function') ? getKarmaTone() : 'neutral';
+            var close;
+            if (tone === 'angelic') close = 'You catch yourself smiling at the mirror. Thirteen years of work, and strangers can describe it from memory. You earned every inch of that.';
+            else if (tone === 'demonic') close = 'You smile at the mirror, slow. They remember you. They\'ll keep remembering right up until the night you pick one of them, and they\'ll walk to you smiling.';
+            else close = 'You look at yourself for a long moment. People you\'ve never met carry your face around in their heads. You haven\'t decided yet what to do with that.';
+            if ((gameState.corruption || 0) >= 4001) close += ' The thought of strangers picturing you when you\'re not there makes your nipples tighten.';
+            paras.push(close);
+            return paras;
+        }
+        // -- END STEP 14 ---------------------------------------------------
+
         // Short prose names for what she's wearing, for the early Jaewon beats.
         // Returns { dress: 'the satin dress', shoes: 'the heels' }.
         function getBOLookWords() {
@@ -43879,6 +43955,21 @@ audioSystem.playSFX('buttonClick');
                     changeRows += row('All Damage Bonus',
                         '+' + Math.round((oldData.damageBonus || 0) * 100) + '%',
                         '+' + Math.round((newData.damageBonus || 0) * 100) + '%', '#ff6666');
+                }
+            } else if (traitKey === 'beauty') {
+                changeRows += row('Base Appeal', '+' + oldData.baseAppeal, '+' + newData.baseAppeal, '#ff9ed6');
+                changeRows += row('Your Own Makeup', '+' + oldData.makeupAppeal, '+' + newData.makeupAppeal, '#ff9ed6');
+                changeRows += row('Fresh Skin (routine)', '+' + oldData.ritualGlow, '+' + newData.ritualGlow, '#ffd700');
+                changeRows += row('Smear Resistance', Math.round((oldData.smearResist || 0) * 100) + '%', Math.round((newData.smearResist || 0) * 100) + '%', '#88ccff');
+                changeRows += row('Allure Floor', '+' + oldData.allureFloor, '+' + newData.allureFloor, '#cc66ff');
+                changeRows += row('First Impressions', '+' + oldData.firstImpression, '+' + newData.firstImpression, '#88ff88');
+                changeRows += row('Diner Tips', '+' + Math.round(oldData.tipBonus * 100) + '%', '+' + Math.round(newData.tipBonus * 100) + '%', '#ffc88a');
+                changeRows += row('Coordinated At', Math.round(oldData.coherenceAt * 100) + '%', Math.round(newData.coherenceAt * 100) + '%', '#a0c8f0');
+                if (newData.relationshipMult && !oldData.relationshipMult) {
+                    changeRows += '<div style="padding:4px 8px;margin:3px 0;background:rgba(255,215,0,0.1);border-radius:5px;border:1px solid #ffd700;color:#ffd700;font-size:0.9em;">✦ NEW: Relationship gains ×' + newData.relationshipMult.toFixed(2) + ' while Attractive or better</div>';
+                }
+                if (newData.bonusCharisma) {
+                    changeRows += '<div style="padding:4px 8px;margin:3px 0;background:rgba(136,255,136,0.1);border-radius:5px;border:1px solid #88ff88;color:#88ff88;font-size:0.9em;text-align:center;font-weight:bold;">+' + newData.bonusCharisma + ' Charisma</div>';
                 }
             } else if (traitKey === 'track') {
                 changeRows += row('Speed Travel Thirst Cost',
@@ -45574,6 +45665,10 @@ audioSystem.playSFX('buttonClick');
                 faceInner += '<div style="color:#ffb3e6;font-weight:bold;font-size:0.9em;"><img src="Images/icons/mirror.png" class="icon" alt=""> Beauty Obsessed</div>';
                 var _bo = getBOEvolutionData();
                 faceInner += _bpRow('Tier', _bo.name, '#ffb3e6');
+                var _boEvos = TRAITS.pretty_face.subtypes.pretty_face.evolutions;
+                var _boNext = _boEvos[getBOTier() + 1];
+                var _boDays = gameState.boRadiantDays || 0;
+                faceInner += _bpRow('Radiant days', _boNext ? _boDays + ' / ' + _boNext.minDays + ' to ' + _boNext.name : _boDays + ' (top tier)', '#ffb3e6');
                 faceInner += _bpRow('Base appeal', '+' + _bo.baseAppeal + ' on top of your face', '#88ff88');
                 faceInner += _bpRow('Your own makeup', '+' + _bo.makeupAppeal + ', on in 5 min', '#88ff88');
                 if (_bo.smearResist > 0) faceInner += _bpRow('Smear resistance', Math.round(_bo.smearResist * 100) + '% (any makeup, Godpeia included)', '#88ff88');
@@ -51750,6 +51845,9 @@ audioSystem.playSFX('buttonClick');
         function evaluatePresentationStreak() {
             if (!gameState.flags || !gameState.flags.arrivedInCity) return;
 
+            // Beauty Obsessed (Step 14): lifetime radiant days drive her evolution.
+            if (typeof processBORadiantDay === 'function') processBORadiantDay();
+
             var kept = (typeof appealTierAtLeast === 'function') && appealTierAtLeast('attractive');
             if (!kept) {
                 var hadStreak = (gameState.presentationStreak || 0);
@@ -55875,9 +55973,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
 
         // ===== PERSONAL CARE ITEM USAGE FUNCTIONS =====
         
-        function canApplyMakeupHere() {
-            // Locations with bathrooms/mirrors where makeup can be applied without hand mirror
-            const locationsWithMirrors = [
+        // Locations with bathrooms/mirrors where makeup can be applied without hand mirror
+        const MIRROR_SCENES = [
                 'jaewon_apartment_main',
                 'jaewon_apartment_return',
                 'jaewon_apartment_bathroom',
@@ -55895,8 +55992,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 'parkside_inn_bathroom',
                 'hotel_room_bathroom'
             ];
-            
-            return locationsWithMirrors.includes(currentScene);
+        function canApplyMakeupHere() {
+            return MIRROR_SCENES.includes(currentScene);
         }
         
         function hasHandMirror() {
@@ -143064,6 +143161,27 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 }
             },
 
+            // Step 14: the one-time evolution beat, then the popup.
+            bo_tier_beat: {
+                text: function() {
+                    var t = getPendingBOTierBeat() || gameState.boTier || 2;
+                    return getBOTierBeatParas(t).join('\n\n');
+                },
+                choices: function() {
+                    return [
+                        { text: '<img src="Images/icons/mirror.png" class="icon" alt=""> Continue', action: () => {
+                            var t = getPendingBOTierBeat() || gameState.boTier || 2;
+                            gameState.flags['boSeenTier' + t] = true;
+                            var ret = gameState.flags._boTierBeatReturn;
+                            gameState.flags._boTierBeatReturn = null;
+                            showScene(ret && story[ret] ? ret : (gameState.flags.hasOwnApartment ? 'own_apartment_main' : 'city_exploration'));
+                            var evos = TRAITS.pretty_face.subtypes.pretty_face.evolutions;
+                            showTraitEvolutionPopup(t, 'Images/icons/mirror.png', evos[t], evos[t - 1], 0, 'beauty');
+                        }}
+                    ];
+                }
+            },
+
             // Step 13: her routine. One short variant per day, rotating.
             bo_ritual_scene: {
                 text: function() {
@@ -198200,6 +198318,14 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     }
                 }
                 
+                // ── BEAUTY OBSESSED TIER-UP BEAT (Step 14) ──
+                // Lands at the next mirror or at home, once per tier.
+                if (part === 0 && sceneId !== 'bo_tier_beat' && typeof getPendingBOTierBeat === 'function' && getPendingBOTierBeat() && isBOTierBeatSpot(sceneId)) {
+                    gameState.flags._boTierBeatReturn = sceneId;
+                    showScene('bo_tier_beat');
+                    return;
+                }
+
                 // ── EXPOSURE BUILDING CHECK ──
                 const exposureLevel = getExposureLevel();
                 if (exposureLevel !== 'clothed') {
