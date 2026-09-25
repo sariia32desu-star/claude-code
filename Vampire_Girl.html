@@ -43227,6 +43227,15 @@ audioSystem.playSFX('buttonClick');
                             }
                         }
 
+                        // Check for Beauty Obsessed trait evolution
+                        if (traitId === 'pretty_face' && sub.evolutions) {
+                            const boEvoD = getBOEvolutionData();
+                            if (boEvoD) {
+                                displayName = boEvoD.name;
+                                displayPassive = boEvoD.passive;
+                            }
+                        }
+
                         // Check for volleyball trait evolution
                         if (traitId === 'volleyball' && sub.evolutions) {
                             const volEvoD = getVolEvolutionData();
@@ -43408,6 +43417,28 @@ audioSystem.playSFX('buttonClick');
             return evolutions[tier] || evolutions[1];
         }
         
+        // ── Beauty Obsessed evolution (Beauty Obsessed overhaul, Step 3C) ──
+        function isBeautyObsessed() {
+            return hasTrait('pretty_face');
+        }
+
+        // Highest tier whose minDays <= boRadiantDays. 1 if she isn't Beauty Obsessed.
+        function getBOTier() {
+            if (!isBeautyObsessed()) return 1;
+            var evos = TRAITS.pretty_face.subtypes.pretty_face.evolutions;
+            var days = gameState.boRadiantDays || 0;
+            var tier = 1;
+            for (var t = 4; t >= 1; t--) {
+                if (evos[t] && days >= evos[t].minDays) { tier = t; break; }
+            }
+            return tier;
+        }
+
+        function getBOEvolutionData() {
+            var evos = TRAITS.pretty_face.subtypes.pretty_face.evolutions;
+            return evos[getBOTier()] || evos[1];
+        }
+
         function getGymEvolutionData() {
             if (!hasTrait('gymnast')) return null;
             var skill = (gameState.athleteSkills && gameState.athleteSkills.gymnastics) || 0;
@@ -214631,16 +214662,50 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 name: 'Beauty Obsessed',
                 icon: 'Images/icons/mirror.png',
                 color: '#ffaadd',
-                description: 'Skincare like a religion. Every reflective surface checked twice. Whatever she was born with, she works at it harder than anyone.',
+                description: 'While the other girls trained for a sport, she trained for the mirror. Thirteen years of it.',
                 subtypes: {
                     pretty_face: {
                         id: 'pretty_face',
                         name: 'Beauty Obsessed',
-                        backstory: 'It started young. A morning routine that grew one step at a time until it filled the whole bathroom counter and the better part of an hour.<br><br>Cleanser, toner, the serum she\'d die before skipping. She catches her reflection in every window, every dark phone screen, every passing spoon, and fixes whatever\'s wrong before anyone else sees it.<br><br>Call it vanity if you want. She calls it control, the one part of herself she gets to decide. She\'d rather be late than be seen unfinished, and she almost never is.',
-                        startBonus: '+15 Base Appeal, +1 Charisma Level',
-                        passive: 'Immaculate: Permanent +15 Appeal from constant grooming. Smeared makeup and messy hair hit her softer, and a short nap won\'t ruin her hair.',
+                        backstory: 'She was five the first time she climbed onto the bathroom counter in Margaret\'s heels, lipstick smeared past the edges of her mouth, turning her face to find which side the light liked better. The left. It\'s still the left.<br><br>Soccer lasted a week. Dance lasted two. Swim ended the day she saw what chlorine did to her hair. Every practice she quit, she went home and practiced in front of the mirror instead.<br><br>Thirteen years later, the routine fills the whole counter. Cleanser, toner, the serum she\'d die before skipping. Her closet holds looks, planned down to the shoes.<br><br>The athletes built bodies that could do things. She built one people can\'t stop looking at, and she knows exactly what it cost.',
+                        startBonus: '+2 Charisma Levels, +15 Base Appeal. Starts with her 32-piece collection, a designer backpack (50 slots), and her makeup bag.',
+                        passive: 'Immaculate: +15 base appeal. Your own makeup lands harder (+28). Grooming flaws hit at half strength. A daily routine leaves a fresh-skin glow. Evolves as you stay radiant.',
                         apply: function() {
-                            gameState.charisma += 1;
+                            gameState.charisma += 2;
+                            // Worn outfit and designer backpack (Beauty Obsessed overhaul, Step 6)
+                            if (typeof applyBeautyObsessedStart === 'function') applyBeautyObsessedStart();
+                        },
+                        // Evolution keyed by gameState.boRadiantDays (lifetime days ended at Alluring+),
+                        // the same structure the athlete traits use with skill levels.
+                        evolutions: {
+                            1: {
+                                name: 'Beauty Obsessed',
+                                minDays: 0,
+                                baseAppeal: 15, makeupAppeal: 28, allureFloor: 6, firstImpression: 3, ritualGlow: 6,
+                                tipBonus: 0.08, smearResist: 0, coherenceAt: 0.70, bonusCharisma: 0,
+                                passive: 'Immaculate: +15 base appeal. Your own makeup lands harder (+28). Grooming flaws hit at half strength. A daily routine leaves a fresh-skin glow. Evolves as you stay radiant.'
+                            },
+                            2: {
+                                name: 'Polished',
+                                minDays: 7,
+                                baseAppeal: 20, makeupAppeal: 30, allureFloor: 9, firstImpression: 4, ritualGlow: 7,
+                                tipBonus: 0.10, smearResist: 0.20, coherenceAt: 0.70, bonusCharisma: 1,
+                                passive: 'Polished: +20 base appeal. Your own makeup gives +30 and shrugs off 20% of smears. Grooming flaws hit at half strength. Your routine glows brighter, and your allure, first impressions, and tips all climb. Keep staying radiant.'
+                            },
+                            3: {
+                                name: 'Flawless',
+                                minDays: 21,
+                                baseAppeal: 25, makeupAppeal: 32, allureFloor: 12, firstImpression: 5, ritualGlow: 8,
+                                tipBonus: 0.12, smearResist: 0.40, coherenceAt: 0.65, bonusCharisma: 1,
+                                passive: 'Flawless: +25 base appeal. Your own makeup gives +32 and holds through 40% of smears. Your looks read as Coordinated more easily. Grooming flaws hit at half strength. Keep staying radiant.'
+                            },
+                            4: {
+                                name: 'Iconic',
+                                minDays: 45,
+                                baseAppeal: 30, makeupAppeal: 35, allureFloor: 15, firstImpression: 6, ritualGlow: 10,
+                                tipBonus: 0.15, smearResist: 0.60, coherenceAt: 0.65, bonusCharisma: 1, relationshipMult: 1.10,
+                                passive: 'Iconic: +30 base appeal. Your own makeup gives +35, a match for Godpeia, and holds through 60% of smears. Grooming flaws hit at half strength. While you look the part, people warm to you faster.'
+                            }
                         }
                     }
                 }
