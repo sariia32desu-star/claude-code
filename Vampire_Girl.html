@@ -49065,6 +49065,90 @@ audioSystem.playSFX('buttonClick');
             return item;
         }
 
+        // ── Starting state (Beauty Obsessed overhaul, Step 6) ──
+
+        // Runs once from the trait's apply() at the end of character creation.
+        // She wakes up after the party in her own look, and she never owned the basics.
+        function applyBeautyObsessedStart() {
+            var o = gameState.currentOutfit;
+            if (!o) return;
+            o.bra = makeBOInventoryItem('bo_underwired_lace_bra', { cleanliness: 60 });
+            o.panties = makeBOInventoryItem('bo_underwired_lace_panties', { cleanliness: 60 });
+            o.dress = makeBOInventoryItem('bo_satin_black_mini_dress', { cleanliness: 70 });
+            o.footwear = makeBOInventoryItem('bo_satin_black_heels', { cleanliness: 70 });
+            o.top = null;
+            o.bottom = null;
+            // The bag stays empty until a prologue packing scene fills it (grantStartingPacking)
+            if (gameState.inventory) gameState.inventory.clothing = [];
+            if (!gameState.backpackCapacity) gameState.backpackCapacity = { current: 0, max: 50 };
+            gameState.backpackCapacity.max = Math.max(50, gameState.backpackCapacity.max || 0);
+            if (!gameState.flags) gameState.flags = {};
+            gameState.flags.designerBackpack = true;
+        }
+
+        // The nine basic pieces every other Kelsie packs. Fresh objects every call.
+        function getBasicStartingClothes() {
+            return [
+                { id: "basic_jeans", name: "Basic Jeans", category: "bottoms", appeal: 4, price: 0, owned: true, cleanliness: 100 },
+                { id: "plain_tshirt", name: "Plain T-Shirt", category: "tops", appeal: 3, price: 0, owned: true, cleanliness: 100 },
+                { id: "black_leggings", name: "Black Leggings", category: "bottoms", appeal: 10, price: 0, owned: true, cleanliness: 100 },
+                { id: "oversized_sweater", name: "Oversized Sweater", category: "outerwear", appeal: 7, price: 0, owned: true, cleanliness: 100, tags: ["casual", "cozy", "fit:loose", "material:knit", "warm:2", "conceal:partial", "layer:medium"] },
+                { id: "skinny_jeans", name: "Skinny Jeans", category: "bottoms", appeal: 11, price: 0, owned: true, cleanliness: 100 },
+                { id: "black_tank", name: "Black Tank Top", category: "tops", appeal: 4, price: 0, owned: true, cleanliness: 100 },
+                { id: "joggers", name: "Joggers", category: "bottoms", appeal: 3, price: 0, owned: true, cleanliness: 100 },
+                { id: "hoodie", name: "Hoodie", category: "outerwear", appeal: 9, price: 0, owned: true, cleanliness: 100, tags: ["casual", "streetwear", "fit:loose", "material:cotton", "warm:2", "conceal:partial", "layer:medium"] },
+                { id: "sundress", name: "Simple Sundress", category: "dresses", appeal: 33, price: 0, owned: true, cleanliness: 100 }
+            ];
+        }
+
+        // One packing helper for all three prologue paths (room_search,
+        // pack_after_cruel_words, after_attacking_mother).
+        // Beauty Obsessed: the rest of her collection plus her makeup bag, granted once.
+        function grantStartingPacking() {
+            if (!gameState.inventory) return;
+            if (!Array.isArray(gameState.inventory.clothing)) gameState.inventory.clothing = [];
+            if (typeof isBeautyObsessed === 'function' && isBeautyObsessed()) {
+                if (!gameState.flags) gameState.flags = {};
+                if (gameState.flags.boCollectionGranted) return;
+                // Every collection piece she isn't already wearing or carrying
+                var have = {};
+                var o = gameState.currentOutfit || {};
+                for (var slot in o) { if (o[slot] && o[slot].id) have[o[slot].id] = true; }
+                gameState.inventory.clothing.forEach(function(it) { if (it && it.id) have[it.id] = true; });
+                BEAUTY_OBSESSED_COLLECTION.forEach(function(def) {
+                    if (!have[def.id]) gameState.inventory.clothing.push(makeBOInventoryItem(def.id));
+                });
+                // Her makeup bag
+                if (!Array.isArray(gameState.inventory.consumables)) gameState.inventory.consumables = [];
+                for (var k = 0; k < 5; k++) gameState.inventory.consumables.push({ id: 'makeup', name: 'Makeup Kit', price: 0 });
+                if (!Array.isArray(gameState.inventory.personalCare)) gameState.inventory.personalCare = [];
+                var pc = gameState.inventory.personalCare;
+                if (!pc.some(function(i) { return i.id === 'hand_mirror'; })) pc.push({ id: 'hand_mirror', name: 'Hand Mirror', price: 0 });
+                if (!pc.some(function(i) { return i.id === 'hairbrush'; })) pc.push({ id: 'hairbrush', name: 'Hairbrush', price: 0 });
+                gameState.flags.boCollectionGranted = true;
+            } else {
+                gameState.inventory.clothing = getBasicStartingClothes();
+            }
+            if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
+        }
+
+        // Takes off whatever dress she's wearing and puts it in the bag (keeping its
+        // cleanliness), unless an item with that id is already there. Works for the
+        // party dress and the satin dress alike.
+        function stashWornDress() {
+            var o = gameState.currentOutfit;
+            if (!o || !o.dress) return;
+            var worn = o.dress;
+            if (!gameState.inventory.clothing.some(function(i) { return i.id === worn.id; })) {
+                var copy = JSON.parse(JSON.stringify(worn));
+                copy.category = 'dresses';
+                copy.owned = true;
+                if (copy.cleanliness === undefined) copy.cleanliness = 100;
+                gameState.inventory.clothing.push(copy);
+            }
+            o.dress = null;
+        }
+
         // Clothing Descriptions Database for Starting Clothes
         const startingClothingDescriptions = {
             'basic_jeans': 'Standard blue jeans. Practical and boring.',
@@ -61211,20 +61295,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         gameState.flags.sealedMotherWounds = true;
                         gameState.flags.stoleMothersEnvelope = true;
                     }
-                    // Add starting clothes to inventory (packed when fleeing)
-                    if (gameState.inventory.clothing.length === 0) {
-                        gameState.inventory.clothing = [
-                            { id: "basic_jeans", name: "Basic Jeans", category: "bottoms", appeal: 4, price: 0, owned: true, cleanliness: 100 },
-                            { id: "plain_tshirt", name: "Plain T-Shirt", category: "tops", appeal: 3, price: 0, owned: true, cleanliness: 100 },
-                            { id: "black_leggings", name: "Black Leggings", category: "bottoms", appeal: 10, price: 0, owned: true, cleanliness: 100 },
-                            { id: "oversized_sweater", name: "Oversized Sweater", category: "outerwear", appeal: 7, price: 0, owned: true, cleanliness: 100, tags: ["casual", "cozy", "fit:loose", "material:knit", "warm:2", "conceal:partial", "layer:medium"] },
-                            { id: "skinny_jeans", name: "Skinny Jeans", category: "bottoms", appeal: 11, price: 0, owned: true, cleanliness: 100 },
-                            { id: "black_tank", name: "Black Tank Top", category: "tops", appeal: 4, price: 0, owned: true, cleanliness: 100 },
-                            { id: "joggers", name: "Joggers", category: "bottoms", appeal: 3, price: 0, owned: true, cleanliness: 100 },
-                            { id: "hoodie", name: "Hoodie", category: "outerwear", appeal: 9, price: 0, owned: true, cleanliness: 100, tags: ["casual", "streetwear", "fit:loose", "material:cotton", "warm:2", "conceal:partial", "layer:medium"] },
-                            { id: "sundress", name: "Simple Sundress", category: "dresses", appeal: 33, price: 0, owned: true, cleanliness: 100 }
-                        ];
-                    }
+                    // Pack the bag when fleeing (basic clothes, or her collection if Beauty Obsessed)
+                    grantStartingPacking();
                     advanceTime(TIME_COSTS.QUICK);
                     updateStatus();
                 },
@@ -61387,18 +61459,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     gameState.flags.packedAfterFight = true;
                     advanceTime(TIME_COSTS.CHANGE_CLOTHES);
                     
-                    // Add basic items to inventory (matching room_search format)
-                    gameState.inventory.clothing = [
-                        { id: "basic_jeans", name: "Basic Jeans", category: "bottoms", appeal: 4, price: 0, owned: true },
-                        { id: "plain_tshirt", name: "Plain T-Shirt", category: "tops", appeal: 3, price: 0, owned: true },
-                        { id: "black_leggings", name: "Black Leggings", category: "bottoms", appeal: 10, price: 0, owned: true },
-                        { id: "oversized_sweater", name: "Oversized Sweater", category: "outerwear", appeal: 7, price: 0, owned: true, tags: ["casual", "cozy", "fit:loose", "material:knit", "warm:2", "conceal:partial", "layer:medium"] },
-                        { id: "skinny_jeans", name: "Skinny Jeans", category: "bottoms", appeal: 11, price: 0, owned: true },
-                        { id: "black_tank", name: "Black Tank Top", category: "tops", appeal: 4, price: 0, owned: true },
-                        { id: "joggers", name: "Joggers", category: "bottoms", appeal: 3, price: 0, owned: true },
-                        { id: "hoodie", name: "Hoodie", category: "outerwear", appeal: 9, price: 0, owned: true, tags: ["casual", "streetwear", "fit:loose", "material:cotton", "warm:2", "conceal:partial", "layer:medium"] },
-                        { id: "sundress", name: "Simple Sundress", category: "dresses", appeal: 33, price: 0, owned: true }
-                    ];
+                    // Pack the bag (basic clothes, or her collection if Beauty Obsessed)
+                    grantStartingPacking();
                     
                     // Show inventory button
                     document.getElementById('inventory-section').style.display = 'block';
@@ -61624,18 +61686,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         };
                     }
                     
-                    // Add starting clothes to inventory (matching the appeal values from initial gameState)
-                    gameState.inventory.clothing = [
-                        { id: "basic_jeans", name: "Basic Jeans", category: "bottoms", appeal: 4, price: 0, owned: true },
-                        { id: "plain_tshirt", name: "Plain T-Shirt", category: "tops", appeal: 3, price: 0, owned: true },
-                        { id: "black_leggings", name: "Black Leggings", category: "bottoms", appeal: 10, price: 0, owned: true }, // Matches yoga pants (best bottoms)
-                        { id: "oversized_sweater", name: "Oversized Sweater", category: "outerwear", appeal: 7, price: 0, owned: true, tags: ["casual", "cozy", "fit:loose", "material:knit", "warm:2", "conceal:partial", "layer:medium"] },
-                        { id: "skinny_jeans", name: "Skinny Jeans", category: "bottoms", appeal: 11, price: 0, owned: true }, // Matches yoga pants/jeggings (best bottoms)
-                        { id: "black_tank", name: "Black Tank Top", category: "tops", appeal: 4, price: 0, owned: true },
-                        { id: "joggers", name: "Joggers", category: "bottoms", appeal: 3, price: 0, owned: true },
-                        { id: "hoodie", name: "Hoodie", category: "outerwear", appeal: 9, price: 0, owned: true, tags: ["casual", "streetwear", "fit:loose", "material:cotton", "warm:2", "conceal:partial", "layer:medium"] }, // Matches denim jacket/bomber (best outerwear)
-                        { id: "sundress", name: "Simple Sundress", category: "dresses", appeal: 33, price: 0, owned: true } // Matches maxi/jersey dress (best dresses)
-                    ];
+                    // Pack the bag (basic clothes, or her collection if Beauty Obsessed)
+                    grantStartingPacking();
                     
                     // Show inventory button
                     document.getElementById('inventory-section').style.display = 'block';
@@ -157142,10 +157194,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     return 'You pull on the clothes Jaewon left.\n\nThe jeans hug your legs perfectly. Dark indigo, high-waisted. They make your butt look <em>great</em>.\n\nThe fitted tee is soft, quality cotton. The V-neck shows just a hint of collarbone.\n\nThe leather jacket completes it. Cropped, with silver zippers. It makes the whole outfit look intentional. Cool.\n\nYou look in the mirror.\n\nActually... you look <em>good</em>.\n\nWay better than anything you own. You turn slightly. Check the back. Yeah.\n\nYou stand there a moment longer than you need to.\n\nIt\'s stupid, probably. It\'s just clothes. But yesterday you had nothing, and today you\'re standing in someone else\'s bathroom wearing an outfit that actually fits, and something about that feels larger than it should.\n\nYou take a breath. Open the door.\n\nThe hallway feels shorter than you remember. Three steps and you\'re at the living room.\n\nJaewon looks up from the couch.\n\nShe goes still for just a second\u2014really looking at you\u2014and then this smile breaks across her face. Quiet. Genuine. A smile that isn\'t performing anything.\n\n"Those look better on you than they do on me," she says.\n\nYou look down at yourself. "They fit really well, actually."\n\n"Keep them."\n\nYou look up. "What?"\n\n"Seriously. Keep them."\n\n"Jaewon, I can\'t just\u2014"\n\n"You can." Her voice is easy, certain. "I mean it. They\'re yours now. Consider it a housewarming gift."\n\n"Thank you," you finally say.\n\nShe just nods, like it\'s nothing.';
                 },
                 onEnter: () => {
-                    // Save rumpled black dress to inventory
-                    if (!gameState.inventory.clothing.some(i => i.id === 'party_dress')) {
-                        gameState.inventory.clothing.push({ id: "party_dress", name: "Rumpled Black Dress", category: "dresses", appeal: 5, owned: true, cleanliness: 30, tags: ["edgy", "romantic", "fit:tight", "material:synthetic", "occasion:club"] });
-                    }
+                    // Put the dress she's wearing in the bag
+                    stashWornDress();
                     // Equip Jaewon's gifted items—NO owner field, these belong to Kelsie now
                     gameState.currentOutfit.bra = { id: "basic_white_bra", name: "Basic White Bra", appeal: 1 };
                     gameState.currentOutfit.panties = { id: "basic_white_panties", name: "Basic White Panties", appeal: 1 };
@@ -157172,9 +157222,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             wear_own_best: {
                 text: 'You slip on the sundress.\n\nLight blue. Small white flowers. Falls just above your knees.\n\nYou look in the mirror.\n\nCute. Feminine. Modest.\n\nInnocent.\n\nAnd... comfortable. Like yourself.\n\nIt\'s not fancy, but it\'s clean. It\'s <em>yours</em>.\n\nAfter everything that\'s happened, that matters.\n\nYou adjust it. Make sure it sits right.\n\nIt\'ll work just fine.',
                 onEnter: () => {
-                    if (!gameState.inventory.clothing.some(i => i.id === 'party_dress')) {
-                        gameState.inventory.clothing.push({ id: "party_dress", name: "Rumpled Black Dress", category: "dresses", appeal: 5, owned: true, cleanliness: 30, tags: ["edgy", "romantic", "fit:tight", "material:synthetic", "occasion:club"] });
-                    }
+                    stashWornDress();
                     gameState.currentOutfit.bra = { id: "basic_white_bra", name: "Basic White Bra", appeal: 1 };
                     gameState.currentOutfit.panties = { id: "basic_white_panties", name: "Basic White Panties", appeal: 1 };
                     gameState.currentOutfit.dress = { id: "sundress", name: "Simple Sundress", appeal: 33 };
