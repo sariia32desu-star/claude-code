@@ -10060,6 +10060,117 @@
     transform: scale(0.98) !important;
     pointer-events: none;
 }
+/* ── CC Trait Picker (trait questions render as a tile grid + detail panel) ── */
+.cc-trait-picker { width: 100%; }
+.cc-trait-head {
+    text-align: center; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 4px;
+    color: #c7a3ea; text-transform: uppercase; margin: 0 0 14px; text-shadow: 0 0 12px rgba(190,130,255,0.45);
+}
+.cc-trait-head .cc-trait-head-sub {
+    display: block; margin-top: 5px; font-family: 'Crimson Text', serif; font-style: italic;
+    font-size: 13.5px; letter-spacing: 0.4px; text-transform: none; color: #8f78aa; text-shadow: none;
+}
+.cc-trait-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.cc-trait-tile {
+    position: relative; flex: 0 1 calc(33.333% - 7px); min-width: 0; box-sizing: border-box;
+    padding: 14px 6px 12px; border-radius: 14px; overflow: hidden; cursor: pointer; text-align: center;
+    color: #e8dcff; font: inherit;
+    background:
+        radial-gradient(120% 85% at 50% 0%, rgba(var(--tc-rgb), 0.20), transparent 62%),
+        linear-gradient(160deg, rgba(36,14,54,0.96), rgba(18,7,30,0.96));
+    border: 1px solid rgba(var(--tc-rgb), 0.32);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, filter 0.3s ease, opacity 0.4s ease !important;
+}
+@media (min-width: 560px) { .cc-trait-tile { padding: 18px 10px 14px; } .cc-trait-tile .cc-trait-medal { width: 56px; height: 56px; } .cc-trait-tile .cc-trait-name { font-size: 12px; } }
+.cc-trait-tile:hover:not(:disabled) { transform: translateY(-2px) !important; border-color: rgba(var(--tc-rgb), 0.75); }
+.cc-trait-tile.is-active {
+    transform: translateY(-3px) scale(1.03) !important; border-color: rgb(var(--tc-rgb));
+    box-shadow: 0 0 0 1px rgba(var(--tc-rgb), 0.55), 0 10px 28px rgba(var(--tc-rgb), 0.35), inset 0 0 24px rgba(var(--tc-rgb), 0.14);
+}
+.cc-trait-picker.has-active .cc-trait-tile:not(.is-active) { filter: saturate(0.5) brightness(0.78); }
+.cc-trait-tile::after {
+    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; pointer-events: none;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.13), transparent);
+    transform: skewX(-18deg); animation: ccTraitShine 6s ease-in-out infinite; animation-delay: var(--shine-delay, 0s);
+}
+@keyframes ccTraitShine { 0%, 72% { left: -60%; } 100% { left: 135%; } }
+.cc-trait-medal {
+    position: relative; width: 46px; height: 46px; margin: 0 auto 9px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 42%, rgba(var(--tc-rgb), 0.38), rgba(var(--tc-rgb), 0.08) 64%, transparent 71%);
+}
+.cc-trait-medal::before {
+    content: ''; position: absolute; inset: -2px; border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(var(--tc-rgb),0), rgba(var(--tc-rgb),0.95), rgba(var(--tc-rgb),0) 38%, rgba(var(--tc-rgb),0.55) 68%, rgba(var(--tc-rgb),0));
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+    animation: ccTraitSpin 7s linear infinite;
+}
+.cc-trait-tile.is-active .cc-trait-medal::before { animation-duration: 1.6s; }
+.cc-trait-medal img { position: relative; width: 26px; height: 26px; filter: drop-shadow(0 0 6px rgba(var(--tc-rgb), 0.75)); }
+@keyframes ccTraitSpin { to { transform: rotate(360deg); } }
+.cc-trait-name {
+    font-family: 'Cinzel', serif; font-weight: 700; font-size: 10.5px; letter-spacing: 1.2px; line-height: 1.3;
+    text-transform: uppercase; color: rgb(var(--tc-rgb)); text-shadow: 0 0 10px rgba(var(--tc-rgb), 0.45);
+}
+.cc-trait-name.is-long { font-size: 9.5px; letter-spacing: 0.5px; }
+.cc-trait-tag { margin-top: 4px; font-family: 'Crimson Text', serif; font-style: italic; font-size: 14.5px; line-height: 1.35; color: #bba8d4; }
+.cc-trait-badge {
+    position: absolute; top: 6px; right: 8px; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px;
+    color: rgb(var(--tc-rgb)); opacity: 0.9; text-transform: uppercase;
+}
+.cc-trait-tile.is-exclusive { border-color: rgba(255,210,80,0.7); }
+.cc-trait-tile.is-exclusive .cc-trait-badge { color: #ffe090; }
+.cc-trait-tile.is-locked { cursor: not-allowed; filter: grayscale(0.85) brightness(0.6); opacity: 0.55; }
+.cc-trait-optout {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 12px; padding: 12px 16px; border-radius: 12px; cursor: pointer;
+    background: rgba(20,8,32,0.5); border: 1px dashed #4d3668; color: #a08cbc;
+    font-family: 'Crimson Text', serif; font-style: italic; font-size: 15px; text-align: center;
+    transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease, opacity 0.4s ease !important;
+}
+.cc-trait-optout:hover { border-color: #8a70aa; color: #d8c8ee; }
+.cc-trait-optout.is-active { border-style: solid; border-color: #b8a4d4; color: #f0e4ff; background: rgba(60,30,90,0.45); }
+.cc-trait-hint { margin-top: 14px; text-align: center; font-family: 'Crimson Text', serif; font-style: italic; font-size: 14px; color: #6f5c8a; }
+.cc-trait-dossier {
+    margin-top: 14px; padding: 18px 18px 16px; border-radius: 14px; position: relative;
+    border: 1px solid rgba(var(--tc-rgb), 0.55);
+    background: linear-gradient(170deg, rgba(var(--tc-rgb), 0.12), rgba(18,8,30,0.97) 42%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: ccDossierIn 0.35s ease;
+}
+@keyframes ccDossierIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.cc-trait-dossier-head { display: flex; align-items: center; gap: 12px; }
+.cc-trait-dossier-head .cc-trait-medal { width: 44px; height: 44px; margin: 0; flex: 0 0 auto; }
+.cc-trait-dossier-head .cc-trait-medal img { width: 24px; height: 24px; }
+.cc-trait-kicker { font-family: 'Cinzel', serif; font-size: 9.5px; letter-spacing: 2.5px; color: #8f78aa; text-transform: uppercase; }
+.cc-trait-title { font-family: 'Cinzel', serif; font-weight: 700; font-size: 17px; letter-spacing: 1.5px; color: rgb(var(--tc-rgb)); text-shadow: 0 0 14px rgba(var(--tc-rgb), 0.5); line-height: 1.2; }
+.cc-trait-prose p { margin: 12px 0 0; font-family: Georgia, 'Times New Roman', serif; font-size: 15.5px; line-height: 1.6; color: #e2ceff; }
+.cc-trait-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.cc-trait-chip { font-family: 'Crimson Text', serif; font-size: 13.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); }
+.cc-trait-chip img { width: 13px; height: 13px; vertical-align: middle; }
+.cc-trait-sec { margin-top: 14px; }
+.cc-trait-sec-h { font-family: 'Cinzel', serif; font-size: 9.5px; letter-spacing: 2.5px; color: #8f78aa; text-transform: uppercase; margin-bottom: 4px; }
+.cc-trait-sec-b { font-family: 'Crimson Text', serif; font-size: 15px; line-height: 1.45; color: #d8c8ee; }
+.cc-trait-sec-b.is-passive { border-left: 2px solid rgb(var(--tc-rgb)); padding-left: 10px; color: #e6daf6; }
+.cc-trait-evo-path { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 6px; font-family: 'Cinzel', serif; font-size: 10.5px; letter-spacing: 1px; }
+.cc-trait-evo-step { padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(var(--tc-rgb), 0.3); color: #bba8d6; }
+.cc-trait-evo-step.is-start { background: rgba(var(--tc-rgb), 0.18); border-color: rgba(var(--tc-rgb), 0.7); color: rgb(var(--tc-rgb)); }
+.cc-trait-evo-arrow { color: #6a5588; }
+.cc-trait-confirm {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 16px; padding: 13px 16px; border-radius: 12px; cursor: pointer;
+    border: 1px solid rgb(var(--tc-rgb)); background: linear-gradient(135deg, rgba(var(--tc-rgb), 0.38), rgba(var(--tc-rgb), 0.14));
+    color: #fff; font-family: 'Cinzel', serif; font-weight: 700; font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(var(--tc-rgb), 0.85); animation: ccTraitReady 2.2s ease-in-out infinite;
+    transition: opacity 0.4s ease !important;
+}
+@keyframes ccTraitReady {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--tc-rgb), 0), 0 0 14px rgba(var(--tc-rgb), 0.25); }
+    50% { box-shadow: 0 0 0 4px rgba(var(--tc-rgb), 0.12), 0 0 28px rgba(var(--tc-rgb), 0.5); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cc-trait-tile::after, .cc-trait-medal::before, .cc-trait-confirm, .cc-trait-dossier { animation: none !important; }
+}
 .cc-choice-body {
     display: none;
     font-family: Georgia, 'Times New Roman', serif;
@@ -215314,6 +215425,186 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             }
         }
 
+        // ── CC TRAIT PICKER ──────────────────────────────────────────────
+        // Any question whose choices grant traits renders as a tile grid with a
+        // detail panel instead of the regular list. Tap a tile to inspect it,
+        // then confirm. Opt-out choices (no trait) sit under the grid.
+        // Per-trait tile art. Traits missing from TRAITS (quiet_nature, sharp_eyes)
+        // carry their display name and group here so the tile still reads right.
+        const CC_TRAIT_TILE_STYLE = {
+            gymnast:           { icon: 'Images/icons/girl-in-leotard.png', color: '#cc66ff' },
+            taekwondo:         { icon: 'Images/icons/taekwondo.png',       color: '#ff6644' },
+            track:             { icon: 'Images/icons/person-running.png',  color: '#88dd44' },
+            volleyball:        { icon: 'Images/icons/volleyball.png',      color: '#44aaff' },
+            pretty_face:       { icon: 'Images/icons/mirror.png',          color: '#ffaadd' },
+            medical_reader:    { icon: 'Images/icons/medical-symbol.png' },
+            occult_enthusiast: { icon: 'Images/icons/crescent-moon.png' },
+            true_crime:        { icon: 'Images/icons/face-with-monocle.png' },
+            class_president:   { icon: 'Images/icons/star.png' },
+            theater_kid:       { icon: 'Images/icons/clapper-board.png' },
+            party_girl:        { icon: 'Images/icons/cocktail.png' },
+            survivor:          { icon: 'Images/icons/seedling.png' },
+            thug:              { icon: 'Images/icons/fist.png' },
+            guardian:          { icon: 'Images/icons/hero-shield.png' },
+            resilient:         { icon: 'Images/icons/shield.png' },
+            quiet_nature:      { icon: 'Images/icons/stealth.png', color: '#a3a8ff', name: 'Quiet', group: 'Innate' },
+            sharp_eyes:        { icon: 'Images/icons/eye.png',     color: '#88ddff', name: 'Sharp Eyes', group: 'Innate' }
+        };
+
+        function ccHexToRgb(hex) {
+            var h = (hex || '#c9a0ff').replace('#', '');
+            if (h.length === 3) h = h.split('').map(function(c) { return c + c; }).join('');
+            var n = parseInt(h, 16);
+            return ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255);
+        }
+
+        // Resolves everything a tile / panel needs for a trait-granting choice.
+        function ccGetTraitInfo(traitId) {
+            var art = CC_TRAIT_TILE_STYLE[traitId] || {};
+            for (var pid in TRAITS) {
+                var par = TRAITS[pid];
+                if (par.subtypes && par.subtypes[traitId]) {
+                    var sub = par.subtypes[traitId];
+                    return {
+                        name: sub.name, group: par.name,
+                        icon: art.icon || par.icon, color: art.color || par.color,
+                        startBonus: sub.startBonus || '', passive: sub.passive || '',
+                        evolutions: sub.evolutions || null
+                    };
+                }
+            }
+            return { name: art.name || traitId, group: art.group || 'Trait', icon: art.icon || 'Images/icons/traits.png', color: art.color || '#c9a0ff', startBonus: '', passive: '', evolutions: null };
+        }
+
+        // "Gymnastics. Thirteen years of it." → "Thirteen years of it."
+        function ccTraitTagline(label) {
+            var m = /^[^.!?]+[.!?]\s+(.+)$/.exec(label || '');
+            return m ? m[1] : (label || '');
+        }
+
+        function ccRenderTraitPicker(q, choices, choicesDiv) {
+            var picker = document.createElement('div');
+            picker.className = 'cc-trait-picker';
+            picker.innerHTML = '<div class="cc-trait-head">◆ Choose Your Trait ◆<span class="cc-trait-head-sub">Tap one to see what it gives you.</span></div>';
+            var grid = document.createElement('div');
+            grid.className = 'cc-trait-grid';
+            picker.appendChild(grid);
+            var optOuts = [];
+            var panel = document.createElement('div');
+            var hint = document.createElement('div');
+            hint.className = 'cc-trait-hint';
+            hint.textContent = 'Every trait follows you into the night.';
+
+            var isDemonicSoul = ccState.choices && ccState.choices['q_dream'] === 'dream_kneeling';
+
+            function statChips(choice) {
+                var c = [];
+                if (choice.karma > 0) c.push('<span class="cc-trait-chip" style="color:#88ccff;">+' + choice.karma + ' Karma</span>');
+                if (choice.karma < 0) c.push('<span class="cc-trait-chip" style="color:#ff6666;">' + choice.karma + ' Karma</span>');
+                if (choice.corruption > 0) c.push('<span class="cc-trait-chip" style="color:#cc88ff;">+' + choice.corruption + ' Corruption</span>');
+                if (choice.strength > 0) c.push('<span class="cc-trait-chip" style="color:#ffaa88;">+' + choice.strength + ' <img src="Images/icons/flexed-biceps.png" alt=""> Strength</span>');
+                if (choice.intelligence > 0) c.push('<span class="cc-trait-chip" style="color:#88ccff;">+' + choice.intelligence + ' <img src="Images/icons/intelligence.png" alt=""> Intelligence</span>');
+                if (choice.charisma > 0) c.push('<span class="cc-trait-chip" style="color:#ffb3d9;">+' + choice.charisma + ' <img src="Images/icons/kiss.png" alt=""> Charisma</span>');
+                if (choice.stealth > 0) c.push('<span class="cc-trait-chip" style="color:#a3a8ff;">+' + choice.stealth + ' <img src="Images/icons/stealth.png" alt=""> Stealth</span>');
+                return c.length ? '<div class="cc-trait-chips">' + c.join('') + '</div>' : '';
+            }
+
+            function openPanel(choice, activeEl) {
+                picker.querySelectorAll('.is-active').forEach(function(el) { el.classList.remove('is-active'); el.setAttribute('aria-pressed', 'false'); });
+                activeEl.classList.add('is-active');
+                activeEl.setAttribute('aria-pressed', 'true');
+                picker.classList.add('has-active');
+                if (hint.parentNode) hint.parentNode.removeChild(hint);
+
+                var info = choice.trait ? ccGetTraitInfo(choice.trait) : null;
+                var rgb = ccHexToRgb(info ? info.color : '#b8a4d4');
+                var text = typeof choice.text === 'function' ? choice.text() : choice.text;
+                var prose = (text || '').split(/\n\n+/).map(function(p) { return '<p>' + p.replace(/\n/g, '<br>') + '</p>'; }).join('');
+
+                var html = '';
+                if (info) {
+                    html += '<div class="cc-trait-dossier-head"><div class="cc-trait-medal"><img src="' + info.icon + '" alt="" onerror="this.style.visibility=\'hidden\'"></div>'
+                        + '<div><div class="cc-trait-kicker">' + (info.group && info.group !== info.name ? info.group + ' · Trait' : 'Trait') + '</div><div class="cc-trait-title">' + info.name + '</div></div></div>'
+                        + '<div class="cc-trait-tag">' + ccTraitTagline(typeof choice.label === 'function' ? choice.label() : choice.label) + '</div>';
+                } else {
+                    html += '<div class="cc-trait-kicker">No Trait</div><div class="cc-trait-title" style="color:#d8c8ee;text-shadow:none;">' + (typeof choice.label === 'function' ? choice.label() : choice.label) + '</div>';
+                }
+                html += '<div class="cc-trait-prose">' + prose + '</div>';
+                html += statChips(choice);
+                if (info && info.startBonus) html += '<div class="cc-trait-sec"><div class="cc-trait-sec-h">You Start With</div><div class="cc-trait-sec-b">' + info.startBonus + '</div></div>';
+                if (info && info.passive) html += '<div class="cc-trait-sec"><div class="cc-trait-sec-h">Passive</div><div class="cc-trait-sec-b is-passive">' + info.passive + '</div></div>';
+                if (info && info.evolutions) {
+                    var steps = Object.keys(info.evolutions).sort(function(a, b) { return a - b; }).map(function(k, i) {
+                        return '<span class="cc-trait-evo-step' + (i === 0 ? ' is-start' : '') + '">' + info.evolutions[k].name + '</span>';
+                    });
+                    html += '<div class="cc-trait-sec"><div class="cc-trait-sec-h">Evolves</div><div class="cc-trait-evo-path">' + steps.join('<span class="cc-trait-evo-arrow">›</span>') + '</div></div>';
+                }
+                panel.className = 'cc-trait-dossier';
+                panel.style.setProperty('--tc-rgb', rgb);
+                panel.setAttribute('aria-live', 'polite');
+                panel.innerHTML = html;
+
+                var confirm = document.createElement('button');
+                confirm.className = 'cc-trait-confirm';
+                confirm.textContent = info ? 'Choose ' + info.name : 'Choose This';
+                confirm.onclick = function() { ccSelectChoice(q, choice, activeEl); };
+                panel.appendChild(confirm);
+
+                if (!panel.parentNode) picker.appendChild(panel);
+                // Replay the entrance animation when switching between tiles
+                panel.style.animation = 'none'; void panel.offsetWidth; panel.style.animation = '';
+                if (typeof playSFX === 'function') { try { playSFX('buttonClick'); } catch (e) {} }
+                setTimeout(function() {
+                    try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+                }, 60);
+            }
+
+            choices.forEach(function(choice, idx) {
+                var isDemonicLocked = isDemonicSoul && typeof choice.karma === 'number' && choice.karma > 0;
+                var isLocked = isDemonicLocked || (choice.requires && !choice.requires(ccState));
+                var isExclusive = !isLocked && choice.exclusive && choice.exclusive(ccState);
+                var label = typeof choice.label === 'function' ? choice.label() : choice.label;
+
+                if (!choice.trait) { optOuts.push({ choice: choice, label: label, isLocked: isLocked }); return; }
+
+                var info = ccGetTraitInfo(choice.trait);
+                var tile = document.createElement('button');
+                tile.className = 'cc-trait-tile' + (isLocked ? ' is-locked' : '') + (isExclusive ? ' is-exclusive' : '');
+                tile.style.setProperty('--tc-rgb', ccHexToRgb(info.color));
+                tile.style.setProperty('--shine-delay', (idx * 0.9) + 's');
+                tile.setAttribute('aria-pressed', 'false');
+                var badge = isLocked ? '<img src="Images/icons/lock.png" alt="locked" style="width:11px;height:11px;">'
+                    : isExclusive ? '★'
+                    : info.evolutions ? '◆' : '';
+                tile.innerHTML = (badge ? '<div class="cc-trait-badge">' + badge + '</div>' : '')
+                    + '<div class="cc-trait-medal"><img src="' + info.icon + '" alt="" onerror="this.style.visibility=\'hidden\'"></div>'
+                    + '<div class="cc-trait-name' + (Math.max.apply(null, info.name.split(' ').map(function(w) { return w.length; })) >= 11 ? ' is-long' : '') + '">' + info.name + '</div>';
+                tile.setAttribute('aria-label', info.name + '. ' + ccTraitTagline(label));
+                if (info.evolutions && !isLocked && !isExclusive) tile.title = 'Evolves';
+                if (isLocked) {
+                    tile.disabled = true;
+                    tile.title = isDemonicLocked ? 'You decided something at three years old; even if you don\'t remember what. It doesn\'t let you be good.'
+                        : (typeof choice.lockedReason === 'function' ? choice.lockedReason(ccState) : (choice.lockedReason || 'Locked by a previous choice'));
+                } else {
+                    tile.onclick = function() { openPanel(choice, tile); };
+                }
+                grid.appendChild(tile);
+            });
+
+            optOuts.forEach(function(o) {
+                var b = document.createElement('button');
+                b.className = 'cc-trait-optout';
+                b.textContent = o.label;
+                b.setAttribute('aria-pressed', 'false');
+                if (o.isLocked) { b.disabled = true; b.style.opacity = '0.4'; }
+                else b.onclick = function() { openPanel(o.choice, b); };
+                picker.appendChild(b);
+            });
+
+            picker.appendChild(hint);
+            choicesDiv.appendChild(picker);
+        }
+
         function ccRenderQuestion(index, skipToChoices) {
             // Advance past any question whose requires condition isn't met
             while (index < CC_QUESTIONS.length) {
@@ -215451,7 +215742,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             choicesDiv.style.display = 'flex';
 
             const resolvedChoices = typeof q.choices === 'function' ? q.choices() : q.choices;
-            resolvedChoices.forEach((choice) => {
+            // Trait questions get the tile picker instead of the regular list
+            if (resolvedChoices.some(function(c) { return !!c.trait; })) {
+                ccRenderTraitPicker(q, resolvedChoices, choicesDiv);
+            } else resolvedChoices.forEach((choice) => {
                 const isDemonicSoul = ccState.choices && ccState.choices['q_dream'] === 'dream_kneeling';
                 const isDemonicLocked = isDemonicSoul && typeof choice.karma === 'number' && choice.karma > 0;
                 const isLocked   = isDemonicLocked || (choice.requires && !choice.requires(ccState));
