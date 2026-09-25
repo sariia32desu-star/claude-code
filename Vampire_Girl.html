@@ -214769,6 +214769,38 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     }
                 }
             },
+            quiet_nature: {
+                id: 'quiet_nature',
+                name: 'Quiet',
+                icon: 'Images/icons/stealth.png',
+                color: '#a3a8ff',
+                subtypes: {
+                    quiet_nature: {
+                        id: 'quiet_nature',
+                        name: 'Quiet',
+                        // The +3 Stealth comes from the character creation choice itself
+                        startBonus: '',
+                        passive: 'Unnoticed: Detection chance on every stealth check reduced by 2%',
+                        apply: function() {}
+                    }
+                }
+            },
+            sharp_eyes: {
+                id: 'sharp_eyes',
+                name: 'Sharp Eyes',
+                icon: 'Images/icons/eye.png',
+                color: '#8fe0d0',
+                subtypes: {
+                    sharp_eyes: {
+                        id: 'sharp_eyes',
+                        name: 'Sharp Eyes',
+                        // The +2 Intelligence comes from the character creation choice itself
+                        startBonus: '',
+                        passive: 'Quick Read: Casing a pickpocket target reveals their awareness from Stealth 10 (normally 20) and exact detection odds from Stealth 20 (normally 40)',
+                        apply: function() {}
+                    }
+                }
+            },
             pretty_face: {
                 id: 'pretty_face',
                 name: 'Beauty Obsessed',
@@ -215429,8 +215461,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
         // Any question whose choices grant traits renders as a tile grid with a
         // detail panel instead of the regular list. Tap a tile to inspect it,
         // then confirm. Opt-out choices (no trait) sit under the grid.
-        // Per-trait tile art. Traits missing from TRAITS (quiet_nature, sharp_eyes)
-        // carry their display name and group here so the tile still reads right.
+        // Per-trait tile art. Name, group, passive, and start bonus come from TRAITS.
         const CC_TRAIT_TILE_STYLE = {
             gymnast:           { icon: 'Images/icons/girl-in-leotard.png', color: '#cc66ff' },
             taekwondo:         { icon: 'Images/icons/taekwondo.png',       color: '#ff6644' },
@@ -215447,8 +215478,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             thug:              { icon: 'Images/icons/fist.png' },
             guardian:          { icon: 'Images/icons/hero-shield.png' },
             resilient:         { icon: 'Images/icons/shield.png' },
-            quiet_nature:      { icon: 'Images/icons/stealth.png', color: '#a3a8ff', name: 'Quiet', group: 'Innate' },
-            sharp_eyes:        { icon: 'Images/icons/eye.png',     color: '#88ddff', name: 'Sharp Eyes', group: 'Innate' }
+            quiet_nature:      { icon: 'Images/icons/stealth.png' },
+            sharp_eyes:        { icon: 'Images/icons/eye.png' }
         };
 
         function ccHexToRgb(hex) {
