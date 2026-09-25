@@ -210996,46 +210996,57 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 chapterLabel: 'Something is Changing',
                 age: 13,
                 title: 'The Face in the Mirror',
-                subtitle: 'One morning, the mirror catches up.',
-                text: 'Around thirteen, your face finishes becoming itself. The baby fat thins out, the angles sharpen, and one morning the girl in the mirror isn\'t a kid anymore.\n\nWhat do you see?',
-                choices: [
-                    {
-                        id: 'face_ordinary',
-                        label: 'Ordinary. You look like a person. That\'s about it.',
-                        text: 'A normal face. You don\'t stop traffic and you don\'t scare children. You look like most people, and most people look fine.',
-                        karma: 0, corruption: 0,
-                        facialBeauty: 'ordinary',
-                        result: function() {
-                            return ccIsBO()
-                                ? 'Your yearbook photo comes back and you think, yeah, that\'s me. Then you sign up for retakes. You already know what contour can do, and the second photo looks like a girl people turn around for.'
-                                : 'Your yearbook photo comes back and you think, yeah, that\'s me. You don\'t bother with retakes.';
-                        }
-                    },
-                    {
-                        id: 'face_pretty',
-                        label: 'Pretty. People have started telling you.',
-                        text: 'Good bones, skin that cooperates more often than it doesn\'t, and a smile that makes people smile back.\n\nThe flip side: pretty girls rarely have to fight for anything. You grew up a little soft on it, and raw strength never came as easy as it did for others. (−5% Strength XP.)',
-                        karma: 0, corruption: 0,
-                        facialBeauty: 'pretty',
-                        result: function() {
-                            return ccIsBO()
-                                ? 'Teachers give you the benefit of the doubt. The lunch lady gives you the bigger cookie. You know exactly how pretty you are, down to the angle you tilt your chin when you ask.'
-                                : 'Teachers give you the benefit of the doubt. The lunch lady gives you the bigger cookie. You assume it happens to everyone.';
-                        }
-                    },
-                    {
-                        id: 'face_gorgeous',
-                        label: 'Gorgeous. Strangers tell your mom you could model.',
-                        text: 'People lose their train of thought mid-sentence around you. Striking eyes, sharp cheekbones, a face that looks finished way too early.\n\nA photographer at the mall asks your mom about a portfolio shoot. Twice.\n\nThe flip side: beauty like this clears obstacles before you reach them. You never had to be strong, so you never became it. (−10% Strength XP.)',
-                        karma: 0, corruption: 0,
-                        facialBeauty: 'gorgeous',
-                        result: function() {
-                            return ccIsBO()
-                                ? 'Margaret says no to the photographer both times. You\'re the one who wanted to say yes.\n\nShe spends the whole drive home reminding you that grades last longer than cheekbones, and you stare at your reflection in the window the entire way.'
-                                : 'Margaret says no to the photographer both times, then spends the whole drive home reminding you that grades last longer than cheekbones.';
-                        }
+                subtitle: function() {
+                    return ccIsBO() ? 'Eight years of practice, and the mirror finally pays you back.' : 'One morning, the mirror catches up.';
+                },
+                text: function() {
+                    // Beauty Obsessed overhaul: she's always gorgeous. No face choice, just the moment she sees it.
+                    if (ccIsBO()) {
+                        return 'Around thirteen, your face finishes becoming itself, and you watch every step of it happen.\n\nThe baby fat thins out. Your cheekbones sharpen into lines you used to fake with contour. Your eyes look bigger, and your mouth settles into a shape that looks like it\'s about to smile even when it isn\'t.\n\nOne morning you step up to the bathroom mirror and just stand there.\n\nThe girl looking back is stunning. Model-gorgeous. Strangers stop Margaret at the mall to tell her so.\n\nEight years of practice in this exact mirror, and your face finally caught up with it.';
                     }
-                ]
+                    return 'Around thirteen, your face finishes becoming itself. The baby fat thins out, the angles sharpen, and one morning the girl in the mirror isn\'t a kid anymore.\n\nWhat do you see?';
+                },
+                choices: function() {
+                    // Beauty Obsessed: one path, gorgeous (same id and facialBeauty as the regular pick)
+                    if (ccIsBO()) {
+                        return [
+                            {
+                                id: 'face_gorgeous',
+                                label: 'Continue',
+                                text: 'A photographer at the mall asks Margaret about a portfolio shoot. Twice.\n\nThe flip side: beauty like this clears obstacles before you reach them. You never had to be strong, so you never became it. (−10% Strength XP.)',
+                                karma: 0, corruption: 0,
+                                facialBeauty: 'gorgeous',
+                                result: 'Margaret says no to the photographer both times. You\'re the one who wanted to say yes.\n\nShe spends the whole drive home reminding you that grades last longer than cheekbones, and you stare at your reflection in the window the entire way.'
+                            }
+                        ];
+                    }
+                    return [
+                        {
+                            id: 'face_ordinary',
+                            label: 'Ordinary. You look like a person. That\'s about it.',
+                            text: 'A normal face. You don\'t stop traffic and you don\'t scare children. You look like most people, and most people look fine.',
+                            karma: 0, corruption: 0,
+                            facialBeauty: 'ordinary',
+                            result: 'Your yearbook photo comes back and you think, yeah, that\'s me. You don\'t bother with retakes.'
+                        },
+                        {
+                            id: 'face_pretty',
+                            label: 'Pretty. People have started telling you.',
+                            text: 'Good bones, skin that cooperates more often than it doesn\'t, and a smile that makes people smile back.\n\nThe flip side: pretty girls rarely have to fight for anything. You grew up a little soft on it, and raw strength never came as easy as it did for others. (−5% Strength XP.)',
+                            karma: 0, corruption: 0,
+                            facialBeauty: 'pretty',
+                            result: 'Teachers give you the benefit of the doubt. The lunch lady gives you the bigger cookie. You assume it happens to everyone.'
+                        },
+                        {
+                            id: 'face_gorgeous',
+                            label: 'Gorgeous. Strangers tell your mom you could model.',
+                            text: 'People lose their train of thought mid-sentence around you. Striking eyes, sharp cheekbones, a face that looks finished way too early.\n\nA photographer at the mall asks your mom about a portfolio shoot. Twice.\n\nThe flip side: beauty like this clears obstacles before you reach them. You never had to be strong, so you never became it. (−10% Strength XP.)',
+                            karma: 0, corruption: 0,
+                            facialBeauty: 'gorgeous',
+                            result: 'Margaret says no to the photographer both times, then spends the whole drive home reminding you that grades last longer than cheekbones.'
+                        }
+                    ];
+                }
             },
 
             {
@@ -211630,7 +211641,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     {
                         id: 'bloom_careful',
                         label: 'Take it slow. Stick with your people.',
-                        text: 'You notice it. You\'d have to be blind not to. You just don\'t do much with it.\n\nYou still wear your old hoodie and still eat lunch with the same three people. When the juniors wave you over, you wave back and keep walking.',
+                        text: function() {
+                            return 'You notice it. You\'d have to be blind not to. You just don\'t do much with it.\n\n'
+                                + (ccIsBO() ? 'You still dress the way you always have' : 'You still wear your old hoodie')
+                                + ' and still eat lunch with the same three people. When the juniors wave you over, you wave back and keep walking.';
+                        },
                         karma: 50,
                         corruption: 0, intelligence: 1,
                         result: 'A junior leans on your locker and tells you you\'re "not like other girls." You tell him it\'s the worst line you\'ve ever heard.\n\nYour friends make it a catchphrase for the rest of the year.'
