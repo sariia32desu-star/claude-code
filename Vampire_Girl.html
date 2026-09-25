@@ -19185,7 +19185,11 @@ audioSystem.playSFX('buttonClick');
                     return '\n<div class="inventory-item" style="cursor: default; display: flex; flex-direction: column; align-items: center; text-align: center;">\n' + (itemImage) + '\n<div class="inventory-item-name">' + (item.name) + '</div>\n' + (useButton) + '\n</div>\n';
                 }).join('');
             }
-            
+            // Step 13: her routine card leads the personal-care section.
+            if (typeof isBeautyObsessed === 'function' && isBeautyObsessed()) {
+                personalCareContainer.innerHTML = getBORoutineCardHTML() + (personalCare.length === 0 ? '' : personalCareContainer.innerHTML);
+            }
+
             // Populate Stolen Items Section
             const stolenContainer = document.getElementById('inventory-stolen');
             const stolenItems = gameState.inventory.stolenItems || [];
@@ -31831,7 +31835,7 @@ audioSystem.playSFX('buttonClick');
 
             // 6. Appeal
             var appealBreakdown = (function() { var ba = gameState.bodyAppearance || {}; var parts = ''; if (ba.bodyType && ba.bodyType !== 'ordinary') { if (ba.bodyType === 'petite') parts += '• Body Type (Petite): Combat +10% Dodge<br>'; else if (ba.bodyType === 'athletic') parts += '• Body Type (Athletic): Combat +8% Dmg · +5 Str<br>'; else if (ba.bodyType === 'curvy') parts += '• Body Type (Curvy): Combat +15% Max HP · +5 Cha<br>'; else if (ba.bodyType === 'thick') parts += '• Body Type (Thick): Combat -12% Dmg Taken · +5 Cha<br>'; } if (ba.breastSize === 'small') parts += '• Breasts (Small): Combat +5% Crit Chance<br>'; else if (ba.breastSize === 'large') parts += '• Breasts (Large): Combat -8% Dmg Taken<br>'; if (ba.buttSize === 'small') parts += '• Butt (Flat): Combat +5% Dodge<br>'; else if (ba.buttSize === 'large') parts += '• Butt (Fat): Combat +10% Max HP<br>'; if (ba.facialBeauty === 'pretty') parts += '• Facial Beauty (Pretty): +25<br>'; else if (ba.facialBeauty === 'gorgeous') parts += '• Facial Beauty (Gorgeous): +50<br>'; if (isBeautyObsessed()) parts += '• Beauty Obsessed (' + getBOEvolutionData().name + '): +' + boVal('baseAppeal', 15) + '<br>'; if (ba.height === 'short') parts += '• Height (Short): +15% Dodge<br>'; else if (ba.height === 'tall') parts += '• Height (Tall): +10% Crit, +12% Dmg, ×2.15 Crit Dmg<br>'; if (typeof getClothedBodyAppeal === 'function') { var _isUndressed = gameState.isNaked || (typeof isEffectivelyNaked === 'function' && isEffectivelyNaked()); if (!_isUndressed) { var _cb = getClothedBodyAppeal(); if (_cb > 0) { var _T = BODY_ATTRIBUTE_EFFECTS, _btv = (_T.bodyType[ba.bodyType]||{}).appealClothed||0, _bsv = (_T.breastSize[ba.breastSize]||{}).appealClothed||0, _buv = (_T.buttSize[ba.buttSize]||{}).appealClothed||0, _hcv = (_T.height[ba.height]||{}).appealClothed||0, _segs = []; if (_btv) _segs.push('Build +' + _btv); if (_bsv) _segs.push('Bust +' + _bsv); if (_buv) _segs.push('Hips +' + _buv); if (_hcv) _segs.push('Stature +' + _hcv); parts += '• <span style="color:#ff88aa;">Clothed Body Presence: +' + _cb + '</span> <span style="color:#aa8899;">(' + _segs.join(', ') + ')</span><br>'; } } } return parts; })();
-            var appealExtras = (gameState.bodyState.showered ? '• Showered: +5<br>' : '') + (gameState.bodyState.makeup === 'premium' ? '• Premium Makeup: +35<br>' : '') + (gameState.bodyState.makeup === true ? (isBeautyObsessed() ? '• Makeup (your own): +' + getOwnMakeupAppeal() + '<br>' : '• Makeup Applied: +20<br>') : '') + (gameState.bodyState.makeup === 'smeared' ? '• <span style="color: #ff6666;">Smeared Makeup: -15</span><br>' : '') + (function(){ var bs = gameState.bodyState || {}; var g = bs.hairGroom || 'down'; var bo = (typeof hasTrait === 'function' && hasTrait('pretty_face')); var soft = bo ? 0.5 : 1; var out = ''; if (g === 'salon') out += '• Salon Hair: +' + getSalonHairAppeal() + '<br>'; else if (g === 'styled') out += '• Styled Hair: +14<br>'; else if (g === 'down' && bo) out += '• Glossy Hair (Beauty Obsessed): +6<br>'; if ((typeof getHairLengthTier === 'function') && getHairLengthTier().id === 'very_long') out += '• Very Long Hair: +3<br>'; if (g === 'unkempt') out += '• <span style="color: #ff6666;">Unkempt Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; var c = (typeof bs.hairCleanliness === 'number') ? bs.hairCleanliness : 100; if (c < 40) out += '• <span style="color: #ff6666;">Greasy Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; else if (c < 70) out += '• <span style="color: #ff6666;">Oily Hair: \u2212' + Math.round(8 * soft) + '% of base</span><br>'; return out; })() + (gameState.hygiene >= 80 ? '• Fresh &amp; Clean (Hygiene 80+): +10<br>' : '') + (gameState.hygiene <= 19 ? '• <span style="color: #ff6666;">Dirty (Hygiene <20): -10</span><br>' : '') + ((gameState.fatigue || 0) >= 80 ? '• <span style="color: #ff6666;">Exhausted (Fatigue 80+): -30</span><br>' : (gameState.fatigue || 0) >= 60 ? '• <span style="color: #ff6666;">Very Tired (Fatigue 60+): -15</span><br>' : (gameState.fatigue || 0) >= 40 ? '• Tired (Fatigue 40+): -5<br>' : '');
+            var appealExtras = (gameState.bodyState.showered ? '• Showered: +5<br>' : '') + (gameState.bodyState.makeup === 'premium' ? '• Premium Makeup: +35<br>' : '') + (gameState.bodyState.makeup === true ? (isBeautyObsessed() ? '• Makeup (your own): +' + getOwnMakeupAppeal() + '<br>' : '• Makeup Applied: +20<br>') : '') + (gameState.bodyState.makeup === 'smeared' ? '• <span style="color: #ff6666;">Smeared Makeup: -15</span><br>' : '') + (getBORitualGlow() > 0 ? '• Fresh Skin (your routine): +' + getBORitualGlow() + '<br>' : '') + (function(){ var bs = gameState.bodyState || {}; var g = bs.hairGroom || 'down'; var bo = (typeof hasTrait === 'function' && hasTrait('pretty_face')); var soft = bo ? 0.5 : 1; var out = ''; if (g === 'salon') out += '• Salon Hair: +' + getSalonHairAppeal() + '<br>'; else if (g === 'styled') out += '• Styled Hair: +14<br>'; else if (g === 'down' && bo) out += '• Glossy Hair (Beauty Obsessed): +6<br>'; if ((typeof getHairLengthTier === 'function') && getHairLengthTier().id === 'very_long') out += '• Very Long Hair: +3<br>'; if (g === 'unkempt') out += '• <span style="color: #ff6666;">Unkempt Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; var c = (typeof bs.hairCleanliness === 'number') ? bs.hairCleanliness : 100; if (c < 40) out += '• <span style="color: #ff6666;">Greasy Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; else if (c < 70) out += '• <span style="color: #ff6666;">Oily Hair: \u2212' + Math.round(8 * soft) + '% of base</span><br>'; return out; })() + (gameState.hygiene >= 80 ? '• Fresh &amp; Clean (Hygiene 80+): +10<br>' : '') + (gameState.hygiene <= 19 ? '• <span style="color: #ff6666;">Dirty (Hygiene <20): -10</span><br>' : '') + ((gameState.fatigue || 0) >= 80 ? '• <span style="color: #ff6666;">Exhausted (Fatigue 80+): -30</span><br>' : (gameState.fatigue || 0) >= 60 ? '• <span style="color: #ff6666;">Very Tired (Fatigue 60+): -15</span><br>' : (gameState.fatigue || 0) >= 40 ? '• Tired (Fatigue 40+): -5<br>' : '');
             var outfitAppeal = (function() { var total = 0; for (var slot in gameState.currentOutfit) { if (gameState.currentOutfit[slot]) total += gameState.currentOutfit[slot].appeal || 0; } return total > 0 ? '• Current Outfit: +' + total + '<br>' : ''; })();
             var faceLever = (function() { if (typeof getFaceLeverFraction !== 'function') return ''; var frac = getFaceLeverFraction(); if (frac <= 0) return ''; var _und = gameState.isNaked || (typeof isEffectivelyNaked === 'function' && isEffectivelyNaked()); if (_und) return ''; var gf = 0; if (gameState.bodyState.showered) gf += 5; if (gameState.bodyState.makeup === true) gf += getOwnMakeupAppeal(); gf += getHairGroomFlat(); if ((gameState.hygiene || 0) >= 80) gf += 10; var oa = (typeof calculateOutfitAppeal === 'function') ? calculateOutfitAppeal() : 0; var bonus = Math.round(frac * Math.max(0, gf + oa)); if (bonus <= 0) return ''; var faceName = getFaceLevel() === 'gorgeous' ? 'Gorgeous' : 'Pretty'; return '• <span style="color:#ff69b4;">Face Carries It (' + faceName + ', +' + Math.round(frac * 100) + '% of grooming + outfit): +' + bonus + '</span><br>'; })();
             sections.push({
@@ -40733,6 +40737,9 @@ audioSystem.playSFX('buttonClick');
 
             // Step 14A: evaluate the presentation streak on the tier Kelsie ended at.
             evaluatePresentationStreak();
+
+            // Beauty Obsessed Step 13: count a skipped routine.
+            if (typeof processBORitualRollover === 'function') processBORitualRollover();
         }
 
         // ── Servant Crime System: Global Tracking ──
@@ -43549,6 +43556,83 @@ audioSystem.playSFX('buttonClick');
             return hasTrait('pretty_face');
         }
 
+        // -- STEP 13: THE RITUAL -------------------------------------------
+        // Her daily routine: free, twenty minutes, any mirror. Doing it leaves a
+        // Fresh Skin glow for the rest of the day (tier-scaled ritualGlow). Skipping
+        // it two days running costs a little mental health each rollover and a mild
+        // Skipped Routine imperfection until she does it again.
+        function boRoutineDoneToday() {
+            return !!(gameState.time && gameState.boRitualDay === gameState.time.day);
+        }
+        function getBORitualGlow() {
+            if (!isBeautyObsessed() || !boRoutineDoneToday()) return 0;
+            return boVal('ritualGlow', 6);
+        }
+        function isBORoutineLapsed() {
+            return isBeautyObsessed() && (gameState.boRitualMissStreak || 0) >= 2 && !boRoutineDoneToday();
+        }
+        function getBOSkippedRoutinePenalty(baseAppeal) {
+            if (!isBORoutineLapsed()) return 0;
+            return Math.max(1, Math.round((baseAppeal || 0) * 0.03));
+        }
+        function getBOSkippedRoutineLine() {
+            var mk = gameState.bodyState && gameState.bodyState.makeup;
+            if (mk === true || mk === 'premium') {
+                return 'The makeup covers it, mostly. Underneath, your skin\'s gone too long without the routine, and it\'s starting to sit flat under the foundation.';
+            }
+            return 'Your skin\'s gone too long without the routine. It\'s duller at the cheekbones and tight around the eyes. Nobody else would clock it yet. You do.';
+        }
+        // Rollover: called once per new day from onNewDay().
+        function processBORitualRollover() {
+            if (!isBeautyObsessed() || !gameState.flags || !gameState.flags.arrivedInCity || !gameState.time) return;
+            if (gameState.boRitualDay === gameState.time.day - 1) return; // did it yesterday
+            gameState.boRitualMissStreak = (gameState.boRitualMissStreak || 0) + 1;
+            var n = gameState.boRitualMissStreak;
+            if (n >= 2) {
+                modifyMentalHealth(-2);
+                if (n === 2) {
+                    setTimeout(function() {
+                        showNotification('<img src="Images/icons/mirror.png" class="icon" alt=""> Two days without your routine. Nobody else can tell. You can, every time you catch your reflection. <span style="color:#4488ff;">Mental Health -2</span>');
+                    }, 1200);
+                }
+            }
+        }
+        // Where the inventory panel gets its Your Routine card (her only).
+        function getBORoutineCardHTML() {
+            var glow = boVal('ritualGlow', 6);
+            var img = '<div style="width: 60px; height: 60px; border-radius: 5px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(255,170,221,0.25), rgba(198,168,109,0.18));"><img src="Images/icons/sparkles.png" alt="routine" style="width: 32px; height: 32px;"></div>';
+            var btn;
+            if (boRoutineDoneToday()) {
+                btn = '<button disabled \nstyle="margin-top: 5px; padding: 5px 10px; background: #444; border: none; border-radius: 5px; color: #777; cursor: not-allowed; font-size: 0.9em;">\nDo Your Routine\n</button>\n<div style="margin-top: 5px; font-size: 0.85em; color: #88ff88;">Done today: Fresh Skin +' + glow + '</div>';
+            } else if (canApplyMakeupHere() || hasHandMirror()) {
+                btn = '<button onclick="event.stopPropagation(); doBORoutine();" \nstyle="margin-top: 5px; padding: 5px 10px; background: linear-gradient(135deg, #ffaadd, #c6a86d); border: none; border-radius: 5px; color: white; cursor: pointer; font-size: 0.9em;">\nDo Your Routine\n</button>\n<div style="margin-top: 5px; font-size: 0.8em; color: #888;">20 min. Fresh Skin (+' + glow + ' Appeal) for the day</div>';
+            } else {
+                btn = '<button disabled \nstyle="margin-top: 5px; padding: 5px 10px; background: #444; border: none; border-radius: 5px; color: #777; cursor: not-allowed; font-size: 0.9em;">\nDo Your Routine\n</button>\n<div style="margin-top: 5px; font-size: 0.85em; color: #888;">Needs a mirror</div>';
+            }
+            if (isBORoutineLapsed()) {
+                btn += '<div style="margin-top: 3px; font-size: 0.8em; color: #ffdd88;">Skipped ' + gameState.boRitualMissStreak + ' days running</div>';
+            }
+            return '\n<div class="inventory-item" style="cursor: default; display: flex; flex-direction: column; align-items: center; text-align: center;">\n' + img + '\n<div class="inventory-item-name">Your Routine</div>\n' + btn + '\n</div>\n';
+        }
+        // The extra mirror line: what she notices that nobody else would.
+        function getBOMirrorLine() {
+            var t = getBOTier();
+            var done = boRoutineDoneToday();
+            var lines = {
+                1: ['You can see yesterday on your skin, a dullness along the jaw nobody else would find with a magnifying glass. You find it in two seconds.',
+                    'Your left brow sits a hair higher than the right. It always has. The serum\'s still catching the light along your cheekbone, so you let the brow go.'],
+                2: ['The skin along your hairline is a little rough, right where the routine usually smooths it. You run a thumb over it twice.',
+                    'You check the edge of your lip line out of habit. It\'s clean. It\'s been clean every time you\'ve checked this week.'],
+                3: ['Nobody would know you skipped the routine. There\'s a faint tightness under your eyes the mirror only shows you from this angle, and you know exactly which angle.',
+                    'You lean in close, hunting for anything. A stray lash, a dry patch, a shadow in the wrong place. There\'s nothing. You look anyway.'],
+                4: ['Strangers wouldn\'t see it. You see it. The glow\'s a notch down from yesterday, like a room with one lamp off.',
+                    'You\'ve looked at this face more than anyone alive, and some mornings it still surprises you. Today it\'s the light. It sits on your skin like it\'s been waiting for you.']
+            };
+            var pair = lines[t] || lines[1];
+            return done ? pair[1] : pair[0];
+        }
+        // -- END STEP 13 RITUAL --------------------------------------------
+
         // Short prose names for what she's wearing, for the early Jaewon beats.
         // Returns { dress: 'the satin dress', shoes: 'the heels' }.
         function getBOLookWords() {
@@ -45498,6 +45582,8 @@ audioSystem.playSFX('buttonClick');
                 faceInner += _bpRow('Coordinated at', Math.round(_bo.coherenceAt * 100) + '% (usually 75%)', '#88ff88');
                 faceInner += _bpRow('Diner tips', '+' + Math.round(_bo.tipBonus * 100) + '% with makeup on and hair down or better', '#88ff88');
                 faceInner += _bpRow('Godpeia', '15% off every service', '#88ff88');
+                faceInner += _bpRow('Daily routine', boRoutineDoneToday() ? 'done today, Fresh Skin +' + _bo.ritualGlow : '+' + _bo.ritualGlow + ' Fresh Skin once done (20 min, any mirror)', boRoutineDoneToday() ? '#88ff88' : '#ffdd88');
+                if (isBORoutineLapsed()) faceInner += _bpRow('Skipped routine', gameState.boRitualMissStreak + ' days: −3% of base, −2 MH a day', '#ffaa44');
                 if (_bo.relationshipMult) faceInner += _bpRow('Relationships', '\u00d7' + _bo.relationshipMult.toFixed(2) + ' gains while Attractive or better', '#88ff88');
                 faceInner += _bpDesc('Thirteen years in front of the mirror. Smeared makeup and messy hair hit you at half strength, and a short nap won\'t wreck your hair.');
                 faceInner += '</div>';
@@ -51565,6 +51651,9 @@ audioSystem.playSFX('buttonClick');
             else if (id === 'plain') delta = -2;
             else if (id === 'invisible') delta = -4;
 
+            // Beauty Obsessed (Step 13): the mirror matters twice as much to her, both ways.
+            if (typeof isBeautyObsessed === 'function' && isBeautyObsessed()) delta *= 2;
+
             if (delta === 0) return '';
             if (typeof modifyMentalHealth === 'function') modifyMentalHealth(delta);
             var color = delta > 0 ? '#88ff88' : '#4488ff';
@@ -51629,7 +51718,12 @@ audioSystem.playSFX('buttonClick');
 
             var karma = gameState.karma || 0;
             var response;
-            if (karma >= 1000) {
+            if (typeof isBeautyObsessed === 'function' && isBeautyObsessed()) {
+                response = 'And it\'s beautiful. You do what you always do with a face: skin first, then symmetry, then the line of the jaw. There isn\'t a flaw on it.'
+                    + '\n\nThirteen years of brushes and primer and practice, and this is the best work you\'ve ever done. You aren\'t sure you did it.'
+                    + '\n\n<em>Look at my skin.</em>'
+                    + '\n\nThe illusion settles back over you. The daylight face is lovely. You miss the other one a little anyway.';
+            } else if (karma >= 1000) {
                 response = 'And it\'s beautiful. That\'s the part that frightens you. Something in you wants to lean closer, and everything else recoils from wanting it.'
                     + '\n\nYou hold onto the daylight face. The girl who still flinches at this. As long as she flinches, she\'s still in there.'
                     + '\n\n<em>I won\'t let it have me. Not all of me.</em>'
@@ -51661,6 +51755,14 @@ audioSystem.playSFX('buttonClick');
                 var hadStreak = (gameState.presentationStreak || 0);
                 gameState.presentationStreak = 0;
                 if (hadStreak >= 3) {
+                    // Beauty Obsessed (Step 13): losing the streak stings her.
+                    if (typeof isBeautyObsessed === 'function' && isBeautyObsessed()) {
+                        if (typeof modifyMentalHealth === 'function') modifyMentalHealth(-3);
+                        setTimeout(function() {
+                            showNotification('<img src="Images/icons/mirror.png" class="icon" alt=""> ' + hadStreak + ' days at your best, and you let it slip. You know exactly where it went wrong, and it\'s going to bug you. <span style="color:#4488ff;">Mental Health -3</span>');
+                        }, 900);
+                        return;
+                    }
                     setTimeout(function() {
                         showNotification('<img src="Images/icons/sparkle.png" class="icon" alt=""> Your ' + hadStreak + '-day streak of looking your best is over. The polish slips when you stop tending it.');
                     }, 900);
@@ -51673,6 +51775,9 @@ audioSystem.playSFX('buttonClick');
 
             // Escalating poise: charisma XP scales with the streak, capped.
             var chaXP = Math.min(2 + s, 8);
+            // Beauty Obsessed (Step 13): the streak pays her half again as much.
+            var _boStreakMult = (typeof isBeautyObsessed === 'function' && isBeautyObsessed()) ? 1.5 : 1;
+            chaXP = Math.round(chaXP * _boStreakMult);
             if (typeof gainCharisma === 'function') gainCharisma(chaXP, 'presentation streak');
 
             // 11B: Allure XP at streak milestones. Sustained high presentation
@@ -51682,7 +51787,7 @@ audioSystem.playSFX('buttonClick');
 
             // Small MH stabilization, also capped. Skips day 1 so the payoff builds.
             if (s >= 2) {
-                var mh = Math.min(s, 4);
+                var mh = Math.round(Math.min(s, 4) * _boStreakMult);
                 if (typeof modifyMentalHealth === 'function') modifyMentalHealth(mh);
             }
 
@@ -52446,6 +52551,15 @@ audioSystem.playSFX('buttonClick');
                 narratives.push(res);
             }
             rawFlaws.forEach(resolveAndPush);
+
+            // SKIPPED ROUTINE (Beauty Obsessed Step 13): flat 3% of base, never
+            // softened or inverted, gone the moment she does the routine.
+            const _boSkip = getBOSkippedRoutinePenalty(baseAppeal);
+            if (_boSkip > 0) {
+                totalPenalty += _boSkip;
+                totalAllureDelta -= _boSkip;
+                narratives.push({ kind: 'penalty', delta: -_boSkip, allureDelta: -_boSkip, text: getBOSkippedRoutineLine(), severity: 'low', label: 'Skipped Routine (' + gameState.boRitualMissStreak + ' days)', penaltyAmt: _boSkip });
+            }
 
             // DIRTY CLOTHES (skip if effectively naked - no clothes to be dirty)
             if (isEffectivelyNaked()) {
@@ -53913,8 +54027,11 @@ audioSystem.playSFX('buttonClick');
                 else if (hyg <= 39) nakedAppeal -= Math.round(baseForPenalties * 0.25);
                 else if (hyg <= 59) nakedAppeal -= Math.round(baseForPenalties * 0.10);
                 
+                nakedAppeal -= getBOSkippedRoutinePenalty(baseForPenalties);
+
                 nakedAppeal += (gameState.appealBonus || 0);
                 nakedAppeal += getSpaGlowBonus();
+                nakedAppeal += getBORitualGlow();
                 return Math.max(0, nakedAppeal);
             }
 
@@ -53981,6 +54098,9 @@ audioSystem.playSFX('buttonClick');
 
             // SPA GLOW (Step 14C): temporary bump from a Godpeia massage.
             total += getSpaGlowBonus();
+
+            // FRESH SKIN (Beauty Obsessed Step 13): her daily routine.
+            total += getBORitualGlow();
 
             return Math.max(0, total);
         }
@@ -54056,6 +54176,9 @@ audioSystem.playSFX('buttonClick');
             }
             if (gameState.bodyState.makeup === true) {
                 benefits.push((isBeautyObsessed() ? 'Your own makeup' : 'Enhanced facial features') + ' (+' + getOwnMakeupAppeal() + ' Appeal)');
+            }
+            if (getBORitualGlow() > 0) {
+                benefits.push('<img src="Images/icons/sparkles.png" class="icon" alt="sparkles"> Fresh Skin from your routine (+' + getBORitualGlow() + ' Appeal)');
             }
             if (gameState.bodyState.hairGroom === 'salon') {
                 benefits.push('Salon-styled hair (+' + getSalonHairAppeal() + ' Appeal)');
@@ -55757,14 +55880,20 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             const locationsWithMirrors = [
                 'jaewon_apartment_main',
                 'jaewon_apartment_return',
-                'your_apartment_main',
+                'jaewon_apartment_bathroom',
+                'own_apartment_main',
+                'own_apartment_bathroom',
                 'diner_staffroom',
                 'diner_main_floor',
+                'diner_customer_restroom',
                 'hunt_hardy_bar',
                 'hardy_bar_restroom',
                 'hardy_bar_booth',
-                'lucius_lounge_main',
-                'lucius_lounge_vip'
+                'lucius_lounge',
+                'lucius_lounge_restroom',
+                'cheap_motel_bathroom',
+                'parkside_inn_bathroom',
+                'hotel_room_bathroom'
             ];
             
             return locationsWithMirrors.includes(currentScene);
@@ -55813,7 +55942,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             updateInventoryDisplay();
             
             // Save the current scene before transitioning (but don't save if already in a temporary scene)
-            if (currentScene !== 'apply_makeup_scene' && currentScene !== 'brush_hair_scene' && currentScene !== 'consume_blood_bag_scene') {
+            if (currentScene !== 'apply_makeup_scene' && currentScene !== 'brush_hair_scene' && currentScene !== 'consume_blood_bag_scene' && currentScene !== 'bo_ritual_scene') {
                 previousScene = currentScene;
             }
             
@@ -55913,12 +56042,38 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             updateSidebarStats();
 
             // Save the current scene before transitioning (but don't save if already in a temporary scene)
-            if (currentScene !== 'apply_makeup_scene' && currentScene !== 'brush_hair_scene' && currentScene !== 'consume_blood_bag_scene') {
+            if (currentScene !== 'apply_makeup_scene' && currentScene !== 'brush_hair_scene' && currentScene !== 'consume_blood_bag_scene' && currentScene !== 'bo_ritual_scene') {
                 previousScene = currentScene;
             }
 
             // Show scene
             showScene('brush_hair_scene');
+        }
+
+        // Step 13: Beauty Obsessed daily routine. Free; needs a mirror; once a day.
+        function doBORoutine() {
+            if (!isBeautyObsessed()) return;
+            if (boRoutineDoneToday()) {
+                showNotification('<img src="Images/icons/sparkles.png" class="icon" alt=""> You\'ve already done your routine today');
+                return;
+            }
+            if (!canApplyMakeupHere() && !hasHandMirror()) {
+                showNotification('<img src="Images/icons/x-mark.png" class="icon" alt="x"> You need a mirror for your routine. Find a bathroom or keep your hand mirror on you.');
+                return;
+            }
+            gameState.boRitualDay = gameState.time.day;
+            gameState.boRitualMissStreak = 0;
+            modifyMentalHealth(3);
+            advanceTime(20);
+            updateStatus();
+            updateSidebarStats();
+            updateInventoryDisplay();
+
+            // Save the current scene before transitioning (but don't save if already in a temporary scene)
+            if (currentScene !== 'apply_makeup_scene' && currentScene !== 'brush_hair_scene' && currentScene !== 'consume_blood_bag_scene' && currentScene !== 'bo_ritual_scene') {
+                previousScene = currentScene;
+            }
+            showScene('bo_ritual_scene');
         }
 
         function consumeBloodBag() {
@@ -80513,7 +80668,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
 
                     var pages = [];
-                    pages.push(lead + (face ? '\n\n' + face : ''));
+                    // Beauty Obsessed (Step 13): one more line, the thing nobody else would notice.
+                    var boLine = (typeof isBeautyObsessed === 'function' && isBeautyObsessed()) ? getBOMirrorLine() : '';
+                    pages.push(lead + (face ? '\n\n' + face : '') + (boLine ? '\n\n' + boLine : ''));
                     if (middle.length > 0) pages.push(middle.join('\n\n'));
                     pages.push(feeling + allureMirror + (mh || ''));
                     return pages;
@@ -142901,6 +143058,43 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                                 } else {
                                     showScene('city_exploration');
                                 }
+                            }
+                        }}
+                    ];
+                }
+            },
+
+            // Step 13: her routine. One short variant per day, rotating.
+            bo_ritual_scene: {
+                text: function() {
+                    var day = (gameState.time && gameState.time.day) || 1;
+                    var setup = canApplyMakeupHere()
+                        ? 'You line everything up along the edge of the sink, in order.'
+                        : 'You prop your hand mirror up where you can see it and lay everything out in order.';
+                    var pool = [
+                        'Cleanser, toner, then the serum that costs more than your phone bill. You press it in with two fingers, cheekbone to temple, same as every morning since you were thirteen.\n\nTwenty minutes later your skin looks lit from underneath.',
+                        'Your skin doesn\'t need any of this anymore. Whatever happened to you took every pore and every flaw with it.\n\nYou do the whole routine anyway, step by step, and your shoulders drop an inch by the end of it.',
+                        'Cold water, the gel cleanser, then the eye cream, tapped in with your ring finger because anything else drags the skin.\n\nBy the time you cap the last bottle, the girl in the mirror looks rested. You haven\'t had a normal night\'s sleep since you woke up like this.',
+                        setup + ' Cleanser, serum, moisturizer, a dot of lip balm last.\n\nIt\'s the one part of the day that goes exactly how you plan it.'
+                    ];
+                    return pool[day % pool.length]
+                        + '\n\n<span style="color: #88ff88;">Mental Health +3</span>  · <span style="color: #ffd700;">Fresh Skin: Appeal +' + getBORitualGlow() + ' (today)</span>';
+                },
+                onEnter: () => {
+                    // Already handled in doBORoutine
+                },
+                choices: function() {
+                    const returnScene = previousScene || (gameState.flags.hasOwnApartment ? 'own_apartment_bathroom' : 'city_exploration');
+                    return [
+                        { text: '<img src="Images/icons/check-mark.png" class="icon" alt="continue"> Continue', action: () => {
+                            updateStatus();
+                            updateInventoryDisplay();
+                            if (returnScene && story[returnScene]) {
+                                showScene(returnScene);
+                            } else if (gameState.flags.hasOwnApartment) {
+                                showScene('own_apartment_bathroom');
+                            } else {
+                                showScene('city_exploration');
                             }
                         }}
                     ];

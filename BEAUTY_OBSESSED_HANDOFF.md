@@ -2,7 +2,7 @@
 
 This document is self-contained. The only other document required is the style guide (`VampireGirl_Style_Guide_SS.md`), which is mandatory reading before any prose work.
 
-Steps 1 through 12 are done. **Step 13 is next.** Steps 13 through 17 are fully specified below.
+Steps 1 through 13 are done. **Step 14 is next.** Steps 14 through 17 are fully specified below.
 
 ---
 
@@ -16,7 +16,7 @@ Steps 1 through 12 are done. **Step 13 is next.** Steps 13 through 17 are fully 
    - That file is the latest. Never work from an older copy, never copy an earlier upload over it. If the author uploads a new file, work on the new file instead.
    - `/mnt/user-data/outputs` does not exist in this environment. The repo file IS the latest output.
 4. Do **one step per turn** unless the author asks for more. Build it, verify it, commit, push, send the file to the author, then wait for confirmation.
-5. Start with Step 13 (section 13 below).
+5. Start with Step 14 (section 14 below).
 
 ---
 
@@ -163,7 +163,7 @@ gameState fields (initializer, new-game reset, migration defaults): `boRadiantDa
 | 3 | Flawless | 21 | 25 | 32 | 12 | 5 | 8 | 0.12 | 0.40 | 0.65 | 1 | |
 | 4 | Iconic | 45 | 30 | 35 | 15 | 6 | 10 | 0.15 | 0.60 | 0.65 | 1 | relationshipMult 1.10 |
 
-**All numbers are live except `ritualGlow` (Step 13) and `bonusCharisma` (Step 14).** Every tier's passive now says "Grooming flaws hit at half strength, and a short nap won't wreck your hair," and from Polished up, "any makeup on your face" resists smears.
+**All numbers are live except `bonusCharisma` (Step 14).** Every tier's passive now says "Grooming flaws hit at half strength, and a short nap won't wreck your hair," and from Polished up, "any makeup on your face" resists smears.
 
 ### 3.4 Old character creation removed
 TRAITS entries hold only: parent `{ id, name, icon, color, subtypes }`, subtype `{ id, name, startBonus, passive, apply, evolutions? }`.
@@ -214,6 +214,15 @@ TRAITS entries hold only: parent `{ id, name, icon, color, subtypes }`, subtype 
 - Bug fix for all players: Body State showed applied makeup as +10 while the math gave +20.
 - Note for balance: imperfection penalties scale with base appeal, so a higher tier also makes a neglected state cost slightly more allure.
 
+### 3.13 Step 13: The ritual and the mirror
+- Helpers (just below `isBeautyObsessed`): `boRoutineDoneToday`, `getBORitualGlow`, `isBORoutineLapsed`, `getBOSkippedRoutinePenalty(base)`, `getBOSkippedRoutineLine`, `processBORitualRollover`, `getBORoutineCardHTML`, `getBOMirrorLine`. Action `doBORoutine()` (next to `brushHair`), scene `bo_ritual_scene` (4 rotating variants keyed to `day % 4`; the 4th opens differently at a sink vs the hand mirror). `bo_ritual_scene` is in all three temporary-scene guards.
+- Routine: free, 20 min, +3 MH, once a day, any `canApplyMakeupHere()` location or the Hand Mirror. "Your Routine" card leads the personal-care inventory section for her (shows even if she has no personal-care items).
+- Fresh Skin: +`ritualGlow` in both appeal branches, Current Stats ("Fresh Skin (your routine)"), benefits list, and a "Daily routine" row in the Body & Presentation face box.
+- Skipping: `processBORitualRollover()` runs at the end of `onNewDay()` (gated on `arrivedInCity`). A day without the routine increments `boRitualMissStreak`; from 2, −2 MH per rollover (one notification at 2). Skipped Routine imperfection: flat 3% of base (min 1), pushed straight into the narratives (never face-softened or inverted), naked branch too. Clears the moment she does the routine. No new gameState fields.
+- Mirror: `applyMirrorMentalHealth` doubles the delta for her; `own_apartment_mirror` adds `getBOMirrorLine()` after the face line (tier × routine-done, 8 lines); `vampireInMirror` has a BO response ("the best work you've ever done. You aren't sure you did it.") that replaces the karma responses.
+- Streak: charisma XP and MH ×1.5 (rounded); breaking a 3+ streak costs her −3 MH with her own notification.
+- **Bug fix (all players):** `canApplyMakeupHere()` listed three dead ids (`your_apartment_main`, `lucius_lounge_main`, `lucius_lounge_vip`) and missed her own apartment entirely. Now: own apartment main + bathroom, Jaewon's bathroom, `lucius_lounge` + restroom, diner customer restroom, motel / Parkside / hotel bathrooms.
+
 ---
 
 ## 4. Decisions Already Made
@@ -255,8 +264,8 @@ Existing BO hooks not tier-scaled (by design): glossy "down" hair +6 (`getHairGr
 | Step | Title | Status |
 |---|---|---|
 | 1 to 12 | | Done |
-| 13 | The ritual and the mirror | **NEXT** |
-| 14 | Evolution: staying radiant | |
+| 13 | The ritual and the mirror | Done |
+| 14 | Evolution: staying radiant | **NEXT** |
 | 15 | UI and Tips & Guide | |
 | 16 | Save migration | |
 | 17 | Polish and integration | |
@@ -384,3 +393,4 @@ Every new and touched string from Steps 1 to 16 against the style guide checklis
 | 16 | `tell_maya` stale choice id in character creation | Fixed (→ `spread_it`) |
 | 17 | Body State showed applied makeup as +10 | Fixed (Step 12) |
 | 18 | Intro chains exited through the old `after_shopping` GPS scene | Fixed (Step 10) |
+| 19 | `canApplyMakeupHere()` listed dead scene ids, missed her own apartment and every bathroom | Fixed (Step 13) |
