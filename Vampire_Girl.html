@@ -209852,6 +209852,14 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         result: 'Your coaches call it court vision. You see the play forming, and you\'re already standing where the ball\'s going to land.'
                     },
                     {
+                        id: 'trait_beauty_obsessed',
+                        label: 'Yourself. You train in front of the mirror.',
+                        text: 'The other girls are out on a field somewhere. You\'re up on the bathroom counter in Margaret\'s heels, her lipstick all over your mouth, working out which side of your face the light likes better.\n\nIt\'s a game. It\'s also practice.',
+                        trait: 'pretty_face',
+                        karma: 0, corruption: 0, charisma: 1,
+                        result: 'Soccer lasts a week. Dance lasts two. Gym class turns into the one hour a day you\'d rather be invisible.\n\nBy seven you\'ve got a routine. By ten it takes up the whole counter, and Margaret\'s stopped asking where her good mascara went.'
+                    },
+                    {
                         id: 'trait_no_athlete',
                         label: 'Nothing organized. You had other plans.',
                         text: 'Sports never grab you. You spend those afternoons in the backyard, in front of the TV, or anywhere a coach isn\'t yelling.',
@@ -210715,11 +210723,24 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     },
                     {
                         id: 'body_athletic',
-                        label: 'Athletic. Lean muscle. Built by years of training.',
-                        text: 'Toned arms, strong legs, and a core that shows when you stretch. Your body looks like it gets used, because it does.',
+                        // Beauty Obsessed variant (Beauty Obsessed overhaul, Step 4C): same stat and bodyType
+                        label: function() {
+                            return (ccState.selectedTraits && ccState.selectedTraits.indexOf('pretty_face') !== -1)
+                                ? 'Athletic. Lean and toned, and every inch of it on purpose.'
+                                : 'Athletic. Lean muscle. Built by years of training.';
+                        },
+                        text: function() {
+                            return (ccState.selectedTraits && ccState.selectedTraits.indexOf('pretty_face') !== -1)
+                                ? 'Lean and toned from Pilates videos in your bedroom and walking everywhere you can. You built it for how clothes hang on you, and they hang perfectly.'
+                                : 'Toned arms, strong legs, and a core that shows when you stretch. Your body looks like it gets used, because it does.';
+                        },
                         karma: 0, corruption: 0, strength: 5,
                         bodyType: 'athletic',
-                        result: 'Gym class is easy. The rope climb is your favorite day of the year.'
+                        result: function() {
+                            return (ccState.selectedTraits && ccState.selectedTraits.indexOf('pretty_face') !== -1)
+                                ? 'You still sit out the rope climb every year. Your jeans fit like they were cut for you, though, and that\'s the part you care about.'
+                                : 'Gym class is easy. The rope climb is your favorite day of the year.';
+                        }
                     },
                     {
                         id: 'body_curvy',
