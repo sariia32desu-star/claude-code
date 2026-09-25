@@ -244,8 +244,8 @@ Useful function names (search for them; line numbers drift): `getBodyBaseAppeal`
 | 9 | The clothing choice at Jaewon's (bug fixes + variants) | Done |
 | 10 | The city sees her | Done |
 | 11 | Upscale access | Done |
-| 12 | The buffs: her face, her eye, her draw | **NEXT** |
-| 13 | The ritual and the mirror | |
+| 12 | The buffs: her face, her eye, her draw | Done |
+| 13 | The ritual and the mirror | **NEXT** |
 | 14 | Evolution: staying radiant | |
 | 15 | UI and Tips & Guide | |
 | 16 | Save migration | |
@@ -414,7 +414,9 @@ The Noir list contains ids that don't exist (`luxury_lace`, `silk_burgundy`, `co
 
 ---
 
-## 12. Step 12: The Buffs (Her Face, Her Eye, Her Draw)
+## 12. Step 12: The Buffs (Her Face, Her Eye, Her Draw) (DONE)
+
+**As shipped:** helpers `boVal(key, fallback)`, `getOwnMakeupAppeal()`, `trySmearMakeup(source)` (resists only her own makeup, never Godpeia premium; used at all seven smear sites incl. sleep), `getBOTipMultiplier()` (all three tip sites), `getGodpeiaServicePrice(base)` (flat services, hair menu via `chargeGodpeiaHairService`; the face upgrade is untouched since she's already gorgeous). The Iconic x1.10 sits in `modifyRelationship`'s `applyBonus` beside Class President (Party Girl has no relationship hook; its x1.08 is Allure XP). The Body State panel's makeup label said +10 while the math gave +20; it now shows the real number for everyone. Nap-proof hair is still not named in the passive (question to Nathan still open).
 
 Turns the Step 3 tier table into live numbers. Read every number from `getBOEvolutionData()`.
 

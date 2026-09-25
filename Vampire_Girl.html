@@ -23086,6 +23086,8 @@ audioSystem.playSFX('buttonClick');
                     const karma = gameState.karma || 0;
                     if (karma >= 1000) p = p * 2.5;
                     if (hasTrait('class_president')) p = p * 1.25;
+                    // BEAUTY OBSESSED (Iconic): people warm to her faster while she looks the part
+                    if (isBeautyObsessed() && boVal('relationshipMult', 1) > 1 && appealTierAtLeast('attractive')) p = p * boVal('relationshipMult', 1);
                     // Charisma: +0.5% per level above 1, capped at +90%
                     const charismaLevel = gameState.charisma || 1;
                     const charismaRelBonus = Math.min(0.90, (charismaLevel - 1) * 0.005);
@@ -31828,10 +31830,10 @@ audioSystem.playSFX('buttonClick');
             });
 
             // 6. Appeal
-            var appealBreakdown = (function() { var ba = gameState.bodyAppearance || {}; var parts = ''; if (ba.bodyType && ba.bodyType !== 'ordinary') { if (ba.bodyType === 'petite') parts += '• Body Type (Petite): Combat +10% Dodge<br>'; else if (ba.bodyType === 'athletic') parts += '• Body Type (Athletic): Combat +8% Dmg · +5 Str<br>'; else if (ba.bodyType === 'curvy') parts += '• Body Type (Curvy): Combat +15% Max HP · +5 Cha<br>'; else if (ba.bodyType === 'thick') parts += '• Body Type (Thick): Combat -12% Dmg Taken · +5 Cha<br>'; } if (ba.breastSize === 'small') parts += '• Breasts (Small): Combat +5% Crit Chance<br>'; else if (ba.breastSize === 'large') parts += '• Breasts (Large): Combat -8% Dmg Taken<br>'; if (ba.buttSize === 'small') parts += '• Butt (Flat): Combat +5% Dodge<br>'; else if (ba.buttSize === 'large') parts += '• Butt (Fat): Combat +10% Max HP<br>'; if (ba.facialBeauty === 'pretty') parts += '• Facial Beauty (Pretty): +25<br>'; else if (ba.facialBeauty === 'gorgeous') parts += '• Facial Beauty (Gorgeous): +50<br>'; if (ba.height === 'short') parts += '• Height (Short): +15% Dodge<br>'; else if (ba.height === 'tall') parts += '• Height (Tall): +10% Crit, +12% Dmg, ×2.15 Crit Dmg<br>'; if (typeof getClothedBodyAppeal === 'function') { var _isUndressed = gameState.isNaked || (typeof isEffectivelyNaked === 'function' && isEffectivelyNaked()); if (!_isUndressed) { var _cb = getClothedBodyAppeal(); if (_cb > 0) { var _T = BODY_ATTRIBUTE_EFFECTS, _btv = (_T.bodyType[ba.bodyType]||{}).appealClothed||0, _bsv = (_T.breastSize[ba.breastSize]||{}).appealClothed||0, _buv = (_T.buttSize[ba.buttSize]||{}).appealClothed||0, _hcv = (_T.height[ba.height]||{}).appealClothed||0, _segs = []; if (_btv) _segs.push('Build +' + _btv); if (_bsv) _segs.push('Bust +' + _bsv); if (_buv) _segs.push('Hips +' + _buv); if (_hcv) _segs.push('Stature +' + _hcv); parts += '• <span style="color:#ff88aa;">Clothed Body Presence: +' + _cb + '</span> <span style="color:#aa8899;">(' + _segs.join(', ') + ')</span><br>'; } } } return parts; })();
-            var appealExtras = (gameState.bodyState.showered ? '• Showered: +5<br>' : '') + (gameState.bodyState.makeup === 'premium' ? '• Premium Makeup: +35<br>' : '') + (gameState.bodyState.makeup === true ? '• Makeup Applied: +20<br>' : '') + (gameState.bodyState.makeup === 'smeared' ? '• <span style="color: #ff6666;">Smeared Makeup: -15</span><br>' : '') + (function(){ var bs = gameState.bodyState || {}; var g = bs.hairGroom || 'down'; var bo = (typeof hasTrait === 'function' && hasTrait('pretty_face')); var soft = bo ? 0.5 : 1; var out = ''; if (g === 'salon') out += '• Salon Hair: +' + getSalonHairAppeal() + '<br>'; else if (g === 'styled') out += '• Styled Hair: +14<br>'; else if (g === 'down' && bo) out += '• Glossy Hair (Beauty Obsessed): +6<br>'; if ((typeof getHairLengthTier === 'function') && getHairLengthTier().id === 'very_long') out += '• Very Long Hair: +3<br>'; if (g === 'unkempt') out += '• <span style="color: #ff6666;">Unkempt Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; var c = (typeof bs.hairCleanliness === 'number') ? bs.hairCleanliness : 100; if (c < 40) out += '• <span style="color: #ff6666;">Greasy Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; else if (c < 70) out += '• <span style="color: #ff6666;">Oily Hair: \u2212' + Math.round(8 * soft) + '% of base</span><br>'; return out; })() + (gameState.hygiene >= 80 ? '• Fresh &amp; Clean (Hygiene 80+): +10<br>' : '') + (gameState.hygiene <= 19 ? '• <span style="color: #ff6666;">Dirty (Hygiene <20): -10</span><br>' : '') + ((gameState.fatigue || 0) >= 80 ? '• <span style="color: #ff6666;">Exhausted (Fatigue 80+): -30</span><br>' : (gameState.fatigue || 0) >= 60 ? '• <span style="color: #ff6666;">Very Tired (Fatigue 60+): -15</span><br>' : (gameState.fatigue || 0) >= 40 ? '• Tired (Fatigue 40+): -5<br>' : '');
+            var appealBreakdown = (function() { var ba = gameState.bodyAppearance || {}; var parts = ''; if (ba.bodyType && ba.bodyType !== 'ordinary') { if (ba.bodyType === 'petite') parts += '• Body Type (Petite): Combat +10% Dodge<br>'; else if (ba.bodyType === 'athletic') parts += '• Body Type (Athletic): Combat +8% Dmg · +5 Str<br>'; else if (ba.bodyType === 'curvy') parts += '• Body Type (Curvy): Combat +15% Max HP · +5 Cha<br>'; else if (ba.bodyType === 'thick') parts += '• Body Type (Thick): Combat -12% Dmg Taken · +5 Cha<br>'; } if (ba.breastSize === 'small') parts += '• Breasts (Small): Combat +5% Crit Chance<br>'; else if (ba.breastSize === 'large') parts += '• Breasts (Large): Combat -8% Dmg Taken<br>'; if (ba.buttSize === 'small') parts += '• Butt (Flat): Combat +5% Dodge<br>'; else if (ba.buttSize === 'large') parts += '• Butt (Fat): Combat +10% Max HP<br>'; if (ba.facialBeauty === 'pretty') parts += '• Facial Beauty (Pretty): +25<br>'; else if (ba.facialBeauty === 'gorgeous') parts += '• Facial Beauty (Gorgeous): +50<br>'; if (isBeautyObsessed()) parts += '• Beauty Obsessed (' + getBOEvolutionData().name + '): +' + boVal('baseAppeal', 15) + '<br>'; if (ba.height === 'short') parts += '• Height (Short): +15% Dodge<br>'; else if (ba.height === 'tall') parts += '• Height (Tall): +10% Crit, +12% Dmg, ×2.15 Crit Dmg<br>'; if (typeof getClothedBodyAppeal === 'function') { var _isUndressed = gameState.isNaked || (typeof isEffectivelyNaked === 'function' && isEffectivelyNaked()); if (!_isUndressed) { var _cb = getClothedBodyAppeal(); if (_cb > 0) { var _T = BODY_ATTRIBUTE_EFFECTS, _btv = (_T.bodyType[ba.bodyType]||{}).appealClothed||0, _bsv = (_T.breastSize[ba.breastSize]||{}).appealClothed||0, _buv = (_T.buttSize[ba.buttSize]||{}).appealClothed||0, _hcv = (_T.height[ba.height]||{}).appealClothed||0, _segs = []; if (_btv) _segs.push('Build +' + _btv); if (_bsv) _segs.push('Bust +' + _bsv); if (_buv) _segs.push('Hips +' + _buv); if (_hcv) _segs.push('Stature +' + _hcv); parts += '• <span style="color:#ff88aa;">Clothed Body Presence: +' + _cb + '</span> <span style="color:#aa8899;">(' + _segs.join(', ') + ')</span><br>'; } } } return parts; })();
+            var appealExtras = (gameState.bodyState.showered ? '• Showered: +5<br>' : '') + (gameState.bodyState.makeup === 'premium' ? '• Premium Makeup: +35<br>' : '') + (gameState.bodyState.makeup === true ? (isBeautyObsessed() ? '• Makeup (your own): +' + getOwnMakeupAppeal() + '<br>' : '• Makeup Applied: +20<br>') : '') + (gameState.bodyState.makeup === 'smeared' ? '• <span style="color: #ff6666;">Smeared Makeup: -15</span><br>' : '') + (function(){ var bs = gameState.bodyState || {}; var g = bs.hairGroom || 'down'; var bo = (typeof hasTrait === 'function' && hasTrait('pretty_face')); var soft = bo ? 0.5 : 1; var out = ''; if (g === 'salon') out += '• Salon Hair: +' + getSalonHairAppeal() + '<br>'; else if (g === 'styled') out += '• Styled Hair: +14<br>'; else if (g === 'down' && bo) out += '• Glossy Hair (Beauty Obsessed): +6<br>'; if ((typeof getHairLengthTier === 'function') && getHairLengthTier().id === 'very_long') out += '• Very Long Hair: +3<br>'; if (g === 'unkempt') out += '• <span style="color: #ff6666;">Unkempt Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; var c = (typeof bs.hairCleanliness === 'number') ? bs.hairCleanliness : 100; if (c < 40) out += '• <span style="color: #ff6666;">Greasy Hair: \u2212' + Math.round(18 * soft) + '% of base</span><br>'; else if (c < 70) out += '• <span style="color: #ff6666;">Oily Hair: \u2212' + Math.round(8 * soft) + '% of base</span><br>'; return out; })() + (gameState.hygiene >= 80 ? '• Fresh &amp; Clean (Hygiene 80+): +10<br>' : '') + (gameState.hygiene <= 19 ? '• <span style="color: #ff6666;">Dirty (Hygiene <20): -10</span><br>' : '') + ((gameState.fatigue || 0) >= 80 ? '• <span style="color: #ff6666;">Exhausted (Fatigue 80+): -30</span><br>' : (gameState.fatigue || 0) >= 60 ? '• <span style="color: #ff6666;">Very Tired (Fatigue 60+): -15</span><br>' : (gameState.fatigue || 0) >= 40 ? '• Tired (Fatigue 40+): -5<br>' : '');
             var outfitAppeal = (function() { var total = 0; for (var slot in gameState.currentOutfit) { if (gameState.currentOutfit[slot]) total += gameState.currentOutfit[slot].appeal || 0; } return total > 0 ? '• Current Outfit: +' + total + '<br>' : ''; })();
-            var faceLever = (function() { if (typeof getFaceLeverFraction !== 'function') return ''; var frac = getFaceLeverFraction(); if (frac <= 0) return ''; var _und = gameState.isNaked || (typeof isEffectivelyNaked === 'function' && isEffectivelyNaked()); if (_und) return ''; var gf = 0; if (gameState.bodyState.showered) gf += 5; if (gameState.bodyState.makeup === true) gf += 20; gf += getHairGroomFlat(); if ((gameState.hygiene || 0) >= 80) gf += 10; var oa = (typeof calculateOutfitAppeal === 'function') ? calculateOutfitAppeal() : 0; var bonus = Math.round(frac * Math.max(0, gf + oa)); if (bonus <= 0) return ''; var faceName = getFaceLevel() === 'gorgeous' ? 'Gorgeous' : 'Pretty'; return '• <span style="color:#ff69b4;">Face Carries It (' + faceName + ', +' + Math.round(frac * 100) + '% of grooming + outfit): +' + bonus + '</span><br>'; })();
+            var faceLever = (function() { if (typeof getFaceLeverFraction !== 'function') return ''; var frac = getFaceLeverFraction(); if (frac <= 0) return ''; var _und = gameState.isNaked || (typeof isEffectivelyNaked === 'function' && isEffectivelyNaked()); if (_und) return ''; var gf = 0; if (gameState.bodyState.showered) gf += 5; if (gameState.bodyState.makeup === true) gf += getOwnMakeupAppeal(); gf += getHairGroomFlat(); if ((gameState.hygiene || 0) >= 80) gf += 10; var oa = (typeof calculateOutfitAppeal === 'function') ? calculateOutfitAppeal() : 0; var bonus = Math.round(frac * Math.max(0, gf + oa)); if (bonus <= 0) return ''; var faceName = getFaceLevel() === 'gorgeous' ? 'Gorgeous' : 'Pretty'; return '• <span style="color:#ff69b4;">Face Carries It (' + faceName + ', +' + Math.round(frac * 100) + '% of grooming + outfit): +' + bonus + '</span><br>'; })();
             sections.push({
                 icon: 'Images/icons/sparkle.png',
                 label: 'Appeal',
@@ -31855,7 +31857,7 @@ audioSystem.playSFX('buttonClick');
                     if (hasTrait('party_girl')) _traitA += 6;
                     if (hasTrait('theater_kid')) _traitA += 6;
                     if (hasTrait('class_president')) _traitA += 4;
-                    if (hasTrait('pretty_face')) _traitA += 6;
+                    if (hasTrait('pretty_face')) _traitA += boVal('allureFloor', 6);
                 }
                 var _derivedFloor = 20 + _tierSocial + _faceA + _presA + _chaA + _corrA + _traitA + _impA + _spaA;
                 var _earnedAllure = (gameState.allureLevel || 1) * 3;
@@ -36850,7 +36852,8 @@ audioSystem.playSFX('buttonClick');
                 if (styleCounts[s] === dominantCount) { dominantStyle = s; break; }
             }
 
-            if (coherenceRatio >= 0.75) return { score: 1.15, label: 'Coordinated', desc: 'Everything works together.', color: '#88ffaa', dominant: dominantStyle };
+            // BEAUTY OBSESSED: her eye pulls a look together sooner (the Try On preview uses this too)
+            if (coherenceRatio >= boVal('coherenceAt', 0.75)) return { score: 1.15, label: 'Coordinated', desc: 'Everything works together.', color: '#88ffaa', dominant: dominantStyle };
             if (coherenceRatio >= 0.50) return { score: 1.05, label: 'Put-Together', desc: 'A solid look.', color: '#cccccc', dominant: dominantStyle };
             if (coherenceRatio >= 0.30) return { score: 1.00, label: 'Mixed', desc: 'It\'s fine.', color: '#888888', dominant: dominantStyle };
             return { score: 0.92, label: 'Clashing', desc: 'These pieces fight each other.', color: '#cc6666', dominant: dominantStyle };
@@ -39609,7 +39612,7 @@ audioSystem.playSFX('buttonClick');
                 
                 // Smear makeup if raining
                 if (gameState.bodyState.makeup === true && gameState.weather.clothesWetness > 20) {
-                    gameState.bodyState.makeup = 'smeared';
+                    trySmearMakeup('rain');
                 }
             }
             
@@ -39619,7 +39622,7 @@ audioSystem.playSFX('buttonClick');
                 if (_tcMakeup.level === 'overheating') {
                     var smearChance = 0.15 * (minutesPassed / 60);
                     if (Math.random() < smearChance) {
-                        gameState.bodyState.makeup = 'smeared';
+                        trySmearMakeup('heat');
                         showNotification('<img src="Images/icons/lipstick.png" class="icon" alt="lipstick"> The heat got to your makeup. It\'s running.');
                     }
                 }
@@ -43578,6 +43581,45 @@ audioSystem.playSFX('buttonClick');
             return evos[getBOTier()] || evos[1];
         }
 
+        // One tier number for a Beauty Obsessed hook, or the fallback for everyone else.
+        function boVal(key, fallback) {
+            if (!isBeautyObsessed()) return fallback;
+            var v = getBOEvolutionData()[key];
+            return (v === undefined) ? fallback : v;
+        }
+
+        // Appeal from ordinary (non-Godpeia) makeup: +20, or her tier's number.
+        function getOwnMakeupAppeal() {
+            return boVal('makeupAppeal', 20);
+        }
+
+        // Every "makeup smears" moment runs through here. Her own makeup rolls
+        // against her tier's smear resistance first. Returns true if it smeared.
+        function trySmearMakeup(source) {
+            var bs = gameState.bodyState;
+            if (!bs || !bs.makeup || bs.makeup === 'smeared') return false;
+            if (bs.makeup === true) {
+                var resist = boVal('smearResist', 0);
+                if (resist > 0 && Math.random() < resist) return false;
+            }
+            bs.makeup = 'smeared';
+            return true;
+        }
+
+        // Diner tips: her own face earns more, as long as it's done.
+        function getBOTipMultiplier() {
+            if (!isBeautyObsessed()) return 1;
+            var bs = gameState.bodyState || {};
+            var faceOn = bs.makeup === true || bs.makeup === 'premium';
+            var hairOk = bs.hairGroom === 'down' || bs.hairGroom === 'styled' || bs.hairGroom === 'salon';
+            return (faceOn && hairOk) ? 1 + boVal('tipBonus', 0) : 1;
+        }
+
+        // Godpeia: 15% off every service for her.
+        function getGodpeiaServicePrice(base) {
+            return isBeautyObsessed() ? Math.round(base * 0.85) : base;
+        }
+
         function getGymEvolutionData() {
             if (!hasTrait('gymnast')) return null;
             var skill = (gameState.athleteSkills && gameState.athleteSkills.gymnastics) || 0;
@@ -45447,7 +45489,17 @@ audioSystem.playSFX('buttonClick');
             if (typeof hasTrait === 'function' && hasTrait('pretty_face')) {
                 faceInner += '<div style="margin-top:8px;padding:8px 10px;background:rgba(255,170,221,0.08);border:1px solid rgba(255,170,221,0.25);border-radius:8px;">';
                 faceInner += '<div style="color:#ffb3e6;font-weight:bold;font-size:0.9em;"><img src="Images/icons/mirror.png" class="icon" alt=""> Beauty Obsessed</div>';
-                faceInner += _bpDesc('Grooming devotion, not innate looks: a flat +15 appeal, smeared makeup and messy hair hit you softer, and a short nap won\'t wreck your hair.');
+                var _bo = getBOEvolutionData();
+                faceInner += _bpRow('Tier', _bo.name, '#ffb3e6');
+                faceInner += _bpRow('Base appeal', '+' + _bo.baseAppeal + ' on top of your face', '#88ff88');
+                faceInner += _bpRow('Your own makeup', '+' + _bo.makeupAppeal + (_bo.smearResist > 0 ? ', shrugs off ' + Math.round(_bo.smearResist * 100) + '% of smears' : '') + ', on in 5 min', '#88ff88');
+                faceInner += _bpRow('Allure floor', '+' + _bo.allureFloor, '#88ff88');
+                faceInner += _bpRow('First impressions', '+' + _bo.firstImpression, '#88ff88');
+                faceInner += _bpRow('Coordinated at', Math.round(_bo.coherenceAt * 100) + '% (usually 75%)', '#88ff88');
+                faceInner += _bpRow('Diner tips', '+' + Math.round(_bo.tipBonus * 100) + '% with makeup on and hair down or better', '#88ff88');
+                faceInner += _bpRow('Godpeia', '15% off every service', '#88ff88');
+                if (_bo.relationshipMult) faceInner += _bpRow('Relationships', '\u00d7' + _bo.relationshipMult.toFixed(2) + ' gains while Attractive or better', '#88ff88');
+                faceInner += _bpDesc('Thirteen years in front of the mirror. Smeared makeup and messy hair hit you at half strength, and a short nap won\'t wreck your hair.');
                 faceInner += '</div>';
             }
             html += _bpSection('Face', 'sparkle', faceInner);
@@ -45598,7 +45650,7 @@ audioSystem.playSFX('buttonClick');
                 _bpDerived += Math.round(Math.min(gameState.charisma || 0, 50) * 0.8);
                 var _bpCorr = (gameState.corruption || 0);
                 _bpDerived += (_bpCorr >= 6001 ? 20 : _bpCorr >= 4001 ? 12 : _bpCorr >= 2001 ? 6 : 0);
-                if (typeof hasTrait === 'function') { if (hasTrait('party_girl')) _bpDerived += 6; if (hasTrait('theater_kid')) _bpDerived += 6; if (hasTrait('class_president')) _bpDerived += 4; if (hasTrait('pretty_face')) _bpDerived += 6; }
+                if (typeof hasTrait === 'function') { if (hasTrait('party_girl')) _bpDerived += 6; if (hasTrait('theater_kid')) _bpDerived += 6; if (hasTrait('class_president')) _bpDerived += 4; if (hasTrait('pretty_face')) _bpDerived += boVal('allureFloor', 6); }
                 if (typeof getImperfectionAllureDelta === 'function') _bpDerived += getImperfectionAllureDelta() * 2;
                 _bpDerived += (typeof getSpaGlowAllureBonus === 'function') ? getSpaGlowAllureBonus() * 2 : 0;
                 var _bpEarned = (gameState.allureLevel || 1) * 3;
@@ -50814,7 +50866,8 @@ audioSystem.playSFX('buttonClick');
             const face = getFaceLevel();
             const entry = (BODY_ATTRIBUTE_EFFECTS.facialBeauty[face]) || BODY_ATTRIBUTE_EFFECTS.facialBeauty.ordinary;
             const weights = { ordinary: 0, pretty: 6, gorgeous: 12 };
-            return { tier: entry.firstImpression, weight: weights[face] || 0, face };
+            // BEAUTY OBSESSED: people read the work before they read anything else
+            return { tier: entry.firstImpression, weight: (weights[face] || 0) + boVal('firstImpression', 0), face };
         }
 
         // 4D-B: the face lightly tilts how much the movable levers (grooming + outfit)
@@ -51919,6 +51972,7 @@ audioSystem.playSFX('buttonClick');
         // or -1 if she can't cover it (caller bails without applying anything).
         function chargeGodpeiaHairService(price) {
             if (!gameState.flags.godpeiaFreeUsed) { gameState.flags.godpeiaFreeUsed = true; return 0; }
+            price = getGodpeiaServicePrice(price);
             if ((gameState.money || 0) < price) return -1;
             gameState.money -= price;
             return price;
@@ -52051,7 +52105,7 @@ audioSystem.playSFX('buttonClick');
         // weeks; survives water and sleep. Just sets length up, leaves hair down.
         function godpeiaExtensions() {
             var paid = chargeGodpeiaHairService(GODPEIA_HAIR_PRICES.extensions);
-            if (paid === -1) { showMessage('Eight hundred is out of reach right now.', function() { showScene('godpeia_salon'); }); return; }
+            if (paid === -1) { showMessage((isBeautyObsessed() ? 'Six hundred and eighty' : 'Eight hundred') + ' is out of reach right now.', function() { showScene('godpeia_salon'); }); return; }
             var ba = gameState.bodyAppearance || (gameState.bodyAppearance = {});
             ba.hairLength = getHairTierMidpoint('very_long');
             // Down and long; extensions aren't a temporary style, so no decay clock.
@@ -52115,7 +52169,7 @@ audioSystem.playSFX('buttonClick');
 
         function getBodyBaseAppeal() {
             let base = 10;
-            if (hasTrait('pretty_face')) base += 15;
+            if (hasTrait('pretty_face')) base += boVal('baseAppeal', 15);
             const ba = gameState.bodyAppearance || {};
             if (ba.facialBeauty === 'pretty') base += 25;
             else if (ba.facialBeauty === 'gorgeous') base += 50;
@@ -52558,7 +52612,7 @@ audioSystem.playSFX('buttonClick');
                 if (hasTrait('party_girl')) floor += 6;
                 if (hasTrait('theater_kid')) floor += 6;
                 if (hasTrait('class_president')) floor += 4;
-                if (hasTrait('pretty_face')) floor += 6;
+                if (hasTrait('pretty_face')) floor += boVal('allureFloor', 6);
             }
 
             // Imperfection deltas: sultry-undone raises allure; squalor tanks it.
@@ -53836,7 +53890,7 @@ audioSystem.playSFX('buttonClick');
                 const nba = gameState.bodyAppearance || {};
                 if (nba.facialBeauty === 'pretty') nakedAppeal += 25;
                 else if (nba.facialBeauty === 'gorgeous') nakedAppeal += 50;
-                if (hasTrait('pretty_face')) nakedAppeal += 15;
+                if (hasTrait('pretty_face')) nakedAppeal += boVal('baseAppeal', 15);
                 
                 // Naked body bonus: good bodies look good naked
                 nakedAppeal += getNakedAppealBonus();
@@ -53844,7 +53898,7 @@ audioSystem.playSFX('buttonClick');
                 // Effort bonuses still matter when naked
                 if (gameState.bodyState.showered) nakedAppeal += 5;
                 if (gameState.bodyState.makeup === 'premium') nakedAppeal += 35;
-                else if (gameState.bodyState.makeup === true) nakedAppeal += 20;
+                else if (gameState.bodyState.makeup === true) nakedAppeal += getOwnMakeupAppeal();
                 nakedAppeal += getHairGroomFlat(); // Hair overhaul (Step 3): down 0, styled +14, salon band, very-long flex
                 if ((gameState.hygiene || 0) >= 80) nakedAppeal += 10;
                 
@@ -53872,7 +53926,7 @@ audioSystem.playSFX('buttonClick');
             let _groomingFlats = 0;
             if (gameState.bodyState.showered) _groomingFlats += 5;
             if (gameState.bodyState.makeup === 'premium') _groomingFlats += 35;
-            else if (gameState.bodyState.makeup === true) _groomingFlats += 20;
+            else if (gameState.bodyState.makeup === true) _groomingFlats += getOwnMakeupAppeal();
             _groomingFlats += getHairGroomFlat(); // Hair overhaul (Step 3): replaces styled+5 and the godpeia bonus
             if ((gameState.hygiene || 0) >= 80) _groomingFlats += 10;
             total += _groomingFlats;
@@ -54001,7 +54055,7 @@ audioSystem.playSFX('buttonClick');
                 benefits.push('Feel clean and refreshed (+5 Appeal)');
             }
             if (gameState.bodyState.makeup === true) {
-                benefits.push('Enhanced facial features (+20 Appeal)');
+                benefits.push((isBeautyObsessed() ? 'Your own makeup' : 'Enhanced facial features') + ' (+' + getOwnMakeupAppeal() + ' Appeal)');
             }
             if (gameState.bodyState.hairGroom === 'salon') {
                 benefits.push('Salon-styled hair (+' + getSalonHairAppeal() + ' Appeal)');
@@ -54355,7 +54409,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
 
             // Body state; handle all makeup states correctly
             const makeupDisplay = gameState.bodyState.makeup === true
-                ? 'Applied <span style="color:#ff69b4;">(+10)</span>'
+                ? 'Applied <span style="color:#ff69b4;">(+' + getOwnMakeupAppeal() + ')</span>'
                 : gameState.bodyState.makeup === 'smeared'
                     ? '<span style="color:#ff4444;">Smeared (\u2212' + Math.round(baseAppeal * 0.22) + ' / 22% of base)</span>'
                     : 'None';
@@ -55753,7 +55807,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             gameState.bodyState.makeup = true;
             gameState.mentalHealth = Math.min(100, gameState.mentalHealth + 3);
             
-            advanceTime(10);
+            advanceTime(isBeautyObsessed() ? 5 : 10); // she could do this in her sleep
             updateStatus();
             updateSidebarStats();
             updateInventoryDisplay();
@@ -72705,6 +72759,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     const basePay = (gameState.flags.dinerPayRate || 15) * 6;
                     let tips = gameState.flags.shiftTips || 0;
                     if (hasTrait('party_girl')) tips = Math.floor(tips * 1.20);
+                    tips = Math.floor(tips * getBOTipMultiplier()); // Beauty Obsessed: her face earns
                     const total = basePay + tips;
 
                     if (gameState.flags.bankDirectDeposit && gameState.flags.hasBankAccount && !isBankFrozen()) {
@@ -76503,6 +76558,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (hasTrait('party_girl')) {
                         tips = Math.floor(tips * 1.20);
                     }
+                    tips = Math.floor(tips * getBOTipMultiplier()); // Beauty Obsessed: her face earns
                     if (gameState.flags.arrivedLateToWork) {
                         tips = Math.floor(tips * 0.5);
                         gameState.flags.arrivedLateToWork = false;
@@ -93048,6 +93104,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (hasTrait('party_girl')) {
                         tips = Math.floor(tips * 1.20);
                     }
+                    // TRAIT: Beauty Obsessed; her face earns (makeup on, hair down or better)
+                    tips = Math.floor(tips * getBOTipMultiplier());
                     
                     // Step 12A: Arousal-based tip multiplier
                     // Heat radiates. Customers tip more when you're running hot.
@@ -110857,7 +110915,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     
                     // If sleeping with makeup on, it becomes smeared (looks bad)
                     if (gameState.bodyState.makeup) {
-                        gameState.bodyState.makeup = 'smeared';
+                        trySmearMakeup('sleep');
                     }
                     
                     // Don't call updateStatus here - let the choices handle overflow
@@ -110984,7 +111042,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     
                     // If sleeping with makeup on, it becomes smeared (looks bad)
                     if (gameState.bodyState.makeup) {
-                        gameState.bodyState.makeup = 'smeared';
+                        trySmearMakeup('sleep');
                     }
                     
                     // Don't call updateStatus here - let the choices handle overflow
@@ -139618,7 +139676,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: function() {
                     var choices = [];
                     var free = !gameState.flags.godpeiaFreeUsed;
-                    var canAffordPaid = gameState.money >= 200;
+                    var _gpFlat = getGodpeiaServicePrice(200);
+                    var canAffordPaid = gameState.money >= _gpFlat;
 
                     function card(name, desc, icon, scene, bare, key) {
                         var doneToday = godpeiaServiceUsedToday(key);
@@ -139626,7 +139685,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         var thisFree = free && !doneToday;
                         var affordable = thisFree || canAffordPaid;
                         var locked = doneToday || !affordable;
-                        var priceText = doneToday ? 'DONE TODAY' : (thisFree ? 'FREE' : '$200');
+                        var priceText = doneToday ? 'DONE TODAY' : (thisFree ? 'FREE' : '$' + _gpFlat);
                         choices.push({
                             cardData: {
                                 name: name,
@@ -139639,7 +139698,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             },
                             action: () => {
                                 if (godpeiaServiceUsedToday(key)) { showMessage('You\'ve already had this one today. Each service is once a day, but the others are still open to you.', () => {}); return; }
-                                if (!(free && true) && gameState.money < 200) { showMessage('You can\'t cover the $200 right now.', () => {}); return; }
+                                if (!(free && true) && gameState.money < _gpFlat) { showMessage('You can\'t cover the $' + _gpFlat + ' right now.', () => {}); return; }
                                 showScene(scene);
                             }
                         });
@@ -139659,7 +139718,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             name: 'Hair Salon',
                             desc: 'Cut, color, styling, treatment, extensions.',
                             icon: '<img src="Images/icons/gp-hair.png" class="icon" alt="">',
-                            price: free ? 'FIRST FREE' : 'from $200',
+                            price: free ? 'FIRST FREE' : 'from $' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.style),
                             free: free,
                             bare: null,
                             locked: false
@@ -139720,7 +139779,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     if (!gameState.flags.godpeiaFreeUsed) { gameState.flags.godpeiaFreeUsed = true; }
-                    else { gameState.money -= 200; }
+                    else { gameState.money -= getGodpeiaServicePrice(200); }
                     markGodpeiaServiceUsedToday('facial');
                     modifyMentalHealth(4);
                     advanceTime(45);
@@ -139752,7 +139811,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     if (!gameState.flags.godpeiaFreeUsed) { gameState.flags.godpeiaFreeUsed = true; }
-                    else { gameState.money -= 200; }
+                    else { gameState.money -= getGodpeiaServicePrice(200); }
                     markGodpeiaServiceUsedToday('manipedi');
                     if (typeof gainCharisma === 'function') gainCharisma(4, 'Godpeia mani-pedi');
                     advanceTime(50);
@@ -139786,7 +139845,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     if (!gameState.flags.godpeiaFreeUsed) { gameState.flags.godpeiaFreeUsed = true; }
-                    else { gameState.money -= 200; }
+                    else { gameState.money -= getGodpeiaServicePrice(200); }
                     markGodpeiaServiceUsedToday('makeup');
                     if (gameState.bodyState) gameState.bodyState.makeup = 'premium';
                     advanceTime(40);
@@ -139865,7 +139924,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     if (!gameState.flags.godpeiaFreeUsed) { gameState.flags.godpeiaFreeUsed = true; }
-                    else { gameState.money -= 200; }
+                    else { gameState.money -= getGodpeiaServicePrice(200); }
                     markGodpeiaServiceUsedToday('sauna');
                     modifyMentalHealth(6);
                     if (typeof gameState.fatigue === 'number') gameState.fatigue = Math.max(0, gameState.fatigue - 30);
@@ -139939,7 +139998,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 onEnter: () => {
                     // Charge / consume the free pass, mark this service done for today.
                     if (!gameState.flags.godpeiaFreeUsed) { gameState.flags.godpeiaFreeUsed = true; }
-                    else { gameState.money -= 200; }
+                    else { gameState.money -= getGodpeiaServicePrice(200); }
                     markGodpeiaServiceUsedToday('massage');
 
                     // Go naked for the service.
@@ -140007,7 +140066,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     if (!gameState.flags.godpeiaFreeUsed) { gameState.flags.godpeiaFreeUsed = true; }
-                    else { gameState.money -= 200; }
+                    else { gameState.money -= getGodpeiaServicePrice(200); }
                     markGodpeiaServiceUsedToday('skincare');
 
                     // Cleanliness + beauty all around.
@@ -142604,6 +142663,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const usingMirror = hasHandMirror();
                     const location = canApplyMakeupHere();
                     
+                    // BEAUTY OBSESSED: one line, five minutes
+                    if (isBeautyObsessed()) return 'Primer, concealer, a wing on each side. Five minutes, and your face is right back where it belongs.';
+
                     let text = 'You ' + (location ? 'find a mirror' : 'pull out your hand mirror') + ' and set to work.\n\nFoundation first. Smooth it over your skin. Even out your complexion.\n\nThen mascara. Careful strokes. Make your eyes pop.\n\nLipstick last. A touch of color. Subtle but effective.\n\nYou step back and look at yourself.\n\nBetter. Definitely better.\n\nYou feel more put-together. More confident. More in control of how you\'re perceived.';
                     
                     return text;
@@ -142705,17 +142767,17 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var styleDone = godpeiaServiceUsedToday('hairStyle');
                     var treatDone = godpeiaServiceUsedToday('hairTreatment');
 
-                    out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Style ' + (styleDone ? '(done today)' : '($' + GODPEIA_HAIR_PRICES.style + freeNote + ')'),
+                    out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Style ' + (styleDone ? '(done today)' : '($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.style) + freeNote + ')'),
                         action: () => { if (styleDone) { showMessage('You\'ve already had a fresh style today. It needs its day to settle.', () => showScene('godpeia_salon')); return; } showScene('godpeia_salon_style'); } });
 
-                    out.push({ text: '<img src="Images/icons/haircut.png" class="icon" alt=""> Cut ($' + GODPEIA_HAIR_PRICES.cut + freeNote + ')', nextScene: 'godpeia_salon_cut' });
+                    out.push({ text: '<img src="Images/icons/haircut.png" class="icon" alt=""> Cut ($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.cut) + freeNote + ')', nextScene: 'godpeia_salon_cut' });
 
-                    out.push({ text: '<img src="Images/icons/allure.png" class="icon" alt=""> Color / Dye ($' + GODPEIA_HAIR_PRICES.dye + ', bold $' + GODPEIA_HAIR_PRICES.dyeBold + ')', nextScene: 'godpeia_salon_color' });
+                    out.push({ text: '<img src="Images/icons/allure.png" class="icon" alt=""> Color / Dye ($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.dye) + ', bold $' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.dyeBold) + ')', nextScene: 'godpeia_salon_color' });
 
-                    out.push({ text: '<img src="Images/icons/sparkle.png" class="icon" alt=""> Treatment ' + (treatDone ? '(done today)' : '($' + GODPEIA_HAIR_PRICES.treatment + freeNote + ')'),
+                    out.push({ text: '<img src="Images/icons/sparkle.png" class="icon" alt=""> Treatment ' + (treatDone ? '(done today)' : '($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.treatment) + freeNote + ')'),
                         action: () => { if (treatDone) { showMessage('You\'ve already had a treatment today.', () => showScene('godpeia_salon')); return; } showScene('godpeia_salon_treatment'); } });
 
-                    out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Extensions ($' + GODPEIA_HAIR_PRICES.extensions + freeNote + ')', nextScene: 'godpeia_salon_extensions' });
+                    out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Extensions ($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.extensions) + freeNote + ')', nextScene: 'godpeia_salon_extensions' });
 
                     out.push({ text: '<img src="Images/icons/door.png" class="icon" alt="back"> Back to the menu', nextScene: 'godpeia_services' });
                     return out;
@@ -142781,7 +142843,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     HAIR_COLORS.forEach(function(c) {
                         if (c.id === cur) return; // no point dyeing the color she already has
                         var sw = '<span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:' + c.hex + ';border:1px solid #0006;vertical-align:middle;margin-right:6px;"></span>';
-                        var tag = c.bold ? ' <span style="color:#c9a0ff;">(bold, $' + GODPEIA_HAIR_PRICES.dyeBold + ')</span>' : '';
+                        var tag = c.bold ? ' <span style="color:#c9a0ff;">(bold, $' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.dyeBold) + ')</span>' : '';
                         out.push({ text: sw + c.label + tag, action: (function(id){ return function(){ godpeiaDyeHair(id); }; })(c.id) });
                     });
                     out.push({ text: '<img src="Images/icons/door.png" class="icon" alt="back"> Keep my color', nextScene: 'godpeia_salon' });
@@ -142810,7 +142872,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (getHairLengthTier().id === 'very_long') {
                         out.push({ text: '<span style="color:#888;">(Your hair\'s already as long as it goes.)</span>', nextScene: 'godpeia_salon_extensions' });
                     } else {
-                        out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Add length, all the way ($' + GODPEIA_HAIR_PRICES.extensions + ')', action: () => godpeiaExtensions() });
+                        out.push({ text: '<img src="Images/icons/gp-hair.png" class="icon" alt=""> Add length, all the way ($' + getGodpeiaServicePrice(GODPEIA_HAIR_PRICES.extensions) + ')', action: () => godpeiaExtensions() });
                     }
                     out.push({ text: '<img src="Images/icons/door.png" class="icon" alt="back"> Not today', nextScene: 'godpeia_salon' });
                     return out;
@@ -150693,7 +150755,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     // Hair gets messy, makeup smears from sweat
                     messHairFromExertion(); // Hair overhaul (Step 4C): exertion/sex tangles hair (woven survives)
                     if (gameState.bodyState.makeup === true) {
-                        gameState.bodyState.makeup = 'smeared';
+                        trySmearMakeup('sweat');
                     }
                     
                     // Need break before next set
@@ -154650,7 +154712,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     // Makeup smears from sweat
                     if (gameState.bodyState && gameState.bodyState.makeup === true) {
-                        gameState.bodyState.makeup = 'smeared';
+                        trySmearMakeup('sweat');
                     }
 
                     // Need break before next activity
@@ -154883,7 +154945,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 10);
                     if (typeof messHairFromExertion === 'function') messHairFromExertion();
                     if (gameState.bodyState && gameState.bodyState.makeup === true) {
-                        gameState.bodyState.makeup = 'smeared';
+                        trySmearMakeup('sweat');
                     }
 
                     if (typeof gainStripping === 'function') gainStripping(2, 'VIP private dance');
