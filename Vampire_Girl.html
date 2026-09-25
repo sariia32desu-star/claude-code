@@ -210079,7 +210079,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 age: 8,
                 title: 'The Lesson',
                 subtitle: 'Saturday morning. One old ball. One rope for a net.',
-                text: function() { var _vb = ccState.selectedTraits && ccState.selectedTraits.indexOf('volleyball') !== -1; return 'Saturday morning. The grass is still wet, and Richie\'s out in the backyard with a volleyball under his arm.\n\nIt\'s old, the white panels gone yellow at the seams, with SUMMERS written across one of them in black Sharpie. He\'s had it since before you were born.\n\n"Kels. C\'mere. Today you learn to serve."\n\n---\n\n' + (_vb ? 'You\'ve been in club for a year now. Your serves still die in the net, and your coach has twenty other girls to worry about. Richie only has one.' : 'You\'ve watched him do it a hundred times in the school gym, easy as breathing, but you\'ve never touched the ball yourself.') + '\n\nHe ties a rope between the clothesline poles, chest-high on him and way over your head.\n\n"That\'s your net."\n\n"It\'s too high."\n\n"It\'s exactly high enough."\n\n---\n\nHe crouches behind you and closes his hands over yours, rough and warm and big enough to swallow yours whole. "Toss first. Everything starts with the toss. Bad toss, bad serve. Every single time."\n\nYour first toss goes sideways into the tomato plants. He fetches it without a word and sets it back in your hands. "Again. Soft. Like you\'re handing it to the sky."\n\n---\n\nYou toss, and he moves your feet. You toss again, and he tips your shoulder an inch. Twenty tries, then thirty, until your arm aches.\n\nThe ball hits the rope, the dirt, the fence, and your own face once, and he laughs so hard he has to sit down in the wet grass.\n\nThen the toss is right, and you can feel it before it happens.\n\nThe heel of your hand swings through, and the ball makes a sound you\'ve heard a thousand times from the bleachers, one clean, hollow smack. It sails over the rope and slams into the back fence.\n\n---\n\nRichie\'s on his feet before it lands. "THAT\'S IT! Kels! That\'s it!"\n\nHe scoops you up and spins you until the yard smears into green. You\'re both laughing, and the neighbor\'s dog starts barking at the noise.\n\nYou serve until the dew burns off. Some clear the rope and most don\'t. He resets every miss without a sigh, fixes your stance, and talks you through it again.\n\n---\n\nWhen you finally flop down in the grass, he tosses you the old ball. "Keep it. It\'s yours now."\n\nYou hug it to your chest like it might change its mind.\n\nHe\'s leaning on the fence with a water bottle while you catch your breath, and then he drops this on you, casual, like he says everything.\n\nLike it\'s no big deal and the most important thing in the world at the same time.\n\nWhat does he say?'; },
+                text: function() { var _vb = ccState.selectedTraits && ccState.selectedTraits.indexOf('volleyball') !== -1; return 'Saturday morning. The grass is still wet, and Richie\'s out in the backyard with a volleyball under his arm.\n\nIt\'s old, the white panels gone yellow at the seams, with SUMMERS written across one of them in black Sharpie. He\'s had it since before you were born.\n\n"Kels. C\'mere. Today you learn to serve."\n\n---\n\n' + (_vb ? 'You\'ve been in club for a year now. Your serves still die in the net, and your coach has twenty other girls to worry about. Richie only has one.' : ccIsBO() ? 'You\'ve watched him do it a hundred times from the bleachers, mostly while checking your reflection in the gym doors, but you\'ve never touched the ball yourself.' : 'You\'ve watched him do it a hundred times in the school gym, easy as breathing, but you\'ve never touched the ball yourself.') + '\n\nHe ties a rope between the clothesline poles, chest-high on him and way over your head.\n\n"That\'s your net."\n\n"It\'s too high."\n\n"It\'s exactly high enough."\n\n---\n\nHe crouches behind you and closes his hands over yours, rough and warm and big enough to swallow yours whole. "Toss first. Everything starts with the toss. Bad toss, bad serve. Every single time."\n\nYour first toss goes sideways into the tomato plants. He fetches it without a word and sets it back in your hands. "Again. Soft. Like you\'re handing it to the sky."\n\n---\n\nYou toss, and he moves your feet. You toss again, and he tips your shoulder an inch. Twenty tries, then thirty, until your arm aches.\n\nThe ball hits the rope, the dirt, the fence, and your own face once, and he laughs so hard he has to sit down in the wet grass.\n\nThen the toss is right, and you can feel it before it happens.\n\nThe heel of your hand swings through, and the ball makes a sound you\'ve heard a thousand times from the bleachers, one clean, hollow smack. It sails over the rope and slams into the back fence.\n\n---\n\nRichie\'s on his feet before it lands. "THAT\'S IT! Kels! That\'s it!"\n\nHe scoops you up and spins you until the yard smears into green. You\'re both laughing, and the neighbor\'s dog starts barking at the noise.\n\nYou serve until the dew burns off. Some clear the rope and most don\'t. He resets every miss without a sigh, fixes your stance, and talks you through it again.\n\n---\n\nWhen you finally flop down in the grass, he tosses you the old ball. "Keep it. It\'s yours now."\n\nYou hug it to your chest like it might change its mind.\n\nHe\'s leaning on the fence with a water bottle while you catch your breath, and then he drops this on you, casual, like he says everything.\n\nLike it\'s no big deal and the most important thing in the world at the same time.\n\nWhat does he say?'; },
                 choices: [
                     {
                         id: 'lesson_show_up',
@@ -211005,7 +211005,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         text: 'A normal face. You don\'t stop traffic and you don\'t scare children. You look like most people, and most people look fine.',
                         karma: 0, corruption: 0,
                         facialBeauty: 'ordinary',
-                        result: 'Your yearbook photo comes back and you think, yeah, that\'s me. You don\'t bother with retakes.'
+                        result: function() {
+                            return ccIsBO()
+                                ? 'Your yearbook photo comes back and you think, yeah, that\'s me. Then you sign up for retakes. You already know what contour can do, and the second photo looks like a girl people turn around for.'
+                                : 'Your yearbook photo comes back and you think, yeah, that\'s me. You don\'t bother with retakes.';
+                        }
                     },
                     {
                         id: 'face_pretty',
@@ -211013,7 +211017,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         text: 'Good bones, skin that cooperates more often than it doesn\'t, and a smile that makes people smile back.\n\nThe flip side: pretty girls rarely have to fight for anything. You grew up a little soft on it, and raw strength never came as easy as it did for others. (−5% Strength XP.)',
                         karma: 0, corruption: 0,
                         facialBeauty: 'pretty',
-                        result: 'Teachers give you the benefit of the doubt. The lunch lady gives you the bigger cookie. You assume it happens to everyone.'
+                        result: function() {
+                            return ccIsBO()
+                                ? 'Teachers give you the benefit of the doubt. The lunch lady gives you the bigger cookie. You know exactly how pretty you are, down to the angle you tilt your chin when you ask.'
+                                : 'Teachers give you the benefit of the doubt. The lunch lady gives you the bigger cookie. You assume it happens to everyone.';
+                        }
                     },
                     {
                         id: 'face_gorgeous',
@@ -211021,7 +211029,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         text: 'People lose their train of thought mid-sentence around you. Striking eyes, sharp cheekbones, a face that looks finished way too early.\n\nA photographer at the mall asks your mom about a portfolio shoot. Twice.\n\nThe flip side: beauty like this clears obstacles before you reach them. You never had to be strong, so you never became it. (−10% Strength XP.)',
                         karma: 0, corruption: 0,
                         facialBeauty: 'gorgeous',
-                        result: 'Margaret says no to the photographer both times, then spends the whole drive home reminding you that grades last longer than cheekbones.'
+                        result: function() {
+                            return ccIsBO()
+                                ? 'Margaret says no to the photographer both times. You\'re the one who wanted to say yes.\n\nShe spends the whole drive home reminding you that grades last longer than cheekbones, and you stare at your reflection in the window the entire way.'
+                                : 'Margaret says no to the photographer both times, then spends the whole drive home reminding you that grades last longer than cheekbones.';
+                        }
                     }
                 ]
             },
@@ -211071,7 +211083,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 age: 14,
                 title: 'Where You Sit',
                 subtitle: 'Freshman year. New school. Pick a table.',
-                text: 'High school. The hallways are wider, everybody\'s taller, and nobody hands out the rules.\n\nBy the end of the first week, you\'ve got the cafeteria mapped. The popular kids own the center table like they pay rent on it. The nerds are in the corner, arguing about who-knows-what.\n\nThe jocks are the loudest people in the building. And the back table by the exit belongs to the kids the teachers stopped trying with.\n\nWhere do you sit?',
+                text: function() {
+                    return 'High school. The hallways are wider, everybody\'s taller, and nobody hands out the rules.\n\nBy the end of the first week, you\'ve got the cafeteria mapped. The popular kids own the center table like they pay rent on it.'
+                        + (ccIsBO() ? ' They clocked you on day one, before you\'d even picked a seat.' : '')
+                        + ' The nerds are in the corner, arguing about who-knows-what.\n\nThe jocks are the loudest people in the building. And the back table by the exit belongs to the kids the teachers stopped trying with.\n\nWhere do you sit?';
+                },
                 choices: [
                     {
                         id: 'clique_popular',
@@ -211607,7 +211623,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 age: 15,
                 title: 'Sophomore Year',
                 subtitle: 'Suddenly everybody knows your name.',
-                text: 'Sophomore year starts and everybody\'s acting weird. Boys who ignored you all of freshman year suddenly know your name, and they say it like they\'ve been practicing.\n\nJuniors wave you over to their table. Two different girls ask where you got your jacket.\n\nYour phone blows up with group chats you don\'t remember joining. Somebody\'s having people over Friday. Somebody else\'s older brother can drive. Everyone wants to know if you\'re coming.\n\nWhat do you do with all this?',
+                text: function() {
+                    return 'Sophomore year starts and everybody\'s acting weird. Boys who ignored you all of freshman year suddenly know your name, and they say it like they\'ve been practicing.\n\nJuniors wave you over to their table. ' + (ccIsBO() ? 'Girls ask where you get everything, and you never tell.' : 'Two different girls ask where you got your jacket.') + '\n\nYour phone blows up with group chats you don\'t remember joining. Somebody\'s having people over Friday. Somebody else\'s older brother can drive. Everyone wants to know if you\'re coming.\n\nWhat do you do with all this?';
+                },
                 choices: [
                     {
                         id: 'bloom_careful',
@@ -212698,12 +212716,14 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     const fd = ccState.choices['q_ds_first_date'];
                     const dating = ['date_dante_yes', 'date_dante_slow', 'date_steph_yes', 'date_steph_slow'];
                     const isRelationship = (confession === 'confess_dante' || confession === 'confess_steph') && dating.includes(fd);
+                    // Beauty Obsessed overhaul (Step 5): one line ahead of every branch
+                    const boLine = ccIsBO() ? 'The dress has been planned since January. The shoes since February.\n\n' : '';
                     if (isRelationship && confession === 'confess_dante') {
-                        return 'Dante shows up at your door with one white flower, trimmed, held in one hand like he thought through every option and landed on the simplest one.\n\nDark suit, no tie. His dress shoes are actually polished.\n\n"Damn, Kels." It comes out low. He catches himself and clears his throat. "You look amazing. I\'m just gonna say that and stop talking."\n\nYour mom takes seven hundred pictures.\n\n---\n\nThe venue is a ballroom two towns over that the school rents for prom: fairy lights, crepe paper, and a DJ who\'s trying his absolute best.\n\nYou walk in holding Dante Colson\'s hand, and it feels like the most normal thing in the world.';
+                        return boLine + 'Dante shows up at your door with one white flower, trimmed, held in one hand like he thought through every option and landed on the simplest one.\n\nDark suit, no tie. His dress shoes are actually polished.\n\n"Damn, Kels." It comes out low. He catches himself and clears his throat. "You look amazing. I\'m just gonna say that and stop talking."\n\nYour mom takes seven hundred pictures.\n\n---\n\nThe venue is a ballroom two towns over that the school rents for prom: fairy lights, crepe paper, and a DJ who\'s trying his absolute best.\n\nYou walk in holding Dante Colson\'s hand, and it feels like the most normal thing in the world.';
                     } else if (isRelationship && confession === 'confess_steph') {
-                        return 'Stephanie pulls up in a car you\'ve never seen before, wearing a deep burgundy dress that should need its own weather system.\n\nShe pins your corsage on herself, careful and close, then steps back to look.\n\n"Okay," she says. "You\'re perfect. This is going to be so good. Let\'s go."\n\nShe drives with the windows cracked and the music up, and she has opinions about everything: where to park, whose afterparty to hit, what counts as a successful prom. All of them are correct.\n\nWhen you walk into the ballroom together, heads turn. Stephanie notices, laces her fingers through yours, and keeps walking.';
+                        return boLine + 'Stephanie pulls up in a car you\'ve never seen before, wearing a deep burgundy dress that should need its own weather system.\n\nShe pins your corsage on herself, careful and close, then steps back to look.\n\n"Okay," she says. "You\'re perfect. This is going to be so good. Let\'s go."\n\nShe drives with the windows cracked and the music up, and she has opinions about everything: where to park, whose afterparty to hit, what counts as a successful prom. All of them are correct.\n\nWhen you walk into the ballroom together, heads turn. Stephanie notices, laces her fingers through yours, and keeps walking.';
                     } else {
-                        return 'Prom, in a rented ballroom two towns over. Fairy lights, and a DJ who announces every slow song like he\'s calling a horse race.\n\nSome of your classmates brought dates and some came in packs. A few look like movie stars. Most look like themselves in borrowed suits, which you like better.\n\nYou came alone, on purpose. How do you spend it?';
+                        return boLine + 'Prom, in a rented ballroom two towns over. Fairy lights, and a DJ who announces every slow song like he\'s calling a horse race.\n\nSome of your classmates brought dates and some came in packs. A few look like movie stars. Most look like themselves in borrowed suits, which you like better.\n\nYou came alone, on purpose. How do you spend it?';
                     }
                 },
                 choices: function() {
@@ -212786,7 +212806,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 age: 17,
                 title: 'What They Say About You',
                 subtitle: 'Everybody\'s got a take on Kelsie Summers.',
-                text: 'Junior year. By now everybody at school has a take on you, stitched together from parties you went to, parties you skipped, and a few things you definitely never did. Somebody always tells somebody.\n\nSo what\'s the word on Kelsie Summers at seventeen?',
+                text: function() {
+                    return 'Junior year. By now everybody at school has a take on you, stitched together from parties you went to, parties you skipped, and a few things you definitely never did. Somebody always tells somebody.\n\n'
+                        + (ccIsBO() ? 'Whatever else they say about Kelsie Summers, nobody\'s ever seen her look bad.\n\n' : '')
+                        + 'So what\'s the word on Kelsie Summers at seventeen?';
+                },
                 choices: [
                     {
                         id: 'smart',
@@ -215215,6 +215239,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 }
                 window._ccPrevCorruption = c;
             }
+        }
+
+        // Beauty Obsessed overhaul (Step 5): true when the age-five mirror trait was picked
+        function ccIsBO() {
+            return !!(ccState && ccState.selectedTraits && ccState.selectedTraits.indexOf('pretty_face') !== -1);
         }
 
         function ccCliqueVision() {
