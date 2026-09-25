@@ -13138,6 +13138,7 @@
                 boSeenTier2: false,                // Polished tier-up beat seen
                 boSeenTier3: false,                // Flawless tier-up beat seen
                 boSeenTier4: false,                // Iconic tier-up beat seen
+                boCollectionPending: [],        // collection pieces an old save couldn't fit yet (Step 16)
                 // ── Mental Health System Overhaul flags (Step 1D) ──
                 mhDailyDriftApplied: 0,            // last day the passive drift ran
                 mhSleepBonusToday: false,          // whether sleep MH bonus already applied today
@@ -13821,9 +13822,12 @@
                     // Preserve borrowed state by id
                     var borrowedState = {};
                     existing.forEach(function(i) { if (i && i.id) borrowedState[i.id] = !!i.currentlyBorrowed; });
+                    // Kelsie's own clothes stored here survive the rebuild
+                    var kelsiesOwn = existing.filter(function(i) { return i && i.owner !== 'jaewon'; });
                     // Force a rebuild from the canonical definition
                     gameState.wardrobes.jaewon = [];
                     initializeJaewonWardrobe();
+                    if (Array.isArray(gameState.wardrobes.jaewon)) gameState.wardrobes.jaewon = gameState.wardrobes.jaewon.concat(kelsiesOwn);
                     if (Array.isArray(gameState.wardrobes.jaewon)) {
                         gameState.wardrobes.jaewon.forEach(function(i) {
                             if (i && i.id && borrowedState.hasOwnProperty(i.id)) i.currentlyBorrowed = borrowedState[i.id];
@@ -16990,7 +16994,6 @@
             if (gameState.flags.seenImperfectionInversion === undefined) gameState.flags.seenImperfectionInversion = false;
 
             // MIGRATION (Beauty Obsessed overhaul, Step 1F): default the new trait state.
-            // The collection grant and item normalization for old saves arrive in Step 16.
             if (gameState.boRadiantDays === undefined) gameState.boRadiantDays = 0;
             if (gameState.boTier === undefined) gameState.boTier = 1;
             if (gameState.boRitualDay === undefined) gameState.boRitualDay = 0;
@@ -17000,6 +17003,12 @@
             if (gameState.flags.boSeenTier2 === undefined) gameState.flags.boSeenTier2 = false;
             if (gameState.flags.boSeenTier3 === undefined) gameState.flags.boSeenTier3 = false;
             if (gameState.flags.boSeenTier4 === undefined) gameState.flags.boSeenTier4 = false;
+            if (!Array.isArray(gameState.flags.boCollectionPending)) gameState.flags.boCollectionPending = [];
+
+            // MIGRATION (Beauty Obsessed overhaul, Step 16): old Beauty Obsessed saves get
+            // the designer backpack, the collection, and a tier that matches their radiant days.
+            // Every save gets its collection pieces refreshed from the definitions.
+            migrateBeautyObsessed();
 
             // MIGRATION (Appeal & Body overhaul, Step 14C/19): grooming, spa, and Godpeia
             // state. bodyState is read across grooming/mirror/appeal; ensure it and its
@@ -18051,6 +18060,7 @@
                     boSeenTier2: false,
                     boSeenTier3: false,
                     boSeenTier4: false,
+                    boCollectionPending: [],        // collection pieces an old save couldn't fit yet (Step 16)
                     // MH Overhaul (Step 1D)
                     mhDailyDriftApplied: 0,
                     mhSleepBonusToday: false,
@@ -40773,6 +40783,16 @@ audioSystem.playSFX('buttonClick');
 
             // Beauty Obsessed Step 13: count a skipped routine.
             if (typeof processBORitualRollover === 'function') processBORitualRollover();
+
+            // Beauty Obsessed Step 16: pieces an old save couldn't fit yet.
+            if (gameState.flags && Array.isArray(gameState.flags.boCollectionPending) && gameState.flags.boCollectionPending.length && typeof deliverBOPendingCollection === 'function') {
+                var _boDel = deliverBOPendingCollection();
+                if (_boDel.bag + _boDel.wardrobe > 0) {
+                    setTimeout(function() {
+                        showNotification('<img src="Images/icons/dress.png" class="icon" alt=""> ' + (_boDel.bag + _boDel.wardrobe) + ' more piece' + ((_boDel.bag + _boDel.wardrobe) === 1 ? '' : 's') + ' of your collection found room' + (_boDel.wardrobe ? ' (' + _boDel.where + ')' : ' in your bag') + '.');
+                    }, 1400);
+                }
+            }
         }
 
         // ── Servant Crime System: Global Tracking ──
@@ -49429,6 +49449,128 @@ audioSystem.playSFX('buttonClick');
                 gameState.inventory.clothing = getBasicStartingClothes();
             }
             if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
+        }
+
+        // ── Save migration (Beauty Obsessed overhaul, Step 16) ──
+
+        // Rewrites a saved collection piece's data from its definition (name, appeal,
+        // effects, tags, stats, upscale, sheer) and keeps its state (cleanliness,
+        // damage, wetness, anything else the save put on it).
+        var BO_DATA_KEYS_OPTIONAL = ['upscale', 'sheer', 'comfort', 'mobility', 'terrain', 'noise'];
+        function normalizeBOItem(item) {
+            if (!item || typeof item.id !== 'string' || item.id.indexOf('bo_') !== 0) return;
+            var def = getBOItemDef(item.id);
+            if (!def) return;
+            var fresh = makeBOInventoryItem(item.id);
+            var keep = { cleanliness: 1, damage: 1, owned: 1 };
+            for (var k in fresh) {
+                if (Object.prototype.hasOwnProperty.call(fresh, k) && !keep[k]) item[k] = fresh[k];
+            }
+            BO_DATA_KEYS_OPTIONAL.forEach(function(k) {
+                if (!(k in fresh) && (k in item)) delete item[k];
+            });
+            if (item.cleanliness === undefined) item.cleanliness = 100;
+            item.owned = true;
+        }
+
+        // Where overflow collection pieces go when the bag's full: her apartment
+        // wardrobe, or her side of Jaewon's wardrobe. Null if she has neither.
+        function getBOOverflowWardrobe() {
+            if (!gameState.wardrobes) return null;
+            if (gameState.flags && gameState.flags.hasOwnApartment) {
+                if (!Array.isArray(gameState.wardrobes.apartment)) gameState.wardrobes.apartment = [];
+                return { list: gameState.wardrobes.apartment, where: 'your apartment wardrobe' };
+            }
+            if (gameState.flags && gameState.flags.stayingWithJaewon) {
+                if (!Array.isArray(gameState.wardrobes.jaewon)) gameState.wardrobes.jaewon = [];
+                // Seed her clothes first; the seeder only runs on an empty wardrobe.
+                if (gameState.wardrobes.jaewon.length === 0 && typeof initializeJaewonWardrobe === 'function') initializeJaewonWardrobe();
+                return { list: gameState.wardrobes.jaewon, where: 'your side of the wardrobe at Jaewon\'s' };
+            }
+            return null;
+        }
+
+        // Hands over queued collection pieces: the bag first, then her wardrobe at home.
+        // Anything with nowhere to go stays queued for the next load or rollover.
+        // Returns { bag, wardrobe, where, left }.
+        function deliverBOPendingCollection() {
+            var res = { bag: 0, wardrobe: 0, where: '', left: 0 };
+            var pending = gameState.flags && gameState.flags.boCollectionPending;
+            if (!Array.isArray(pending) || pending.length === 0) return res;
+            if (!gameState.inventory || !Array.isArray(gameState.inventory.clothing)) return res;
+            var max = (gameState.backpackCapacity && gameState.backpackCapacity.max) || 30;
+            var ward = getBOOverflowWardrobe();
+            var still = [];
+            pending.forEach(function(id) {
+                var item = makeBOInventoryItem(id);
+                if (!item) return;
+                if (calculateBackpackUsage() < max) {
+                    gameState.inventory.clothing.push(item);
+                    res.bag++;
+                } else if (ward) {
+                    ward.list.push(item);
+                    res.wardrobe++;
+                    res.where = ward.where;
+                } else {
+                    still.push(id);
+                }
+            });
+            gameState.flags.boCollectionPending = still;
+            res.left = still.length;
+            return res;
+        }
+
+        function migrateBeautyObsessed() {
+            if (!gameState.flags) gameState.flags = {};
+
+            // Every save: refresh collection pieces wherever they are.
+            if (gameState.inventory && Array.isArray(gameState.inventory.clothing)) gameState.inventory.clothing.forEach(normalizeBOItem);
+            if (gameState.currentOutfit) Object.keys(gameState.currentOutfit).forEach(function(sl) { normalizeBOItem(gameState.currentOutfit[sl]); });
+            if (gameState.wardrobes) Object.keys(gameState.wardrobes).forEach(function(w) {
+                if (Array.isArray(gameState.wardrobes[w])) gameState.wardrobes[w].forEach(normalizeBOItem);
+            });
+
+            if (!hasTrait('pretty_face')) return;
+
+            // Designer backpack
+            if (!gameState.backpackCapacity || typeof gameState.backpackCapacity !== 'object') gameState.backpackCapacity = { current: 0, max: 50 };
+            gameState.backpackCapacity.max = Math.max(50, gameState.backpackCapacity.max || 0);
+            gameState.flags.designerBackpack = true;
+
+            // Tier from radiant days
+            gameState.boTier = getBOTier();
+
+            // The collection, for saves that never got it. A save still in the prologue
+            // gets it from the packing scene like any new game, so leave those alone.
+            if (!gameState.flags.boCollectionGranted && gameState.flags.arrivedInCity) {
+                var have = {};
+                var o = gameState.currentOutfit || {};
+                Object.keys(o).forEach(function(sl) { if (o[sl] && o[sl].id) have[o[sl].id] = true; });
+                if (gameState.inventory && Array.isArray(gameState.inventory.clothing)) {
+                    gameState.inventory.clothing.forEach(function(it) { if (it && it.id) have[it.id] = true; });
+                }
+                if (gameState.wardrobes) Object.keys(gameState.wardrobes).forEach(function(w) {
+                    if (Array.isArray(gameState.wardrobes[w])) gameState.wardrobes[w].forEach(function(it) { if (it && it.id && it.owner !== 'jaewon') have[it.id] = true; });
+                });
+                BEAUTY_OBSESSED_COLLECTION.forEach(function(def) {
+                    if (!have[def.id] && gameState.flags.boCollectionPending.indexOf(def.id) === -1) gameState.flags.boCollectionPending.push(def.id);
+                });
+                gameState.flags.boCollectionGranted = true;
+                var r = deliverBOPendingCollection();
+                if (r.bag + r.wardrobe + r.left > 0) {
+                    var msg = 'Your Beauty Obsessed collection caught up with you. ';
+                    var parts = [];
+                    if (r.bag) parts.push(r.bag + ' piece' + (r.bag === 1 ? ' is' : 's are') + ' in your designer backpack');
+                    if (r.wardrobe) parts.push(r.wardrobe + ' ' + (r.wardrobe === 1 ? 'is' : 'are') + ' in ' + r.where);
+                    msg += parts.length ? capFirst(parts.join(', and ')) + '.' : '';
+                    if (r.left) msg += ' ' + r.left + ' more ' + (r.left === 1 ? 'is' : 'are') + ' waiting until you have room in your bag or a place of your own.';
+                    setTimeout(function() {
+                        showNotification('<img src="Images/icons/dress.png" class="icon" alt=""> ' + msg);
+                    }, 1500);
+                }
+            } else if (gameState.flags.boCollectionPending.length) {
+                deliverBOPendingCollection();
+            }
         }
 
         // Takes off whatever dress she's wearing and puts it in the bag (keeping its
