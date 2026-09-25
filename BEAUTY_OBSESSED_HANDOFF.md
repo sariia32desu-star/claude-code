@@ -89,6 +89,9 @@ Mental model (keep this in mind for all prose):
 - Makeup Kit: `{ id: 'makeup', name: 'Makeup Kit', price }` in `inventory.consumables`. Hand Mirror `hand_mirror` and Hairbrush `hairbrush` in `inventory.personalCare`. Starting shower cap: `terry_cloth_cap`.
 - Only three story scenes grant the backpack: `room_search`, `pack_after_cruel_words`, `after_attacking_mother`. Every prologue route passes through one of them.
 - The prologue never resets `currentOutfit` after character creation.
+- Day 1 is **Monday, June 9, 2025** (both the default state and `newGame()`).
+- Kelsie can only change outfits from her backpack inside an apartment, hotel, or porta potty, so on the walk-to-the-city path she's always in the satin dress when she meets Jaewon.
+- Story-scene outfit changes use `wearFromBag(ids)` and `stashWornSlot(slot)` (Step 9). Never hand-build clothing objects in a scene.
 
 ---
 
@@ -236,10 +239,10 @@ Useful function names (search for them; line numbers drift): `getBodyBaseAppeal`
 
 | Step | Title | Status |
 |---|---|---|
-| 7 | The prologue at home | **NEXT** |
-| 8 | Meeting Jaewon | |
-| 9 | The clothing choice at Jaewon's (bug fixes + variants) | |
-| 10 | The city sees her | |
+| 7 | The prologue at home | Done |
+| 8 | Meeting Jaewon | Done |
+| 9 | The clothing choice at Jaewon's (bug fixes + variants) | Done |
+| 10 | The city sees her | **NEXT** |
 | 11 | Upscale access | |
 | 12 | The buffs: her face, her eye, her draw | |
 | 13 | The ritual and the mirror | |
@@ -346,7 +349,7 @@ Scenes (all near each other, search by id): `jaewon_just_change`, `jaewon_clothe
 She changes into something from her bag. Equip Garden Party (cream halter tank, white flared mini skirt, blue orchid heels) with `makeBOInventoryItem` or by moving the owned copies from inventory (prefer moving her actual inventory copies so nothing duplicates). The "Better than the party dress. But still not great." line becomes her being pleased with a look she put together in a four-by-six bathroom in ninety seconds.
 
 ### 9C. `jaewon_clothes_check` (BO variant)
-The text ends "these are way nicer than anything in your backpack." For her, Jaewon's pieces are good (her taste lines up with Kelsie's), and the jacket's the find, because it's February and she packed seven dresses and zero coats.
+The text ends "these are way nicer than anything in your backpack." For her, Jaewon's pieces are good (her taste lines up with Kelsie's), and the jacket's the find, because it's the one layer she didn't pack and it goes with everything in her bag. (Day 1 is June 9. Never write February or cold weather here.) **Done in Step 9.**
 BO choices:
 - Wear Jaewon's outfit (tee, jeans, jacket) → `wear_jaewon_clothes`
 - **Wear Jaewon's jacket over one of your looks** → new `wear_bo_with_jacket`
@@ -368,7 +371,7 @@ BO choices, each → `wear_bo_look` with a transient flag `_boLook` (set, read, 
 
 ### 9F. `wear_jaewon_clothes` (three karma variants)
 "Way better than anything you own" (neutral) and the same premise in angelic and demonic. BO variant for all three: the jeans are good and the tee's better quality than it looks, but the jacket's the real find. Jaewon's "Those look better on you than they do on me" and "Keep them" beats stay.
-Anchor (neutral): `Her jeans are good. Your closet\'s better, and you both know it. The jacket\'s the real find. It\'s February, and you packed seven dresses and zero coats.`
+Anchor as shipped: `Your closet\'s better. You\'d never say it out loud. / The jacket\'s the real find. Cropped, black, silver zippers. You packed thirty-two pieces, and not one of them was a layer.`
 
 ### 9G. `wear_party_dress_again` (BO variant)
 "It's also the only sexy thing you own." is false for her. Variant: she puts the satin dress back on because it still looks incredible and she knows it. Route BO players here through the "satin dress again" option in 9D (or have `wear_bo_look` handle it; pick one and flag it). Basic path unchanged apart from the 9A fixes.
@@ -377,8 +380,8 @@ Anchor (neutral): `Her jeans are good. Your closet\'s better, and you both know 
 
 ## 10. Step 10: The City Sees Her
 
-### 10A. Duplicate scene definitions (bug)
-`walk_to_bargain`, `walk_to_urban`, `walk_to_noir` are each defined **twice** in `story`. JS keeps the later definition, so the earlier copies are dead. Delete the dead copies and edit only the live ones. (Verify with grep which copy is later.)
+### 10A. Duplicate scene definitions (bug), DONE
+The dead first copies of `walk_to_bargain`, `walk_to_urban`, `walk_to_noir` were deleted (along with the dead `urban_entrance` / `maya_help` scenes only they reached). Each walk now has one live definition.
 
 ### 10B. Outfit-aware walks (all players)
 The live walks hardcode "Your basic outfit stands out here" and "In your rumpled party dress." Make each walk read her actual appearance: branch on `getAppealTier()` and `calculateStyleCoherence().label`, name the garment through `cv`. Three short bands per walk (low, middle, high). At high appeal on the Noir walk, the woman in the fur coat looks for a different reason. A BO line joins the high band when she's wearing collection pieces: someone clocks the shoes, then the bag, then her.
@@ -387,7 +390,7 @@ The live walks hardcode "Your basic outfit stands out here" and "In your rumpled
 "The rumpled party dress. Your exposed legs. The fabric clinging." becomes `cv`-aware for everyone. Jack's leer stays exactly as uncomfortable. Only the garment changes.
 
 ### 10D. Store staff recognition (optional polish)
-First visit to Urban Edge (Maya) and Noir Boutique (Vivienne) while wearing collection pieces, one line each: Maya recognizes a piece and asks where she found it; Vivienne notes the look is excellent and the labels aren't hers, which is a compliment from Vivienne. One-time flags.
+**There are no named store owners.** Urban Edge and Noir Boutique are established businesses staffed by unnamed employees (Maya and Vivienne were removed from the game entirely, relationships included). First visit to each while wearing collection pieces, one line each: an Urban Edge staffer recognizes a piece and asks where she found it; a Noir Boutique staffer notes the look is excellent and the labels aren't theirs. One-time flags. Store scene ids: `urban_edge_entrance`, `urban_edge_help`, `urban_edge_browse`, `urban_edge_return`, `noir_entrance`, `noir_recommend`, `noir_browse`; visit flags `visitedUrbanEdge`, `visitedNoirBoutique`.
 
 ---
 
@@ -528,13 +531,13 @@ New helpers still to build: `meetsUpscaleDressCode()` (11), `trySmearMakeup(sour
 | # | Bug | Status |
 |---|---|---|
 | 1 | Beauty Obsessed unreachable in CC | Fixed (Step 4) |
-| 2 | `wear_*` scenes force-equip the basic white underwear | Step 9A |
-| 3 | "Wear the skinny jeans and tank top" puts on the sundress | Step 9A |
-| 4 | `wear_comfy` equips id-less items (and leaves the dress on) | Step 9A |
-| 5 | `jaewon_just_change` changes nothing | Step 9A |
+| 2 | `wear_*` scenes force-equip the basic white underwear | Fixed (Step 9) |
+| 3 | "Wear the skinny jeans and tank top" puts on the sundress | Fixed (Step 9) |
+| 4 | `wear_comfy` equips id-less items (and leaves the dress on) | Fixed (Step 9) |
+| 5 | `jaewon_just_change` changes nothing | Fixed (Step 9) |
 | 6 | Two of three prologue packing arrays omit `cleanliness` | Fixed (Step 6) |
-| 7 | `walk_to_*` scenes defined twice | Step 10A |
+| 7 | `walk_to_*` scenes defined twice | Fixed (before Step 10) |
 | 8 | `isWearingNoirBoutique()` checks nonexistent ids and an `underwear` slot | Step 11B |
 | 9 | Quiet and Sharp Eyes missing from `TRAITS` | Fixed (extra) |
 | 10 | Set badge reported only the first ensemble an item belonged to | Fixed (Step 2) |
-| 11 | `wear_sundress` overwrites the worn dress without stashing it | Step 9A |
+| 11 | `wear_sundress` overwrites the worn dress without stashing it | Fixed (Step 9) |

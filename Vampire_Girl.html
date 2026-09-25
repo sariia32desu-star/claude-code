@@ -12821,9 +12821,9 @@
             time: {
                 day: 1,              // Day counter (total days since game start)
                 weekday: 'Monday',   // Day of week
-                month: 2,            // February (1-12)
-                date: 3,             // 3rd (1-31)
-                year: 2026,          // Year
+                month: 6,            // June (1-12)
+                date: 9,             // 9th (1-31)
+                year: 2025,          // Year (matches newGame)
                 hour: 7,             // 0-23 (24-hour format)
                 minute: 21,          // 0-59
                 week: 1              // Week counter
@@ -13037,8 +13037,6 @@
             relationships: {
                 margaret: { friendship: 0, discovered: false, name: "Mom" }, // No romance for mom
                 jaewon: { friendship: 0, romance: 0, discovered: false, name: "Jaewon" },
-                maya: { friendship: 0, romance: 0, discovered: false, name: "Maya" },
-                vivienne: { friendship: 0, romance: 0, discovered: false, name: "Vivienne" },
                 gunwoo: { friendship: 0, romance: 0, discovered: false, name: "Gunwoo" },
                 oksana: { friendship: 0, romance: 0, discovered: false, name: "Oksana" },
                 jensen: { friendship: 0, romance: 0, discovered: false, name: "Jensen" },
@@ -16609,6 +16607,10 @@
         function loadSaveData(saveData) {
             try {
             gameState = JSON.parse(JSON.stringify(saveData.gameState));
+            // Renamed store scenes (Urban Edge and Noir Boutique have no named owners)
+            var _renamedScenes = { maya_browse: 'urban_edge_return', maya_helps: 'urban_edge_help', maya_help: 'urban_edge_help', urban_entrance: 'urban_edge_entrance', vivienne_browse: 'noir_browse', vivienne_recommend: 'noir_recommend' };
+            if (_renamedScenes[saveData.currentScene]) saveData.currentScene = _renamedScenes[saveData.currentScene];
+            if (_renamedScenes[gameState.previousScene]) gameState.previousScene = _renamedScenes[gameState.previousScene];
             currentScene = saveData.currentScene;
             gameState.currentScene = saveData.currentScene;
             currentPart = saveData.currentPart;
@@ -16821,8 +16823,15 @@
             if (gameState.relationships.trish && gameState.relationships.trish.corruption === undefined) gameState.relationships.trish.corruption = 0;
             if (gameState.relationships.jade_liu && gameState.relationships.jade_liu.corruption === undefined) gameState.relationships.jade_liu.corruption = 0;
             if (gameState.relationships.richie && gameState.relationships.richie.romance === undefined) gameState.relationships.richie.romance = 0;
-            if (!gameState.relationships.maya) gameState.relationships.maya = { friendship: 0, romance: 0, discovered: false, name: "Maya" };
-            if (!gameState.relationships.vivienne) gameState.relationships.vivienne = { friendship: 0, romance: 0, discovered: false, name: "Vivienne" };
+            // Urban Edge and Noir Boutique are staffed by employees only; no named owners
+            delete gameState.relationships.maya;
+            delete gameState.relationships.vivienne;
+            if (gameState.flags) {
+                if (gameState.flags.metMaya) gameState.flags.visitedUrbanEdge = true;
+                if (gameState.flags.metVivienne) gameState.flags.visitedNoirBoutique = true;
+                delete gameState.flags.metMaya;
+                delete gameState.flags.metVivienne;
+            }
             if (!gameState.relationships.zeus) gameState.relationships.zeus = { friendship: 0, romance: 0, corruption: 0, discovered: false, name: "Zeus" };
             if (!gameState.relationships.ruby) gameState.relationships.ruby = { friendship: 0, romance: 0, corruption: 0, discovered: false, name: "Ruby" };
             if (gameState.relationships.ruby && gameState.relationships.ruby.corruption === undefined) gameState.relationships.ruby.corruption = 0;
@@ -17975,8 +17984,6 @@
                 relationships: {
                     margaret: { friendship: 0, discovered: false, name: "Mom" },
                     jaewon: { friendship: 0, romance: 0, discovered: false, name: "Jaewon" },
-                    maya: { friendship: 0, romance: 0, discovered: false, name: "Maya" },
-                    vivienne: { friendship: 0, romance: 0, discovered: false, name: "Vivienne" },
                     gunwoo: { friendship: 0, romance: 0, discovered: false, name: "Gunwoo" },
                     oksana: { friendship: 0, romance: 0, discovered: false, name: "Oksana" },
                     jensen: { friendship: 0, romance: 0, discovered: false, name: "Jensen" },
@@ -20588,7 +20595,7 @@ audioSystem.playSFX('buttonClick');
                 ,{ id: 'exhibition_bench_trigger', repeatable: true, chance: 0.22, districts: ['park'], condition: () => !isNight && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionBenchDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_puddle_trigger', repeatable: true, chance: 0.19, districts: ['park','commercial','residential','downtown'], condition: () => !isNight && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionPuddleDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_crowd_trigger', repeatable: true, chance: 0.18, districts: ['commercial','downtown'], condition: () => (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionCrowdDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
-                ,{ id: 'exhibition_fitting_trigger', repeatable: true, chance: 0.18, districts: ['commercial'], condition: () => !isNight && ['bargain_threads_entrance','bargain_threads_browse','noir_entrance','vivienne_browse','vivienne_recommend','noir_checkout','urban_edge_entrance','urban_edge_browse'].includes(currentScene) && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionFittingDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
+                ,{ id: 'exhibition_fitting_trigger', repeatable: true, chance: 0.18, districts: ['commercial'], condition: () => !isNight && ['bargain_threads_entrance','bargain_threads_browse','noir_entrance','noir_browse','noir_recommend','noir_checkout','urban_edge_entrance','urban_edge_browse'].includes(currentScene) && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionFittingDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_escalator_trigger', repeatable: true, chance: 0.18, districts: ['commercial','downtown'], condition: () => (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionEscalatorDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 // exhibition_bus_trigger removed from random pool — fires exclusively via travelToLocation() when method === 'bus'
                 ,{ id: 'exhibition_barstool_trigger', repeatable: true, chance: 0.20, districts: ['downtown'], condition: () => gameState.time.hour >= 18 && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionBarDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
@@ -24582,20 +24589,6 @@ audioSystem.playSFX('buttonClick');
                 if (points >= 40) benefits.push("10% discount at Bargain Threads");
                 if (points >= 20) benefits.push("5% discount at Bargain Threads");
                 if (points < -20) benefits.push('<img src="Images/icons/warning.png" class="icon" alt="warning">️ Jack is hostile, may refuse service');
-            }
-            
-            // Maya benefits (merchant)
-            if (person === "maya") {
-                if (points >= 40) benefits.push("10% discount at Urban Edge");
-                if (points >= 20) benefits.push("5% discount at Urban Edge");
-                if (points >= 10) benefits.push("Helpful shopping advice");
-            }
-            
-            // Vivienne benefits (merchant)
-            if (person === "vivienne") {
-                if (points >= 40) benefits.push("10% discount at Noir Boutique");
-                if (points >= 20) benefits.push("5% discount at Noir Boutique");
-                if (points >= 10) benefits.push("Access to exclusive pieces");
             }
             
             // Captive benefits
@@ -36501,9 +36494,9 @@ audioSystem.playSFX('buttonClick');
             vajaros_realty:     { name: "Vajaros Realty",      preferred: ['professional', 'elegant', 'glamorous'], penalized: ['casual', 'sporty'], minAppeal: 50 },
             // Commercial district
             noir_entrance:      { name: "Noir Boutique",        preferred: ['elegant', 'glamorous'], penalized: ['casual', 'sporty'], minAppeal: 50 },
-            vivienne_browse:    { name: "Noir Boutique",        preferred: ['elegant', 'glamorous'], penalized: ['casual', 'sporty'], minAppeal: 50 },
+            noir_browse:        { name: "Noir Boutique",        preferred: ['elegant', 'glamorous'], penalized: ['casual', 'sporty'], minAppeal: 50 },
             urban_edge_entrance:{ name: "Urban Edge",           preferred: ['edgy', 'streetwear', 'provocative'], penalized: [], minAppeal: 0 },
-            maya_browse:        { name: "Urban Edge",           preferred: ['edgy', 'streetwear', 'provocative'], penalized: [], minAppeal: 0 },
+            urban_edge_return:  { name: "Urban Edge",           preferred: ['edgy', 'streetwear', 'provocative'], penalized: [], minAppeal: 0 },
             // Residential
             diner_entrance:     { name: "Ruby\'s Diner",        preferred: ['casual', 'minimalist'], penalized: [], minAppeal: 0 },
             parkside_inn:       { name: "Parkside Inn",         preferred: ['casual', 'minimalist'], penalized: [], minAppeal: 0 }
@@ -36554,7 +36547,7 @@ audioSystem.playSFX('buttonClick');
 
             // Penalized style reactions — mental health hit
             if (check.standsOut) {
-                if (sceneId === 'noir_entrance' || sceneId === 'vivienne_browse') {
+                if (sceneId === 'noir_entrance' || sceneId === 'noir_browse') {
                     reactions.push({ text: 'A woman near the fitting rooms looks you over. Her eyes catch on your outfit and slide away. You don\'t match the room.', type: 'negative', mhChange: -3 });
                     reactions.push({ text: 'One of the staff glances at you and keeps a neutral face. She\'s good at it, but you catch the effort.', type: 'negative', mhChange: -2 });
                     reactions.push({ text: 'A girl restocking earrings pauses when you walk past. Her expression says she\'s deciding whether you\'re lost.', type: 'negative', mhChange: -3 });
@@ -36579,7 +36572,7 @@ audioSystem.playSFX('buttonClick');
 
             // Under-dressed reactions — mental health hit
             if (check.underDressed && !check.standsOut) {
-                if (sceneId === 'noir_entrance' || sceneId === 'vivienne_browse') {
+                if (sceneId === 'noir_entrance' || sceneId === 'noir_browse') {
                     reactions.push({ text: 'A staff member approaches, then thinks better of it. Adjusts a display instead. You can feel the assessment from across the room.', type: 'negative', mhChange: -3 });
                 } else if (sceneId === 'casino_inside') {
                     reactions.push({ text: 'You feel the room pricing you. The dealers, the waitresses, the other gamblers. Everyone does the math.', type: 'negative', mhChange: -4 });
@@ -36593,7 +36586,7 @@ audioSystem.playSFX('buttonClick');
 
             // Preferred style match reactions — mental health boost
             if (check.fitsIn && !check.standsOut && !check.underDressed) {
-                if (sceneId === 'noir_entrance' || sceneId === 'vivienne_browse') {
+                if (sceneId === 'noir_entrance' || sceneId === 'noir_browse') {
                     reactions.push({ text: 'A staff member gives you an approving nod as you browse. You belong here and she can tell.', type: 'positive', mhChange: 3 });
                     reactions.push({ text: 'A woman checking out at the counter glances at your outfit. Looks back at her own purchases. Looks satisfied with her taste.', type: 'positive', mhChange: 2 });
                 } else if (sceneId === 'hunt_hardy_bar') {
@@ -49971,9 +49964,9 @@ audioSystem.playSFX('buttonClick');
             // Clothing stores - browsing scenes
             'jack_browse': 'outside_bargain_threads',
             'bargain_checkout': 'outside_bargain_threads',
-            'maya_browse': 'outside_urban_edge',
+            'urban_edge_return': 'outside_urban_edge',
             'urban_checkout': 'outside_urban_edge',
-            'vivienne_browse': 'outside_noir_boutique',
+            'noir_browse': 'outside_noir_boutique',
             'noir_checkout': 'outside_noir_boutique',
             
             // Convenience store
@@ -54403,9 +54396,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             if (currentShopId === 'bargain_threads') {
                 returnScene = gameState.flags.metJack ? 'jack_browse' : 'bargain_threads_browse';
             } else if (currentShopId === 'urban_edge') {
-                returnScene = gameState.flags.metMaya ? 'maya_browse' : 'urban_edge_browse';
+                returnScene = gameState.flags.visitedUrbanEdge ? 'urban_edge_return' : 'urban_edge_browse';
             } else if (currentShopId === 'noir_boutique') {
-                returnScene = 'vivienne_browse';
+                returnScene = 'noir_browse';
             } else if (currentShopId === 'convenience_store') {
                 returnScene = 'convenience_store';
             }
@@ -55990,13 +55983,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 'jack_tour': 'Images/locations/bargain-threads.png',
                 'jack_browse': 'Images/locations/bargain-threads.png',
                 'urban_edge': 'Images/locations/urban-edge.png',
-                'urban_entrance': 'Images/locations/urban-edge.png',
-                'maya_intro': 'Images/locations/urban-edge.png',
-                'maya_browse': 'Images/locations/urban-edge.png',
+                'urban_edge_return': 'Images/locations/urban-edge.png',
                 'noir_boutique': 'Images/locations/noir-boutique.png',
                 'noir_entrance': 'Images/locations/noir-boutique.png',
-                'vivienne_intro': 'Images/locations/noir-boutique.png',
-                'vivienne_browse': 'Images/locations/noir-boutique.png',
+                'noir_browse': 'Images/locations/noir-boutique.png',
                 
                 // Bars & Lounges
                 'hardy_bar': 'Images/locations/hardy-bar.png',
@@ -62596,75 +62586,6 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             },
             
             // Tutorial scenes removed - players go directly to commercial_district_street
-
-            // Walking to stores with street atmosphere
-            walk_to_bargain: {
-                text: 'You head toward Bargain Threads. Three blocks north.\n\nThe sidewalk is busy. People stream past. Business suits. Casual clothes. Shopping bags.\n\nMost don\'t even glance at you. A woman with a stroller. A businessman absorbed in his phone. Teenagers laughing at something on a screen.\n\nIn your rumpled party dress, you\'re just another person navigating the city.\n\nNobody pays attention.\n\nThe walk takes about ten minutes.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.WALK_MEDIUM);
-                    gameState.thirst += 2;
-                    
-                    // Random encounter based on appeal
-                    const appeal = calculateTotalAppeal();
-                    const encounterChance = Math.random() * 100;
-                    
-                    // Higher appeal = better chance of being approached
-                    if (appeal >= 240 && encounterChance < 30) {
-                        gameState.flags.streetEncounter = 'approached';
-                    } else {
-                        gameState.flags.streetEncounter = 'none';
-                    }
-                    
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Arrive at the store", nextScene: "bargain_entrance" }
-                ]
-            },
-
-            walk_to_urban: {
-                text: 'You make your way to Urban Edge. Five blocks east.\n\nThe streets are crowded. More upscale here. Trendy coffee shops. Boutique windows. Well-dressed people.\n\nYou catch a few glances. Nothing major. Your basic outfit stands out slightly; not quite fitting the vibe.\n\nOne guy does a double-take as you pass a storefront. But he keeps walking.\n\nThe sidewalk hums with energy. Conversations. Laughter. The city pulse.\n\nThe walk takes about ten minutes.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.WALK_MEDIUM);
-                    gameState.thirst += 2;
-                    
-                    const appeal = calculateTotalAppeal();
-                    const encounterChance = Math.random() * 100;
-                    
-                    if (appeal >= 240 && encounterChance < 30) {
-                        gameState.flags.streetEncounter = 'approached';
-                    } else {
-                        gameState.flags.streetEncounter = 'none';
-                    }
-                    
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Arrive at the store", nextScene: "urban_entrance" }
-                ]
-            },
-
-            walk_to_noir: {
-                text: 'You walk toward Noir Boutique. Seven blocks northeast. The upscale district.\n\nThe atmosphere shifts as you go. Cleaner streets. Designer storefronts. Expensive cars.\n\nThe people here dress better. Tailored suits. Designer bags. Confident strides.\n\nSeveral glances come your way. Some lingering. Your party dress stands out here; and not in a flattering way.\n\nA woman in a fur coat gives you a once-over. Her expression says everything.\n\nYou don\'t belong here. Not dressed like this.\n\nThe walk takes about fifteen minutes.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.WALK_MEDIUM);
-                    gameState.thirst += 2;
-                    
-                    const appeal = calculateTotalAppeal();
-                    const encounterChance = Math.random() * 100;
-                    
-                    if (appeal >= 240 && encounterChance < 30) {
-                        gameState.flags.streetEncounter = 'approached';
-                    } else {
-                        gameState.flags.streetEncounter = 'none';
-                    }
-                    
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Arrive at the boutique", nextScene: "noir_entrance" }
-                ]
-            },
 
             // BARGAIN THREADS - Complete sequence
             bargain_entrance: {
@@ -134108,7 +134029,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const nearby = getNearbyLocations();
                     const choices = [];
                     
-                    choices.push({ text: "Go inside Urban Edge", nextScene: "maya_browse" });
+                    choices.push({ text: "Go inside Urban Edge", nextScene: "urban_edge_return" });
                     
                     // Add nearby locations
                     addNearbyTileChoices(choices, nearby, { excludeIds: ['urban_edge'], maxTime: 15 });
@@ -134136,7 +134057,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const nearby = getNearbyLocations();
                     const choices = [];
                     
-                    choices.push({ text: "Go inside Noir Boutique", nextScene: "vivienne_browse" });
+                    choices.push({ text: "Go inside Noir Boutique", nextScene: "noir_browse" });
                     
                     // Add nearby locations
                     addNearbyTileChoices(choices, nearby, { excludeIds: ['noir_boutique'], maxTime: 15 });
@@ -156295,32 +156216,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: [{ text: '<img src="Images/icons/check-mark.png" class="icon" alt="continue"> Continue', nextScene: "jaewon_apartment_main" }]
             },
 
-            // URBAN EDGE - Complete sequence
-            urban_entrance: {
-                text: 'You step into Urban Edge.\n\nImmediately, the energy hits you. Music plays; something modern with a heavy beat. Mannequins pose in trendy, sexy outfits. Neon signs accent the walls.\n\nThe place is busy. Other shoppers browse. Young people. Fashionable. Confident.\n\nA sales clerk approaches. Early twenties. Stylish pixie cut. Bright smile.\n\n"Hey! Welcome to Urban Edge!"\n\nShe\'s friendly. Professional. No judgment in her eyes.\n\n"I\'m Maya. Let me know if you need help finding anything!"\n\nThe racks around you are full of options. Trendy. Sexy. Well-made.\n\nThis is a real store. The kind where you might actually find something good.',
-                onEnter: () => {
-                    gameState.flags.metMaya = true;
-                    advanceTime(TIME_COSTS.QUICK_ACTION);
-                    updateStatus();
-                },
-                choices: [
-                    { text: "\"Thanks, I\'ll look around.\"", nextScene: "maya_browse" },
-                    { text: "\"Can you help me find something that I\'d look good in?\"", nextScene: "maya_help" }
-                ]
-            },
-
-            maya_help: {
-                text: 'Maya\'s smile brightens.\n\n"Absolutely! We\'ve got some amazing stuff."\n\nShe leads you to a section. Tight jeans. Crop tops. Mini skirts. Lace details.\n\n"What\'s your vibe? Going out? Date night? Just want to feel hot?"\n\nShe\'s casual about it. Matter-of-fact. No weirdness.\n\n"We\'ve got options in different price ranges. Take a look and let me know!"\n\nProfessional. Helpful. Normal.\n\nA relief after Jack.',
-                onEnter: () => {
-                    advanceTime(TIME_COSTS.CONVERSATION);
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Browse the selection", nextScene: "maya_browse" }
-                ]
-            },
-
-            maya_browse: {
+            // URBAN EDGE - Return visits
+            urban_edge_return: {
                 text: 'The music\'s different today but the energy\'s the same. Busy floor, people browsing, staff folding and restocking between customers.\n\nYou know the layout by now. Tops on the left wall, bottoms along the back, dresses and outerwear on the right. Accessories near the register.\n\nA guy at the shoe display tries on combat boots, stomping once to test the fit. Two girls share a fitting room, trading opinions through the curtain.',
                 onEnter: () => {
                     advanceTime(TIME_COSTS.BROWSE);
@@ -156358,29 +156255,29 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             noir_entrance: {
                 text: 'You push through the glass door and the street noise cuts off behind you.\n\nNoir Boutique hits you in layers. The air first. Something floral and warm, piped through the vents. Then the carpet, thick enough that your footsteps disappear.\n\nThe place is alive. A woman in a camel coat browses silk blouses near the window, tilting one toward the light. Two friends in heels pick through a rack of evening dresses, murmuring to each other. A man in a fitted suit sits in a leather armchair near the back, scrolling his phone while his girlfriend tries things on behind a curtain.\n\nStaff move between customers. Three that you can count. All in black. All polished. A tall girl adjusts a mannequin display. A guy with a sharp jawline carries a garment bag toward the fitting rooms. A third, the one closest to the entrance, notices you and starts walking over.\n\nShe\'s maybe twenty-five. Hair pulled back tight. Small gold earrings. Heels that click on the marble border between carpet sections.\n\n"Welcome to Noir Boutique," she says. Warm, professional. "First time with us?"\n\nHer eyes sweep your outfit. Quick, trained. She doesn\'t react, but you can feel the assessment.\n\n"Take your time. Everything on the floor is current season. Let me know if you\'d like a fitting room."',
                 onEnter: () => {
-                    gameState.flags.metVivienne = true;
+                    gameState.flags.visitedNoirBoutique = true;
                     advanceTime(TIME_COSTS.QUICK_ACTION);
                     tryDressCodeReaction('noir_entrance');
                     updateStatus();
                 },
                 choices: [
-                    { text: "Browse the selection", nextScene: "vivienne_browse" },
-                    { text: "\"What would you recommend?\"", nextScene: "vivienne_recommend" }
+                    { text: "Browse the selection", nextScene: "noir_browse" },
+                    { text: "\"What would you recommend?\"", nextScene: "noir_recommend" }
                 ]
             },
 
-            vivienne_recommend: {
+            noir_recommend: {
                 text: 'The staff member tilts her head slightly. "Shopping for anything specific? An event, a date, just treating yourself?"\n\n"Just... looking for something new."\n\nShe nods. "We\'ve got a silk collection that\'s been moving fast. Some designer evening pieces, too. Depends on what you\'re after."\n\nShe leads you toward a display near the center of the store. Runs her hand along a rack without touching the fabric.\n\n"Most of what we carry runs between a thousand and three thousand. A few things go higher." She glances at you. "I can pull some things in your size if you want to try anything on."',
                 onEnter: () => {
                     advanceTime(TIME_COSTS.CONVERSATION);
                     updateStatus();
                 },
                 choices: [
-                    { text: "Browse the collection", nextScene: "vivienne_browse" }
+                    { text: "Browse the collection", nextScene: "noir_browse" }
                 ]
             },
 
-            vivienne_browse: {
+            noir_browse: {
                 text: function() {
                     var hour = gameState.time.hour;
                     var desc = '';
@@ -156398,7 +156295,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     advanceTime(TIME_COSTS.BROWSE);
-                    tryDressCodeReaction('vivienne_browse');
+                    tryDressCodeReaction('noir_browse');
                     updateStatus();
                 },
                 choices: [
@@ -156857,7 +156754,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (gameState.outfitPresets && gameState.outfitPresets.length > 0) {
                         choices.push({ text: 'Quick Change (presets)', action: function() { openPresetQuickChange(); } });
                     }
-                    choices.push({ text: 'Back to browsing', nextScene: 'maya_browse' });
+                    choices.push({ text: 'Back to browsing', nextScene: 'urban_edge_return' });
                     return choices;
                 }
             },
@@ -156875,7 +156772,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (gameState.outfitPresets && gameState.outfitPresets.length > 0) {
                         choices.push({ text: 'Quick Change (presets)', action: function() { openPresetQuickChange(); } });
                     }
-                    choices.push({ text: 'Back to browsing', nextScene: 'vivienne_browse' });
+                    choices.push({ text: 'Back to browsing', nextScene: 'noir_browse' });
                     return choices;
                 }
             },
@@ -156884,17 +156781,17 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             urban_edge_entrance: {
                 text: 'You push through the door and the bass hits first. Something with a beat, playing loud enough to feel in your chest but not so loud you can\'t think.\n\nUrban Edge runs deeper than it looks from outside. Exposed brick on one wall, concrete on the other. Track lighting angled at the displays. Graffiti art behind the register, framed and intentional.\n\nPeople everywhere. A girl in a denim jacket flips through a rack of mini skirts. Two guys debate over bomber jackets near the back. A woman with box braids holds a leather skirt up against her waist, checking herself in a full-length mirror.\n\nStaff weave through the floor in matching black tees with the store logo. A guy with rolled sleeves refolds a display table of crop tops. A girl with short silver hair rings up a customer at the counter, laughing at something he said.\n\nAnother staffer spots you. She\'s maybe twenty-two, nose ring, confident walk.\n\n"Hey, welcome in," she says. Casual. "First time? Lmk if you need anything. Fitting rooms are in the back."\n\nShe\'s already moving on to the next thing. No hovering.',
                 onEnter: () => {
-                    gameState.flags.metMaya = true;
+                    gameState.flags.visitedUrbanEdge = true;
                     advanceTime(TIME_COSTS.QUICK_ACTION);
                     updateStatus();
                 },
                 choices: [
                     { text: "\"Thanks, I\'ll browse.\"", nextScene: "urban_edge_browse" },
-                    { text: "\"Can you help me find something?\"", nextScene: "maya_helps" }
+                    { text: "\"Can you help me find something?\"", nextScene: "urban_edge_help" }
                 ]
             },
 
-            maya_helps: {
+            urban_edge_help: {
                 text: 'The girl tilts her head. "What are you going for? Club? Date night? Just wanna look hot?"\n\nShe leads you toward a section without waiting for an answer. Tight jeans. Crop tops. Mini skirts. Mesh. Lace details.\n\n"This rack\'s been flying off the shelves," she says, pulling a strappy top off a hanger and holding it up. "Depends on your budget. We\'ve got stuff from like fifty bucks up to a few hundred."\n\nShe drapes it back. "Try anything you want. Fitting rooms are back there."',
                 onEnter: () => {
                     advanceTime(TIME_COSTS.CONVERSATION);
@@ -157360,7 +157257,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 finalImage: "", // Clear any previous images
                 text: () => isBeautyObsessed()
                     // BEAUTY OBSESSED: a closet's worth of looks and nowhere to hang them
-                    ? 'You dump your backpack onto the bathroom counter.\n\nIt keeps coming.\n\nThe diamond cutout dress, which still makes you a little dizzy. The pink sequin co-ord. The satin corset top, your favorite thing you own. The denim halter and the lace-up booty shorts that go with it.\n\nThree full lace sets, folded into their own pouch.\n\nYou packed a closet into a backpack, and it all came out uncreased.\n\nThere are more options on this counter than in Jaewon\'s whole wardrobe. And nowhere in this apartment to hang a single one of them.\n\nFor now, though, you need to wear <em>something</em>.'
+                    ? 'You dump your backpack onto the bathroom counter.\n\nIt keeps coming.\n\nThe sheer leopard dress, which still makes you a little dizzy. The pink sequin co-ord. The satin corset top, your favorite thing you own. The denim halter and the lace-up booty shorts that go with it.\n\nThree full lace sets, folded into their own pouch.\n\nYou packed a closet into a backpack, and it all came out uncreased.\n\nThere are more options on this counter than in Jaewon\'s whole wardrobe. And nowhere in this apartment to hang a single one of them.\n\nFor now, though, you need to wear <em>something</em>.'
                     : 'You dump your backpack\'s contents onto the bathroom counter and take inventory:\n\n<strong>Your Clothing Options:</strong>\n• Basic jeans and a plain t-shirt (comfortable, unremarkable)\n• Black leggings and an oversized sweater (cozy, not attention-grabbing)\n• Skinny jeans and a tank top (casual, slightly form-fitting)\n• Joggers and a hoodie (athletic, practical)\n• A simple sundress (feminine but plain, no wow factor)\n\nYou stare at the pile. All basic. All functional. Errand clothes. You wouldn\'t turn a single head in any of this.\n\nThe party dress you just took off, despite being rumpled and torn, at least had <em>something</em>. It was short, showed off your legs, hinted at your figure. But it also looked like you\'d been through hell.\n\nIf you\'re serious about feeding. about finding someone willing to sleep with you. you might need to invest in better clothes. Something that actually flatters your body. Shows off the assets you know you have.\n\nBut that means spending money. Money you need for rent, for survival.\n\nFor now, though, you need to wear <em>something</em>.',
                 onEnter: () => {
                     gameState.thirst = Math.min(80, gameState.thirst + 3);
@@ -197896,17 +197793,15 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             'jack_intro': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
             'jack_tour': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
             'jack_browse': { redirect: 'outside_bargain_threads', name: 'Bargain Threads' },
-            // Urban Edge — block at the door, not mid-browse (both scene chains)
+            // Urban Edge — block at the door, not mid-browse
             'urban_edge_entrance': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
-            'maya_helps': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
+            'urban_edge_help': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
             'urban_edge_browse': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
-            'urban_entrance': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
-            'maya_help': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
-            'maya_browse': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
+            'urban_edge_return': { redirect: 'outside_urban_edge', name: 'Urban Edge' },
             // Noir Boutique — block at the door, not mid-browse
             'noir_entrance': { redirect: 'outside_noir_boutique', name: 'Noir Boutique' },
-            'vivienne_recommend': { redirect: 'outside_noir_boutique', name: 'Noir Boutique' },
-            'vivienne_browse': { redirect: 'outside_noir_boutique', name: 'Noir Boutique' },
+            'noir_recommend': { redirect: 'outside_noir_boutique', name: 'Noir Boutique' },
+            'noir_browse': { redirect: 'outside_noir_boutique', name: 'Noir Boutique' },
             // Diner
             'diner_entrance': { redirect: 'outside_diner', name: 'the diner' },
             'diner_main_floor': { redirect: 'outside_diner', name: 'the diner' },
@@ -214689,7 +214584,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                             if (s.choices['q_fight'] === 'walk_away') return false;
                             if (s.choices['q_fight'] === 'join_stephanie') return false;
                             if (s.choices['q_best_friend_secret'] === 'use_it') return false;
-                            if (s.choices['q_best_friend_secret'] === 'tell_maya') return false;
+                            if (s.choices['q_best_friend_secret'] === 'spread_it') return false;
                             if (s.choices['q_teacher_offer'] === 'comply') return false;
                             return true;
                         },
@@ -214724,7 +214619,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                             return goodCount < 3;
                         },
                         lockedReason: 'You don\'t operate this way. You\'ve spent too long being the person who actually shows up. This version of Kelsie doesn\'t keep ledgers.',
-                        exclusive: (s) => s.choices['q_best_friend_secret'] === 'use_it' || s.choices['q_best_friend_secret'] === 'tell_maya',
+                        exclusive: (s) => s.choices['q_best_friend_secret'] === 'use_it' || s.choices['q_best_friend_secret'] === 'spread_it',
                         exclusiveLabel: 'You already know how to use what you know.',
                         label: 'Because it gives you leverage. People owe you, and you collect.',
                         text: 'You know things now. Who hooked up with who. Who cried in your bathroom. Who told you something at 2am they\'ll spend all week hoping you forgot.\n\nYour house is generous because generous gets you access, and access is power, and power is the only thing that\'s ever actually kept anyone safe.\n\nYour dad taught you that when he left. You just took a different lesson from it than most people would.',
@@ -216893,7 +216788,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             else if (violenceChoice === 'violence_join') coreTraits.push('She helped box in the kid who ended up in the ER, a boy named George. The next morning she ate a whole bowl of cereal.');
 
             if (secretChoice === 'keep_secret') coreTraits.push('She keeps what she\'s trusted with. Even mid-argument, even when it would win.');
-            else if (secretChoice === 'use_it' || secretChoice === 'tell_maya') coreTraits.push('She\'s used what people trusted her with. It cost her something real.');
+            else if (secretChoice === 'use_it' || secretChoice === 'spread_it') coreTraits.push('She\'s used what people trusted her with. It cost her something real.');
 
             if (teacherChoice === 'report') coreTraits.push('When Mr. Vance crossed the line, she walked straight to the office, heart hammering, voice level.');
             else if (teacherChoice === 'comply') coreTraits.push('When Mr. Vance made his offer, she did the math and said yes. She learned how precisely she can detach action from feeling.');
