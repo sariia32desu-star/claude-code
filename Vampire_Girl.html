@@ -19536,7 +19536,7 @@ audioSystem.playSFX('buttonClick');
                     '<div class="wardrobe-item-image">' + itemVisual + '</div>' +
                     '<div class="wardrobe-item-name">' + item.name + '</div>' +
                     '<div class="wardrobe-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' +
-                    descHTML + cleanlinessDisplay + damageDisplay + _ciMatBadge + _ciEffBadge + _ciCombatBadge + equippedBadge +
+                    descHTML + cleanlinessDisplay + damageDisplay + _ciMatBadge + _ciEffBadge + _ciCombatBadge + (isBOItem(item) ? '<div style="font-size:10px;color:#ffb3e6;margin-top:2px;"><img src="Images/icons/mirror.png" class="icon" alt="collection" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"> Your Collection</div>' : '') + equippedBadge +
                     '</div>';
             }).join('');
             updateClothingInvAppeal();
@@ -19868,7 +19868,7 @@ audioSystem.playSFX('buttonClick');
                     '<div class="wardrobe-item-image">' + itemVisual + '</div>' +
                     '<div class="wardrobe-item-name">' + item.name + '</div>' +
                     '<div class="wardrobe-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' +
-                    descHTML + cleanlinessDisplay + damageDisplay + materialBadge + effectBadge + synergyBadge + setBadge + equippedBadge + ownerBadge +
+                    descHTML + cleanlinessDisplay + damageDisplay + materialBadge + effectBadge + synergyBadge + setBadge + (isBOItem(item) ? '<div style="font-size:10px;color:#ffb3e6;margin-top:2px;"><img src="Images/icons/mirror.png" class="icon" alt="collection" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"> Your Collection</div>' : '') + equippedBadge + ownerBadge +
                     '</div>';
             }).join('');
         }
@@ -32734,6 +32734,21 @@ audioSystem.playSFX('buttonClick');
                     applyExhibitionThrillGain(bothThrill);
                 }
             }
+            // Beauty Obsessed overhaul (Step 2E): sheer pieces in public, +1 thrill per hour.
+            // A further +1/hr when she's braless or commando behind the sheer fabric.
+            // Stacks with the braless/commando gains above.
+            if (!isNakedPassive && typeof getVisibleSheerPieces === 'function' &&
+                !(typeof PRIVATE_UNEQUIP_SCENES !== 'undefined' && PRIVATE_UNEQUIP_SCENES.includes(currentScene))) {
+                var _sheer = getVisibleSheerPieces();
+                if (_sheer.chest || _sheer.hips) {
+                    var _sheerRate = 1;
+                    if ((_sheer.chest && cv.braless) || (_sheer.hips && cv.commando)) _sheerRate += 1;
+                    var sheerThrill = Math.floor(hoursPassedPartial * _sheerRate);
+                    if (sheerThrill > 0) {
+                        applyExhibitionThrillGain(sheerThrill);
+                    }
+                }
+            }
             // Topless (chest exposed, bottom covered): +2 thrill per 20 min
             if (isToplessPassive && !isNakedPassive) {
                 const toplessThrill = Math.floor(minutes / 20) * 2;
@@ -34344,10 +34359,99 @@ audioSystem.playSFX('buttonClick');
                 _lines.push(BRALESS_COLD_AMBIENT_LINES[_tierKey].replace(/\{top\}/g, _tn));
             }
 
+            // Beauty Obsessed overhaul (Step 2E): bare behind a sheer piece
+            var _sheerB = (typeof getVisibleSheerPieces === 'function') ? getVisibleSheerPieces() : {};
+            if (_sheerB.chest && SHEER_BRALESS_AMBIENT_LINES[_tierKey]) {
+                _lines.push(SHEER_BRALESS_AMBIENT_LINES[_tierKey].replace(/\{top\}/g, _sheerB.chest.name.toLowerCase()));
+            }
+
             // Pick random line and inject garment name
             var _line = _lines[Math.floor(Math.random() * _lines.length)].replace(/\{top\}/g, _tn);
 
             // Display as italic notification
+            showMessage(
+                '<div style="text-align: center; padding: 8px;">' +
+                '<div style="color: #e8a8cc; font-style: italic; line-height: 1.7; font-size: 0.95em;">' +
+                _line.split('\n\n').map(function(p) { return '<p style="margin-bottom: 1em;">' + p + '</p>'; }).join('') +
+                '</div></div>',
+                null,
+                { skipHistory: true }
+            );
+        }
+
+        // ── Sheer supplements (Beauty Obsessed overhaul, Step 2E) ──
+        // Mixed into the braless / commando / both pools when the bare skin sits
+        // behind a sheer piece. {top} and {bottom} resolve to the sheer garment.
+        var SHEER_BRALESS_AMBIENT_LINES = {
+            high: 'Your {top}\'s sheer and you\'re bare under it. Your stiff nipples are on display for the whole street, and every look that lands on them goes straight to your clit.',
+            midHigh: 'Your nipples press through the {top}, bare and dark behind the sheer fabric. You don\'t cover them. The ache between your legs grows with every block.',
+            mid: 'Your bare tits show through your {top} like there\'s nothing on at all. You can feel the moment each stranger notices. Your nipples harden every time.',
+            low: 'There\'s nothing under your {top}, and it\'s sheer. Your bare nipples show through it, dark and stiff, and anyone who looks can see them. Your arms cross over your chest on their own.'
+        };
+        var SHEER_COMMANDO_AMBIENT_LINES = {
+            high: 'Anyone who looks can see your bare pussy through your {bottom}. You want them to. You\'re dripping, and the fabric clings to your wet folds.',
+            midHigh: 'Your {bottom}\'s sheer and there\'s nothing under it. Your bare cunt is a shadow behind the fabric for anyone who looks low enough. Plenty of people do, and your clit throbs for every one.',
+            mid: 'Your bare pussy shows through your {bottom} in the right light. You know exactly which light. You\'re slick, and you keep walking through it.',
+            low: 'There\'s nothing under your {bottom}, and it\'s sheer. The shadow of your bare pussy shows through when the light hits right. You press your thighs together and walk faster, and you\'re already wet.'
+        };
+
+        // ── Sheer Ambient Interiority (Beauty Obsessed overhaul, Step 2E) ──
+        // Fires on street transitions when her underwear shows through a sheer piece.
+        // {sheer} is the sheer garment, {under} the bra or panties behind it.
+        // 45-minute cooldown. Four corruption tiers, 2 variants each.
+        var SHEER_AMBIENT_LINES = {
+            high: [
+                'Your {sheer} hides nothing, and your {under} is the only thing it\'s framing. You roll your hips into the next step and let the whole street look. Your cunt aches with it.',
+                'A woman stares at your {under} through your {sheer} and doesn\'t look away. Neither do you. The heat between your thighs climbs until your nipples ache.'
+            ],
+            midHigh: [
+                'Your {under} shows through your {sheer} and you walk like you meant it, because you did. Every stare lands warm between your legs.',
+                'You planned this: the {sheer}, the {under} underneath, how it all reads from across the street. People are reading it. Your pussy\'s slick and your stride stays slow.'
+            ],
+            mid: [
+                'You catch your reflection in a shop window. Your {under} sits framed under your {sheer}, every line of it on display. It\'s a good look, and the looks it gets make your nipples tighten.',
+                'Someone behind you goes quiet as you pass. Your {under} is right there under the {sheer}, and you can feel exactly where their eyes are. Your clit throbs once.'
+            ],
+            low: [
+                'Your {under} shows straight through your {sheer}. You knew it would. It looked incredible in the mirror, and out here every pair of eyes that drops to it makes your face burn and your pussy clench.',
+                'A man at the crosswalk reads your {under} through your {sheer} like it\'s a sign. You fold your arms. It doesn\'t help, and the heat pooling between your thighs doesn\'t care.'
+            ]
+        };
+
+        function checkSheerAmbientLine(sceneId) {
+            // Only on street scenes
+            if (_arousalAmbientStreets.indexOf(sceneId) === -1) return;
+            if (typeof getVisibleSheerPieces !== 'function') return;
+            var o = gameState.currentOutfit;
+            if (gameState.isNaked || isEffectivelyNaked()) return;
+
+            // Underwear behind a sheer piece (bare skin behind it belongs to the braless/commando pools)
+            var _sheer = getVisibleSheerPieces();
+            var _under = null, _garment = null;
+            if (_sheer.chest && o.bra) { _under = o.bra; _garment = _sheer.chest; }
+            else if (_sheer.hips && o.panties) { _under = o.panties; _garment = _sheer.hips; }
+            if (!_under) return;
+
+            // Don't stack with the braless/commando/both lines on the same transition
+            var _now = (gameState.time.day || 0) * 1440 + (gameState.time.hour || 0) * 60 + (gameState.time.minute || 0);
+            if (_now === (gameState.flags._lastBralessAmbientTime || 0)) return;
+            if (_now === (gameState.flags._lastCommandoAmbientTime || 0)) return;
+            if (_now === (gameState.flags._lastBothAmbientTime || 0)) return;
+
+            // 45-minute in-game cooldown
+            var _last = gameState.flags._lastSheerAmbientTime || 0;
+            if (_now - _last < 45) return;
+            gameState.flags._lastSheerAmbientTime = _now;
+
+            var _c = gameState.corruption || 0;
+            var _tierKey = _c >= 6001 ? 'high' : _c >= 4001 ? 'midHigh' : _c >= 2001 ? 'mid' : 'low';
+            var _lines = SHEER_AMBIENT_LINES[_tierKey];
+            if (!_lines || _lines.length === 0) return;
+
+            var _line = _lines[Math.floor(Math.random() * _lines.length)]
+                .replace(/\{sheer\}/g, _garment.name.toLowerCase())
+                .replace(/\{under\}/g, _under.name.toLowerCase());
+
             showMessage(
                 '<div style="text-align: center; padding: 8px;">' +
                 '<div style="color: #e8a8cc; font-style: italic; line-height: 1.7; font-size: 0.95em;">' +
@@ -34413,8 +34517,14 @@ audioSystem.playSFX('buttonClick');
             // Select corruption tier
             var _c = gameState.corruption || 0;
             var _tierKey = _c >= 6001 ? 'high' : _c >= 4001 ? 'midHigh' : _c >= 2001 ? 'mid' : 'low';
-            var _lines = COMMANDO_AMBIENT_LINES[_tierKey];
+            var _lines = COMMANDO_AMBIENT_LINES[_tierKey] ? COMMANDO_AMBIENT_LINES[_tierKey].slice() : null;
             if (!_lines || _lines.length === 0) return;
+
+            // Beauty Obsessed overhaul (Step 2E): bare behind a sheer piece
+            var _sheerC = (typeof getVisibleSheerPieces === 'function') ? getVisibleSheerPieces() : {};
+            if (_sheerC.hips && SHEER_COMMANDO_AMBIENT_LINES[_tierKey]) {
+                _lines.push(SHEER_COMMANDO_AMBIENT_LINES[_tierKey].replace(/\{bottom\}/g, _sheerC.hips.name.toLowerCase()));
+            }
 
             // Pick random line
             var _line = _lines[Math.floor(Math.random() * _lines.length)];
@@ -34482,11 +34592,20 @@ audioSystem.playSFX('buttonClick');
             // Select corruption tier
             var _c = gameState.corruption || 0;
             var _tierKey = _c >= 6001 ? 'high' : _c >= 4001 ? 'midHigh' : _c >= 2001 ? 'mid' : 'low';
-            var _lines = BOTH_AMBIENT_LINES[_tierKey];
+            var _lines = BOTH_AMBIENT_LINES[_tierKey] ? BOTH_AMBIENT_LINES[_tierKey].slice() : null;
             if (!_lines || _lines.length === 0) return;
 
             // Resolve garment name for {top} placeholders
             var _tn = o.top ? o.top.name.toLowerCase() : o.dress ? o.dress.name.toLowerCase() : 'top';
+
+            // Beauty Obsessed overhaul (Step 2E): bare behind a sheer piece
+            var _sheerBoth = (typeof getVisibleSheerPieces === 'function') ? getVisibleSheerPieces() : {};
+            if (_sheerBoth.chest && SHEER_BRALESS_AMBIENT_LINES[_tierKey]) {
+                _lines.push(SHEER_BRALESS_AMBIENT_LINES[_tierKey].replace(/\{top\}/g, _sheerBoth.chest.name.toLowerCase()));
+            }
+            if (_sheerBoth.hips && SHEER_COMMANDO_AMBIENT_LINES[_tierKey]) {
+                _lines.push(SHEER_COMMANDO_AMBIENT_LINES[_tierKey].replace(/\{bottom\}/g, _sheerBoth.hips.name.toLowerCase()));
+            }
 
             // Pick random line and inject garment name
             var _line = _lines[Math.floor(Math.random() * _lines.length)].replace(/\{top\}/g, _tn);
@@ -36484,7 +36603,9 @@ audioSystem.playSFX('buttonClick');
                 feed_thirst_bonus: 0,   // extra thirstReduction per feed (Sated)
                 feed_strength_bonus: 0, // extra strengthGain per feed (Vitae)
                 feed_mh_bonus: 0,       // extra mentalHealthChange per feed / less guilt (Communion)
-                feed_heal_bonus: 0      // extra healthRestorePercent per feed (Lifeblood)
+                feed_heal_bonus: 0,     // extra healthRestorePercent per feed (Lifeblood)
+                // Beauty Obsessed overhaul (Step 2D): collection signature effect
+                allure_xp_bonus: 0      // multiplies positive Allure XP gains
             };
 
             for (var slot in gameState.currentOutfit) {
@@ -36510,6 +36631,8 @@ audioSystem.playSFX('buttonClick');
                         totals.feed_mh_bonus += e.value;
                     } else if (e.type === 'feed_heal_bonus') {
                         totals.feed_heal_bonus += e.value;
+                    } else if (e.type === 'allure_xp_bonus') {
+                        totals.allure_xp_bonus += e.value;
                     }
                 });
             }
@@ -36527,6 +36650,8 @@ audioSystem.playSFX('buttonClick');
             totals.feed_strength_bonus = Math.min(6, totals.feed_strength_bonus);
             totals.feed_mh_bonus = Math.min(12, totals.feed_mh_bonus);
             totals.feed_heal_bonus = Math.min(0.20, totals.feed_heal_bonus);
+            // Beauty Obsessed signature cap
+            totals.allure_xp_bonus = Math.min(0.15, totals.allure_xp_bonus);
 
             return totals;
         }
@@ -36552,7 +36677,9 @@ audioSystem.playSFX('buttonClick');
                 'feed_thirst_bonus': 'thirst-reduction.png',
                 'feed_strength_bonus': 'xp-strength.png',
                 'feed_mh_bonus': 'mental-health.png',
-                'feed_heal_bonus': 'health.png'
+                'feed_heal_bonus': 'health.png',
+                // Beauty Obsessed collection signature effect
+                'allure_xp_bonus': 'allure.png'
             };
             return effects.map(function(e) {
                 var iconFile = '';
@@ -36878,7 +37005,12 @@ audioSystem.playSFX('buttonClick');
 
             // Jaewon (2 pairs)
             { bra: 'jaewon_blush_bra', panties: 'jaewon_blush_panties', bonus: 10, name: 'Jaewon\'s Blush Set' },
-            { bra: 'jaewon_navy_bra', panties: 'jaewon_navy_panties', bonus: 10, name: 'Jaewon\'s Navy Set' }
+            { bra: 'jaewon_navy_bra', panties: 'jaewon_navy_panties', bonus: 10, name: 'Jaewon\'s Navy Set' },
+
+            // Beauty Obsessed collection (3 pairs)
+            { bra: 'bo_underwired_lace_bra', panties: 'bo_underwired_lace_panties', bonus: 12, name: 'Underwired Lace Set' },
+            { bra: 'bo_crisscross_lace_bra', panties: 'bo_crisscross_lace_panties', bonus: 10, name: 'Criss-Cross Lace Set' },
+            { bra: 'bo_naughty_nice_bra', panties: 'bo_naughty_nice_panties', bonus: 12, name: 'Naughty & Nice Set' }
         ];
 
         const outfitEnsembles = [
@@ -36929,7 +37061,24 @@ audioSystem.playSFX('buttonClick');
                 items: { top: 'satin_blouse', bottom: 'pencil_skirt', footwear: 'knee_boots', outerwear: 'cashmere_coat' },
                 required: 3,
                 bonus: 18
-            }
+            },
+
+            // ── Beauty Obsessed collection (Beauty Obsessed overhaul, Step 2B/2C) ──
+            // Every piece is required. INVARIANT: any two of these that share a piece must
+            // differ in their bottom (or dress), so no single outfit can trigger two at once.
+            // Keep that true if more are added.
+            // Co-ords (two-piece)
+            { name: 'Satin Co-ord', items: { top: 'bo_satin_corset_top', bottom: 'bo_satin_pleated_micro_skirt' }, required: 2, bonus: 14, collection: 'beauty_obsessed' },
+            { name: 'Pink Sequin Co-ord', items: { top: 'bo_pink_sequin_crop_top', bottom: 'bo_pink_sequin_mini_skirt' }, required: 2, bonus: 14, collection: 'beauty_obsessed' },
+            { name: 'Gingham Co-ord', items: { top: 'bo_red_gingham_crop_top', bottom: 'bo_red_gingham_mini_skirt' }, required: 2, bonus: 12, collection: 'beauty_obsessed' },
+            { name: 'Denim Co-ord', items: { top: 'bo_denim_halter_crop_top', bottom: 'bo_denim_pleated_mini_skirt' }, required: 2, bonus: 10, collection: 'beauty_obsessed' },
+            // Looks
+            { name: 'Little Black Satin', items: { dress: 'bo_satin_black_mini_dress', footwear: 'bo_satin_black_heels' }, required: 2, bonus: 12, collection: 'beauty_obsessed' },
+            { name: 'Double Denim', items: { top: 'bo_denim_halter_crop_top', bottom: 'bo_denim_booty_shorts', footwear: 'bo_denim_platform_heels' }, required: 3, bonus: 16, collection: 'beauty_obsessed' },
+            { name: 'Garden Party', items: { top: 'bo_cream_halter_tank_top', bottom: 'bo_white_flared_mini_skirt', footwear: 'bo_blue_orchid_heels' }, required: 3, bonus: 14, collection: 'beauty_obsessed' },
+            { name: 'Last Dance', items: { top: 'bo_black_tie_front_crop_top', bottom: 'bo_white_fringe_mini_skirt', footwear: 'bo_satin_black_heels' }, required: 3, bonus: 14, collection: 'beauty_obsessed' },
+            { name: 'All Black', items: { top: 'bo_keyhole_camisole_top', bottom: 'bo_mesh_mini_skirt', footwear: 'bo_satin_black_heels' }, required: 3, bonus: 14, collection: 'beauty_obsessed' },
+            { name: 'Cotton Candy', items: { top: 'bo_pink_sequin_crop_top', bottom: 'bo_pink_fringe_mini_skirt', footwear: 'bo_blue_orchid_heels' }, required: 3, bonus: 12, collection: 'beauty_obsessed' }
         ];
 
         function getSetBonuses() {
@@ -37002,28 +37151,38 @@ audioSystem.playSFX('buttonClick');
                 }
             }
 
-            // Check ensemble membership
+            // Check ensemble membership. An item can belong to several ensembles
+            // (the Beauty Obsessed satin heels are in three), so report the one
+            // closest to done: complete > would complete > building (fewest missing) > member.
+            var best = null, bestRank = 0;
             for (var i = 0; i < outfitEnsembles.length; i++) {
                 var ens = outfitEnsembles[i];
                 for (var slot in ens.items) {
                     if (ens.items[slot] === item.id) {
-                        // Count how many pieces are currently equipped
-                        var equipped = 0;
+                        // Count the OTHER pieces currently equipped (this item is counted separately)
+                        var others = 0;
                         for (var s2 in ens.items) {
+                            if (s2 === slot) continue;
                             var eq = outfit[s2];
-                            if (eq && eq.id === ens.items[s2]) equipped++;
+                            if (eq && eq.id === ens.items[s2]) others++;
                         }
-                        if (equipped + 1 >= ens.required) {
-                            return { setName: ens.name, status: 'wouldComplete', bonus: ens.bonus };
+                        var selfWorn = !!(outfit[slot] && outfit[slot].id === item.id);
+                        var cand, rank;
+                        if (selfWorn && others + 1 >= ens.required) {
+                            cand = { setName: ens.name, status: 'complete', bonus: ens.bonus }; rank = 400;
+                        } else if (others + 1 >= ens.required) {
+                            cand = { setName: ens.name, status: 'wouldComplete', bonus: ens.bonus }; rank = 300;
+                        } else if (others >= 1) {
+                            var needed = ens.required - others - 1;
+                            cand = { setName: ens.name, status: 'building', needed: needed }; rank = 200 - needed;
+                        } else {
+                            cand = { setName: ens.name, status: 'member' }; rank = 1;
                         }
-                        if (equipped >= 1) {
-                            return { setName: ens.name, status: 'building', needed: ens.required - equipped - 1 };
-                        }
-                        return { setName: ens.name, status: 'member' };
+                        if (rank > bestRank) { best = cand; bestRank = rank; }
                     }
                 }
             }
-            return null;
+            return best;
         }
 
         function calculateOutfitAppeal() {
@@ -37619,6 +37778,24 @@ audioSystem.playSFX('buttonClick');
         /**
          * Check if bra is visible (wearing bra but no top/dress)
          */
+        // ── Sheer pieces (Beauty Obsessed overhaul, Step 2E) ──
+        // Returns the sheer garments currently on show. chest: a sheer dress or top the
+        // bra (or bare chest) shows through. hips: a sheer dress or bottom the panties
+        // (or bare pussy) show through. A full-cover coat hides both.
+        // Sheer pieces are clothes she chose to wear. They never count as visible
+        // underwear, so the 6001 corruption lock ignores them (isBraVisible and
+        // arePantiesVisible only look at empty slots).
+        function getVisibleSheerPieces() {
+            var o = gameState.currentOutfit || {};
+            var res = { chest: null, hips: null };
+            var _conceal = (typeof getOuterwearConcealment === 'function') ? getOuterwearConcealment() : '';
+            if (_conceal === 'full') return res;
+            if (o.dress && o.dress.sheer) { res.chest = o.dress; res.hips = o.dress; }
+            if (o.top && o.top.sheer) res.chest = o.top;
+            if (o.bottom && o.bottom.sheer) res.hips = o.bottom;
+            return res;
+        }
+
         function isBraVisible() {
             const outfit = gameState.currentOutfit;
             return outfit.bra && !outfit.top && !outfit.dress;
@@ -48676,7 +48853,7 @@ audioSystem.playSFX('buttonClick');
         const BEAUTY_OBSESSED_COLLECTION = [
             // Underwear
             { id: 'bo_underwired_lace_bra', name: 'Underwired Lace Bra', category: 'bras', appeal: 15, price: 0, owned: true, cleanliness: 100, collection: 'beauty_obsessed', image: 'underwired-lace-bra.jpg', effect: [{ type: 'seduction_bonus', value: 0.03, desc: '+3% Seduction' }, { type: 'allure_xp_bonus', value: 0.03, desc: '+3% Allure XP' }], tags: ['glamorous', 'provocative', 'fit:structured', 'material:lace'], description: 'Black eyelash lace over nude mesh, cut into a deep plunge and lifted on underwire. Satin bows on the straps. It makes your tits look like a decision you made on purpose.' },
-            { id: 'bo_underwired_lace_panties', name: 'Eyelash Lace Thong', category: 'panties', appeal: 14, price: 0, owned: true, cleanliness: 100, collection: 'beauty_obsessed', image: 'underwired-lace-panties.jpg', effect: [{ type: 'seduction_bonus', value: 0.02, desc: '+2% Seduction' }, { type: 'allure_xp_bonus', value: 0.02, desc: '+2% Allure XP' }], tags: ['glamorous', 'provocative', 'fit:tight', 'material:lace'], description: 'Black eyelash lace with a scalloped trim and a tiny bow at the center. The front\'s sheer enough to show the shadow of your pussy through it. It rides low on your hips and matches the bra exactly, because of course it does.' },
+            { id: 'bo_underwired_lace_panties', name: 'Underwired Lace Panties', category: 'panties', appeal: 14, price: 0, owned: true, cleanliness: 100, collection: 'beauty_obsessed', image: 'underwired-lace-panties.jpg', effect: [{ type: 'seduction_bonus', value: 0.02, desc: '+2% Seduction' }, { type: 'allure_xp_bonus', value: 0.02, desc: '+2% Allure XP' }], tags: ['glamorous', 'provocative', 'fit:tight', 'material:lace'], description: 'Black eyelash lace with a scalloped trim and a tiny bow at the center. The front\'s sheer enough to show the shadow of your pussy through it. It rides low on your hips and matches the bra exactly, because of course it does.' },
             { id: 'bo_crisscross_lace_bra', name: 'Criss-Cross Lace Bralette', category: 'bras', appeal: 13, price: 0, owned: true, cleanliness: 100, collection: 'beauty_obsessed', image: 'criss-cross-lace-bra.jpg', effect: [{ type: 'seduction_bonus', value: 0.02, desc: '+2% Seduction' }, { type: 'xp_bonus', stat: 'charisma', value: 0.02, desc: '+2% Charisma XP' }], tags: ['provocative', 'edgy', 'fit:tight', 'material:lace'], description: 'Turquoise lace with sheer cups and bright yellow elastic straps crisscrossing your chest, with a keyhole cut out in the middle. Your nipples show straight through the lace. The colors are loud on purpose.' },
             { id: 'bo_crisscross_lace_panties', name: 'Criss-Cross Lace Thong', category: 'panties', appeal: 13, price: 0, owned: true, cleanliness: 100, collection: 'beauty_obsessed', image: 'criss-cross-lace-panties.jpg', effect: [{ type: 'seduction_bonus', value: 0.02, desc: '+2% Seduction' }, { type: 'xp_bonus', stat: 'charisma', value: 0.02, desc: '+2% Charisma XP' }], tags: ['provocative', 'edgy', 'fit:tight', 'material:lace'], description: 'A turquoise lace thong, sheer enough to show your pussy through the front. Yellow elastic straps ride high over your hips and hook into little gold rings. It matches the bralette down to the hardware.' },
             { id: 'bo_naughty_nice_bra', name: 'Naughty & Nice Bra', category: 'bras', appeal: 15, price: 0, owned: true, cleanliness: 100, collection: 'beauty_obsessed', image: 'naughty-and-nice-bra.jpg', effect: [{ type: 'seduction_bonus', value: 0.03, desc: '+3% Seduction' }, { type: 'xp_bonus', stat: 'charisma', value: 0.02, desc: '+2% Charisma XP' }], tags: ['provocative', 'glamorous', 'fit:structured', 'material:satin'], description: 'Red satin cups with sheer mesh side panels and thin straps. A big bow sits dead center, its long tails hanging down your stomach. It pushes your tits together like it\'s gift-wrapping them.' },
@@ -52078,6 +52255,12 @@ audioSystem.playSFX('buttonClick');
             if (typeof hasTrait === 'function') {
                 if (hasTrait('theater_kid')) modifiedPoints = Math.round(modifiedPoints * 1.08);
                 if (hasTrait('party_girl')) modifiedPoints = Math.round(modifiedPoints * 1.08);
+            }
+
+            // Beauty Obsessed collection (Step 2D): her clothes sharpen the predator
+            if (!skipScaling && modifiedPoints > 0 && typeof getActiveClothingEffects === 'function') {
+                var _allureClothFx = getActiveClothingEffects().allure_xp_bonus || 0;
+                if (_allureClothFx > 0) modifiedPoints = Math.round(modifiedPoints * (1 + _allureClothFx));
             }
 
             // Diminishing returns at high levels
@@ -197541,6 +197724,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 // ── Braless & Commando Overhaul, Step 1B: Commando ambient interiority ──
                 if (typeof checkCommandoAmbientLine === 'function') {
                     checkCommandoAmbientLine(sceneId);
+                }
+
+                // ── Beauty Obsessed overhaul, Step 2E: underwear showing through sheer pieces ──
+                if (typeof checkSheerAmbientLine === 'function') {
+                    checkSheerAmbientLine(sceneId);
                 }
 
                 // ── Braless & Commando Overhaul, Step 4C: Both-at-once friction notifications ──
