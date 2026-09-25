@@ -60638,12 +60638,31 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 ],
                 finalImage: '',
                 parts: [
-                    'You stumble into the bathroom and slam the door. Back pressed against it, you try to catch your breath.\n\nThe heartbeats are muffled now. Distant. Safer.\n\nThen your reflection catches your eye.',
+                    function() {
+                        const base = 'You stumble into the bathroom and slam the door. Back pressed against it, you try to catch your breath.\n\nThe heartbeats are muffled now. Distant. Safer.\n\nThen your reflection catches your eye.';
+                        // BEAUTY OBSESSED: the mirror always wins
+                        return isBeautyObsessed() ? base + ' It always does.' : base;
+                    },
 
-                    'A stranger stares back.\n\nDeathly pale skin, almost luminescent. Your eyes... <em>God</em>, your eyes are the color of fresh blood. Crimson irises glowing with their own light.\n\nAnd your fangs. Fully extended. Gleaming white.\n\nA soft gasp escapes your throat.',
+                    function() {
+                        const base = 'A stranger stares back.\n\nDeathly pale skin, almost luminescent. Your eyes... <em>God</em>, your eyes are the color of fresh blood. Crimson irises glowing with their own light.\n\nAnd your fangs. Fully extended. Gleaming white.\n\nA soft gasp escapes your throat.';
+                        if (!isBeautyObsessed()) return base;
+                        // BEAUTY OBSESSED: she looks closer than anyone else would
+                        return base + ' Then you do what you always do. You lean in.\n\nCloser than anyone else would. Close enough that your nose almost touches the glass.\n\nEvery pore you\'ve fought since seventh grade is gone. Somebody sanded you smooth overnight.\n\nYour lashes are thicker. Your lips are fuller and darker, stained like you\'ve been biting cherries. Your cheekbones sit higher than they did yesterday, and yesterday they were already good.\n\nThirteen years of practice, and whatever happened last night did it better.';
+                    },
 
                     function() {
                         const k = gameState.karma || 0;
+
+                        // BEAUTY OBSESSED: her reaction to the face she spent thirteen years building
+                        if (isBeautyObsessed()) {
+                            if (k <= -1000) {
+                                return 'You should be terrified.\n\nBut instead... you feel <strong>alive</strong>.\n\nYou turn your chin left, then right. The light likes both sides now. You spent years working out which one it liked better.\n\nCurfews. Lectures. Margaret knocking on this door every time you took too long in here.\n\n<em>The rules are done.</em>\n\nThe girl smiling back at you could walk into any room and take whatever she wanted from whoever she wanted. She\'d look incredible doing it.\n\n<em>This is going to be fun.</em>';
+                            } else if (k >= 1000) {
+                                return 'You should be terrified.\n\nAnd you are. Partly.\n\nThose crimson eyes. The fangs. Skin so pale it looks borrowed from a corpse.\n\n<em>Am I a monster?</em>\n\nYou grip the edge of the sink. Search the glass for something you recognize.\n\nYour pores are gone, but the small scar on your chin from the monkey bars in third grade is still there. You\'ve covered it every morning since sixth grade. You know exactly how much concealer it takes.\n\nThat\'s still your face under there. Nobody alive knows it better than you do.\n\n<em>I know who I am. I\'m a good person. Fangs don\'t change that.</em>';
+                            }
+                            return 'You should be terrified.\n\nBut instead... you feel <strong>curious</strong>.\n\nYou lean closer. Turn your head. Watch the light slide over skin without a single flaw left on it.\n\n<em>What else did it change?</em>\n\nThe question surfaces without permission. The speed you felt earlier. The strength. That heartbeat through a wall. And this face, which somebody finally got right.\n\nYou don\'t know what this is yet.\n\nBut some quiet, honest part of you is already picking out a lip color for it.';
+                        }
                         
                         if (k <= -1000) {
                             // Demonic
@@ -60657,12 +60676,40 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         }
                     }
                 ],
-                text: 'Your panic subsides. Heart rate slows. Breathing steadies.\n\nAnd with that clarity comes <em>change</em>.\n\nYou watch as your fangs slowly retract. Eyes shift from crimson to dark brown. Skin warms to a healthy, fair complexion.\n\nNormal. Human.\n\nBut the thirst deepens. You feel the drain immediately. This illusion costs energy; energy you don\'t have.',
+                text: function() {
+                    if (!isBeautyObsessed()) {
+                        return 'Your panic subsides. Heart rate slows. Breathing steadies.\n\nAnd with that clarity comes <em>change</em>.\n\nYou watch as your fangs slowly retract. Eyes shift from crimson to dark brown. Skin warms to a healthy, fair complexion.\n\nNormal. Human.\n\nBut the thirst deepens. You feel the drain immediately. This illusion costs energy; energy you don\'t have.';
+                    }
+                    // BEAUTY OBSESSED: the illusion settles, then she fixes her face
+                    const k = gameState.karma || 0;
+                    let closer;
+                    if (k <= -1000) {
+                        closer = 'A swipe of red to finish. You tilt your head at the result.\n\nWhatever you are now, it\'s gorgeous, and people are going to look.\n\n<em>Let them.</em> It\'ll make them easier to catch.';
+                    } else if (k >= 1000) {
+                        closer = 'You watch yourself do it, and the knot in your chest loosens a little.\n\n<em>If I can still do a wing, I\'m still me.</em>';
+                    } else {
+                        closer = 'Ten minutes, start to finish. Your hands still know the routine.\n\nAnd this face takes makeup better than the old one ever did. You file that away with everything else you\'re going to test.';
+                    }
+                    return 'Your panic subsides. Heart rate slows. Breathing steadies.\n\nAnd with that clarity comes <em>change</em>.\n\nYour fangs slowly retract. Your eyes shift from crimson to dark brown. Your skin warms to a healthy, fair complexion.\n\nNormal. Human. Still flawless.\n\nThe mascara\'s another story. It\'s halfway down your cheek.\n\nSome things don\'t fix themselves.\n\nYour makeup\'s right where you left it, lined up across the counter in the order you use it. Your hands find everything without looking.\n\nMakeup wipe. Primer. Concealer. You brush your hair out while it sets.\n\nA wing on the left, a wing on the right, and they match on the first try. Your hands are steadier than they\'ve got any right to be.\n\n' + closer + '\n\nBut the thirst deepens. You feel the drain immediately. Holding the illusion costs energy; energy you don\'t have.';
+                },
                 onEnter: () => {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 3);
                     gameState.illusionActive = true;
                     gameState.flags.lookedInMirror = true;
                     gameState.flags.illusionUnlocked = true; // Show illusion status from now on
+
+                    // BEAUTY OBSESSED: she fixes her face at her own counter (no kit consumed)
+                    if (isBeautyObsessed()) {
+                        const bs = gameState.bodyState;
+                        bs.makeup = true;
+                        bs.hairGroom = 'down';
+                        bs.hairStyle = 'down';
+                        bs.hairStyleClass = 'none';
+                        if (typeof syncLegacyHairField === 'function') syncLegacyHairField();
+                        gameState.flags.boFixedFaceAtHome = true;
+                        if ((gameState.karma || 0) > -1000) modifyMentalHealth(3);
+                        advanceTime(10);
+                    }
                     updateStatus();
                 },
                 choices: function() {
@@ -60675,7 +60722,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     
                     choices.push({ text: "Explore the bathroom", nextScene: "explore_bathroom" });
                     choices.push({ text: "Practice the illusion", nextScene: "practice_illusion" });
-                    choices.push({ text: "Splash water on your face", nextScene: "remember_bathroom" });
+                    // BEAUTY OBSESSED: she just did her face; the cold water goes on her wrists
+                    choices.push({ text: isBeautyObsessed() ? "Run cold water over your wrists" : "Splash water on your face", nextScene: "remember_bathroom" });
                     choices.push({ text: "Leave immediately", nextScene: "bathroom_exit" });
                     
                     return choices;
@@ -60718,7 +60766,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             },
             
             explore_bathroom: {
-                text: 'You rummage through the cabinets. Medicine? Answers? A vampire manual?\n\nMakeup scattered across the counter. Your makeup.\n\nYour prescription bottle. Antidepressants. Half-empty.\n\n<em>Kelsie Summers.</em> Right. You. At least that hasn\'t changed.\n\nYou pocket the bottle. Then you notice your journal behind the toilet.\n\n<em>"Mom\'s on my case again. Same old shit. \'Be responsible, Kelsie.\' Easy for her to say..."</em>\n\nYour handwriting from a few days ago. Before... whatever happened last night.\n\nThe front door opens. Your mom\'s voice erupts in fury.\n\n<strong>"OH, MY GOD!!! KELSIE! ANOTHER PARTY?!"</strong>\n\nMargaret. Of course she\'d come home early.',
+                text: () => 'You rummage through the cabinets. Medicine? Answers? A vampire manual?\n\n' + (isBeautyObsessed()
+                    ? 'Your whole life in bottles lines the counter, serums in order of application. Half of them are still uncapped.'
+                    : 'Makeup scattered across the counter. Your makeup.') + '\n\nYour prescription bottle. Antidepressants. Half-empty.\n\n<em>Kelsie Summers.</em> Right. You. At least that hasn\'t changed.\n\nYou pocket the bottle. Then you notice your journal behind the toilet.\n\n<em>"Mom\'s on my case again. Same old shit. \'Be responsible, Kelsie.\' Easy for her to say..."</em>\n\nYour handwriting from a few days ago. Before... whatever happened last night.\n\nThe front door opens. Your mom\'s voice erupts in fury.\n\n<strong>"OH, MY GOD!!! KELSIE! ANOTHER PARTY?!"</strong>\n\nMargaret. Of course she\'d come home early.',
                 onEnter: () => {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 3);
                     gameState.flags.exploredBathroom = true;
@@ -60748,15 +60798,18 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 text: function() {
                     const k = gameState.karma || 0;
 
+                    // BEAUTY OBSESSED: she just did her face, so the cold water goes on her wrists
+                    const _boWrists = 'You turn on the faucet and run cold water over your wrists. Your face stays dry. You just finished it.\n\nThe cold clears your mind.';
+
                     if (k >= 1000) {
-                        return 'You turn on the faucet. Cold water splashes your face. The shock clears your mind.\n\nYou try to remember. Last night. The party.\n\nNothing. Complete blank.\n\nYou remember the days before. Mom at the kitchen table with that look she gets. Almost angry, but heavier than that. More like someone watching a fire they can\'t decide whether to put out or let burn.\n\n<em>"You\'re so bright, Kelsie. That\'s what makes this hard."</em>\n\nThe same conversation a dozen different ways.\n\nBut last night? Gone.\n\nThen,\n\n"<strong>Kelsie?</strong>"\n\nHer voice from the other side of the door. Quiet. Waiting.\n\nYou hear her moving through the house. Quiet. Methodical. Getting people out.\n\n<em>"I know you\'re in there."</em>'; 
+                        return (isBeautyObsessed() ? _boWrists : 'You turn on the faucet. Cold water splashes your face. The shock clears your mind.') + '\n\nYou try to remember. Last night. The party.\n\nNothing. Complete blank.\n\nYou remember the days before. Mom at the kitchen table with that look she gets. Almost angry, but heavier than that. More like someone watching a fire they can\'t decide whether to put out or let burn.\n\n<em>"You\'re so bright, Kelsie. That\'s what makes this hard."</em>\n\nThe same conversation a dozen different ways.\n\nBut last night? Gone.\n\nThen,\n\n"<strong>Kelsie?</strong>"\n\nHer voice from the other side of the door. Quiet. Waiting.\n\nYou hear her moving through the house. Quiet. Methodical. Getting people out.\n\n<em>"I know you\'re in there."</em>'; 
                     }
 
                     if (k <= -1000) {
-                        return 'You turn on the faucet. Cold water splashes your face.\n\nYou try to remember. Last night. The party.\n\nNothing. Clean blank.\n\nYou remember yesterday. The usual. Margaret finding something to disapprove of, some new evidence for the case she\'s been building against you for years. Her face carrying that specific weight she gets when she looks at you too long.\n\nLike she\'s hoping for something she\'s already given up hoping for.\n\nYou never asked her to hope.\n\nBut last night is gone.\n\nThen,\n\nHer voice through the house. Controlled. Final.\n\n"Everyone out. Now."\n\nShe\'s there.\n\n<em>Of course</em> she\'s there.';
+                        return (isBeautyObsessed() ? _boWrists : 'You turn on the faucet. Cold water splashes your face.') + '\n\nYou try to remember. Last night. The party.\n\nNothing. Clean blank.\n\nYou remember yesterday. The usual. Margaret finding something to disapprove of, some new evidence for the case she\'s been building against you for years. Her face carrying that specific weight she gets when she looks at you too long.\n\nLike she\'s hoping for something she\'s already given up hoping for.\n\nYou never asked her to hope.\n\nBut last night is gone.\n\nThen,\n\nHer voice through the house. Controlled. Final.\n\n"Everyone out. Now."\n\nShe\'s there.\n\n<em>Of course</em> she\'s there.';
                     }
 
-                    return 'You turn on the faucet. Cold water splashes your face. The shock clears your mind.\n\nYou try to remember. Last night. The party.\n\nNothing. Complete blank.\n\nYou remember yesterday. Mom yelling. The same arguments. "You\'re eighteen now, Kelsie. Grow up."\n\nBut last night? Gone.\n\nWhat <em>happened</em>? What turned you into... this?\n\nThen,\n\n<strong>"OH, MY GOD!!! KELSIE! ANOTHER PARTY?!"</strong>\n\nYour mother. Margaret. Sharp with fury.\n\nYou hear her stomping through the house. "GET OUT! GET OUT!"';
+                    return (isBeautyObsessed() ? _boWrists : 'You turn on the faucet. Cold water splashes your face. The shock clears your mind.') + '\n\nYou try to remember. Last night. The party.\n\nNothing. Complete blank.\n\nYou remember yesterday. Mom yelling. The same arguments. "You\'re eighteen now, Kelsie. Grow up."\n\nBut last night? Gone.\n\nWhat <em>happened</em>? What turned you into... this?\n\nThen,\n\n<strong>"OH, MY GOD!!! KELSIE! ANOTHER PARTY?!"</strong>\n\nYour mother. Margaret. Sharp with fury.\n\nYou hear her stomping through the house. "GET OUT! GET OUT!"';
                 },
                 onEnter: () => {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 3);
@@ -61451,7 +61504,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             },
             
             pack_after_cruel_words: {
-                text: 'You reach your room and grab what you can carry.\n\nBackpack. Clothes. Essentials. Your hands are steady, which surprises you.\n\n<em>Get what you need. Get out.</em>\n\nFive minutes. You sling the backpack over your shoulder and head back down.\n\nShe\'s waiting by the door.\n\n\"Never come back.\" Flat. Final. \"I mean it, Kelsie. You\'re not welcome here anymore.\"\n\nIt lands in a place that doesn\'t heal clean. This is her looking at you and making a decision about what you are.\n\nYour dad packed his bags when you were ten and chose himself. That had its own damage. But he left. He didn\'t sit across from you first and decide.\n\nShe looked. She decided. Then she opened the door.\n\nThere\'s a photo on the hallway wall. You at seven, pigtails, front teeth missing, grinning. She hung that herself.\n\nShe\'s looking at you right now like you\'re someone she doesn\'t recognize.\n\nYou nod. Once. You don\'t have anything left to say.\n\nThe door shuts behind you with a soft click.\n\nSomehow that\'s worse than a slam.',
+                text: () => 'You reach your room and grab what you can carry.\n\n' + (isBeautyObsessed() ? 'The designer backpack first. Then your makeup bag. Then the looks.' : 'Backpack. Clothes. Essentials.') + ' Your hands are steady, which surprises you.\n\n<em>Get what you need. Get out.</em>\n\nFive minutes. You sling the backpack over your shoulder and head back down.\n\nShe\'s waiting by the door.\n\n\"Never come back.\" Flat. Final. \"I mean it, Kelsie. You\'re not welcome here anymore.\"\n\nIt lands in a place that doesn\'t heal clean. This is her looking at you and making a decision about what you are.\n\nYour dad packed his bags when you were ten and chose himself. That had its own damage. But he left. He didn\'t sit across from you first and decide.\n\nShe looked. She decided. Then she opened the door.\n\nThere\'s a photo on the hallway wall. You at seven, pigtails, front teeth missing, grinning. She hung that herself.\n\nShe\'s looking at you right now like you\'re someone she doesn\'t recognize.\n\nYou nod. Once. You don\'t have anything left to say.\n\nThe door shuts behind you with a soft click.\n\nSomehow that\'s worse than a slam.',
                 onEnter: () => {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 3);
                     gameState.flags.hasBackpack = true;
@@ -61662,6 +61715,17 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 text: function() {
                     const k = gameState.karma || 0;
 
+                    // BEAUTY OBSESSED: her room's the opposite of a mess, and she packs looks
+                    if (isBeautyObsessed()) {
+                        if (k >= 1000) {
+                            return 'You push open the door to your room.\n\nEverything\'s where it belongs. It always is. The closet\'s organized by color, the ring light\'s angled over the vanity, and the sticky notes on the vanity mirror are the only mess in the room.\n\n<em>Work harder. Call Grandma. You can do this.</em>\n\nYou grab the designer backpack from the top shelf. Margaret gave it to you last Christmas. You told her it was too much. She told you to use it.\n\nPacking\'s fast. You already know what you\'d take. Every look in that closet\'s planned down to the shoes.\n\nYour phone charger. Your ID.\nThe antidepressants from the bathroom counter.\nYour makeup bag.\n\nA framed photo on the nightstand. You and your mom. You must be nine or ten. Both laughing at something, faces scrunched, looking at each other instead of the camera.\n\nYou hold it for a long time.\n\nThen wrap it in your softest dress and pack it carefully at the top.\n\nYou look around one last time. The empty hangers. The notes on the mirror.\n\n<em>You can do this.</em>\n\nMaybe you wrote it to yourself. Maybe it\'s still true.\n\nYour whole collection, in one bag.\n\nIt still zips.';
+                        }
+                        if (k <= -1000) {
+                            return 'You push the door open and go inside.\n\nYour room.\n\nYou look around with the detached eye of someone cataloguing rather than remembering. The closet, organized by color. The vanity and its ring light. A half-finished drawing on the desk of something you no longer remember intending.\n\nYou grab the designer backpack from the top shelf. Margaret\'s Christmas present. Useful, at least.\n\nYou move fast. Clinical about it.\n\nThe looks go in first, every one of them planned down to the shoes. Makeup bag. Phone charger. ID. Cash if there\'s any.\n\nThere\'s a photo on the nightstand. You and your mom. Years ago. Both smiling.\n\nYou look at it for exactly three seconds.\n\nThen you set it face-down.\n\nYou didn\'t ask to be born into this family. Didn\'t ask to end up in this room. You\'ve never belonged here and you\'ve always known it.\n\nYour whole collection goes in, and the backpack still zips.\n\nOne bag. Good.\n\nTravel light.';
+                        }
+                        return 'You push the door open and step inside.\n\nThe closet\'s organized by color. The ring light\'s angled over the vanity. Everything\'s exactly where you left it.\n\nIt\'s yours.\n\nWas yours.\n\nYou grab the designer backpack from the top shelf. Margaret gave it to you last Christmas.\n\nPacking\'s fast. You already know what you\'d take: looks, every one of them planned down to the shoes.\n\nA framed photo on the nightstand. You and your mom. Years ago. Both smiling.\n\nYou pick it up. Stare at it.\n\nThen pack it carefully.\n\nYour laptop\'s gone. Probably sold it for party money.\n\nYour makeup bag. Your charger. Your ID.\n\nYour whole collection fits in one backpack. It still zips.\n\nYour entire life. One backpack.';
+                    }
+
                     if (k >= 1000) {
                         return 'You push open the door to your room.\n\nIt\'s a mess. It\'s always a mess. Clothes draped over the desk chair, a book left open on the floor, sticky notes on the mirror you wrote to yourself at some point and never acted on.\n\n<em>Work harder. Call Grandma. You can do this.</em>\n\nYou stand there and look at all of it. Your whole room like a portrait of someone on the edge of becoming.\n\nYou grab the backpack from the closet.\n\nYou move carefully. Taking stock.\n\nClothes. The ones you actually wear, not the ones you always meant to.\nYour phone charger. Your ID.\nThe antidepressants from the bathroom counter.\n\nA framed photo on the nightstand. You and your mom. You must be nine or ten. Both laughing at something, faces scrunched, looking at each other instead of the camera. Whoever took it caught you mid-moment.\n\nYou hold it for a long time.\n\nThen wrap it in a sweater and pack it carefully at the top.\n\nYou look around one last time. The sticky notes. The book on the floor.\n\n<em>You can do this.</em>\n\nMaybe you wrote it to yourself. Maybe it\'s still true.\n\nYou zip the backpack.\n\nYour entire life, for now, in one bag.\n\nIt fits.';
                     }
@@ -61716,7 +61780,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             },
             
             last_look_room: {
-                text: 'You stand in the doorway. Backpack over one shoulder.\n\nTaking it all in one final time.\n\nThe posters. The mess. The life you barely remember living.\n\nIt feels like someone else\'s room. Someone else\'s life.\n\nMaybe it was.\n\nYou close the door softly behind you.',
+                text: () => 'You stand in the doorway. Backpack over one shoulder.\n\nTaking it all in one final time.\n\n' + (isBeautyObsessed() ? 'The vanity. The empty hangers.' : 'The posters. The mess.') + ' The life you barely remember living.\n\nIt feels like someone else\'s room. Someone else\'s life.\n\nMaybe it was.\n\nYou close the door softly behind you.',
                 onEnter: () => {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 3);
                     gameState.items.push("photo");
