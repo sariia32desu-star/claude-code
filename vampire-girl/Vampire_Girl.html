@@ -13352,6 +13352,7 @@
                 _slumsSheerExhibPregnancy: false,
                 _sheerDiscovery: null,
                 _sheerDiscoveryCondom: null,
+                _thrillGainRemainder: 0,
                 // ── Beauty Obsessed overhaul flags (Step 1F) ──
                 boCollectionGranted: false,        // her 32-piece collection has been handed out
                 boFixedFaceAtHome: false,          // Step 7: she fixed her face before leaving home
@@ -17018,6 +17019,7 @@
                 if (gameState.flags._slumsSheerExhibPregnancy === undefined) gameState.flags._slumsSheerExhibPregnancy = false;
                 if (gameState.flags._sheerDiscovery === undefined) gameState.flags._sheerDiscovery = null;
                 if (gameState.flags._sheerDiscoveryCondom === undefined) gameState.flags._sheerDiscoveryCondom = null;
+                if (gameState.flags._thrillGainRemainder === undefined) gameState.flags._thrillGainRemainder = 0;
 
                 // MIGRATION (Ruby's Diner Erotic Overhaul — Step 15A)
                 // Harassment system flags
@@ -36304,8 +36306,18 @@ audioSystem.playSFX('buttonClick');
         // Wrapper: applies corruption-scaled gain multiplier, caps at 100.
         function applyExhibitionThrillGain(baseAmount) {
             var _mult = getExhibitionThrillGainMultiplier();
-            var _adjusted = Math.round(baseAmount * _mult);
-            gameState.exhibitionismThrill = Math.min(100, (gameState.exhibitionismThrill || 0) + _adjusted);
+            var _exact = baseAmount * _mult;
+            // Carry the rounding remainder so many small passive gains add up to the same
+            // total as one big one (1 x 1.5 would otherwise round to 2 every tick).
+            if (_exact > 0) {
+                _exact += (gameState.flags._thrillGainRemainder || 0);
+                var _whole = Math.round(_exact);
+                gameState.flags._thrillGainRemainder = _exact - _whole;
+                _exact = _whole;
+            } else {
+                _exact = Math.round(_exact);
+            }
+            gameState.exhibitionismThrill = Math.min(100, (gameState.exhibitionismThrill || 0) + _exact);
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -163651,6 +163663,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     }
                 ],
                 text: function() {
+                    var cv = getSceneClothingVars();
                     const corruption = gameState.corruption || 0;
                     if (corruption >= 8001) {
                         return 'You get dressed. Quickly. Aware of every sound from beyond the locker room door.\n\nJaewon is already at her locker, pulling on her jacket. She glances over.\n\n"We\'re getting out of here," she says. It isn\'t a question.\n\n"Yes," you say.\n\nShe takes your hand on the way out, fingers tight, and doesn\'t let go until you reach the street.';
@@ -163861,6 +163874,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var commando = cv.commando;
                     var braless = cv.braless;
                     var breastSize = _ba.breastSize || 'average';
+                    var _bs = breastSize;
                     var _butt = _ba.buttSize || 'average';
                     var _bt = _ba.bodyType || 'ordinary';
                     
@@ -197095,6 +197109,9 @@ wet_car_slowdown: {
             
             dojang_corrupt_romance_jensen_sex: {
                 text: function() {
+                    var _ba = gameState.bodyAppearance || {};
+                    var _bs = _ba.breastSize || 'average';
+                    var _butt = _ba.buttSize || 'average';
                     let desc = '<h3><img src="Images/icons/no-under-18.png" class="icon" alt="18+"> INTIMATE SCENE - UNMASKED <img src="Images/icons/no-under-18.png" class="icon" alt="18+"></h3>\n\n';
                     
                                         desc += '<p>The practice room smells like rubber and chalk dust and the two of you, the want already dense before the lock clicks.</p>\n\n';
@@ -198296,6 +198313,7 @@ wet_car_slowdown: {
                     masturbate(100, false);
                 },
                 text: function() {
+                    var cv = getSceneClothingVars();
                     let desc = 'You hear raised voices from the changing area hallway and your stomach drops. It\'s Oksana and Jensen.\n\nYou don\'t mean to eavesdrop. But you can\'t walk away.\n\n"Stop doing that," Oksana says. Her voice is sharp. Defensive. But cracking at the edges.\n\n"Doing what?"\n\n"Looking at me like that. Like I am... like you..." She makes a frustrated sound. "I can\'t think straight when you look at me like that. It\'s infuriating."';
                     
                     desc += '\n\nJensen is quiet. Then:\n\n"I\'ve been looking at you like that for a year, Oksana."\n\nSilence. Absolute silence.\n\n"What?" Her voice is small. Smaller than you\'ve ever heard it.\n\n"Since the day you walked into this dojang. Since the first time you sparred with me and I realized you were the only person who\'d ever made me fight for real." His voice is steady. The mask is off. All of it. "I look at you like that because you\'re the only person I don\'t want to perform for. You make me want to just... be. And mean it."';
