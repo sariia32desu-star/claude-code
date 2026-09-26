@@ -52,9 +52,16 @@ A warrant severity of 60+ bumps the class up one step. When a warrant is cleared
 | Slums killer with prints on file | warrant (violent), ceiling 100; Rufus clearance holds and suspicion drops to 40 |
 | Masked feeds, hidden bodies, clean pickpockets | stay anonymous; heat tops out at 40 |
 
+## Follow-up: surrender and cop-killer consistency
+
+- **Hunt interrupts now offer surrender.** It's caught in the act: an aggravated assault linked on the spot, the mask comes off, and she goes to booking (mugshot, prints, mask cascade).
+- **Killing police builds facial recognition from the bodycams** (+40 unmasked), plus supernatural evidence and bodycam incidents either way. Unmasked, she's identified the next day. Masked, she stays anonymous until booked with the mask.
+- **The cop-killer aftermath is rewritten** to say what actually happens, with separate masked and unmasked versions.
+- **The permanent blood-theft block is gone.** Assaulting or killing police used to set `bloodBagTheftBlocked` forever; the wanted tier decides now.
+- **Held heat and warrant floor.** Heat above the ceiling is held back and released when a warrant raises the ceiling. An active warrant sets a floor (20 minor, 40 serious, 60 violent).
+
 ## Still open (design calls, not bugs)
 
-- **Masked, never-booked players can't be identified.** Hunt interrupts offer flee/fight/kill with no arrest route, so outside the drug raid there's no pre-warrant booking.
 - **Blood bank, clinic and hospital thefts** still create no ledger entries (one hospital scene aside). They add heat but can't build a case.
 - **The cop-killer aftermath text** promises a permanent manhunt and blocked feeding. That's only true once the killing is tied to Kelsie.
 - **Hero-only players never meet Cruz.** Her vigilante awareness requires her to be assigned to Kelsie's criminal case.

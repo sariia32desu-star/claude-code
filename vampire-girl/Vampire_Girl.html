@@ -7831,7 +7831,7 @@
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">City Suspicion</strong> (0-100%) is the primary stat. It measures how close the city is to identifying Kelsie as the perpetrator. It rises from crimes, police encounters, and witness reports. It decays by 2 per day, but only on days you don't commit a crime.</li>
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">Wanted Tier</strong> escalates as suspicion rises. Tier 1 (20+): Person of Interest. Tier 2 (40+): Under Investigation. Tier 3 (60+): Heavy Patrols; mugging, burglary, and blood theft are blocked. Tier 4 (80+): Active Manhunt; all crimes and violent hunts blocked. Higher tiers mean more police on the streets and higher encounter rates.</li>
-                            <li style="margin: 3px 0;"><strong style="color: #cc6666;">Suspicion Ceiling</strong> - Heat follows the case. Until there's a warrant with your name on it, police don't know who they're looking for, so suspicion stops at <strong>40</strong> (Tier 2) and never blocks crime or hunting. A warrant raises the ceiling by how serious the charges are: <strong>60</strong> for minor charges (theft, pickpocketing, burglary, exposure, fleeing), <strong>80</strong> for serious ones (mugging, aggravated assault, assaulting police, escape), and <strong>100</strong> for murder or killing police. A heavy stack of charges bumps the ceiling up one step. If the warrant is cleared, suspicion drops back under 40.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #cc6666;">Suspicion Ceiling</strong> - Heat follows the case. Until there's a warrant with your name on it, police don't know who they're looking for, so suspicion stops at <strong>40</strong> (Tier 2) and never blocks crime or hunting. A warrant raises the ceiling by how serious the charges are: <strong>60</strong> for minor charges (theft, pickpocketing, burglary, exposure, fleeing), <strong>80</strong> for serious ones (mugging, aggravated assault, assaulting police, escape), and <strong>100</strong> for murder or killing police. A heavy stack of charges bumps the ceiling up one step. Heat from crimes committed before the warrant isn't lost: it's held back and pours in when the warrant raises the ceiling. While a warrant is active, suspicion also can't cool below a floor (20 minor, 40 serious, 60 violent). If the warrant is cleared, suspicion drops back under 40.</li>
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">How a Case Gets Built</strong> - Every crime goes into the evidence ledger. Three crimes of the same type in the same district become a <strong>series</strong> with an unknown suspect. Nothing lands on you until something identifies you: your fingerprints or face matched after a booking, a witness ID, being caught in the act, your mask being traced, or your facial recognition reaching 70 (someone recognizes you from the sketch). Once one crime in a series is tied to you, the whole series is. Two charges on you, or one murder, and a warrant goes out. Evidence doesn't expire: the day you're first booked, old prints and footage start matching.</li>
                             <li style="margin: 3px 0;"><strong style="color: #88ccff;">Karma Gates</strong> - Angelic karma (1000+) Kelsie cannot commit crimes at all. Neutral karma Kelsie can only commit crimes when her total funds (cash + bank + credit) are $40 or less. Demonic karma Kelsie can always commit crimes.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ffb366;">Robbery Mask</strong> (Optional, $1,500) - Buy from Juzman in the <strong style="color: #88ccff;">Slums back alleys</strong>. One-of-a-kind. If owned, auto-equips during crimes. Blocks facial recognition but its red devil girl emblem creates a trackable mask signature that links all masked crimes together. Without the mask, cameras and witnesses see your face, building facial recognition instead. Both paths carry risk: the emblem links crimes through the mask; your face links them through you. If the mask is found at booking, every masked crime links to you at once.</li>
@@ -7909,6 +7909,7 @@
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #ffb3d9; font-size: 13px;">POLICE ENCOUNTERS</strong></li>
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
                             <li style="margin: 3px 0;">Police can interrupt a violent hunt once suspicion reaches 20, and the chance climbs with heat (about 17% at 40, about 67% at 100). Witnessed feeds go into the ledger as aggravated assault.</li>
+                            <li style="margin: 3px 0;">When police interrupt a hunt, you can flee, fight, kill them, or <strong>surrender</strong>. Surrendering means an aggravated assault charge tied to you on the spot and a trip to Central Booking (mugshot, prints, and the mask cascade if you're carrying it). Their bodycams record everything either way: killing them unmasked puts your face on every screen in the city, and you'll be identified within a day.</li>
                             <li style="margin: 3px 0;">Police can arrive during muggings. The chance scales with city suspicion, Wanted Tier, and district heat. In the Slums, it caps at 15%. In other districts at Tier 4 with high heat, it can reach 95%.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ff6666;">Bodycam Risk</strong> - When you use vampire speed to flee or fight police, there is a chance (30% base, +15% per Wanted Tier) that their bodycams capture it. This feeds Supernatural Evidence and can trigger the bodycam footage leak event.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ff6666;">Fleeing</strong> always uses vampire speed. <strong style="color: #ff6666;">Knocking out</strong> officers costs +30 suspicion (cop-quality witness). <strong style="color: #ff6666;">Killing</strong> officers costs +100 suspicion and massive karma loss. All three paths carry bodycam risk.</li>
@@ -12390,7 +12391,7 @@
                             • <strong>Supernatural Evidence</strong> — Bodycam footage of vampire speed. +25 per incident. At 50+, footage can leak publicly. At 80+, your Wanted Tier can escalate independently.<br>
                             • <strong>Facial Recognition</strong> — Pickpocketing is unmasked; every lift feeds your face into camera systems even on a clean getaway. High-camera districts (Downtown, Commercial) build FR faster. At 70%+, someone recognizes you from the sketch, and every unmasked crime where your face was seen is tied to you.<br>
                             • <strong>Detective Cruz</strong>: Assigned when the case opens on you (first crime tied to you, or a warrant). Cannot be compelled. A permanent investigative pressure.<br>
-                            • <strong>Suspicion Ceiling</strong>: 40 without a warrant. 60 / 80 / 100 with a warrant for minor / serious / violent charges.<br>
+                            • <strong>Suspicion Ceiling</strong>: 40 without a warrant. 60 / 80 / 100 with a warrant for minor / serious / violent charges, with a floor of 20 / 40 / 60 while the warrant is active.<br>
                             <br>
                             <strong>Increases Suspicion:</strong><br>
                             • Murder (slums): +15 | Murder (elsewhere): +40<br>
@@ -30310,6 +30311,8 @@ audioSystem.playSFX('buttonClick');
         // the ceiling by how serious the charges are. Tune these numbers here.
         var SUSPICION_CAP_NO_WARRANT = 40;
         var SUSPICION_CAP_BY_WARRANT_CLASS = { minor: 60, serious: 80, violent: 100 };
+        // While a warrant is active, heat can't cool below this (the city keeps looking)
+        var SUSPICION_FLOOR_BY_WARRANT_CLASS = { minor: 20, serious: 40, violent: 60 };
 
         function getWarrantClass() {
             if (!gameState.flags.warrantIssued) return 'none';
@@ -30339,11 +30342,32 @@ audioSystem.playSFX('buttonClick');
             return 0;
         }
 
-        // Pulls suspicion down to the current cap (e.g. after a warrant is cleared).
+        function getSuspicionFloor() {
+            var cls = getWarrantClass();
+            if (cls === 'none') return 0;
+            return SUSPICION_FLOOR_BY_WARRANT_CLASS[cls] || 0;
+        }
+
+        // Keeps suspicion inside [floor, cap] for the current case. Heat that was held back
+        // by the ceiling (crimes committed before the warrant) pours in when the ceiling
+        // rises, so an identified cop-killer gets the manhunt the crime earned.
         function enforceSuspicionCap() {
+            var sd = gameState.suspicionData;
             var cap = getSuspicionCap();
-            if ((gameState.citySuspicion || 0) > cap) {
-                gameState.citySuspicion = cap;
+            var floor = getSuspicionFloor();
+            var s = gameState.citySuspicion || 0;
+            if (s > cap) s = cap;
+            // Held heat only pours in on the day a warrant raises the ceiling
+            var prevCap = (sd && sd.lastSuspicionCap) || SUSPICION_CAP_NO_WARRANT;
+            if (sd && cap > prevCap && (sd.heldHeat || 0) > 0 && s < cap) {
+                var take = Math.min(cap - s, sd.heldHeat);
+                s += take;
+                sd.heldHeat -= take;
+            }
+            if (sd) sd.lastSuspicionCap = cap;
+            if (s < floor) s = floor;
+            if (s !== gameState.citySuspicion) {
+                gameState.citySuspicion = s;
                 calculateWantedTier();
                 updateSidebarStats();
             }
@@ -30398,7 +30422,16 @@ audioSystem.playSFX('buttonClick');
             // Cap: gains stop at the ceiling the case allows (see getSuspicionCap)
             if (modifiedAmount > 0) {
                 const room = Math.max(0, getSuspicionCap() - (gameState.citySuspicion || 0));
+                if (modifiedAmount > room && gameState.suspicionData) {
+                    // Held back, not lost: released if a warrant raises the ceiling
+                    gameState.suspicionData.heldHeat = Math.min(100, (gameState.suspicionData.heldHeat || 0) + (modifiedAmount - room));
+                }
                 modifiedAmount = Math.min(modifiedAmount, room);
+            }
+            // Decay can't take heat below the warrant's floor
+            if (modifiedAmount < 0) {
+                const floorRoom = Math.max(0, (gameState.citySuspicion || 0) - getSuspicionFloor());
+                modifiedAmount = -Math.min(-modifiedAmount, floorRoom);
             }
 
             const oldSuspicion = gameState.citySuspicion;
@@ -31284,6 +31317,9 @@ audioSystem.playSFX('buttonClick');
 
             // Flag for narrative event
             gameState.flags.warrantIssuedPending = true;
+
+            // The ceiling and floor move with the warrant, held heat pours in
+            enforceSuspicionCap();
 
             // Immediate consequences
             gameState.flags.hotelsBanned = true;
@@ -43958,6 +43994,9 @@ audioSystem.playSFX('buttonClick');
             }
             if (!gameState.flags.committedCrimeToday) {
                 modifyCitySuspicion(-2);
+                if (gameState.suspicionData && gameState.suspicionData.heldHeat) {
+                    gameState.suspicionData.heldHeat = Math.max(0, gameState.suspicionData.heldHeat - 2);
+                }
             }
             gameState.flags.committedCrimeToday = false;
             gameState.flags.cruzSpottedToday = false;
@@ -44125,6 +44164,7 @@ audioSystem.playSFX('buttonClick');
             processPendingForensics();  // Evidence ledger: daily forensic matching
             checkWarrantConditions();
             checkForNewCharges();  // Refresh warrant charges from ledger
+            enforceSuspicionCap();  // New or heavier charges move the ceiling and floor
             
             if (gameState.flags.warrantIssued && !gameState.flags.currentlyInCustody) {
                 gameState.flags.policeEncounterToday = false;
@@ -132364,7 +132404,103 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 choices: [
                     { text: "Use vampire speed to flee", nextScene: "police_flee_vampire_speed" },
                     { text: "Attack the officers (non-lethal)", nextScene: "police_attack_nonlethal" },
-                    { text: "Kill both officers", nextScene: "police_kill_decision" }
+                    { text: "Kill both officers", nextScene: "police_kill_decision" },
+                    { text: "Let go. Put your hands up.", nextScene: "police_interrupt_surrender" }
+                ]
+            },
+
+            // ── Hunt interrupt: Surrender ──
+            // Caught in the act. The assault goes on the books tied to her by name, and
+            // she's booked (mugshot, prints, mask cascade if she's carrying it).
+            police_interrupt_surrender: {
+                image: 'Images/scenes/events/police-flashlights.png',
+                text: function() {
+                    var desc = '';
+                    var isMale = (gameState.flags.ambushVictimGender || 'male') === 'male';
+                    var obj = isMale ? 'him' : 'her';
+                    var P = isMale ? 'He' : 'She';
+                    var pos = isMale ? 'his' : 'her';
+                    var masked = gameState.flags._huntWearingMask;
+
+                    desc += 'You let go.\n\n';
+
+                    desc += P + ' scrambles away from you on hands and knees, then finds ' + pos + ' feet and runs. Neither officer so much as glances after ' + obj + '. Both guns stay on you.\n\n';
+
+                    desc += 'You raise your hands slowly, palms out, and turn to face the wall.';
+
+                    if (masked) {
+                        desc += '"Mask off! Take it off, slow!"\n\n';
+
+                        desc += 'You pull the ski mask over your head and let it drop. One of the officers kicks it away from your feet, then scoops it into an evidence bag. The red devil girl stares up at you through the plastic.\n\n';
+
+                        desc += 'Two flashlights land on your bare face at once. You can hear the bodycams humming on their chests.';
+                    } else {
+                        desc += 'Two flashlights hold on your face. The bodycams on their chests are still rolling, taking in every detail.';
+                    }
+
+                    desc += '"On your knees. Hands behind your head."\n\n';
+
+                    desc += 'You kneel. The concrete\'s cold and damp through your clothes.\n\n';
+
+                    desc += 'The cuffs close on your wrists, one and then the other. Cold steel on skin that could tear through it without trying. The officer ratchets them tight and pats you down with quick, nervous hands. His heart\'s beating so fast you can hear it over the radio.\n\n';
+
+                    desc += '"Suspect in custody," his partner says into her shoulder mic. Her voice wobbles on the last word. "Assault in progress, victim fled on foot. Requesting transport."\n\n';
+
+                    desc += 'They walk you out of the alley between them. A cruiser\'s already turning onto the street, lights going, no siren.\n\n';
+
+                    desc += 'The back seat smells like vinyl and disinfectant. The door shuts, and the street noise cuts off.\n\n';
+
+                    desc += 'You could snap the cuffs with a twitch. You could punch through the cage and be six blocks away before either of them finished blinking.\n\n';
+
+                    desc += 'The thirst is still there, sharp and unfinished, sitting behind your teeth. You swallow it down.\n\n';
+
+                    desc += 'You stay put. You chose this. Whatever comes next, you chose it.';
+
+                    return desc;
+                },
+                onEnter: function() {
+                    var masked = !!gameState.flags._huntWearingMask;
+                    var district = gameState.currentDistrictId || 'commercial';
+
+                    // Caught in the act: the assault goes on the books tied to her by name
+                    var caughtId = createLedgerEntry({
+                        type: 'assault',
+                        district: district,
+                        masked: masked,
+                        maskSignature: masked,
+                        witnessEvidence: true,
+                        cameraEvidence: true,
+                        supernaturalEvidence: false,
+                        biteMarks: true,
+                        witnesses: [{ type: 'cop', faceSeen: true, description: 'Arresting officers' }],
+                        cameraType: 'bodycam',
+                        cameraQuality: 'clear'
+                    });
+                    linkCrimeToSuspect(caughtId, 'caught_in_act');
+                    modifyCitySuspicion(10, 'assault', district, 'cop');
+
+                    // Unmasked on camera now, whatever she wore into the alley
+                    if (!gameState.suspicionData) gameState.suspicionData = {};
+                    gameState.suspicionData.facialRecognition =
+                        Math.min(100, (gameState.suspicionData.facialRecognition || 0) + (masked ? 30 : 10));
+
+                    // Police encounter + custody (same as arrest_surrender)
+                    gameState.flags.policeEncounterToday = true;
+                    gameState.flags.lastPoliceEncounterDay = gameState.time.day;
+                    gameState.flags.policeEncountersTotal = (gameState.flags.policeEncountersTotal || 0) + 1;
+                    gameState.flags.currentlyInCustody = true;
+                    gameState.flags.custodyDay = gameState.time.day;
+                    gameState.flags.custodyProcessed = false;
+                    gameState.flags.custodyInterrogated = false;
+                    gameState.flags.arrestCount = (gameState.flags.arrestCount || 0) + 1;
+                    delete gameState.flags.policeInterrupted;
+
+                    modifyMentalHealth(-10);
+                    advanceTime(20);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Ride in silence.', nextScene: 'arrest_booking' }
                 ]
             },
 
@@ -132527,8 +132663,6 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var masked = gameState.flags._huntWearingMask;
                     gameState.flags.policeWitnessSupernatural = true;
                     gameState.flags.policeAssaulted = true;
-                    gameState.flags.violentHuntsBlocked = true;
-                    gameState.flags.bloodBagTheftBlocked = true;
                     logHuntPoliceCrime('police_assault', 1);
                     modifyCitySuspicion(50);
                     modifyKarma(-25);
@@ -132621,11 +132755,23 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 onEnter: () => {
                     gameState.flags.policeKilled = true;
                     gameState.flags.copKiller = true;
-                    gameState.flags.violentHuntsBlocked = true;
-                    gameState.flags.bloodBagTheftBlocked = true;
                     gameState.flags.cityLockdown = true; // New flag for extreme response
                     logHuntPoliceCrime('police_killing', 2); // two officers
-                    modifyCitySuspicion(100); // Maximum
+                    modifyCitySuspicion(100); // Heat is capped by the case (see getSuspicionCap)
+
+                    // The bodycams kept rolling. The footage comes off the bodies within the hour.
+                    if (!gameState.suspicionData) gameState.suspicionData = {};
+                    var _pkMasked = !!gameState.flags._huntWearingMask;
+                    gameState.suspicionData.bodycamIncidents = (gameState.suspicionData.bodycamIncidents || 0) + 2;
+                    gameState.suspicionData.supernaturalEvidence =
+                        Math.min(100, (gameState.suspicionData.supernaturalEvidence || 0) + 30);
+                    if (!_pkMasked) {
+                        // Her face, in high definition, on every screen in the city
+                        gameState.suspicionData.facialRecognition =
+                            Math.min(100, (gameState.suspicionData.facialRecognition || 0) + 40);
+                        if (gameState.suspicionData.facialRecognition >= 50) gameState.suspicionData.hasCompositeSketch = true;
+                    }
+                    calculateWantedTier();
                     modifyKarma(-50); // Massive karma hit
                     
                     // Mental health impact based on karma
@@ -132648,7 +132794,33 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             police_kill_aftermath: {
-                text: '<strong>CONSEQUENCES OF KILLING POLICE:</strong>\n\n<img src="Images/icons/skull.png" class="icon" alt="skull"> <strong>COP KILLER</strong>\nYou murdered two police officers. This is the worst crime you could commit. The entire department wants your head. The FBI is involved. National manhunt.\n\n<img src="Images/icons/red-circle.png" class="icon" alt="alert"> <strong>CITY LOCKDOWN</strong>\nThe city has gone into emergency mode. Massive police presence. National Guard on standby. Curfews. Checkpoints. You can barely move without seeing uniforms.\n\n<img src="Images/icons/warning.png" class="icon" alt="warning"> <strong>ALL VIOLENT FEEDING BLOCKED</strong>\nViolent hunts: <em>Impossible</em>. Every dark alley has patrols. Undercover cops everywhere.\nBlood bag theft: <em>Impossible</em>. Armed guards at hospitals and blood banks.\n\n<img src="Images/icons/newspaper.png" class="icon" alt="news"> <strong>NATIONAL NEWS</strong>\n"Two Officers Murdered in Brutal Attack." It\'s everywhere. Every channel. Every website. Theories about you. What you are. Why you killed them.\n\n<img src="Images/icons/broken-heart.png" class="icon" alt="trauma"> <strong>PSYCHOLOGICAL DAMAGE</strong>\nYou killed two people who were just doing their jobs. Protecting their city. No matter how low your morals go... this weighs on you. You can feel yourself changing. Becoming something darker.\n\n<img src="Images/icons/vampire.png" class="icon" alt="vampire"> <strong>NO WITNESSES</strong>\nThe only silver lining: The officers who saw your supernatural abilities are dead. Their testimony died with them. The department doesn\'t know about your powers... yet.\n\nBut the manhunt will never stop. Not until you\'re caught or dead.',
+                text: function() {
+                    var desc = '';
+                    var masked = !!gameState.flags._huntWearingMask;
+                    var evil = (gameState.karma || 0) <= -200;
+
+                    desc += '<strong>CONSEQUENCES OF KILLING POLICE:</strong>\n\n';
+
+                    desc += '<img src="Images/icons/skull.png" class="icon" alt="skull"> <strong>TWO OFFICERS DEAD</strong>\nYou murdered two police officers. Every cop in Trigrave is going to take this personally, and the charge is the heaviest one there is.\n\n';
+
+                    desc += '<img src="Images/icons/warning.png" class="icon" alt="warning"> <strong>THE BODYCAMS KEPT ROLLING</strong>\nBoth cameras were recording from the moment their flashlights found you. The footage comes off their bodies within the hour: every second of what you did, and how fast you did it.\n\n';
+
+                    if (masked) {
+                        desc += '<img src="Images/icons/red-circle.png" class="icon" alt="alert"> <strong>A MASK, AND NOTHING ELSE</strong>\nThe footage shows a black ski mask with a red devil girl on the forehead, moving faster than anything human should. Nobody can put a name to it yet. The emblem\'s on file now, though, and if you\'re ever booked with that mask on you, these two deaths are the first charges they read out.\n\n';
+                    } else {
+                        desc += '<img src="Images/icons/red-circle.png" class="icon" alt="alert"> <strong>YOUR FACE IS EVERYWHERE</strong>\nStills from the footage go out to every precinct, every news desk and every phone in the city. Somebody who knows you is going to see them. Once they do, the case lands on you by name.\n\n';
+                    }
+
+                    desc += '<img src="Images/icons/newspaper.png" class="icon" alt="news"> <strong>WHEN THEY KNOW IT\'S YOU</strong>\nMurder of law enforcement takes the ceiling off the heat. Patrols on every block. Violent hunting becomes impossible. Guards at every hospital and blood bank. The manhunt won\'t stop until you\'re caught or dead.\n\n';
+
+                    if (evil) {
+                        desc += '<img src="Images/icons/vampire.png" class="icon" alt="vampire"> <strong>HOW IT SITS WITH YOU</strong>\nIt should weigh on you. It barely does. What you feel is closer to power, warm and humming under your skin, and some quiet part of you knows that\'s the part to be scared of.';
+                    } else {
+                        desc += '<img src="Images/icons/broken-heart.png" class="icon" alt="trauma"> <strong>HOW IT SITS WITH YOU</strong>\nYou killed two people who were doing their jobs. However you tell it to yourself, you can feel the story changing, and you can feel yourself changing with it.';
+                    }
+
+                    return desc;
+                },
                 onEnter: () => {
                     advanceTime(10);
                     updateStatus();
@@ -215842,6 +216014,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             var timedBlock = (gameState.flags.crimeBlockedUntilDay || 0) > (gameState.time.day || 0);
             gameState.flags.crimesBlocked = (tier >= 3) || timedBlock;
             gameState.flags.bloodTheftBlocked = (tier >= 3);
+            gameState.flags.bloodBagTheftBlocked = false; // legacy permanent block; the tier decides now
             return tier;
         }
 
