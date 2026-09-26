@@ -173389,6 +173389,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     desc += '<p>His phone drops an inch. His lips part.</p>';
                     desc += '<p>You don\'t stop.</p>';
+                    if (_sheer && corruption >= 8001) {
+                        desc += '<p>You pull the ' + b.noun + ' tight with two fingers so it lies flat ' + (_mClit ? 'over your slit and he can see every fold through it' : 'over your nipples and he can see every inch of them through it') + '. Then you go back to work. Slower now. For him.</p>';
+                    }
 
                     // ── APPROACH ──
                     if (_sheer) {
@@ -173410,13 +173413,18 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     desc += '<p>The last spasm rolls through you and leaves you sagging against the brick. Your fingers are still inside. You can feel your cunt twitching around them in small, spent grips. Too sensitive to pull out fast.' + (_sheer ? '</p><p>' : ' ') + 'You ease them free' + (_mClit ? ' and out from under the ' + b.noun : '') + ', and a wet string catches the light between your fingers and your folds.</p>';
 
                     // ── CORRUPTION-TIERED AFTERMATH ──
-                    if (corruption >= 8001) {
+                    if (corruption >= 8001 && _sheer) {
+                        desc += '<p>You wipe your fingers on your thigh. Slowly. Making sure he sees. Your clit gives one last, heavy throb, and you meet his eyes and hold the look until he\'s the one who turns away.</p>';
+                        desc += '<p>' + (_mClit ? 'There\'s nothing to fix. You smooth the ' + b.noun + ' flat over your slit and it clings to you, soaked, showing exactly how wet you still are.' : 'You tug your ' + (hasBottom ? cv.bottomName : b.panties) + ' straight. Up top there\'s nothing to fix. You smooth the ' + b.noun + ' flat over your nipples, swollen and dark from your pinching, and leave them on display.') + '</p>';
+                        desc += '<p>You walk back toward the mouth of the alley on legs that feel liquid. He\'s gone by the time you reach the sidewalk. Everyone else out here gets the view he got. You let them.</p>';
+                        desc += '<p>You lick the taste of yourself off your thumb and keep walking. The ' + b.noun + ' scratches at your ' + (_mClit ? 'clit' : 'nipples') + ' with every step. You don\'t hurry.</p>';
+                    } else if (corruption >= 8001) {
                         desc += '<p>You wipe your fingers on your thigh. Slowly. Making sure he sees. Your clit gives one last, heavy throb, and you meet his eyes and hold the look until he\'s the one who turns away.</p>';
                         desc += '<p>You straighten up, fix what needs fixing. Walk back toward the mouth of the alley on legs that feel liquid. He\'s gone by the time you reach the sidewalk.</p>';
                         desc += '<p>You lick the taste of yourself off your thumb and keep walking.</p>';
                     } else if (_sheer) {
                         desc += '<p>The heat drains. What replaces it is the brick against your back and the smell of garbage and the fact that a man just watched you get yourself off in a public alley. Your stomach turns. Your face burns. Your pussy\'s still twitching.</p>';
-                        desc += '<p>You reach to fix your clothes and there\'s nothing to fix. The ' + b.noun + ' sits right where it was the whole time. ' + (_mClit ? 'It\'s soaked now, clinging to your folds, and your slit shows through it slicker than when you walked in.' : 'Your nipples show through it, swollen and dark from your fingers.') + '</p>';
+                        desc += '<p>' + (_mClit ? 'You reach to fix your clothes and there\'s nothing to fix. The ' + b.noun + ' sits right where it was the whole time. It\'s soaked now, clinging to your folds, and your slit shows through it slicker than when you walked in.' : 'You tug your ' + (hasBottom ? cv.bottomName : b.panties) + ' straight with shaking hands. Up top there\'s nothing to fix. Your nipples show through the ' + b.noun + ', swollen and dark from your fingers.') + '</p>';
                         desc += '<p>Your eyes stay on the ground. Whether he\'s still at the mouth of the alley, you can\'t bring yourself to check. You walk out on unsteady legs and turn the opposite direction, and every stranger on the sidewalk gets the same view he did.</p>';
                         desc += '<p>Your inner thighs are slick. Your hands smell like sex. The ' + b.noun + ' scratches at everything you just rubbed raw, and your clit throbs under it with every step. The shame only makes it sharper. You hate that most.</p>';
                     } else {
