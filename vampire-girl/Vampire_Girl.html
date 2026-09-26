@@ -47981,6 +47981,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'exhibition_masturbate_alley', label: 'Alley — Bottomless', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _alleyMastGalleryExposure: 'bottomless' } },
                     { sceneId: 'exhibition_masturbate_alley', label: 'Alley — Underwear', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _alleyMastGalleryExposure: 'underwear_only' } },
                     { sceneId: 'exhibition_masturbate_alley', label: 'Alley — Clothed', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _alleyMastGalleryExposure: 'clothed' } },
+                    { sceneId: 'exhibition_masturbate_alley', label: 'Alley: Sheer', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _alleyMastGalleryExposure: 'sheer' } },
                     { sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench — Naked', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _parkBenchMastGalleryExposure: 'naked' } },
                     { sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench — Topless', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _parkBenchMastGalleryExposure: 'topless' } },
                     { sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench — Bottomless', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _parkBenchMastGalleryExposure: 'bottomless' } },
@@ -173278,9 +173279,17 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
 
             exhibition_masturbate_alley: {
+                galleryOnEnter: function() {
+                    if (!gameState.flags._galleryMode || gameState.flags._alleyMastGalleryExposure !== 'sheer') return;
+                    gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                        top: null, bottom: null, bra: null, panties: null, outerwear: null,
+                        dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
+                    });
+                },
                 text: function() {
                     var cv = getSceneClothingVars();
                     var exposure = gameState.flags._galleryMode ? (gameState.flags._alleyMastGalleryExposure || 'clothed') : getExposureLevel();
+                    if (!gameState.flags._galleryMode && (exposure === 'clothed' || exposure === 'underwear_only') && isSheerExposureState(getSheerState().state)) exposure = 'sheer';
                     var corruption = gameState.corruption || 0;
                     var ba = gameState.bodyAppearance || {};
                     var _bs = ba.breastSize || 'average';
@@ -173290,6 +173299,12 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var hasBra = cv.hasBra;
                     var hasTop = !!(gameState.currentOutfit.top || gameState.currentOutfit.dress);
                     var hasBottom = !!(gameState.currentOutfit.bottom || gameState.currentOutfit.dress);
+                    var _sheer = exposure === 'sheer';
+                    var b = _sheer ? _sheerBodyCtx() : null;
+                    var _mClit = _sheer && b.seeHips;
+                    var _mNip = _sheer && b.seeChest;
+                    var _hipReach = hasBottom ? (cv.isPants ? 'down the front of your ' : 'up under your ') + cv.bottomName + (hasPanties ? ' and into your ' + (b ? b.panties : 'panties') : '') : 'into your ' + (b ? b.panties : 'panties');
+                    var _chestReach = hasTop ? 'under your ' + cv.topName + (hasBra ? ' and under your ' + (b ? b.bra : 'bra') : '') : 'under the cup of your ' + (b ? b.bra : 'bra');
 
                     var desc = '';
 
@@ -173299,7 +173314,15 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     desc += '<p>You don\'t go deeper. You want to be seen.</p>';
 
                     // ── PHYSICAL SETUP (exposure-state-aware) ──
-                    if (exposure === 'naked') {
+                    if (_sheer) {
+                        desc += '<p>You lean back against the brick. ' + (_mClit && _mNip ? 'You don\'t hike a hem or pull a strap. You don\'t have to.' : 'You don\'t touch your ' + (_mNip ? b.top : b.bottom) + '.') + ' The ' + b.noun + ' already shows ' + b.shows + ' to anyone who looks down the gap between buildings.</p>';
+                        desc += '<p>' + (_mClit && _mNip
+                            ? 'Your nipples are stiff behind the grid. Your slit is flushed and wet behind it, the ' + b.noun + ' clinging where you\'re soaked. Every stranger on the walk here got the same view.'
+                            : _mNip
+                                ? 'Your nipples are stiff behind the grid. One hand works ' + _hipReach + '.'
+                                : 'Your slit is flushed and wet behind the grid, the ' + b.noun + ' clinging where you\'re soaked. One hand pushes ' + _chestReach + ' and finds your nipple stiff and aching.')
+                            + ' You can hear footsteps on the sidewalk. Voices. Traffic. All of it twelve feet away.</p>';
+                    } else if (exposure === 'naked') {
                         desc += '<p>You\'re already bare. Every inch of you. You lean back against the brick wall and the rough surface drags against your shoulder blades, your bare ass pressing flat to the cold stone. Your ' + (_bs === 'large' ? 'heavy tits settle against your ribs, nipples stiff, the weight of them shifting with each breath' : _bs === 'small' ? 'small tits rise and fall with your breathing, nipples tight and hard in the alley air' : 'tits rise and fall with your breathing') + '. Your pussy is flushed and wet and on full display to anyone who glances down the gap between buildings.</p>';
                     } else if (exposure === 'topless') {
                         desc += '<p>Your tits are already out, nipples stiff against the alley air. You lean back into the brick and the rough surface scrapes your bare shoulder blades. You work your waistband down to your thighs' + (hasPanties ? ', shove your panties sideways with two fingers' : '') + '. The air hits your wet pussy and your hips jerk.</p>';
@@ -173317,6 +173340,27 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     desc += '<p>Your fingers start at your inner thigh. Slow. Tracing up the soft skin in a line that stops just short of where you need it. ' + (_bt === 'petite' ? 'Your narrow thigh twitches under your fingertip. You feel small against the brick, tucked into the alley like you could disappear.' : _bt === 'athletic' ? 'Your quad flexes under your fingertip, the muscle taut, trained. Your body is coiled against the wall.' : _bt === 'curvy' ? 'Your thigh is soft under your fingertip, the flesh giving as you trace higher, your hip pressing into the brick.' : _bt === 'thick' ? 'Your thigh is warm and heavy under your fingertip, the flesh full, your hips filling the narrow space against the wall.' : 'Your quad twitches under your fingertip.') + ' The brick is rough against your back and you can smell the dumpster and your own arousal cutting through it, sharp and musky, unmistakable.</p>';
                     desc += '<p>You trace the crease where your thigh meets your hip. Back and forth. Your breathing goes shallow. A car horn blares on the street and you flinch, but your hand doesn\'t move away. It moves closer.</p>';
 
+                    if (_sheer) {
+                    // ── SHEER: THROUGH THE MESH ──
+                    if (_mClit) {
+                        desc += '<p>You press two fingers to your clit through the ' + b.noun + '. The grid bites into your swollen folds and your clit throbs against the crosshatch. Your breath catches hard. "Nnh—" It gets out anyway, thin and sharp, bouncing off the close brick walls.</p>';
+                        desc += '<p>You drag your fingertips down the length of your slit and every little square catches on wet skin. The ' + b.noun + ' is soaked through already. You can watch your own fingers work your pussy through a layer that hides nothing, and the sight of it makes your hips jerk.</p>';
+                    } else {
+                        desc += '<p>You split your folds with two fingers and the slickness is immediate. Hot. Your clit is swollen, throbbing, and when your fingertip drags across it you have to bite down on your lip to keep quiet. "Nnh—" It gets out anyway, thin and sharp, bouncing off the close brick walls.</p>';
+                    }
+                    if (_mNip) {
+                        desc += '<p>Your free hand finds your nipple through the ' + b.noun + '. You pinch it through the grid and the crosshatch digs into the stiff peak, scratchy and sharp, and the sting shoots straight to your clit. You pinch harder and your hips buck off the wall.</p>';
+                    } else {
+                        desc += '<p>Your free hand rolls your bare nipple ' + (hasTop ? 'under your ' + cv.topName : 'under the cup of your ' + b.bra) + ', and the sharp pull connects to the ache between your legs like a wire.</p>';
+                    }
+                    if (_mClit) {
+                        desc += '<p>You start rubbing. Tight circles through the ' + b.noun + ', slow at first, then faster when your body won\'t let you keep the pace. The grid drags across your clit on every pass. It\'s too rough and not enough at the same time, and your hips start matching the rhythm before you tell them to.</p>';
+                    } else {
+                        desc += '<p>You start rubbing. Tight circles, slow at first, then faster when your body won\'t let you keep the pace. The pad of your middle finger finds the left side of your clit and stays there, pressing hard, circling in a rhythm your hips start matching before you tell them to.</p>';
+                    }
+                    desc += '<p>Both hands working now. Your shoulders are pressed into the wall and your hips are rocking forward, grinding your pussy into your own fingers' + (_mClit ? ' through the soaked ' + b.noun : '') + '.</p>';
+                    desc += '<p>"Hh— fuck—" Your voice is barely a breath. Your thighs are trembling. The scent of your arousal is thick in the narrow alley, layered over stale garbage and exhaust. ' + (_mClit ? 'Slick seeps through the ' + b.noun + ' and onto your fingers, warm and obscene.' : 'You can feel your slick running down your fingers, onto your inner thigh, warm and obscene.') + '</p>';
+                    } else {
                     // ── FIRST DIRECT CONTACT ──
                     desc += '<p>You split your folds with two fingers and the slickness is immediate. Hot. Your clit is swollen, throbbing, and when your fingertip drags across it you have to bite down on your lip to keep quiet. "Nnh\u2014" It gets out anyway, thin and sharp, bouncing off the close brick walls.</p>';
                     desc += '<p>You press two fingers flat to your clit and hold. The pressure is blinding. Your hips push into your own hand on instinct, ' + (_butt === 'large' ? 'your ass grinding back against the brick, the flesh spreading against the rough surface' : _butt === 'small' ? 'the bones of your hips pressing into the wall behind you' : 'grinding slow against your fingertips') + ', and the wet sounds are louder than they should be in the tight space. Loud enough that someone on the sidewalk could hear if they stopped walking.</p>';
@@ -173330,32 +173374,51 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     desc += '<p>You slide two fingers inside. Your walls clench around them immediately, hot and tight and soaking. The stretch settles in full and your mouth opens on a sound you almost don\'t catch in time. You curl your fingers toward your front wall, find the spot, and press.</p>';
                     desc += '<p>"Ah\u2014" You bite your lip hard enough to taste copper. Your thumb takes over your clit, grinding fast and sloppy while your fingers pump in and out, the wet sounds echoing off brick. A pigeon startles off the fire escape above you and you don\'t flinch. You can\'t think about anything except the drag of your fingers and the building pressure in your belly.</p>';
 
+                    }
+
                     // ── THE WITNESS ──
                     desc += '<p>Footsteps on the sidewalk. Close. Getting closer.</p>';
                     desc += '<p>A man walks past the mouth of the alley. Mid-thirties, suit jacket, phone in his hand. He glances sideways, casual, already looking past you.</p>';
                     desc += '<p>He stops.</p>';
-                    desc += '<p>You\'re twelve feet away, ' + (exposure === 'naked' ? 'completely naked, back against the wall, two fingers buried in your cunt and your thumb grinding your clit in frantic circles. He can see everything. Your bare tits. Your flushed, wet pussy. The slick on your thighs.' : (exposure === 'topless' ? 'bare tits against the brick wall, your hand between your legs, two fingers deep and your thumb working your clit. He can see your bare chest heaving, your nipples dark and stiff, your arm moving between your thighs.' : (exposure === 'bottomless' ? 'your ' + cv.topName + ' riding up and nothing below it, your hand between your bare legs, fingers pumping. He can see the motion of your arm, your bare thighs spread, the wet shine between your legs.' : (exposure === 'underwear_only' ? 'in your bra and panties with both shoved aside, one breast free and your hand buried between your legs. He can see the frantic motion of your arm, the displacement of your underwear, the flush on every inch of exposed skin.' : 'your ' + cv.bottomName + ' hiked to your waist, ' + (hasPanties ? 'your panties shoved aside, ' : '') + 'your hand buried between your legs. He can see the rhythm of your arm, the bare skin of your thighs, your hips grinding forward into your own hand.')))) + '</p>';
+                    if (_sheer) {
+                        desc += '<p>You\'re twelve feet away, back against the wall, still covered and hiding nothing. He can see ' + b.shows + ' through the ' + b.noun + '.</p>';
+                        desc += '<p>He can see ' + (_mClit ? 'your fingers rubbing your pussy right through it' : 'your hand buried ' + (hasBottom ? (cv.isPants ? 'down the front of your ' : 'under your ') + cv.bottomName : 'in your ' + b.panties)) + ', your other hand ' + (_mNip ? 'pinching your nipple through the grid' : 'working under your ' + (hasTop ? cv.topName : b.bra)) + '. Every stroke. Every twitch of your hips.</p>';
+                    } else {
+                        desc += '<p>You\'re twelve feet away, ' + (exposure === 'naked' ? 'completely naked, back against the wall, two fingers buried in your cunt and your thumb grinding your clit in frantic circles. He can see everything. Your bare tits. Your flushed, wet pussy. The slick on your thighs.' : (exposure === 'topless' ? 'bare tits against the brick wall, your hand between your legs, two fingers deep and your thumb working your clit. He can see your bare chest heaving, your nipples dark and stiff, your arm moving between your thighs.' : (exposure === 'bottomless' ? 'your ' + cv.topName + ' riding up and nothing below it, your hand between your bare legs, fingers pumping. He can see the motion of your arm, your bare thighs spread, the wet shine between your legs.' : (exposure === 'underwear_only' ? 'in your bra and panties with both shoved aside, one breast free and your hand buried between your legs. He can see the frantic motion of your arm, the displacement of your underwear, the flush on every inch of exposed skin.' : 'your ' + cv.bottomName + ' hiked to your waist, ' + (hasPanties ? 'your panties shoved aside, ' : '') + 'your hand buried between your legs. He can see the rhythm of your arm, the bare skin of your thighs, your hips grinding forward into your own hand.')))) + '</p>';
+                    }
 
                     desc += '<p>His phone drops an inch. His lips part.</p>';
                     desc += '<p>You don\'t stop.</p>';
 
                     // ── APPROACH ──
-                    desc += '<p>His eyes are locked on you and the thrill of it hits your clit like a second hand. Your cunt clenches hard around your fingers and a moan slips out, louder than anything else you\'ve let through. "Fuh\u2014 God\u2014" He\'s watching your fingers move, watching your pussy grip and release, and the knowledge of it floods your belly with heat. You add a third finger and your back arches off the wall.</p>';
+                    if (_sheer) {
+                        desc += '<p>His eyes are locked on you and the thrill of it hits your clit like a second hand. You can\'t take the grid anymore.</p><p>' + (_mClit
+                            ? 'You shove your hand under the ' + b.noun + ' and two fingers sink straight into your cunt. The first stroke of bare skin after all that scratching nearly finishes you on the spot.'
+                            : 'You shove your hand under the ' + b.noun + ' and grab your bare tit, and two fingers sink into your cunt at the same time. Skin on skin after all that scratching nearly finishes you on the spot.') + '</p>';
+                        desc += '<p>"Fuh— God—" He\'s watching your fingers move' + (_mClit ? ' under the ' + b.noun + ', watching your pussy grip and release right through it' : ', watching your pussy grip and release') + '. Your thumb finds your clit ' + (_mClit ? 'bare for the first time' : 'again') + ' and your back arches off the wall.</p>';
+                    } else {
+                        desc += '<p>His eyes are locked on you and the thrill of it hits your clit like a second hand. Your cunt clenches hard around your fingers and a moan slips out, louder than anything else you\'ve let through. "Fuh\u2014 God\u2014" He\'s watching your fingers move, watching your pussy grip and release, and the knowledge of it floods your belly with heat. You add a third finger and your back arches off the wall.</p>';
+                    }
                     desc += '<p>Your hips are moving on their own. Grinding, rocking, fucking yourself against your hand while a stranger watches from twelve feet away. ' + (_bt === 'petite' ? 'Your small body is tight against the wall, your narrow hips jerking in frantic little circles.' : _bt === 'athletic' ? 'Your abs clench with each grind, your trained body driving the rhythm, every muscle taut and working.' : _bt === 'curvy' ? 'Your hips roll in heavy circles against the brick, your body swaying, the motion fluid and desperate.' : _bt === 'thick' ? 'Your heavy hips slam back against the wall with each grind, the slap of flesh on brick loud in the narrow alley.' : 'Your thumb skids across your clit in wild, graceless circles.') + ' The pressure in your belly is past what you can manage. Your thighs are shaking. Your eyes are half-closed but you can still see him standing there, frozen, staring.</p>';
 
                     // ── ORGASM: HIT ──
                     desc += '<p>It breaks.</p>';
-                    desc += '<p>Your cunt clamps down in hard, rhythmic spasms around your fingers. A gush of slick floods your palm, runs hot down your inner thigh. "Nnh\u2014 ah fuck\u2014" The sound punches out of you, raw, echoing off the brick walls. Your back bows off the wall and your hips stutter forward, grinding into your hand through each wave. Your toes curl' + (!gameState.flags._galleryMode && gameState.currentOutfit.footwear ? ' inside your shoes' : ' against the concrete') + ' until the arches cramp.</p>';
-                    desc += '<p>You keep moving through it. Your thumb still circling, fingers held deep, your walls fluttering in weakening pulses around them. "Haaah\u2014" Your voice is wrecked. The man at the mouth of the alley hasn\'t moved. He watched the whole thing. He watched your pussy clench and your body arch and your face come apart.</p>';
+                    desc += '<p>Your cunt clamps down in hard, rhythmic spasms around your fingers. A gush of slick floods your palm, runs hot down your inner thigh. "Nnh\u2014 ah fuck\u2014" The sound punches out of you, raw, echoing off the brick walls. Your back bows off the wall and your hips stutter forward, grinding into your hand through each ' + (_sheer ? 'spasm' : 'wave') + '. Your toes curl' + (!gameState.flags._galleryMode && gameState.currentOutfit.footwear ? ' inside your shoes' : ' against the concrete') + ' until the arches cramp.</p>';
+                    desc += '<p>You keep moving through it. Your thumb still circling, fingers held deep, your walls fluttering in weakening ' + (_sheer ? 'clenches' : 'pulses') + ' around them. "Haaah\u2014" Your voice is wrecked. The man at the mouth of the alley hasn\'t moved. He watched the whole thing. He watched your pussy clench and your body arch and your face come apart.</p>';
 
                     // ── ORGASM: LINGER ──
-                    desc += '<p>The last spasm rolls through you and leaves you sagging against the brick. Your fingers are still inside. You can feel your cunt twitching around them in small, spent grips. Too sensitive to pull out fast. You ease them free and a wet string catches the light between your fingers and your folds.</p>';
+                    desc += '<p>The last spasm rolls through you and leaves you sagging against the brick. Your fingers are still inside. You can feel your cunt twitching around them in small, spent grips. Too sensitive to pull out fast.' + (_sheer ? '</p><p>' : ' ') + 'You ease them free' + (_mClit ? ' and out from under the ' + b.noun : '') + ', and a wet string catches the light between your fingers and your folds.</p>';
 
                     // ── CORRUPTION-TIERED AFTERMATH ──
                     if (corruption >= 8001) {
                         desc += '<p>You wipe your fingers on your thigh. Slowly. Making sure he sees. Your clit gives one last, heavy throb, and you meet his eyes and hold the look until he\'s the one who turns away.</p>';
                         desc += '<p>You straighten up, fix what needs fixing. Walk back toward the mouth of the alley on legs that feel liquid. He\'s gone by the time you reach the sidewalk.</p>';
                         desc += '<p>You lick the taste of yourself off your thumb and keep walking.</p>';
+                    } else if (_sheer) {
+                        desc += '<p>The heat drains. What replaces it is the brick against your back and the smell of garbage and the fact that a man just watched you get yourself off in a public alley. Your stomach turns. Your face burns. Your pussy\'s still twitching.</p>';
+                        desc += '<p>You reach to fix your clothes and there\'s nothing to fix. The ' + b.noun + ' sits right where it was the whole time. ' + (_mClit ? 'It\'s soaked now, clinging to your folds, and your slit shows through it slicker than when you walked in.' : 'Your nipples show through it, swollen and dark from your fingers.') + '</p>';
+                        desc += '<p>Your eyes stay on the ground. Whether he\'s still at the mouth of the alley, you can\'t bring yourself to check. You walk out on unsteady legs and turn the opposite direction, and every stranger on the sidewalk gets the same view he did.</p>';
+                        desc += '<p>Your inner thighs are slick. Your hands smell like sex. The ' + b.noun + ' scratches at everything you just rubbed raw, and your clit throbs under it with every step. The shame only makes it sharper. You hate that most.</p>';
                     } else {
                         desc += '<p>The heat drains. What replaces it is the brick against your back and the smell of garbage and the fact that a man just watched you come in a public alley. Your stomach turns. Your face burns. Your pussy\'s still twitching.</p>';
                         desc += '<p>You fix your clothes with shaking hands. Your eyes stay on the ground. Whether he\'s still standing at the mouth of the alley, you can\'t bring yourself to check.</p>';
