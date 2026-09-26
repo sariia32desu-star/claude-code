@@ -6788,7 +6788,7 @@
 
                             <li style="margin: 5px 0; border-bottom: 1px solid #333; padding-bottom: 5px;"><strong style="color: #d4a8e8; font-size: 13px;">TRISH &amp; JADE</strong></li>
                             <li style="margin: 3px 0;">Two coworkers with friendship tracks accessible during breaks:</li>
-                            <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Trish</strong> (mentor): Dance tips at friendship 20+ (+5 stripping XP next set). Watch her warm up at friendship 60+ (+20 stripping XP). At friendship 25+, she occasionally teaches Kelsie a move before a set (+25% XP that set, every 5 shifts)</li>
+                            <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Trish</strong> (mentor): Dance tips at friendship 20+ (+15 stripping XP next set). Watch her warm up at friendship 60+ (+20 stripping XP). At friendship 25+, she occasionally teaches Kelsie a move before a set (+25% XP that set, every 5 shifts)</li>
                             <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Jade</strong> (peer): Floor gossip (always available, flavor intel on tippers and creeps). Dance practice at friendship 30+ (+15 stripping XP). Both unlock romance/flirt tracks at friendship 15+</li>
 
                             <li style="margin: 5px 0; border-bottom: 1px solid #333; padding-bottom: 5px;"><strong style="color: #d4a8e8; font-size: 13px;">STAT GAINS</strong></li>
@@ -157737,9 +157737,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var _stageXpBase = 30;
                     var _stageXpBonus = 0;
                     var _stageXpReason = 'stage performance';
-                    // Step 6A: Dance tip bonus (+5 XP)
+                    // Step 6A: Dance tip bonus (+15 XP)
                     if (gameState.flags._trishDanceTipActive) {
-                        _stageXpBonus += 5;
+                        _stageXpBonus += 15;
                         _stageXpReason += ' + Trish\'s tips';
                         gameState.flags._trishDanceTipActive = false;
                     }
@@ -158811,7 +158811,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.flags._trishDanceTipActive = true;
                     advanceTime(10);
                     updateStatus();
-                    showNotification('<img src="Images/icons/stripping-shoe.png" class="icon" alt="strip"> Trish\'s tips: +5 stripping XP on your next set');
+                    showNotification('<img src="Images/icons/stripping-shoe.png" class="icon" alt="strip"> Trish\'s tips: +15 stripping XP on your next set');
                 },
                 choices: [
                     { text: 'Talk about something else', nextScene: 'lucius_strip_talk_trish' },
