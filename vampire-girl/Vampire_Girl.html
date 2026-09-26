@@ -13330,6 +13330,28 @@
             },
             
             flags: {
+                // ── Mesh & Sheer overhaul flags (Step 21) ──
+                _passiveAccum: {},
+                _lastSheerExposureAmbientTime: 0,
+                _lastSheerAmbientTime: 0,
+                _sheerDistrictAwarenessFired: {},
+                _sheerNpcVignetteIndex: [],
+                _wetAwarenessJustFired: '',
+                _luciusSheerDoorDay: 0,
+                _rubySheerLineShift: 0,
+                _hardySheerLineDay: 0,
+                _sheerStopCoveringDay: 0,
+                _lastSheerLightMinute: 0,
+                _lastSheerPeelMinute: 0,
+                _seductionSheer: null,
+                _jaewonMeshTopReactionDay: 0,
+                _jaewonMeshTopReactionMin: 0,
+                _jaewonMeshTopFromRoom: null,
+                _jaewonMeshTopSexDay: 0,
+                _districtSheerExhibPregnancy: false,
+                _slumsSheerExhibPregnancy: false,
+                _sheerDiscovery: null,
+                _sheerDiscoveryCondom: null,
                 // ── Beauty Obsessed overhaul flags (Step 1F) ──
                 boCollectionGranted: false,        // her 32-piece collection has been handed out
                 boFixedFaceAtHome: false,          // Step 7: she fixed her face before leaving home
@@ -16970,6 +16992,33 @@
                 if (gameState.flags._bralessCommandoAlleyUsedToday === undefined) gameState.flags._bralessCommandoAlleyUsedToday = {};
                 if (gameState.flags.dinerBralessCommandoEventCount === undefined) gameState.flags.dinerBralessCommandoEventCount = 0;
 
+                // MIGRATION (Mesh & Sheer Overhaul, Step 21)
+                if (gameState.sheerLingerieStartTime === undefined) gameState.sheerLingerieStartTime = null;
+                if (gameState.exhibitionStats.sheerMinutesTotal === undefined) gameState.exhibitionStats.sheerMinutesTotal = 0;
+                if (gameState.exhibitionStats.sheerBareMinutesTotal === undefined) gameState.exhibitionStats.sheerBareMinutesTotal = 0;
+                if (gameState.exhibitionStats.sheerLingerieMinutesTotal === undefined) gameState.exhibitionStats.sheerLingerieMinutesTotal = 0;
+                if (gameState.flags._passiveAccum === undefined) gameState.flags._passiveAccum = {};
+                if (gameState.flags._lastSheerExposureAmbientTime === undefined) gameState.flags._lastSheerExposureAmbientTime = 0;
+                if (gameState.flags._lastSheerAmbientTime === undefined) gameState.flags._lastSheerAmbientTime = 0;
+                if (gameState.flags._sheerDistrictAwarenessFired === undefined) gameState.flags._sheerDistrictAwarenessFired = {};
+                if (gameState.flags._sheerNpcVignetteIndex === undefined) gameState.flags._sheerNpcVignetteIndex = [];
+                if (gameState.flags._wetAwarenessJustFired === undefined) gameState.flags._wetAwarenessJustFired = '';
+                if (gameState.flags._luciusSheerDoorDay === undefined) gameState.flags._luciusSheerDoorDay = 0;
+                if (gameState.flags._rubySheerLineShift === undefined) gameState.flags._rubySheerLineShift = 0;
+                if (gameState.flags._hardySheerLineDay === undefined) gameState.flags._hardySheerLineDay = 0;
+                if (gameState.flags._sheerStopCoveringDay === undefined) gameState.flags._sheerStopCoveringDay = 0;
+                if (gameState.flags._lastSheerLightMinute === undefined) gameState.flags._lastSheerLightMinute = 0;
+                if (gameState.flags._lastSheerPeelMinute === undefined) gameState.flags._lastSheerPeelMinute = 0;
+                if (gameState.flags._seductionSheer === undefined) gameState.flags._seductionSheer = null;
+                if (gameState.flags._jaewonMeshTopReactionDay === undefined) gameState.flags._jaewonMeshTopReactionDay = 0;
+                if (gameState.flags._jaewonMeshTopReactionMin === undefined) gameState.flags._jaewonMeshTopReactionMin = 0;
+                if (gameState.flags._jaewonMeshTopFromRoom === undefined) gameState.flags._jaewonMeshTopFromRoom = null;
+                if (gameState.flags._jaewonMeshTopSexDay === undefined) gameState.flags._jaewonMeshTopSexDay = 0;
+                if (gameState.flags._districtSheerExhibPregnancy === undefined) gameState.flags._districtSheerExhibPregnancy = false;
+                if (gameState.flags._slumsSheerExhibPregnancy === undefined) gameState.flags._slumsSheerExhibPregnancy = false;
+                if (gameState.flags._sheerDiscovery === undefined) gameState.flags._sheerDiscovery = null;
+                if (gameState.flags._sheerDiscoveryCondom === undefined) gameState.flags._sheerDiscoveryCondom = null;
+
                 // MIGRATION (Ruby's Diner Erotic Overhaul — Step 15A)
                 // Harassment system flags
                 if (gameState.flags.dinerHarassmentFiredThisShift === undefined) gameState.flags.dinerHarassmentFiredThisShift = false;
@@ -17207,6 +17256,10 @@
             // the designer backpack, the collection, and a tier that matches their radiant days.
             // Every save gets its collection pieces refreshed from the definitions.
             migrateBeautyObsessed();
+
+            // MIGRATION (Mesh & Sheer overhaul, Step 21): retired Noir bodysuits become
+            // the new Noir mesh dresses; Jaewon's top gets its mesh tag.
+            migrateMeshOverhaulItems();
 
             // MIGRATION (Appeal & Body overhaul, Step 14C/19): grooming, spa, and Godpeia
             // state. bodyState is read across grooming/mirror/appeal; ensure it and its
@@ -52986,6 +53039,61 @@ audioSystem.playSFX('buttonClick');
             gameState.flags.boCollectionPending = still;
             res.left = still.length;
             return res;
+        }
+
+        function migrateMeshOverhaulItems() {
+            var MAP = { designer_bodysuit: 'mesh_party_dress', lace_bodysuit: 'one_shoulder_club_dress' };
+            var dresses = (shopInventories.noir_boutique && shopInventories.noir_boutique.items && shopInventories.noir_boutique.items.dresses) || [];
+            var swapped = [];
+            function fresh(old) {
+                var def = null;
+                for (var i = 0; i < dresses.length; i++) if (dresses[i].id === MAP[old.id]) { def = dresses[i]; break; }
+                if (!def) return old;
+                var n = { id: def.id, name: def.name, category: 'dresses', appeal: def.appeal, price: def.price, owned: old.owned !== undefined ? old.owned : true, bought: old.bought !== undefined ? old.bought : true };
+                if (def.tags) n.tags = def.tags.slice();
+                if (def.effect) n.effect = def.effect;
+                ['cleanliness', 'damage', 'wetness', 'borrowed', 'owner'].forEach(function(k) { if (old[k] !== undefined) n[k] = old[k]; });
+                if (swapped.indexOf(def.name) === -1) swapped.push(def.name);
+                return n;
+            }
+            function swapArr(arr) {
+                if (!Array.isArray(arr)) return;
+                for (var i = 0; i < arr.length; i++) if (arr[i] && MAP[arr[i].id]) arr[i] = fresh(arr[i]);
+            }
+            function fixJaewonTop(it) {
+                if (!it || it.id !== 'jaewon_mesh_top' || !Array.isArray(it.tags)) return;
+                var k = it.tags.indexOf('material:synthetic');
+                if (k !== -1) it.tags[k] = 'material:mesh';
+                else if (it.tags.indexOf('material:mesh') === -1) it.tags.push('material:mesh');
+            }
+            if (gameState.inventory) swapArr(gameState.inventory.clothing);
+            if (gameState.wardrobes) Object.keys(gameState.wardrobes).forEach(function(w) { swapArr(gameState.wardrobes[w]); });
+            var o = gameState.currentOutfit;
+            if (o) Object.keys(o).forEach(function(slot) {
+                if (!o[slot] || !MAP[o[slot].id]) return;
+                var n = fresh(o[slot]);
+                if (slot === 'dress') { o.dress = n; return; }
+                o[slot] = null;
+                if (!o.dress && !o.top && !o.bottom) o.dress = n;
+                else if (gameState.inventory && Array.isArray(gameState.inventory.clothing)) gameState.inventory.clothing.push(n);
+            });
+            if (Array.isArray(gameState.outfitPresets)) gameState.outfitPresets.forEach(function(pr) {
+                if (!pr || !pr.slots) return;
+                Object.keys(pr.slots).forEach(function(slot) {
+                    var id = pr.slots[slot];
+                    if (!MAP[id]) return;
+                    delete pr.slots[slot];
+                    pr.slots.dress = MAP[id];
+                });
+            });
+            [gameState.inventory && gameState.inventory.clothing].concat(gameState.wardrobes ? Object.keys(gameState.wardrobes).map(function(w) { return gameState.wardrobes[w]; }) : []).forEach(function(arr) {
+                if (Array.isArray(arr)) arr.forEach(fixJaewonTop);
+            });
+            if (o) Object.keys(o).forEach(function(slot) { fixJaewonTop(o[slot]); });
+            if (swapped.length) {
+                var msg = 'Noir Boutique retired its bodysuits. Yours came back as the ' + swapped.join(' and the ') + '.';
+                setTimeout(function() { showNotification(msg); }, 800);
+            }
         }
 
         function migrateBeautyObsessed() {
