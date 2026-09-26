@@ -22308,25 +22308,64 @@ audioSystem.playSFX('buttonClick');
 
         // 4C: Lucius' doorman, once per day, evening or night, when she walks up in a sheer state.
         // Returns '' when nothing fires. Step 13C widens this to three variants per state.
+        // 4C / Mesh Step 13C: Lucius doorman, one line per visit-day, 3 variants per state.
+        var LUCIUS_SHEER_DOOR_LINES = {
+            sheer_framed: [
+                function(b) { return 'The bouncer\'s eyes go to your ' + b.under + ' through the ' + b.noun + ' and stay there a second longer than the job needs. He unhooks the rope.'; },
+                function(b) { return 'The bouncer checks your ID, then checks your ' + b.under + ' through the ' + b.noun + '. "Nice," he says, and it isn\'t about the ID. He unhooks the rope.'; },
+                function(b) { return 'The bouncer runs his eyes down your ' + b.sheer + ' and the ' + b.under + ' under it, slow, like he\'s pricing it. He nods you through.'; }
+            ],
+            sheer_braless: [
+                function(b) { return 'The bouncer\'s eyes drop to ' + b.tits + ', bare behind the ' + b.noun + ', nipples stiff. He takes his time. Then he unhooks the rope.'; },
+                function(b) { return 'The bouncer looks at your face for exactly one second. Then at your nipples, dark and stiff behind the ' + b.noun + ', for a lot longer. "Go on in," he says, still looking.'; },
+                function(b) { return 'The bouncer lifts the rope with his eyes on your chest. ' + capFirst(b.tits) + ' sit right there behind the ' + b.noun + ', and he gets a long look as you pass close enough to brush him.'; }
+            ],
+            sheer_commando: [
+                function(b) { return 'The bouncer glances down and stops. Your bare slit shows straight through the ' + b.noun + '. He clears his throat and unhooks the rope without checking anything else.'; },
+                function(b) { return 'The bouncer\'s eyes drop to ' + b.hips + ' and stay. Your bare pussy shows through the ' + b.noun + ', slit and all. "Enjoy your night," he says, to it.'; },
+                function(b) { return 'The bouncer waves the couple ahead of you in without a glance. You get a longer one. He looks at your bare slit through the ' + b.noun + ' until the line behind you starts complaining, then unhooks the rope.'; }
+            ],
+            sheer_bare: [
+                function(b) { return 'The bouncer skips your face and your shoes and goes straight to ' + b.tits + ' through the ' + b.noun + '. He waves you through. Your clit throbs every step to the bar.'; },
+                function(b) { return 'The bouncer takes you in from your nipples down to your bare slit, all of it right there through the ' + b.noun + '. "Guess that counts as dressed," he says, and unhooks the rope.'; },
+                function(b) { return 'The bouncer lets out a low whistle and forgets the list. ' + b.Shows + ' are on show through the ' + b.noun + ' for the whole line, and he waves you in past all of them.'; }
+            ]
+        };
+
         function getLuciusSheerDoorLine() {
             var st = getSheerState();
-            if (st.state === 'none') return '';
+            var pool = LUCIUS_SHEER_DOOR_LINES[st.state];
+            if (!pool) return '';
             var day = (gameState.time && gameState.time.day) || 1;
             if ((gameState.flags._luciusSheerDoorDay || 0) === day) return '';
-            var noun = getSheerNoun(st);
-            var line = '';
-            if (st.state === 'sheer_framed') {
-                var under = st.chestUnder || st.hipsUnder;
-                line = 'The bouncer\'s eyes go to your ' + (under ? proseItemName(under) : 'underwear') + ' through the ' + noun + ' and stay there a second longer than the job needs. He unhooks the rope.\n\n';
-            } else if (st.state === 'sheer_braless') {
-                line = 'The bouncer\'s eyes drop to your tits, bare behind the ' + noun + ', nipples stiff. He takes his time. Then he unhooks the rope.\n\n';
-            } else if (st.state === 'sheer_commando') {
-                line = 'The bouncer glances down and stops. Your bare slit shows straight through the ' + noun + '. He clears his throat and unhooks the rope without checking anything else.\n\n';
-            } else if (st.state === 'sheer_bare') {
-                line = 'The bouncer doesn\'t check your face, or your shoes. He checks your tits through the ' + noun + ' and waves you through. Your clit throbs every step to the bar.\n\n';
-            }
-            if (line) gameState.flags._luciusSheerDoorDay = day;
-            return line;
+            gameState.flags._luciusSheerDoorDay = day;
+            return pool[Math.floor(Math.random() * pool.length)](_sheerBodyCtx()) + '\n\n';
+        }
+
+        // Mesh Step 13C: Hardy Bar reacts once a day when she walks in bare or braless behind mesh.
+        var HARDY_SHEER_LINES = {
+            sheer_bare: [
+                function(b) { return 'The bartender looks up when you walk in and stops pouring. His eyes go down your ' + b.outfit + ', over ' + b.shows + ', and back up to your face.\n\nHe sets a shot in front of you without being asked. "On the house," he says. "Don\'t tell anyone."'; },
+                function(b) { return 'A table of guys by the pool table goes quiet one at a time as you pass, until all of them are watching ' + b.tits + ' and your bare slit through the ' + b.noun + '. Somebody\'s beer foams over his hand.'; }
+            ],
+            sheer_braless: [
+                function(b) { return 'The bartender\'s eyes drop to your nipples through the ' + b.noun + ' and stay there. He slides a beer across the bar to you. "First one\'s free," he says, to ' + b.tits + '.'; },
+                function(b) { return 'A table near the jukebox goes quiet as you pass. Four heads turn to follow ' + b.tits + ' behind the ' + b.noun + ', nipples stiff, until you reach the bar.'; }
+            ]
+        };
+        var _hardySheerLineNow = '';
+
+        function rollHardySheerLine() {
+            _hardySheerLineNow = '';
+            var st = getSheerState();
+            var pool = HARDY_SHEER_LINES[st.state];
+            if (!pool) return;
+            var day = (gameState.time && gameState.time.day) || 1;
+            if ((gameState.flags._hardySheerLineDay || 0) === day) return;
+            gameState.flags._hardySheerLineDay = day;
+            var c = gameState.corruption || 0;
+            var tail = c < 2001 ? ' Your face burns, and your clit throbs anyway.' : c < 6001 ? ' Your pussy clenches.' : ' You let them look.';
+            _hardySheerLineNow = '\n\n' + pool[Math.floor(Math.random() * pool.length)](_sheerBodyCtx()) + '\n\n' + tail.trim();
         }
 
         // 4D: transit. Lingerie with nothing over a zone gets refused like underwear;
@@ -23183,7 +23222,7 @@ audioSystem.playSFX('buttonClick');
             var m = /^exhibition_(.+)_trigger$/.exec(eventId || '');
             if (!m) return 1;
             var cv = getSceneClothingVars();
-            if (m[1] === 'wet') return cv.topSheer ? 0 : 1; // mesh is see-through already; rain changes nothing
+            if (m[1] === 'wet' || m[1] === 'spill') return cv.topSheer ? 0 : 1; // mesh is see-through already; a soaking changes nothing
             if (SHEER_HEM_EVENTS.indexOf(m[1]) !== -1) return cv.bottomSheer ? 0.5 : 1;
             if (SHEER_TOP_EVENTS.indexOf(m[1]) !== -1) return cv.topSheer ? 0.5 : 1;
             return 1;
@@ -36972,6 +37011,12 @@ audioSystem.playSFX('buttonClick');
             var bs = (gameState.bodyAppearance && gameState.bodyAppearance.breastSize) || 'average';
             var butt = (gameState.bodyAppearance && gameState.bodyAppearance.buttSize) || 'average';
             var bt = (gameState.bodyAppearance && gameState.bodyAppearance.bodyType) || 'ordinary';
+            // Mesh Step 13A: these lines describe fabric going see-through. A mesh zone skips its
+            // lines (the wet-mesh line carries that zone), and any mesh skips the body-type line.
+            var _wmBB = getWetMeshZones();
+            if (_wmBB.chest) bs = 'average';
+            if (_wmBB.hips) butt = 'average';
+            if (_wmBB.chest || _wmBB.hips) bt = 'ordinary';
             var extra = '';
 
             // Breast size
@@ -37029,6 +37074,108 @@ audioSystem.playSFX('buttonClick');
 
             return extra;
         }
+
+        // ── Mesh & Sheer Overhaul, Step 13A: wet mesh ──
+        // Mesh doesn't turn see-through in the rain; it already is. When a zone's outer
+        // garment is sheer, the wet systems use these lines for that zone instead of
+        // "fabric going transparent". 4 corruption tiers x chest/hips.
+        function _wetMeshTier() {
+            var c = gameState.corruption || 0;
+            return c >= 8001 ? 'high' : c >= 6001 ? 'midHigh' : c >= 2001 ? 'mid' : 'low';
+        }
+
+        function getWetMeshZones() {
+            var cv = getSceneClothingVars();
+            var st = getSheerState();
+            // The outer garment has to be sheer and on show (a coat keeps the rain off the view)
+            return { chest: !!(cv.topSheer && st.chestGarment), hips: !!(cv.bottomSheer && st.hipsGarment), st: st };
+        }
+
+        function getWetMeshLine(zone, tierKey) {
+            var z = getWetMeshZones();
+            if (!z[zone]) return '';
+            var b = _sheerBodyCtx();
+            var st = z.st;
+            var t = tierKey || _wetMeshTier();
+            var fish = st.zoneWeave && st.zoneWeave[zone] === 'fishnet';
+            if (zone === 'chest') {
+                var n = getFabricNoun(st.chestGarment);
+                if (st.chest !== 'veiled' && st.chest !== 'lingerie') {
+                    // Framed: the rain comes through the mesh and soaks the bra under it
+                    var fl = 'The rain comes straight through the ' + n + ' and soaks your ' + b.bra + ' underneath. It goes dark and clinging under the grid, your nipples pushing hard against the cups.';
+                    return fl + (t === 'low' ? ' You fold your arms and your face burns.' : t === 'mid' ? ' Your clit throbs.' : ' You roll your shoulders back and let them look.');
+                }
+                var line;
+                if (t === 'low') {
+                    line = 'The rain comes straight through the ' + n + ' and lands on bare skin. Beads of water sit on your nipples behind the grid, and the cold has them stiff and aching. '
+                        + (b.bs === 'large' ? 'Your heavy tits are slick with it, the wet ' + n + ' plastered flat across them.' : b.bs === 'small' ? 'The wet ' + n + ' lies flat on your small tits and hides even less than before.' : 'The wet ' + n + ' plasters flat across your tits.')
+                        + ' You fold your arms over them. Everyone already saw.';
+                } else if (t === 'mid') {
+                    line = 'The wet ' + n + ' plasters flat to your tits. Your nipples push dark and beaded through the grid, rain running off the points. '
+                        + _bt5(b, 'On your slight frame it clings to every rib.', 'It sticks to the flat of your stomach too.', 'It clings to every curve under them too.', 'It clings to your soft belly under them too.', 'It clings to your stomach under them too.')
+                        + ' Your clit throbs every time a drop rolls down one.';
+                } else if (t === 'midHigh') {
+                    line = 'Rain runs down your chest under the ' + n + ' and over your nipples, and the wet grid sticks to them. You roll your shoulders back. Let them see the water on your tits.';
+                } else {
+                    line = 'Rain beads on your bare nipples behind the ' + n + ' and runs down the underside of your tits. '
+                        + (b.bs === 'large' ? 'Your heavy tits shine wet through it.' : b.bs === 'small' ? 'Your small tits shine wet through it, nipples sharp.' : 'Your tits shine wet through it.')
+                        + ' You walk slow and let the whole street watch it happen.';
+                }
+                return line + (fish ? '\n\nEvery diamond in the fishnet is full of wet skin.' : '');
+            }
+            var hn = getFabricNoun(st.hipsGarment);
+            if (st.hips !== 'veiled' && st.hips !== 'lingerie') {
+                var hl = 'The rain comes through the ' + hn + ' and soaks your ' + b.panties + ' against your pussy. The wet grid clings to them and to ' + b.ass + '.';
+                return hl + (t === 'low' ? ' You tug at the hem. It clings right back.' : t === 'mid' ? ' Your pussy clenches.' : ' You slow down and let the ' + hn + ' cling.');
+            }
+            var hline;
+            if (t === 'low') {
+                hline = 'The rain runs straight through the ' + hn + ' and down your bare mound. Water beads on your slit behind the grid. '
+                    + (b.butt === 'large' ? 'The wet ' + hn + ' plasters to your full ass and clings in the crease.' : b.butt === 'small' ? 'The wet ' + hn + ' sticks flat to your tight little ass.' : 'The wet ' + hn + ' plasters flat to your ass.')
+                    + ' You press your thighs together and feel the slick under it.';
+            } else if (t === 'mid') {
+                hline = 'The wet ' + hn + ' sticks to your bare pussy and outlines every fold. Rain runs down your slit behind the grid, and you can\'t tell it apart from your own wet.';
+            } else if (t === 'midHigh') {
+                hline = 'Rain slides down your belly under the ' + hn + ' and straight over your clit. The grid clings to your folds, shiny and dark. '
+                    + (b.butt === 'large' ? 'Behind you it\'s glued to your full ass.' : b.butt === 'small' ? 'Behind you it\'s glued to your tight little ass.' : 'Behind you it\'s glued to your ass.')
+                    + ' You slow down so it keeps happening.';
+            } else {
+                hline = 'The ' + hn + ' is glued to your bare pussy, rain beading on your swollen folds behind it. '
+                    + _bt5(b, 'On your slight frame it clings to everything.', 'Water runs down the lines of your stomach into it.', 'Water pools in the curve of your hips and runs down into it.', 'Water runs down your soft belly and between your thick thighs.', 'Water runs down your belly and between your thighs.')
+                    + ' Your clit throbs under the wet grid, and you let everyone see you dripping.';
+            }
+            return hline + (fish ? '\n\nEvery diamond over your hips is full of wet, bare skin.' : '');
+        }
+
+        // {top}/{bottom} in the wet pools. The dedicated wet lines never resolved them.
+        function _resolveWetGarmentTokens(line) {
+            var o = gameState.currentOutfit || {};
+            return String(line || '').replace(/\{top\}/g, o.top ? proseItemName(o.top) : o.dress ? proseItemName(o.dress) : 'top')
+                .replace(/\{bottom\}/g, o.bottom ? proseItemName(o.bottom) : o.dress ? proseItemName(o.dress) : 'skirt');
+        }
+
+        // Harassment opener wet layer when the mesh was see-through before the rain.
+        function getWetMeshHarassLine(cast) {
+            var z = getWetMeshZones();
+            if (!z.chest && !z.hips) return '';
+            var b = _sheerBodyCtx();
+            var n = getFabricNoun(z.chest ? z.st.chestGarment : z.st.hipsGarment);
+            var what = (b.seeChest || b.seeHips) ? b.shows : 'your ' + b.under;
+            if (cast === 'street') {
+                return '<p>The ' + n + ' showed them everything before the rain started. Now it\'s plastered flat and beaded with water, ' + what + ' shining wet behind it.</p>'
+                    + '<p>"She\'s soaked," the stocky one says. "And she was see-through before it started."</p>';
+            }
+            return '\n\nThe ' + n + ' was see-through before the rain. Now it\'s glued to you, ' + what + ' wet and shining behind it.\n\n"Rain didn\'t even have to try," the wiry one says. The leader just looks.';
+        }
+
+        // District awareness phrases that assume the rain made the clothes see-through
+        var WET_MESH_DISTRICT_SWAPS = [
+            [/Wet fabric, transparent, your body printed through it/g, 'Wet {noun} plastered flat, your body printed through it'],
+            [/Wet fabric, transparent, the full shape of your body visible through it/g, 'Wet {noun} plastered flat, the full shape of your body visible through it'],
+            [/the cling, the transparency/g, 'the cling, the {noun}'],
+            [/the outline of your body through transparent fabric/g, 'the outline of your body through wet {noun}'],
+            [/you're the one whose clothes went transparent/gi, 'you\'re the one in wet {noun}']
+        ];
 
         // Check function: fires on street transitions when wet. 40% chance,
         // 2-transition cooldown, max 4 per day.
@@ -37091,9 +37238,16 @@ audioSystem.playSFX('buttonClick');
             }
 
             // Add braless/commando/both branch
+            // Mesh Step 13A: a zone under sheer outer clothing gets the wet-mesh line instead
             var o = gameState.currentOutfit;
-            var braless = !o.bra && !!(o.top || o.dress);
-            var commando = !o.panties && !!(o.bottom || o.dress);
+            var cv13 = getSceneClothingVars();
+            var _wm = getWetMeshZones();
+            var braless = cv13.braless && !_wm.chest;
+            var commando = cv13.commando && !_wm.hips;
+            if (_wm.chest && _wm.hips) {
+                // Head to toe in mesh: the rain has nothing to turn see-through
+                _line = getWetMeshLine('chest') + '\n\n' + getWetMeshLine('hips');
+            }
 
             // Step 10A: Cold braless amplification (before regular braless layer)
             if ((_temp === 'cold' || _temp === 'cool') && braless) {
@@ -37110,9 +37264,10 @@ audioSystem.playSFX('buttonClick');
                     _line += '\n\n' + WET_COMMANDO_INTERIORITY[wKey];
                 }
             }
+            if (_wm.chest !== _wm.hips) _line += '\n\n' + getWetMeshLine(_wm.chest ? 'chest' : 'hips');
 
-            // Add body branching
-            _line += getWetInterioritBodyBranch(wKey);
+            // Add body branching (the wet-mesh lines carry their own when she's all mesh)
+            if (!(_wm.chest && _wm.hips)) _line += getWetInterioritBodyBranch(wKey);
 
             // ── Step 4B: Arousal-to-interiority feedback ──
             // When arousal is Warm (30+) or above AND clothes are wet, append
@@ -37175,6 +37330,7 @@ audioSystem.playSFX('buttonClick');
             var o = gameState.currentOutfit;
             if (o.bra) return;
             if (!(o.top || o.dress)) return;
+            if (getWetMeshZones().chest) return; // Mesh Step 13A: wet mesh speaks for this zone
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless()) return;
 
             // 2-transition cooldown
@@ -37193,7 +37349,7 @@ audioSystem.playSFX('buttonClick');
 
             var _pool = WET_BRALESS_DEDICATED_INTERIORITY[cKey];
             if (!_pool || _pool.length === 0) return;
-            var _line = _pool[Math.floor(Math.random() * _pool.length)];
+            var _line = _resolveWetGarmentTokens(_pool[Math.floor(Math.random() * _pool.length)]);
 
             showMessage(
                 '<div style="text-align: center; padding: 8px;">' +
@@ -37219,6 +37375,7 @@ audioSystem.playSFX('buttonClick');
             var o = gameState.currentOutfit;
             if (o.panties) return;
             if (!(o.bottom || o.dress)) return;
+            if (getWetMeshZones().hips) return; // Mesh Step 13A: wet mesh speaks for this zone
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyBottomless()) return;
 
             // 2-transition cooldown
@@ -37237,7 +37394,7 @@ audioSystem.playSFX('buttonClick');
 
             var _pool = WET_COMMANDO_DEDICATED_INTERIORITY[cKey];
             if (!_pool || _pool.length === 0) return;
-            var _line = _pool[Math.floor(Math.random() * _pool.length)];
+            var _line = _resolveWetGarmentTokens(_pool[Math.floor(Math.random() * _pool.length)]);
 
             showMessage(
                 '<div style="text-align: center; padding: 8px;">' +
@@ -37266,6 +37423,8 @@ audioSystem.playSFX('buttonClick');
             if (!(o.top || o.dress)) return;
             if (!(o.bottom || o.dress)) return;
             if (gameState.isNaked || isEffectivelyNaked()) return;
+            var _wmB = getWetMeshZones();
+            if (_wmB.chest || _wmB.hips) return; // Mesh Step 13A: "the rain turned your clothes transparent" isn't true of mesh
 
             // Once per rain session (keyed to day)
             var _today = gameState.time.day || 0;
@@ -37276,7 +37435,7 @@ audioSystem.playSFX('buttonClick');
             var _c = gameState.corruption || 0;
             var cKey = _c >= 8001 ? 'high' : _c >= 4001 ? 'mid' : 'low';
 
-            var _line = WET_BOTH_RECOGNITION_LINES[cKey];
+            var _line = _resolveWetGarmentTokens(WET_BOTH_RECOGNITION_LINES[cKey]);
             if (!_line) return;
 
             showMessage(
@@ -37349,6 +37508,14 @@ audioSystem.playSFX('buttonClick');
                 } else {
                     prose = 'Open space. Joggers, dog walkers. You\'re not the only one caught in the rain. But you\'re the one whose clothes went transparent. A dog walker stares. You cross your arms. The openness makes it worse. There\'s nowhere to hide.';
                 }
+            }
+
+            // Mesh Step 13A: mesh was see-through before the rain; say so, then add the wet-mesh line
+            var _wmD = getWetMeshZones();
+            if (prose && (_wmD.chest || _wmD.hips)) {
+                var _dn = getFabricNoun(_wmD.chest ? _wmD.st.chestGarment : _wmD.st.hipsGarment);
+                WET_MESH_DISTRICT_SWAPS.forEach(function(sw) { prose = prose.replace(sw[0], sw[1].replace('{noun}', _dn)); });
+                prose += '\n\n' + getWetMeshLine(_wmD.chest ? 'chest' : 'hips');
             }
 
             // Mesh Overhaul Step 8C: wet takes precedence; sheer awareness waits for the next district
@@ -37435,10 +37602,11 @@ audioSystem.playSFX('buttonClick');
             if (!_pool || _pool.length === 0) return;
             var _line = _pool[Math.floor(Math.random() * _pool.length)];
 
-            // Add braless/commando/both branch
-            var o = gameState.currentOutfit;
-            var braless = !o.bra && !!(o.top || o.dress);
-            var commando = !o.panties && !!(o.bottom || o.dress);
+            // Add braless/commando/both branch (Mesh Step 13A: mesh zones get the wet-mesh line)
+            var cvN = getSceneClothingVars();
+            var _wmN = getWetMeshZones();
+            var braless = cvN.braless && !_wmN.chest;
+            var commando = cvN.commando && !_wmN.hips;
             if (braless && commando && WET_NPC_BOTH[cKey]) {
                 _line += '\n\n' + WET_NPC_BOTH[cKey];
             } else {
@@ -37449,10 +37617,17 @@ audioSystem.playSFX('buttonClick');
                     _line += '\n\n' + WET_NPC_COMMANDO[cKey];
                 }
             }
+            if (_wmN.chest) _line += '\n\n' + getWetMeshLine('chest', cKey);
+            if (_wmN.hips) _line += '\n\n' + getWetMeshLine('hips', cKey);
 
             // Add body branching (reuse interiority helper)
             var wKey = wetness >= 80 ? 'soaking' : wetness >= 60 ? 'veryWet' : wetness >= 40 ? 'wet' : 'damp';
             _line += getWetInterioritBodyBranch(wKey);
+
+            // Resolve {top}/{bottom} (these were showing raw in NPC reactions)
+            var _oN = gameState.currentOutfit || {};
+            _line = _line.replace(/\{top\}/g, _oN.top ? proseItemName(_oN.top) : _oN.dress ? proseItemName(_oN.dress) : 'top')
+                .replace(/\{bottom\}/g, _oN.bottom ? proseItemName(_oN.bottom) : _oN.dress ? proseItemName(_oN.dress) : 'skirt');
 
             // Apply thrill and arousal gains (scaling with wetness)
             var _thrillBase = wetness >= 80 ? 8 : wetness >= 60 ? 6 : 4;
@@ -38776,6 +38951,35 @@ audioSystem.playSFX('buttonClick');
         // Fires once per day when entering a district (not slums).
         // Based on appeal + coherence combo.
 
+        // Mesh Step 13B: style comments keyed by sheer state. Framed reads as fashion;
+        // the bare states read as scandal.
+        var SHEER_STYLE_COMMENTS = {
+            sheer_framed: [
+                function(b) { return 'A woman outside a boutique gives your ' + b.sheer + ' a slow once-over. "' + capFirst(b.noun) + ' over ' + (b.braF ? 'a good bra' : 'good underwear') + '," she says to her friend. "That\'s how you do it."'; },
+                function(b) { return 'A girl at a crosswalk points at your ' + b.sheer + '. "Where\'s that from?" She\'s already got her phone out to search it.'; },
+                function(b) { return 'Two guys outside a barbershop watch you pass. "You can see her ' + (b.braF ? 'bra' : 'underwear') + '," one says. "Yeah," says the other. "That\'s the point."'; },
+                function(b) { return 'An older woman at the bus stop takes in your ' + b.under + ' through the ' + b.noun + ' and purses her lips. "In public," she says, to nobody.'; }
+            ],
+            sheer_braless: [
+                function(b) { return 'A man at a café table lowers his cup and stares at your nipples through the ' + b.noun + '. His girlfriend follows his eyes and kicks him under the table.'; },
+                function(b) { return 'A woman in a pencil skirt looks at your ' + b.top + ', then at your face. "That\'s a choice," she tells her friend, not quietly.'; },
+                function(b) { return 'A teenager on a bench lifts his phone and doesn\'t even pretend. You hear the shutter click as ' + b.tits + ' go past behind the ' + b.noun + '.'; },
+                function(b) { return 'Two girls outside a nail salon stop mid-sentence. "No bra," one whispers. "Under see-through," the other whispers back. "Iconic or insane."'; }
+            ],
+            sheer_commando: [
+                function(b) { return 'A woman walking past glances down at your ' + b.bottom + ' and stops. "Oh my god," she says to her friend. "No underwear. Look." Her friend looks.'; },
+                function(b) { return 'A guy on a scooter slows beside you for a long look at your bare slit through the ' + b.noun + '. He nearly clips the curb.'; },
+                function(b) { return 'Two women at a café table watch you pass. "Bold," one says. The other is still looking at ' + b.hips + '.'; },
+                function(b) { return 'Someone behind you takes a photo. You hear the fake shutter sound and feel exactly where the phone was aimed.'; }
+            ],
+            sheer_bare: [
+                function(b) { return 'A woman grabs her friend\'s arm. "That\'s a choice," she says, loud enough for the block. Her friend can\'t stop staring at your nipples and your bare pussy through the ' + b.noun + '.'; },
+                function(b) { return 'A man outside a bank stops with his hand on the door. He stares at ' + b.shows + ' through your ' + b.outfit + ' until someone behind him has to say excuse me.'; },
+                function(b) { return 'Three phones come up at a bus stop at once. Nobody even pretends to be texting.'; },
+                function(b) { return 'An old woman at a crosswalk crosses herself. The man beside her takes a long look at ' + b.tits + ' before the light changes.'; }
+            ]
+        };
+
         function checkStyleComment(district) {
             var cv = getSceneClothingVars();
             if (district === 'slums') return null;
@@ -38814,6 +39018,15 @@ audioSystem.playSFX('buttonClick');
             }
 
             var comments = [];
+
+            // Mesh Step 13B: mesh on show takes priority over every other style comment except
+            // dirty or torn clothes. Sheer lingerie gets none; the vignettes speak for it.
+            var _sheerStyle = getSheerState().state;
+            if (_sheerStyle.indexOf('sheer_lingerie') === 0) return null;
+            if (SHEER_STYLE_COMMENTS[_sheerStyle] && avgClean >= 60 && avgDmg < 30) {
+                var _sp = SHEER_STYLE_COMMENTS[_sheerStyle];
+                return _sp[Math.floor(Math.random() * _sp.length)](_sheerBodyCtx());
+            }
 
             // ==========================================
             // DIRTY CLOTHING REACTIONS (override other comments)
@@ -56986,7 +57199,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         const _wetNightNote = _wetnessDisp >= 60 ? 'Night assault chance: <span style="color:#ff6655;">+10%</span>' : _wetnessDisp >= 20 ? 'Night assault chance: <span style="color:#ff9977;">+5%</span>' : 'Night assault chance: slight increase';
                         outfitHTML += '<div style="border:1px solid rgba(100,160,255,0.5);background:rgba(65,105,225,0.08);padding:10px 14px;border-radius:6px;font-style:normal;font-size:0.92em;color:#aac8ee;line-height:1.6;">'
                             + '<span style="color:#88bbff;font-weight:bold;font-style:normal;"><img src="Images/icons/droplet.png" class="icon" alt="droplet"> ' + _wetLabel + ' (' + Math.floor(_wetnessDisp) + '/100)</span><br><br>'
-                            + 'Your clothes are soaked through. The fabric pulls close and turns translucent. Everything underneath shows when the light catches right.'
+                            + ((getWetMeshZones().chest || getWetMeshZones().hips)
+                                ? 'Your clothes are soaked through. The mesh was see-through before the rain; now it\'s plastered flat to wet skin, beaded with water, and everything underneath shines.'
+                                : 'Your clothes are soaked through. The fabric pulls close and turns translucent. Everything underneath shows when the light catches right.')
                             + '<br><br>'
                             + 'Exhibition Thrill: <span style="color:#cc99ff;">' + _wetThrillRate + ' per hour</span> &nbsp;·&nbsp; ' + _wetNightNote
                             + '</div>';
@@ -66321,11 +66536,13 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         desc += 'The TV is on, morning news, anchors smiling too hard for this hour. The pool table sits empty, green felt bright under the overhead lamp.\n\n';
                         desc += 'Quiet. The kind of place where nobody asks why you\'re here.';
                     }
-                    
+
+                    desc += _hardySheerLineNow; // Mesh Step 13C
                     return desc;
                 },
                 onEnter: () => {
                     advanceTime(5);
+                    rollHardySheerLine(); // Mesh Step 13C
                     tryDressCodeReaction('hunt_hardy_bar');
                     updateStatus();
                 },
@@ -108454,6 +108671,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     // Mesh Step 11: framed keeps the regular opener and gains one sheer line
                     if (!_sheerHS) desc += getSheerHarassmentOpener('street');
 
+                    // Mesh Step 13A: see-through before the rain; this replaces the translucent wet layer
+                    var _wetMeshH = (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless') ? getWetMeshHarassLine('street') : '';
+                    if (_wetMeshH) { desc += _wetMeshH; _wetness = 0; }
+
                     // ── WET CLOTHING AWARENESS (Wet Clothing Overhaul, District 5A) ──
                     if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
                         var _topName = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
@@ -110065,6 +110286,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
 
                     // Mesh Step 11: framed keeps the regular opener and gains one sheer line
                     if (!_sheerHS) desc += getSheerHarassmentOpener('slums');
+
+                    // Mesh Step 13A: see-through before the rain; this replaces the translucent wet layer
+                    var _wetMeshH = (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless') ? getWetMeshHarassLine('slums') : '';
+                    if (_wetMeshH) { desc += _wetMeshH; _wetness = 0; }
 
                     // ── WET CLOTHING AWARENESS (Wet Clothing Overhaul, Step 5A) ──
                     if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
