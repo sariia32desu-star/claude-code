@@ -67044,13 +67044,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
             
             city_arrival: {
-                text: function() {
-                    const nearby = getNearbyLocations();
-                    
-                    let desc = 'The city hits you all at once, and it hits hard.\n\nHorns, sirens, a jackhammer chewing up asphalt somewhere down the block. Exhaust and fryer grease and a hundred different perfumes, stacked on top of each other until you can taste them. And under all of it, drowning everything else out, the <em>heartbeats</em>.\n\nThousands of them. Every person on this street is carrying a drum in their chest, and you can hear every single one, thudding out of sync until the whole sidewalk seems to shake.\n\nYou stumble and grab a lamppost to keep your feet. The metal\'s cold under your palm. Your fangs ache in your gums, and for one bad second you\'re not sure you can hold them back.\n\nYou close your eyes and make yourself breathe, slow and deliberate, in through your nose and out through your mouth.\n\nThen you pick one sound and hold onto it, a street musician\'s guitar on the corner, and let everything else slide in behind it. The heartbeats sink down to a low hum you can think over.\n\nWhen you open your eyes, Trigrave\'s still there. Glass towers cutting up the sky, streets packed curb to curb, people pouring past you in a current that won\'t slow down for anyone.\n\nThis is it. Your new home, whether you like it or not.\n\nYou\'re standing in the Commercial District. Storefronts crowd both sides of the street, and everyone\'s carrying something: shopping bags, coffee cups, phones they won\'t look up from. Nobody gives you a second glance.\n\nGood. Time to figure out how to survive here.';
-                    
-                    return desc;
-                },
+                parts: [
+                    'The city hits you all at once, and it hits hard.\n\nHorns, sirens, a jackhammer chewing up asphalt somewhere down the block. Exhaust and fryer grease and a hundred different perfumes, stacked on top of each other until you can taste them. And under all of it, drowning everything else out, the <em>heartbeats</em>.\n\nThousands of them. Every person on this street is carrying a drum in their chest, and you can hear every single one, thudding out of sync until the whole sidewalk seems to shake.',
+
+                    'You stumble and grab a lamppost to keep your feet. The metal\'s cold under your palm. Your fangs ache in your gums, and for one bad second you\'re not sure you can hold them back.\n\nYou close your eyes and make yourself breathe, slow and deliberate, in through your nose and out through your mouth.\n\nThen you pick one sound and hold onto it, a street musician\'s guitar on the corner, and let everything else slide in behind it. The heartbeats sink down to a low hum you can think over.'
+                ],
+                text: 'When you open your eyes, Trigrave\'s still there. Glass towers cutting up the sky, streets packed curb to curb, people pouring past you in a current that won\'t slow down for anyone.\n\nThis is it. Your new home, whether you like it or not.\n\nYou\'re standing in the Commercial District. Storefronts crowd both sides of the street, and everyone\'s carrying something: shopping bags, coffee cups, phones they won\'t look up from. Nobody gives you a second glance.\n\nGood. Time to figure out how to survive here.',
                 onEnter: () => {
                     // Only set the arrival baseline if thirst wasn't already reduced by feeding
                     // (e.g. player drained someone in the alley just before arriving)
