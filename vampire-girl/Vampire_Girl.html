@@ -24554,18 +24554,19 @@ audioSystem.playSFX('buttonClick');
             // Pick scene based on state
             var _sceneId = '';
             var _label = '';
+            var cv = getSceneClothingVars();
             if (_isBraless && _isCommando) {
                 if (_used.both) return null;
                 _sceneId = 'masturbate_both_alley';
-                _label = 'Duck into an alley (the friction is unbearable)';
+                _label = (cv.seeThroughChest || cv.seeThroughHips) ? 'Duck into an alley (everyone\'s been looking)' : 'Duck into an alley (the friction is unbearable)';
             } else if (_isBraless) {
                 if (_used.braless) return null;
                 _sceneId = 'masturbate_braless_alley';
-                _label = 'Duck into an alley (your nipples won\'t stop)';
+                _label = cv.seeThroughChest ? 'Duck into an alley (everyone\'s been looking)' : 'Duck into an alley (your nipples won\'t stop)';
             } else {
                 if (_used.commando) return null;
                 _sceneId = 'masturbate_commando_alley';
-                _label = 'Duck into an alley (the friction won\'t stop)';
+                _label = cv.seeThroughHips ? 'Duck into an alley (everyone\'s been looking)' : 'Duck into an alley (the friction won\'t stop)';
             }
 
             return {
@@ -105048,14 +105049,24 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             masturbate_braless_alley: {
                 text: function() {
                     var cv = getSceneClothingVars();
+                    var _sheer = cv.seeThroughChest;
+                    var b = _sheer ? _sheerBodyCtx() : null;
                     var textContent = '<p>The alley between two storefronts. Dumpster at the far end, fire escape overhead, the smell of old rain on concrete and something greasy from the restaurant exhaust vent. The street is ten feet behind you. Foot traffic, voices, a bus pulling away from the curb. All of it right there.</p>'
-                    + '<p>You press your back against the brick and close your eyes. Your nipples have been dragging against the inside of your ' + cv.topName + ' for hours. The friction has been sitting in your chest like a fist, constant and building, and you can\'t walk another block without doing something about it.</p>'
-                    + '<p>You shove your ' + cv.topName + ' up to your collarbones. The air hits your bare tits and you exhale hard through your teeth. Your nipples are swollen, tender from hours of fabric scraping, and the cool air tightens them further. You cup both breasts with your hands and the relief of direct contact after the constant drag of ' + cv.topFabric + ' makes your knees dip.</p>'
-                    + '<p>You hold them. Just hold them. The weight of your bare tits in your own palms, the heat of your hands replacing the friction that\'s been grinding at you all day. You press them together and feel the ache start to loosen. Your thumbs graze your nipples. Light. Testing. The sensation shoots straight between your legs and you bite the inside of your cheek.</p>'
+                    + (_sheer
+                        ? '<p>You press your back against the brick and close your eyes. Your nipples have been showing through your ' + b.top + ' all day. Every stranger who looked at you got the full shape of them, stiff and dark behind the ' + b.noun + ', and you felt every single stare land.</p>'
+                        + '<p>The ' + b.noun + ' grid has been dragging across them for hours, the tiny crosshatch scraping the peaks with every step, and the friction has wound through your chest into a knot you can\'t carry another block.</p>'
+                        : '<p>You press your back against the brick and close your eyes. Your nipples have been dragging against the inside of your ' + cv.topName + ' for hours. The friction has been sitting in your chest like a fist, constant and building, and you can\'t walk another block without doing something about it.</p>')
+                    + (_sheer
+                        ? '<p>You press both palms flat over your tits through the ' + b.noun + '. The grid digs into your palms and you can feel your nipples, swollen and tender, pushing back against the mesh from the other side. You squeeze and the crosshatch bites into the stiff peaks and your knees buckle against the brick.</p>'
+                        + '<p>You slide your hands under the ' + b.noun + ' and the relief of bare skin on bare skin after hours of ' + b.noun + ' scraping makes you exhale through your teeth.</p>'
+                        : '<p>You shove your ' + cv.topName + ' up to your collarbones. The air hits your bare tits and you exhale hard through your teeth. Your nipples are swollen, tender from hours of fabric scraping, and the cool air tightens them further. You cup both breasts with your hands and the relief of direct contact after the constant drag of ' + cv.topFabric + ' makes your knees dip.</p>')
+                    + (_sheer
+                        ? '<p>You hold them under the ' + b.noun + '. Your bare tits in your own palms, the heat of your hands replacing the grid that\'s been grinding at you all day. Your thumbs graze your nipples. Light. Testing. The sensation shoots straight between your legs and you bite the inside of your cheek.</p>'
+                        : '<p>You hold them. Just hold them. The weight of your bare tits in your own palms, the heat of your hands replacing the friction that\'s been grinding at you all day. You press them together and feel the ache start to loosen. Your thumbs graze your nipples. Light. Testing. The sensation shoots straight between your legs and you bite the inside of your cheek.</p>')
                     + '<p>You do it again. Slower. Tracing the stiff peak with your thumbnail, circling the edge where the swollen skin meets the areola. Your hips press back against the brick. A man on the sidewalk coughs and your stomach clenches but you don\'t stop.</p>'
                     + '<p>You roll your left nipple between your thumb and forefinger. Slow, deliberate pressure, and the heat floods down through your belly and settles between your legs like poured water. You pinch. Your breath catches. A thin sound climbs your throat and you swallow it before it can carry.</p>'
-                    + '<p>You work both now. Rolling, tugging, the swollen peaks tender and aching and sending a pulse to your clit with every pinch. Your hips are rocking against the brick. You can feel yourself getting wet, the dampness spreading against your panties, and the smell of your own arousal cuts through the alley grease in a sharp, sweet thread.</p>'
-                    + '<p>Your right hand drops from your breast. Down your stomach, past your waistband, fingers shoving your panties aside. You find your clit through slick folds and the first direct contact makes your whole body flinch. You\'re drenched. The hours of nipple friction have been priming you and your body treats the first touch like a struck match.</p>'
+                    + '<p>You work both now. Rolling, tugging, the swollen peaks tender and aching and sending a ' + (_sheer ? 'jolt' : 'pulse') + ' to your clit with every pinch. Your hips are rocking against the brick. You can feel yourself getting wet, the dampness spreading against your panties, and the smell of your own arousal cuts through the alley grease in a sharp, sweet thread.</p>'
+                    + '<p>Your right hand drops from your breast. Down your stomach, past your waistband, fingers shoving your panties aside. You find your clit through slick folds and the first direct contact makes your whole body flinch. You\'re drenched. The hours of nipple ' + (_sheer ? b.noun + ' scratch' : 'friction') + ' have been priming you and your body treats the first touch like a struck match.</p>'
                     + '<p>"Hhh\u2014" Against the brick. Barely a sound. You press harder. Tight circles, two fingers flat on your clit, your left hand still rolling your nipple. The dual stimulation stacks. Your hips grind into your hand. The wet sounds between your fingers are small but immediate, your slick audible even over the street noise bleeding into the alley.</p>'
                     + '<p>Your left hand pinches your nipple hard enough to sting and the jolt drives your hips forward. Both points feeding each other now. The scrape of your thumbnail across the stiff peak, the rough circles on your swollen clit. Your back scrapes the brick with every rock of your hips. Your thighs are starting to shake.</p>'
                     + '<p>The rhythm stops being careful. Your fingers rub your clit in rough, frantic passes, grinding through the slick. Someone laughs on the sidewalk ten feet away and your cunt clenches around nothing. Your hand squeezes your breast, thumb grinding your nipple flat, and the sound that wants out you trap behind your teeth.</p>'
@@ -105063,7 +105074,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     + '<p>Your clit throbs under your fingers and the orgasm breaks in a single hard clench. Your cunt spasms, walls gripping around nothing, slick flooding your fingers and soaking through your panties. You bite your lip so hard your fangs almost break skin. Your hips buck against your hand, grinding through every contraction, your nipple crushed between your fingers while your back arches off the brick.</p>'
                     + '<p>"Hhng\u2014" The sound gets out anyway. Thin and wrecked. Your cunt keeps clenching in rapid pulses, each one sending a jolt through your thighs. You hold the pressure on your clit through every spasm, riding it, your left hand still gripping your breast while the aftershocks roll through you in weakening waves.</p>'
                     + '<p>The spasms ease. Your clit twitches under your fingertips, oversensitive, each lingering tremor making your thighs jerk. You ease the pressure but don\'t pull away until the last flutter passes. Your nipple aches where you were squeezing it. The smell of your arousal hangs sharp in the close alley air, layered over old concrete and restaurant grease.</p>'
-                    + '<p>You pull your hand free. Slick on your fingers, damp spot soaking your panties. You wipe your hand on your thigh and pull your ' + cv.topName + ' back down over your bare tits. The fabric lands on your swollen nipples and you hiss at the contact. Your legs are unsteady. You straighten your clothes, take one breath against the brick, and step back out into the foot traffic.</p>';
+                    + (_sheer
+                        ? '<p>You pull your hand free. Slick on your fingers, damp spot soaking your panties. You wipe your hand on your thigh and slide your hands out from under your ' + b.top + '. The ' + b.noun + ' settles back over your bare tits and your swollen nipples show through it the same as they did walking in.</p>'
+                        + '<p>You straighten up, take one breath against the brick, and step back out into the foot traffic. Your nipples are on display before you\'ve gone three steps. They were on display before you ducked in here.</p>'
+                        : '<p>You pull your hand free. Slick on your fingers, damp spot soaking your panties. You wipe your hand on your thigh and pull your ' + cv.topName + ' back down over your bare tits. The fabric lands on your swollen nipples and you hiss at the contact. Your legs are unsteady. You straighten your clothes, take one breath against the brick, and step back out into the foot traffic.</p>');
                     return textContent;
                 },
                 onEnter: function() {
