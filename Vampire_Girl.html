@@ -148325,42 +148325,6 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 }
             },
 
-            casino_bar_seduce: {
-                text: function() {
-                    const gender = Math.random() > 0.5 ? 'man' : 'woman';
-                    const situation = Math.random();
-                    
-                    gameState.flags.casinoTargetGender = gender;
-                    
-                    if (situation < 0.4) {
-                        // Winner
-                        gameState.flags.casinoTargetType = 'winner';
-                        return 'You spot ' + (gender === 'man' ? 'a man' : 'a woman') + ' celebrating at the bar. ' + (gender === 'man' ? 'He' : 'She') + ' just won big.\n\nChips piled on the bar. Expensive watch. Designer clothes.\n\n' + (gender === 'man' ? 'He' : 'She') + '\'s drunk on victory. Buying drinks for everyone. Loud. Confident.\n\n<em>Rich. Distracted. Perfect.</em>';
-                    } else {
-                        // Loser
-                        gameState.flags.casinoTargetType = 'loser';
-                        return 'You spot ' + (gender === 'man' ? 'a man' : 'a woman') + ' slumped at the bar. ' + (gender === 'man' ? 'He' : 'She') + ' just lost everything.\n\nEmpty wallet on the bar. Defeated expression. Nursing a drink.\n\n' + (gender === 'man' ? 'He' : 'She') + '\'s vulnerable. Desperate. Looking for comfort. Or an escape.\n\n<em>Broken. Easy prey.</em>';
-                    }
-                },
-                choices: function() {
-                    const gender = gameState.flags.casinoTargetGender || 'man';
-                    return [
-                        { text: 'Approach ' + (gender === 'man' ? 'him' : 'her'), nextScene: "casino_seduce_target" },
-                        { text: "Look for someone else", nextScene: "casino_bar_seduce" },
-                        { text: "Leave them alone", nextScene: "casino_bar" }
-                    ];
-                }
-            },
-
-            casino_hunt: {
-                text: 'You move through the casino floor. Watching. Hunting.\n\nThere are so many desperate people here. Losers looking for comfort. Winners looking for celebration.\n\nAll of them vulnerable.\n\nThe noise. The lights. The alcohol. It all makes them careless.\n\n<em>This is a hunting ground.</em>',
-                choices: [
-                    { text: "Target the big winner", nextScene: "casino_hunt_winner" },
-                    { text: "Target the desperate loser", nextScene: "casino_hunt_loser" },
-                    { text: "Leave them alone", nextScene: "casino_inside" }
-                ]
-            },
-
             outside_casino: {
                 text: function() {
                     const nearby = getNearbyLocations();
