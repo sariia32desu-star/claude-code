@@ -23299,6 +23299,78 @@ audioSystem.playSFX('buttonClick');
         // ── Mesh & Sheer Overhaul, Step 11: harassment, slums, night assault ──
         // Sheer sub-state for the harassment scenes' exhibState. Framed keeps the regular
         // clothed sub-state and only gains a line, so this returns '' for it.
+        // ── Mesh & Sheer Overhaul, Step 18: discovery scenes ──
+        // Scenes a Step 9 event can lead into, by event key and stranger gender. Each entry is
+        // added as its scene is written; the follow offer only appears for listed pairs.
+        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m' };
+
+        // The follow offer: 8001+ (the scenes are DC only), bare behind mesh, a written scene,
+        // and for the Backlight, after dark (its scene is a lit shop doorway after close).
+        function getSheerDiscoveryScene(event) {
+            if (!event || !event.key || (gameState.corruption || 0) < 8001) return null;
+            var st = getSheerState().state;
+            if (st !== 'sheer_braless' && st !== 'sheer_commando' && st !== 'sheer_bare') return null;
+            if (event.key === 'backlight' && !((typeof isDark === 'function') && isDark())) return null;
+            return SHEER_DISCOVERY_SCENES[event.key + '_' + event.gender] || null;
+        }
+
+        // Consensual garment handling for the discovery scenes: how a stranger's hands find her
+        // through the mesh, how she opens it for him, and how she puts it back. Zone by zone.
+        function _sheerDiscoveryGarb() {
+            var b = _sheerBodyCtx(), st = b.st, cv = getSceneClothingVars(), n = b.noun, zw = st.zoneWeave || {};
+            var cFish = st.chest === 'veiled' && zw.chest === 'fishnet';
+            var squeeze = b.bs === 'large' ? 'Your heavy tit spills around his fingers' : b.bs === 'small' ? 'His palm swallows your small tit whole' : 'He squeezes a full handful';
+            var g = { b: b, st: st, cv: cv, n: n, cFish: cFish, hFish: st.hips === 'veiled' && zw.hips === 'fishnet' };
+            if (st.chest === 'veiled') {
+                g.chestTouch = 'His palm closes on your tit through the ' + n + '. ' + squeeze + ', and his thumb grinds your nipple until the grid bites into it.';
+                g.chestPeel = cFish ? 'You work two fingers into the fishnet over each tit and stretch the diamonds wide until your nipples push through into the air.'
+                    : 'You hook the neckline of your ' + b.top + ' and drag it down under your tits' + (st.chestUnder ? ', your ' + b.bra + ' with it' : '') + '. The ' + n + ' stretches and holds them up for him.';
+                g.frame = cFish ? 'pushed through the stretched fishnet' : 'propped on the stretched ' + n;
+                g.bounce = cFish ? 'through the stretched fishnet' : 'over the stretched ' + n;
+                g.chestFix = cFish ? 'You tug the fishnet back over your nipples.' : 'You drag the neckline of your ' + b.top + ' back up over your tits.';
+            } else if (st.chest === 'framed') {
+                g.chestTouch = 'His palm closes on your tit through the ' + n + ' and the ' + b.bra + ' under it. ' + squeeze + '.';
+                g.chestPeel = 'You drag the neckline of your ' + b.top + ' down and shove the cups of your ' + b.bra + ' down with it. Your tits sit bare on top of the wire.';
+                g.frame = 'propped on your shoved-down cups';
+                g.bounce = 'over your shoved-down cups';
+                g.chestFix = 'You tug your ' + b.bra + ' and the ' + n + ' back up over your tits.';
+            } else if (st.chest === 'underwear') {
+                g.chestTouch = 'His palm closes on your tit through your ' + b.bra + '. ' + squeeze + '.';
+                g.chestPeel = 'You pull the cups of your ' + b.bra + ' down under your tits.';
+                g.frame = 'propped on your shoved-down cups';
+                g.bounce = 'over your shoved-down cups';
+                g.chestFix = 'You tug your ' + b.bra + ' back up.';
+            } else {
+                g.chestTouch = 'His hand slides up under your ' + cv.topName + (cv.hasBra ? ', shoves your bra aside,' : '') + ' and closes on your bare tit. ' + squeeze + '.';
+                g.chestPeel = 'You pull your ' + cv.topName + ' up over your tits' + (cv.hasBra ? ', bra and all' : '') + '.';
+                g.frame = 'bare under your shoved-up ' + cv.topName;
+                g.bounce = 'under your shoved-up ' + cv.topName;
+                g.chestFix = 'You pull your ' + cv.topName + ' back down.';
+            }
+            if (st.hips === 'veiled') {
+                g.hipsTouch = 'His other hand cups your pussy through the ' + n + '. Two fingers press the grid into your slit and rub until the ' + n + ' goes dark and clinging where you\'re wet.';
+                g.hipsPeel = 'You gather your ' + b.bottom + ' in both fists and hike it up around your waist' + (st.hipsUnder ? ', then hook your ' + b.panties + ' aside' : '') + '. The ' + n + ' bunches at your hips and keeps glowing.';
+                g.hipsFix = 'You smooth your ' + b.bottom + ' back down.';
+            } else if (st.hips === 'framed') {
+                g.hipsTouch = 'His other hand cups your pussy through the ' + n + ' and your ' + b.panties + '. The crotch is soaked through.';
+                g.hipsPeel = 'You hike your ' + b.bottom + ' up around your waist and hook your ' + b.panties + ' aside.';
+                g.hipsFix = 'You tug your ' + b.panties + ' back into place and smooth your ' + b.bottom + ' down.';
+            } else if (st.hips === 'underwear') {
+                g.hipsTouch = 'His other hand cups your pussy through your ' + b.panties + '. The crotch is soaked through.';
+                g.hipsPeel = 'You hook your ' + b.panties + ' aside.';
+                g.hipsFix = 'You tug your ' + b.panties + ' back into place.';
+            } else if (cv.liftable) {
+                g.hipsTouch = 'His other hand slides up under your ' + cv.bottomName + (cv.hasPanties ? ' and finds your panties soaked through.' : ' and finds you bare and soaked.');
+                g.hipsPeel = 'You hike your ' + cv.bottomName + ' up around your waist' + (cv.hasPanties ? ' and hook your panties aside.' : '.');
+                g.hipsFix = 'You smooth your ' + cv.bottomName + ' back down.';
+            } else {
+                g.hipsTouch = 'His other hand pushes into the front of your ' + cv.bottomName + (cv.hasPanties ? ' and finds your panties soaked through.' : ' and finds you bare and soaked.');
+                g.hipsPeel = 'You open your ' + cv.bottomName + ' and push them down to your knees' + (cv.hasPanties ? ', panties and all.' : '.');
+                g.hipsFix = 'You pull your ' + cv.bottomName + ' back up.';
+            }
+            return g;
+        }
+
         // Exhibition scene a harassment grope leads into, or null when she's in no exhibition
         // state. area 'district' or 'slums'. Sheer runs ahead of wet: mesh was see-through first.
         function getHarassExhibScene(area) {
@@ -24106,6 +24178,13 @@ audioSystem.playSFX('buttonClick');
             if (_ct > (gameState.exhibitionStats.peakThrill || 0)) gameState.exhibitionStats.peakThrill = _ct;
 
             var statText = '\n\n<span style="color: #ff69b4;">Arousal +' + event.arousal + '</span>  \u00b7 <span style="color: #ffaacc;">Exhibition Thrill +' + event.thrill + '</span>' + _extraStat;
+
+            // Mesh Step 18: at 8001+ a Backlight, Flash or Snag stranger can follow her
+            if (getSheerDiscoveryScene(event)) {
+                gameState.flags._sheerDiscovery = { key: event.key, gender: event.gender, district: districtId };
+                showMessage(event.text + statText, function() { updateStatus(); showScene('sheer_discovery_offer'); });
+                return true;
+            }
 
             showMessage(event.text + statText, function() { updateStatus(); });
             return true;
@@ -47915,6 +47994,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'slums_exhibition_naked', label: 'Slums — Naked Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_wet_exhibition', label: 'Slums — Wet Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_sheer_exhibition', label: 'Slums: Sheer Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
+                    { sceneId: 'sheer_backlight_sex_m', label: 'Discovery: The Backlight (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_backlight_sex_2_m' } },
                     { sceneId: 'wet_crowd_press_sex', label: 'The Crowd Press', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_doorway_sex', label: 'The Doorway', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_car_slowdown_sex', label: 'The Car Slowdown', tiers: [{l:'Deeply Corrupted',v:8001}] },
@@ -176517,6 +176597,200 @@ wet_car_slowdown: {
                         } }];
                     }
                     return [{ text: 'Keep walking.', nextScene: 'slums_district_street' }];
+                }
+            },
+
+            // ── Mesh & Sheer Overhaul, Step 18: discovery through the mesh ──
+            // The follow offer after a Backlight, Flash or Snag at 8001+. The event's popup already
+            // applied its stats; this scene only asks whether the stranger gets to follow.
+            sheer_discovery_offer: {
+                text: function() {
+                    var d = gameState.flags._sheerDiscovery || {};
+                    var he = d.gender === 'f' ? 'she' : 'he', He = d.gender === 'f' ? 'She' : 'He', him = d.gender === 'f' ? 'her' : 'him';
+                    var desc = '';
+                    if (d.key === 'backlight') {
+                        desc += '<p>You step out of the light and keep walking. ' + He + ' keeps walking too.</p>';
+                        desc += '<p>Half a step behind you, close enough that you can hear ' + him + ' breathing. ' + He + ' got everything the light gave ' + him + '. Now ' + he + ' wants the rest.</p>';
+                        desc += '<p>Up ahead, a boutique\'s closed for the night with its window displays still burning. Your clit throbs.</p>';
+                    }
+                    return desc;
+                },
+                choices: function() {
+                    var d = gameState.flags._sheerDiscovery || {};
+                    var scene = SHEER_DISCOVERY_SCENES[d.key + '_' + d.gender];
+                    var back = d.district ? d.district + '_district_street' : 'city_exploration';
+                    var out = [];
+                    if (scene) out.push({ text: d.gender === 'f' ? 'Let her follow.' : 'Let him follow.', nextScene: scene });
+                    out.push({ text: 'Keep walking.', action: function() {
+                        gameState.flags._sheerDiscovery = null;
+                        showScene(back);
+                    } });
+                    return out;
+                }
+            },
+
+            // The Backlight, male: a lit boutique doorway after close. Part 1 ends at the condom choice.
+            sheer_backlight_sex_m: {
+                galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                        top: null, bottom: null, bra: null, panties: null, outerwear: null,
+                        dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
+                    });
+                },
+                text: function() {
+                    var g = _sheerDiscoveryGarb();
+                    var b = g.b, n = g.n;
+                    var desc = '';
+
+                    // ── HE FOLLOWS ──
+                    desc += '<p>You don\'t look back. You can hear his footsteps matching yours to the end of the block, half a step slower, never falling behind.</p>';
+                    desc += '<p>The boutique\'s locked, the racks dark behind the glass door. The window displays on both sides of the doorway are still burning, white light flooding the recessed entrance and spilling out over the sidewalk.</p>';
+                    desc += '<p>You step into the doorway and turn around in the light.</p>';
+
+                    // ── SHE LETS HIM LOOK ──
+                    desc += '<p>It hits you from both sides at once. The ' + n + ' goes to haze, and inside it you\'re lit up brighter than the mannequins: ' + b.shows + ', all of it glowing.</p>';
+                    desc += '<p>' + _bt5(b,
+                        'Your slight little frame barely shadows the glass behind you. The light goes around you and through you, and there\'s nowhere on you it misses.',
+                        'The light picks out every hard line of your stomach and the lean cut of your thighs, drawn in white through the ' + n + '.',
+                        'The light pours over every curve, the pinch of your waist, the flare of your hips, all of it outlined and bare behind the ' + n + '.',
+                        'The light pours over your soft belly and thick thighs and the heavy swell of your hips, every inch of you bright behind the ' + n + '.',
+                        'The light pours over you from shoulders to thighs, and the ' + n + ' does nothing but frame it.') + '</p>';
+                    desc += '<p>He stops at the edge of the light and stays there. He looks.</p>';
+                    desc += '<p>You let him. Your hands stay at your sides. The light\'s warm on your skin, and your clit throbs every time his eyes move.</p>';
+                    desc += '<p>"Turn around," he says. His voice is rough.</p>';
+                    desc += '<p>You turn slow. ' + (b.seeHips
+                        ? (b.butt === 'large' ? 'Your full ass fills the ' + n + ' behind you, bare and lit at every edge.' : b.butt === 'small' ? 'Your tight little ass sits bare and bright behind the ' + n + '.' : 'Your bare ass shows through the ' + n + ', lit at every edge.')
+                        : 'The light outlines your bare back through the ' + n + ', every notch of your spine.') + ' You count to five before you face him again.</p>';
+                    desc += '<p>He\'s closer. One step inside the light. His eyes drop to ' + (b.seeHips ? 'the wet shine on your slit behind the ' + n : 'your nipples, stiff and dark behind the ' + n) + '.</p>';
+                    desc += '<p>"Two blocks," he says. "Walking in front of me lit up like that."</p>';
+                    desc += '<p>"I know," you tell him. "I felt you looking."</p>';
+
+                    // ── HIS HANDS THROUGH THE MESH ──
+                    desc += '<p>He steps in. ' + g.chestTouch + ' "Mmh—"</p>';
+                    desc += '<p>' + g.hipsTouch + '</p>';
+                    desc += '<p>You rock into his hand. "Harder." He grinds the heel of his palm against your clit, and the window light shows both of you exactly what his fingers are doing.</p>';
+                    desc += '<p>You open it for him yourself. ' + g.chestPeel + '</p>';
+                    desc += '<p>' + g.hipsPeel + '</p>';
+                    desc += '<p>"Now," you tell him.</p>';
+
+                    // ── ACT 1: HIS MOUTH — ENTRY & BUILD ──
+                    desc += '<p>He drops to his knees on the tile. The window light pours over his shoulders and onto your bare pussy. ' + _bt5(b,
+                        'You barely have to spread your feet for him to fit between your slim thighs.',
+                        'You plant your feet wide, your lean thighs tight on either side of his head.',
+                        'You spread your feet, your soft thighs framing his face.',
+                        'You spread your feet, your thick thighs pressing in on either side of his face.',
+                        'You spread your feet for him.') + '</p>';
+                    desc += '<p>He parts your folds with his thumbs and drags his tongue up your slit in one slow, flat stroke. "Hhh—fuck—"</p>';
+                    desc += '<p>He finds your clit and sucks it between his lips. You press your back against the cold glass of the door and fist a hand in his hair.</p>';
+                    desc += '<p>His tongue works your clit in tight flicks. Two fingers push into your cunt and curl, stroking your front wall in time with his mouth. Your hips roll into his face. The wet sounds carry out into the empty street.</p>';
+                    desc += '<p>A car turns the corner. Its headlights sweep the doorway, over your tits, ' + g.frame + ', over the stranger on his knees between your thighs. You hold his face against you and spread your feet wider.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>Your clit swells under his tongue. Your thighs start to shake against his ears and your cunt clenches around his fingers in quickening squeezes. "Right there—don\'t stop—"</p>';
+
+                    // ── HER FIRST ORGASM ──
+                    desc += '<p>You cum on his tongue with your back against the glass. Your cunt clamps around his fingers in hard, rolling spasms, and slick runs down his chin. "Ahh—fuck—fuck—" It rings off the doorway tile.</p>';
+                    desc += '<p>He keeps licking slow through every aftershock until your clit\'s too raw to take it and you shove his head back by the hair.</p>';
+
+                    // ── TO THE WINDOW ──
+                    desc += '<p>You haul him up by his collar and open his jeans yourself. His cock springs out thick and hard, already leaking at the tip. You stroke him once, slow, just to feel the weight.</p>';
+                    desc += '<p>Then you turn around and plant both palms flat on the lit display window.</p>';
+                    desc += '<p>He steps in behind you. The head of his cock slides through your slick, nudging your entrance.</p>';
+                    return desc;
+                },
+                onEnter: function() {
+                    trackGalleryScene('sheer_backlight_sex_m');
+                },
+                choices: function() {
+                    var out = [];
+                    if ((gameState.inventory.condoms || 0) >= 1) {
+                        out.push({ text: 'Hand him a condom', action: function() {
+                            gameState.inventory.condoms -= 1;
+                            gameState.flags._sheerDiscoveryCondom = true;
+                            updateStatus();
+                            showScene('sheer_backlight_sex_2_m');
+                        } });
+                    } else {
+                        out.push({ text: 'Hand him a condom <span style="opacity:0.4;font-size:0.85em">(No condoms)</span>', action: function() {} });
+                    }
+                    out.push({ text: 'Go without', action: function() {
+                        gameState.flags._sheerDiscoveryCondom = false;
+                        showScene('sheer_backlight_sex_2_m');
+                    } });
+                    return out;
+                }
+            },
+
+            sheer_backlight_sex_2_m: {
+                galleryOnEnter: function() {
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.flags._sheerDiscoveryCondom = false;
+                },
+                text: function() {
+                    var g = _sheerDiscoveryGarb();
+                    var b = g.b, n = g.n;
+                    var condom = !!gameState.flags._sheerDiscoveryCondom;
+                    var desc = '';
+
+                    // ── ENTRY ──
+                    desc += '<p>' + (condom
+                        ? 'You hold a condom back over your shoulder. He tears it open with his teeth and rolls it down his shaft, and you push back against him before he\'s finished.'
+                        : 'You reach back, take his bare cock in your hand, and line it up yourself.') + '</p>';
+                    desc += '<p>Your palms press flat on the glass, the white light blazing up under your chin. Inside the window, two mannequins stand lit up and dressed in silk. You\'re the one in the window wearing nothing that counts.</p>';
+                    desc += '<p>He pushes into you slow. He\'s thick, and the stretch opens you inch by inch until his hips press flush against ' + b.ass + '. "Hhnn—ahh—"</p>';
+                    desc += '<p>He holds there, buried to the base. You can feel his cock twitch inside you. The ' + n + ' bunched at your waist glows in the light from the glass.</p>';
+
+                    // ── BUILD ──
+                    desc += '<p>Then he moves. Long strokes, pulling almost out before driving back in, his hands locked on your hips. ' + _bt5(b,
+                        'Your small body rocks up onto your toes with every thrust.',
+                        'Your abs clench on every stroke, your lean body bracing against the glass.',
+                        'Your hips roll back into every stroke, soft and heavy in his hands.',
+                        'Your thick thighs shake with every stroke, your weight rocking back onto him.',
+                        'Your body rocks against the glass with every stroke.') + '</p>';
+                    desc += '<p>' + (b.bs === 'large' ? 'Your heavy tits swing ' + g.bounce + ', nipples dragging across the cold glass on every forward thrust.' : b.bs === 'small' ? 'Your small tits bounce ' + g.bounce + ', nipples brushing the cold glass on every forward thrust.' : 'Your tits sway ' + g.bounce + ', nipples brushing the cold glass on every forward thrust.') + '</p>';
+                    desc += '<p>He speeds up. ' + (b.butt === 'large' ? 'Your full ass slaps back against his hips' : b.butt === 'small' ? 'Your tight little ass smacks against his hips' : 'Your ass slaps against his hips') + ' on every stroke, loud in the recessed doorway. Your breath fogs the window. "Mmh—mmh—harder—"</p>';
+                    desc += '<p>Across the street, a woman walking a dog stops dead. The dog pulls. She doesn\'t move. You watch her watch you through the fog on the glass, and your cunt clamps down on him so hard he groans.</p>';
+                    desc += '<p>His hand slides around your hip and finds your clit. He rubs it in tight circles in time with his strokes, and your knees nearly give. "Ah—ah—fuck—"</p>';
+                    desc += '<p>The light keeps pouring through the ' + n + ' and across your bare skin. Anyone on the street can see all of it: the girl in the lit window, a stranger\'s cock sliding in and out of her, her mouth open against the glass.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>He drags hard over your front wall and your whole body locks up. Your cunt starts clenching in quickening squeezes. Your palms squeak down the glass.</p>';
+                    desc += '<p>"Don\'t stop—right there—don\'t you dare stop—"</p>';
+
+                    // ── HER ORGASM ──
+                    desc += '<p>You cum pressed against the window. Your cunt seizes around his cock in hard, wringing spasms and your whole body shudders ' + _bt5(b, 'against the glass, small and shaking', 'from your locked thighs up', 'in soft, heavy rolls', 'from your thick thighs up', 'against the glass') + '. "AH—fuck—FUCK—" Your breath smears the fog across the pane.</p>';
+                    desc += '<p>He fucks you through it. Every stroke drags over nerves rubbed raw, and your pussy keeps fluttering around him in weakening tremors while his thumb eases off your clit.</p>';
+
+                    // ── HIS ORGASM ──
+                    desc += '<p>' + (condom
+                        ? 'He buries himself to the base and holds. His cock kicks inside you in thick surges, filling the condom while you clench around every one.'
+                        : 'He buries himself to the base and cums. His cock kicks deep inside you in thick surges, flooding you until it runs out around him and down your thigh.') + '</p>';
+
+                    // ── LINGER & AFTERMATH ──
+                    desc += '<p>He stays inside you a moment, forehead dropped against the back of your neck, both of you breathing hard against the glass. Then he pulls out. ' + (condom ? 'He ties the condom off and drops it in the gutter.' : 'His cum runs down the inside of your thigh.') + '</p>';
+                    desc += '<p>You straighten up slow. ' + g.chestFix + ' ' + g.hipsFix + ' The window light still goes straight through the ' + n + '.</p>';
+                    desc += '<p>Across the street, the woman with the dog is gone. He zips up and looks at you standing in the light one more time. "Fuck," he says quietly.</p>';
+                    desc += '<p>You smile at him, step out of the doorway into the dark, and walk on with ' + (condom ? 'your pussy still throbbing' : 'his cum leaking down your thigh') + ' behind the ' + n + '.</p>';
+                    return desc;
+                },
+                onEnter: function() {
+                    completeSexConsensualMale({
+                        time: 30, hygiene: -20,
+                        partner: 'stranger',
+                        skipPregnancy: !!gameState.flags._sheerDiscoveryCondom,
+                        thrill: 20
+                    });
+                },
+                choices: function() {
+                    var d = gameState.flags._sheerDiscovery || {};
+                    var back = d.district ? d.district + '_district_street' : 'city_exploration';
+                    return [{ text: 'Keep walking.', action: function() {
+                        gameState.flags._sheerDiscovery = null;
+                        gameState.flags._sheerDiscoveryCondom = null;
+                        showScene(back);
+                    } }];
                 }
             },
 
