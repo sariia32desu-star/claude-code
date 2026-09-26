@@ -27737,11 +27737,10 @@ audioSystem.playSFX('buttonClick');
         }
 
         // 16D gate: "Come take it back." (living room or bedroom, just after the reaction).
-        // The Experienced tier is live; the DC tier arrives with its own scene text.
         function getJaewonMeshTopSexChoice(room) {
             if (!gameState.flags.officialGirlfriends) return null;
             var jc = (gameState.relationships.jaewon && gameState.relationships.jaewon.corruption) || 0;
-            if (jc < 4001 || jc >= 8001) return null;
+            if (jc < 4001) return null;
             if (!_wearingJaewonMeshTop() || !getSceneClothingVars().seeThroughChest) return null;
             var day = gameState.time.day || 0;
             if ((gameState.flags._jaewonMeshTopSexDay || 0) === day) return null;
@@ -47499,7 +47498,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'rape_dream_jaewon_tribadism', label: 'After the Dream', tiers: [{l:'Deeply Corrupted',v:8001}], flagOverrides: { jaewonRomanceMilestone: true } },
                     { sceneId: 'jaewon_morning_departure_dc', label: 'Morning Departure', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'jaewon_lazy_couch_sex', label: 'Lazy Day: Couch', tiers: [{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
-                    { sceneId: 'jaewon_mesh_top_sex', label: 'Her Mesh Top', tiers: [{l:'Experienced',v:4001}] },
+                    { sceneId: 'jaewon_mesh_top_sex', label: 'Her Mesh Top', tiers: [{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'jaewon_lazy_bedtime_sex', label: 'Lazy Day: Bedtime', tiers: [{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'jaewon_lazy_shower_sex', label: 'Lazy Day: Shower', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'jaewon_strapon_gives_first', label: 'Strapon: Jaewon Gives (First)', tiers: [{l:'Deeply Corrupted',v:8001}] },
@@ -122634,6 +122633,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             // Experienced (4001-8000): Act 1 in Jaewon's lap on the couch, her mouth on Kelsie's
             // nipples through the mesh, fingering her until she cums in the top. Act 2: Kelsie
             // puts the top back on Jaewon and eats her out on the rug, legs over her shoulders.
+            // DC (8001+): Jaewon pins her face-first to the living room window, backlit, and
+            // fingers her from behind while she watches their reflection. Act 2: "On your
+            // knees." Kelsie eats her out in the top, Jaewon's fist in the mesh at her shoulder.
             // ══════════════════════════════════════════════════════════════
             jaewon_mesh_top_sex: {
                 image: 'Images/locations/jaewon_apartment_livingroom.jpg',
@@ -122660,6 +122662,156 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
                     var _ass = _butt === 'large' ? 'your full ass' : _butt === 'small' ? 'your tight little ass' : 'your ass';
                     var t = '';
+
+                    // ══════════════════════════════════════════════
+                    // DC (Jaewon 8001+): the window. Backlit, the mesh
+                    // gone see-through against the glass, their reflection
+                    // over the street. Then "On your knees."
+                    // ══════════════════════════════════════════════
+                    if (_jc >= 8001) {
+                        var _dark = isDark();
+
+                        // ── SENSORY GROUNDING ──
+                        t += '<p>The living room is warm and dim, one lamp on behind the couch. ' + (_dark
+                            ? 'Past the big window the street is dark, all streetlights and the lit windows of the building opposite.'
+                            : 'Past the big window the afternoon is bright, the building opposite all glass and brick.') + ' The whole room smells like her, and so does the mesh on your skin.</p>\n\n';
+
+                        t += '<p>' + (gameState.flags._jaewonMeshTopFromRoom === 'bedroom'
+                            ? 'Jaewon takes a fistful of her own top at your chest and walks you backward out of the bedroom, down the hall, into the living room. She never lets go.'
+                            : 'Jaewon gets up, takes a fistful of her own top at your chest, and walks you backward across the living room.') + '</p>\n\n';
+
+                        t += '<p>Your back hits the window. Cold glass through the mesh, straight onto your skin.</p>\n\n';
+
+                        t += '<p>"Take it back?" She laughs, low. "No. I\'m going to show everyone what it looks like on you."</p>\n\n';
+
+                        t += '<p>"Do it," you say.</p>\n\n';
+
+                        // ── POSITION: face-first into the glass ──
+                        t += '<p>She spins you around. Your front meets the glass. ' + (_bs === 'large' ? 'Your heavy tits flatten against it, the mesh crushed between skin and glass, your nipples going hard against the cold.' : _bs === 'small' ? 'Your small tits press flat to the glass, nipples going rigid against the cold through the grid.' : 'Your tits press flat against it, nipples going rigid against the cold through the grid.') + '</p>\n\n';
+
+                        t += '<p>"Hhh—"</p>\n\n';
+
+                        t += '<p>' + (_dark
+                            ? 'With the lamp behind you and the night outside, the mesh stops hiding anything. Anyone in those lit windows can see your tits mashed against the glass, your nipples, all of it, lit from behind.'
+                            : 'The sun lights you up against the glass, and anyone on the sidewalk who glances up can see your tits pressed flat behind her mesh.') + '</p>\n\n';
+
+                        t += '<p>And you can see yourself. Your reflection hangs in the glass over the street: face flushed, mouth open, her top plastered to your chest, and Jaewon behind you, watching you in it.</p>\n\n';
+
+                        t += '<p>She presses the whole length of her body into your back. Her hips grind into ' + _ass + ', pinning you to the window.</p>\n\n';
+
+                        t += '<p>"Look," she says into your ear. "Look at you."</p>\n\n';
+
+                        // ── UNDRESSING: from behind, top stays ──
+                        if (!_hasBottom) {
+                            t += '<p>' + (_pan
+                                ? 'She hooks your ' + _pan + ' and drags them down your thighs until they drop, and you kick them away.'
+                                : 'There\'s nothing to take off. Just her top and your bare skin.') + '</p>\n\n';
+                        } else if (cv.liftable) {
+                            t += '<p>She shoves your ' + cv.bottomName + ' up over your hips from behind. ' + (_pan
+                                ? 'Your ' + _pan + ' go next, yanked down your thighs until they drop to your ankles and you step out of them.'
+                                : 'Nothing under it. Just your bare ass against her hips and your bare pussy an inch from the glass.') + '</p>\n\n';
+                        } else {
+                            t += '<p>She opens your ' + cv.bottomName + ' from behind and drags them down your legs' + (_pan ? ', your ' + _pan + ' with them' : '') + '. You step out of them without taking your tits off the glass.' + (_pan ? '' : ' Nothing under them.') + '</p>\n\n';
+                        }
+
+                        t += '<p>"Hands on the glass."</p>\n\n';
+
+                        t += '<p>You flatten your palms either side of your face. Your breath fogs a patch on the window.</p>\n\n';
+
+                        // ── ENTRY ──
+                        t += '<p>Her hand slides around your hip and down between your thighs from behind. Two fingers split your folds and she finds you soaking, and she makes a sound against your neck like she\'s angry about it.</p>\n\n';
+
+                        t += '<p>"You\'re dripping," she says. "You walked around in my top and got this wet?"</p>\n\n';
+
+                        t += '<p>"Yes—fuck—yes—"</p>\n\n';
+
+                        // ── BUILD ──
+                        t += '<p>She rubs your clit in hard, tight circles, no teasing at all. Her other hand comes up under the mesh and closes on your tit, pulling it off the glass and squeezing, her thumb grinding your nipple.</p>\n\n';
+
+                        t += '<p>In the window your reflection jerks with every circle. You watch her fingers move between your legs, dark against your skin, and your cunt clenches so hard your knees dip.</p>\n\n';
+
+                        t += '<p>"Eyes open." She bites your earlobe. "You watch."</p>\n\n';
+
+                        t += '<p>She shoves two fingers into you from behind, deep, and fucks you against the window.</p>\n\n';
+
+                        t += '<p>"Ah—ah—Jaewon—"</p>\n\n';
+
+                        t += '<p>' + (_bt === 'petite' ? 'She has you pinned so completely your toes barely stay on the floor, your slight body held up between her hand and the glass.' : _bt === 'athletic' ? 'Every muscle in your back tightens against her chest as she drives her fingers up into you, your palms squeaking down the glass.' : _bt === 'curvy' ? 'Your curves crush between her body and the glass, soft and pinned, your hips rolling back onto her hand.' : _bt === 'thick' ? 'Your thick thighs shake apart around her wrist, your whole weight pressed into the window with every thrust.' : 'Your body jolts against the glass with every thrust, your palms squeaking down the window.') + '</p>\n\n';
+
+                        t += '<p>The wet sounds are filthy in the quiet room. Your smell rises between you, sharp and sweet, and her breath goes ragged against your neck.</p>\n\n';
+
+                        t += '<p>' + (_dark
+                            ? '"There\'s a man in that window," she says. "Third floor. He\'s been watching since I turned you around." Her fingers curl. "Let him see you cum in my top."'
+                            : '"There\'s someone on the sidewalk," she says. "Looking right up at us." Her fingers curl. "Let them see you cum in my top."') + '</p>\n\n';
+
+                        t += '<p>The thought hits your clit like her thumb. You arch your back and push your tits harder into the glass for ' + (_dark ? 'him' : 'them') + '.</p>\n\n';
+
+                        // ── APPROACH ──
+                        t += '<p>Your thighs lock. Your cunt starts to flutter around her fingers and the heat pulls tight and low, and in the glass you watch your own mouth open and stay open.</p>\n\n';
+
+                        t += '<p>"Jaewon—I\'m—I\'m gonna—"</p>\n\n';
+
+                        t += '<p>"Watch yourself do it."</p>\n\n';
+
+                        // ── KELSIE\'S ORGASM: hit + linger ──
+                        t += '<p>You cum against the window with your eyes open. Your cunt clamps down on her fingers in hard, wrenching spasms, your tits dragging on the cold glass, ' + (_bt === 'petite' ? 'your small body bucking back into her' : _bt === 'athletic' ? 'every muscle in your stomach locking' : _bt === 'curvy' ? 'your hips grinding back onto her hand' : _bt === 'thick' ? 'your heavy thighs shaking so hard she has to hold you up' : 'your hips jerking back onto her hand') + '. Your reflection shudders with you.</p>\n\n';
+
+                        t += '<p>"Nngh—ah—fuck—fuck—"</p>\n\n';
+
+                        t += '<p>She keeps fucking you through it, slower, her palm grinding your clit through every aftershock until you\'re twitching and gasping and slick runs down the inside of your thigh.</p>\n\n';
+
+                        t += '<p>When she pulls her fingers out, she holds them up in front of your face so you can see them shine in the glass. Then she wipes them down the mesh over your stomach.</p>\n\n';
+
+                        // ── ACT TWO: on your knees ──
+                        t += '<p>She steps back and strips her shorts and underwear off in one shove. Then she leans her shoulders against the window beside you, bare from the waist down, thighs already parted.</p>\n\n';
+
+                        t += '<p>"On your knees."</p>\n\n';
+
+                        t += '<p>' + (_bt === 'petite' ? 'You drop, and on your knees your mouth is right where she wants it.' : _bt === 'athletic' ? 'You drop easily, knees wide, back straight.' : _bt === 'curvy' ? 'You sink down, your hips settling back on your heels.' : _bt === 'thick' ? 'You sink onto your heels, your thick thighs spread wide on the rug.' : 'You drop to your knees.') + ' The rug is rough under them. Her pussy is right there, swollen and flushed and slick, and you can smell how much she wanted this, musky and sharp.</p>\n\n';
+
+                        t += '<p>She reaches down and fists her hand in the mesh at your shoulder. Twists it until the top pulls tight across your tits. "You keep it on," she says. "Mine. On you. While you eat me."</p>\n\n';
+
+                        // ── ENTRY: oral ──
+                        t += '<p>You lick her once, flat and slow, from her entrance up to her clit.</p>\n\n';
+
+                        t += '<p>"Hhh—yes—"</p>\n\n';
+
+                        // ── BUILD ──
+                        t += '<p>You get to work. Your tongue circles her clit, hard, and she uses her grip on the mesh to pull your face in tighter.</p>\n\n';
+
+                        t += '<p>You push two fingers up into her. She\'s tight and soaking, and she grinds down onto them, her back sliding against the glass.</p>\n\n';
+
+                        t += '<p>You look up. She\'s watching the two of you in the window: her head tipped back against the glass, your head between her thighs, her top bunched in her fist at your shoulder.</p>\n\n';
+
+                        t += '<p>"Look at that," she breathes. "Look at you on your knees in my top."</p>\n\n';
+
+                        t += '<p>Your free hand slides up under her shirt and finds her tit. You pinch her nipple in time with your tongue, and she swears.</p>\n\n';
+
+                        t += '<p>"Fuck—Kels—harder—"</p>\n\n';
+
+                        t += '<p>You suck her clit into your mouth and fuck her with your fingers, fast and deep. Her hips roll against your face. The mesh bites into your shoulder where she\'s pulling it.</p>\n\n';
+
+                        // ── APPROACH ──
+                        t += '<p>Her thighs start to shake around your head. Her grip twists tighter in the mesh, dragging you in, and her cunt flutters around your fingers.</p>\n\n';
+
+                        t += '<p>"Don\'t stop—don\'t you dare—right there—"</p>\n\n';
+
+                        // ── JAEWON\'S ORGASM: hit + linger ──
+                        t += '<p>She cums on your tongue with her back against the window. Her pussy clamps down on your fingers in hard, rolling spasms, her hips bucking against your mouth, and she holds your face there by the mesh so you can\'t pull away.</p>\n\n';
+
+                        t += '<p>"Ah—ah—fuck—Kelsie—"</p>\n\n';
+
+                        t += '<p>You keep your tongue on her through every shudder, slow and soft now, until she\'s trembling and pushing at your shoulder with the same hand that was pulling.</p>\n\n';
+
+                        t += '<p>She slides down the glass until she\'s sitting on the rug in front of you, flushed and panting, her thighs still twitching.</p>\n\n';
+
+                        // ── ACTIVE ENDING ──
+                        t += '<p>She pulls you in by the top and kisses you, tasting herself on your mouth. Then she smooths the wrinkled mesh flat over your tits with both hands, slow. "Don\'t give it back yet," she says. "I want to watch you wear it out."</p>\n\n';
+
+                        t += '<p>She leans back against the window and pulls you into her lap, facing the glass, arms locked around your waist, and the two of you watch the street watch you.</p>';
+
+                        return t;
+                    }
 
                     // ══════════════════════════════════════════════
                     // EXPERIENCED (Jaewon 4001-8000)
@@ -122824,9 +122976,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     gameState.flags._jaewonMeshTopReactionMin = -9999;
                     gameState.flags.hadSexWithJaewon = true;
                     gameState.flags.intimateWithJaewon = true;
-                    // Act 2: the top goes back to Jaewon
+                    // Experienced Act 2 gives the top back to Jaewon; in the DC tier Kelsie keeps it on
                     var _o = gameState.currentOutfit || {};
-                    if (_o.top && _o.top.id === 'jaewon_mesh_top') {
+                    var _jcE = (gameState.relationships.jaewon && gameState.relationships.jaewon.corruption) || 0;
+                    if (_jcE < 8001 && _o.top && _o.top.id === 'jaewon_mesh_top') {
                         var _jw = gameState.wardrobes.jaewon || (gameState.wardrobes.jaewon = []);
                         var _wi = _jw.findIndex(function(i) { return i.id === 'jaewon_mesh_top'; });
                         if (_wi !== -1) _jw[_wi].currentlyBorrowed = false;
