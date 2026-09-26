@@ -16956,6 +16956,18 @@
                     gameState.flags._overflowStartedAt = 0;
                 }
 
+                // REPAIR (fatigue passout fix): a passout lock saved outside a passout
+                // scene would block every future passout.
+                if (gameState.flags.fatiguePassoutInProgress && !(typeof scn === 'string' && scn.startsWith('fatigue_passout'))) {
+                    gameState.flags.fatiguePassoutInProgress = false;
+                }
+                // REPAIR: clocking out early used to clear workingAtDiner (the "has the job"
+                // flag), silently un-hiring her. Restore it if she was never fired or quit.
+                if (!gameState.flags.workingAtDiner && (gameState.flags.hasDinerJob || (gameState.flags.dinerShiftsWorked || 0) > 0)
+                    && !gameState.flags.firedFromDiner && !gameState.flags.quitDiner) {
+                    gameState.flags.workingAtDiner = true;
+                }
+
                 // MIGRATION (Thirst Overflow Overhaul): default the new persistent
                 // overflow counters/flags so older saves read sane values. All use sites
                 // already guard with || 0, but defaulting here keeps state explicit and
@@ -31128,60 +31140,55 @@ audioSystem.playSFX('buttonClick');
         }
 
         function triggerFatiguePassout() {
-            // Prevent multiple triggers
-            if (gameState.flags.fatiguePassoutInProgress) return;
+            // Only block re-entry while a passout scene is actually on screen. A lock
+            // that outlives its scene (another event hijacking showScene) used to stop
+            // passouts from ever firing again.
+            const scene = (typeof currentScene === 'string') ? currentScene : '';
+            if (scene.indexOf('fatigue_passout') === 0) return;
             gameState.flags.fatiguePassoutInProgress = true;
-            
-            // Determine location context
-            const location = gameState.currentLocation;
-            let passoutContext = 'alone_apartment';
-            
-            // Check if with Jaewon at her apartment
-            if (location === "Jaewon\'s Apartment" && gameState.flags.stayingWithJaewon) {
-                // Check if Jaewon is home
+
+            // Clear leftovers from any earlier passout
+            delete gameState.flags._passoutPublicOutcome;
+            delete gameState.flags._passoutMoneyLost;
+            delete gameState.flags._passoutReturnScene;
+            delete gameState.flags._passoutPlace;
+
+            // Route by the scene she's in: it's always current, unlike currentLocation,
+            // which many scenes never update. Home no longer overrides where she is.
+            const location = gameState.currentLocation || '';
+
+            // Jaewon's apartment
+            if (scene.indexOf('jaewon_apartment') === 0 || (location === "Jaewon\'s Apartment" && scene.indexOf('jaewon_') === 0)) {
                 const isJaewonAtWork = checkIfJaewonIsAtWork();
                 const willJaewonReturnSoon = !isJaewonAtWork || (gameState.time.hour >= 14 && gameState.time.hour < 16);
-                
-                if (!isJaewonAtWork || willJaewonReturnSoon) {
-                    passoutContext = 'jaewon_home';
-                } else {
-                    passoutContext = 'jaewon_apartment_alone';
-                }
+                showScene(willJaewonReturnSoon ? 'fatigue_passout_jaewon_home' : 'fatigue_passout_jaewon_apartment_alone');
+                return;
             }
-            // Check if in own apartment
-            else if (location === "Your Apartment" || location === "Apartment") {
-                passoutContext = 'alone_apartment';
-            }
-            // Check if in any indoor location (stores, clubs, dojang, gym, etc.)
-            else if (gameState.flags.stayingWithJaewon || gameState.flags.hasApartment) {
-                // Has a home to wake up in — use the apartment scene
-                passoutContext = 'alone_apartment';
-            }
-            // Check if in the slums; must come before generic district check
-            else if (gameState.currentDistrictId === 'slums') {
-                passoutContext = 'slums';
-            }
-            // Check if in city/public
-            else if (location.includes('District') || location.includes('Street') || location.includes('City') || location === 'Downtown' || location === 'Wendale') {
-                passoutContext = 'city_streets';
-            }
-            // Default to alone
-            else {
-                passoutContext = 'alone_apartment';
-            }
-            
-            // Show appropriate passout scene
-            if (passoutContext === 'jaewon_home') {
-                showScene('fatigue_passout_jaewon_home');
-            } else if (passoutContext === 'jaewon_apartment_alone') {
-                showScene('fatigue_passout_jaewon_apartment_alone');
-            } else if (passoutContext === 'slums') {
-                showScene('fatigue_passout_slums');
-            } else if (passoutContext === 'city_streets') {
-                showScene('fatigue_passout_city_streets');
-            } else {
+
+            // Private rooms: wake on the floor and get up back in the room
+            const notInside = /entrance|outside/.test(scene);
+            let privateRoom = null;
+            if (scene.indexOf('own_apartment') === 0) privateRoom = { place: 'apartment', hub: 'own_apartment_main' };
+            else if (!notInside && /(^|_)cheap_motel(_|$)/.test(scene)) privateRoom = { place: 'motel room', hub: 'cheap_motel_room' };
+            else if (!notInside && /(^|_)parkside_inn(_|$)/.test(scene)) privateRoom = { place: 'room at the inn', hub: 'parkside_inn_room' };
+            else if (/(^|_)hotel_room(_|$)/.test(scene)) privateRoom = { place: 'hotel room', hub: 'hotel_room' };
+            if (privateRoom && story[privateRoom.hub]) {
+                gameState.flags._passoutPlace = privateRoom.place;
+                gameState.flags._passoutReturnScene = privateRoom.hub;
                 showScene('fatigue_passout_alone_apartment');
+                return;
             }
+
+            // The slums
+            if (gameState.currentDistrictId === 'slums' || scene.indexOf('slums_') === 0) {
+                showScene('fatigue_passout_slums');
+                return;
+            }
+
+            // Anywhere else in public. Roll once so text and effects agree.
+            gameState.flags._passoutPublicOutcome = Math.random() < 0.5 ? 'hospital' : 'robbed';
+            gameState.flags._passoutMoneyLost = gameState.money || 0;
+            showScene('fatigue_passout_city_streets');
         }
 
         function checkIfJaewonIsAtWork() {
@@ -33258,7 +33265,7 @@ audioSystem.playSFX('buttonClick');
         // Short scenes stay on a single page. Choices show on the last page.
         // ═══════════════════════════════════════════════════════════════
         const SCENE_PAGE_TARGET_CHARS = 1800;   // rough text length per page
-        let _scenePaginationSceneId = null;     // scene that asked for pagination
+        var _scenePaginationSceneId = null;     // scene that asked for pagination (var: read by updateStatus)
         let _scenePagerState = null;            // { sceneId, part, pages, current }
 
         function requestScenePagination() {
@@ -47309,6 +47316,14 @@ audioSystem.playSFX('buttonClick');
             return 100;
         }
 
+        // Adds (or with a negative amount, removes) thirst, clamped to 0..cap.
+        // The fatigue passout scenes called this before it existed, so every passout
+        // onEnter crashed partway and left fatiguePassoutInProgress stuck on.
+        function modifyThirst(amount) {
+            const cur = (typeof gameState.thirst === 'number' && !isNaN(gameState.thirst)) ? gameState.thirst : 0;
+            gameState.thirst = Math.max(0, Math.min(getThirstCap(), cur + (amount || 0)));
+        }
+
         // Violent hunt thirst threshold: body-type-scaled.
         // Smaller bodies feel the desperation sooner.
         function getViolentHuntThirstThreshold() {
@@ -47569,13 +47584,26 @@ audioSystem.playSFX('buttonClick');
                 triggerThirstOverflow();
             }
             
-            // Check for fatigue passout (blocked during combat, diner shifts, and strip club shifts — each has its own collapse)
-            if (gameState.fatigue >= 100 && gameState.timeStarted && !inCombat && !gameState.flags.workingAtDiner && !gameState.flags.wearingStripperOutfit) {
+            // Check for fatigue passout. Deferred during combat, diner shifts and strip
+            // club shifts (each has its own collapse), sex scenes, a thirst overflow, sleep,
+            // and the gallery. A deferred passout fires on the next updateStatus after.
+            // Diner: "on shift" means a shift phase is running AND she's in a diner scene.
+            // workingAtDiner only means she has the job, so it can't gate this.
+            const _onDinerShift = !!gameState.flags.currentShiftPhase && typeof currentScene === 'string' && currentScene.indexOf('diner_') === 0;
+            // Sex scenes: the sex system's live encounter, or a scene whose onEnter
+            // called a completeSex* function (see requestScenePagination).
+            const _inSexScene = !!gameState.flags.currentSexEncounter || (_scenePaginationSceneId !== null && _scenePaginationSceneId === currentScene);
+            const _fatigueDeferred = inCombat || _inSexScene || gameState.flags._galleryMode || gameState.flags.overflowInProgress || gameState.flags.isSleeping;
+            if (gameState.fatigue < 100) {
+                // Nothing to pass out from; drop any lock a hijacked passout left behind
+                gameState.flags.fatiguePassoutInProgress = false;
+            }
+            if (gameState.fatigue >= 100 && gameState.timeStarted && !_fatigueDeferred && !_onDinerShift && !gameState.flags.wearingStripperOutfit) {
                 triggerFatiguePassout();
             }
             
             // Strip club fatigue collapse (strip club has its own scene)
-            if (gameState.fatigue >= 100 && gameState.timeStarted && !inCombat && gameState.flags.wearingStripperOutfit && !gameState.flags._stripCollapseTriggered) {
+            if (gameState.fatigue >= 100 && gameState.timeStarted && !_fatigueDeferred && gameState.flags.wearingStripperOutfit && !gameState.flags._stripCollapseTriggered) {
                 gameState.flags._stripCollapseTriggered = true;
                 showScene('strip_fatigue_collapse');
             }
@@ -76676,7 +76704,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const jaewonKnows = gameState.flags.jaewonKnowsYoureVampire;
                     
-                    return 'Your vision blurs. Legs give out.\n\nThe exhaustion finally overwhelms you.\n\nEverything goes ' + (jaewonKnows ? "dark" : "black") + '.\n\n...\n\n<em>Warmth.</em> Softness.\n\nYou\'re in bed. Jaewon\'s bed.\n\nShe\'s sitting beside you, hand on your forehead. Worried eyes.\n\n"Hey. You\'re awake." Gentle voice. ' + (jaewonKnows ? "No judgment. Just concern." : "Relief in her eyes.") + '\n\n"You just... collapsed. I caught you before you hit the floor."\n\nShe brushes hair from your face.\n\n"You scared me, Kelsie. How long has it been since you last slept?"';
+                    return 'Your vision goes grainy at the edges. You reach for something to hold onto and miss, and your legs fold under you like somebody cut the strings.\n\nThe last thing you hear is Jaewon saying your name.\n\nYou come to in her bed, tucked under the covers with a damp cloth folded across your forehead. The blinds are drawn, and the room smells like her shampoo and the tea going cold on the nightstand.\n\nJaewon\'s sitting on the edge of the mattress. The second your eyes open, her shoulders drop and her hand finds yours.\n\n"Hey. You\'re awake." Her voice wobbles on it. "You went down out of nowhere. I barely got to you before your head hit the floor."\n\nShe brushes the hair off your face with her free hand.\n\n' + (jaewonKnows ? '"I know you run on different rules than me, but you still need to sleep. When\'s the last time you actually did?"' : '"You scared me, Kelsie. When\'s the last time you actually slept?"');
                 },
                 onEnter: () => {
                     // 2 hours pass unconscious
@@ -76708,7 +76736,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             fatigue_jaewon_blood_request: {
-                text: '"I need..." Your voice is weak. "I need blood."\n\nJaewon nods. Understanding.\n\n"I know. I can see it in your eyes." She rolls up her sleeve.\n\n"Take what you need. But <em>please</em>, Kelsie... you have to take better care of yourself."\n\nShe offers her wrist.\n\n"Sleep is important too. Even for vampires."',
+                text: '"I need..." Your voice comes out thin and cracked. "I need blood."\n\nJaewon doesn\'t flinch. She\'s already rolling up her sleeve.\n\n"I figured. Your eyes are doing the thing." She holds her wrist out between you, pale and steady. "Take what you need."\n\nHer thumb strokes your knuckles while you stare at the blue vein under her skin.\n\n"And then you\'re sleeping, Kelsie. Actual sleep. Even vampires need it."',
                 choices: [
                     { text: "Feed from Jaewon", nextScene: "jaewon_feed_comfort_after_passout" },
                     { text: "No, I\'ll go hunt instead", nextScene: "fatigue_refuse_jaewon_blood" }
@@ -76716,7 +76744,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             fatigue_refuse_jaewon_blood: {
-                text: '"No. I can\'t... I won\'t take from you right now."\n\nJaewon looks hurt. But nods.\n\n"Okay. But please... be careful out there."\n\nShe touches your hand.\n\n"And come back to me safe."',
+                text: '"No." You fold her fingers back over her wrist. "Not like this. I\'ll hunt."\n\nHurt flickers across Jaewon\'s face, but she nods and lets her sleeve fall.\n\n"Okay." She squeezes your hand before she lets go. "Just be careful out there, and come back to me in one piece."',
                 onEnter: () => {
                     // Small relationship gain for respecting boundaries
                     modifyRelationship('jaewon', 5, 'Refused blood after passout');
@@ -76728,7 +76756,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             jaewon_feed_comfort_after_passout: {
-                text: 'You take her wrist gently. Bite carefully.\n\nHer blood flows. Warm. Comforting.\n\nJaewon winces but doesn\'t pull away. She strokes your hair with her free hand.\n\n"It\'s okay. You\'re okay."\n\nWhen you finish, she wraps her wrist.\n\n"Better?" She smiles softly. "Now promise me you\'ll actually <em>sleep</em> from now on."',
+                text: 'You take her wrist in both hands and bite down slow, keeping your fangs shallow.\n\nHer blood floods your mouth, hot and rich, and the ache behind your eyes loosens with every swallow. Jaewon hisses through her teeth but holds still. Her free hand settles in your hair and strokes.\n\n"It\'s okay," she murmurs. "You\'re okay."\n\nYou make yourself stop. She presses a folded tissue to the two small punctures and holds it there.\n\n"Better?" A tired smile tugs at her mouth. "Now promise me you\'ll actually sleep from now on."',
                 onEnter: () => {
                     modifyThirst(-40);
                     gainStrength(8, 'consensual feeding (Jaewon)');
@@ -76736,34 +76764,48 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: [
-                    { text: "I promise", nextScene: "jaewon_apartment_inside" }
+                    { text: "I promise", nextScene: "jaewon_apartment_main" }
                 ]
             },
 
             fatigue_jaewon_apologize: {
-                text: '"I\'m sorry. I\'ve been pushing myself too hard."\n\n"You think?" Jaewon smiles sadly. "Kelsie, you can\'t just... not sleep."\n\nShe squeezes your hand.\n\n"Whatever you\'re dealing with, it\'s not worth destroying yourself over."\n\n"Get some rest. Real rest. Please."',
+                text: '"I\'m sorry. I\'ve been pushing myself too hard."\n\n"You think?" Jaewon laughs, and it comes out wet. "Kelsie, you can\'t just skip sleeping."\n\nShe squeezes your hand hard enough to hurt a little.\n\n"Whatever you\'re dealing with, it isn\'t worth running yourself into the ground over. Get some real rest. Please."',
                 onEnter: () => {
                     modifyRelationship('jaewon', 5, 'Apologized for collapsing');
                     updateStatus();
                 },
                 choices: [
-                    { text: "You\'re right. I will", nextScene: "jaewon_apartment_inside" }
+                    { text: "You\'re right. I will", nextScene: "jaewon_apartment_main" }
                 ]
             },
 
             fatigue_jaewon_thank: {
-                text: '"Thank you. For catching me. For watching over me."\n\nJaewon smiles. "Of course. That\'s what... that\'s what friends do."\n\n' + (gameState.relationships.jaewon.points >= 60 ? 'She looks like she wants to say more. But doesn\'t.' : '') + '\n\n"Just promise me you\'ll take care of yourself. Okay?"',
+                text: function() {
+                    const isGirlfriend = !!gameState.flags.officialGirlfriends;
+                    const jaewonRel = (gameState.relationships && gameState.relationships.jaewon) || {};
+                    let desc = '"Thank you. For catching me, and for watching over me."\n\n';
+                    if (isGirlfriend) {
+                        desc += 'Jaewon leans down and kisses your forehead. "Of course. That\'s what girlfriends do."\n\n';
+                    } else {
+                        desc += 'Jaewon smiles down at you. "Of course. That\'s what... that\'s what friends do."\n\n';
+                        if ((jaewonRel.points || 0) >= 60) {
+                            desc += 'She looks like she wants to say more. She swallows it and squeezes your hand instead.\n\n';
+                        }
+                    }
+                    desc += '"Just promise me you\'ll take better care of yourself. Okay?"';
+                    return desc;
+                },
                 onEnter: () => {
                     modifyRelationship('jaewon', 3, 'Thanked her for care');
                     updateStatus();
                 },
                 choices: [
-                    { text: "I will", nextScene: "jaewon_apartment_inside" }
+                    { text: "I will", nextScene: "jaewon_apartment_main" }
                 ]
             },
 
             fatigue_passout_jaewon_apartment_alone: {
-                text: 'Your vision blurs. The world tilts.\n\nYou try to reach for something—anything—to steady yourself.\n\nBut it\'s too late.\n\nYour legs give out.\n\nYou hit the floor hard.\n\n...\n\n<em>Darkness.</em>\n\n...\n\nYou wake up on the floor. Disoriented. Aching.\n\nJaewon\'s apartment. Empty. She\'s still at work.\n\nYour head is pounding. How long were you out?\n\nThe clock says... two hours passed.\n\n<strong>You\'re so thirsty.</strong>\n\nAnd your mental health has taken a hit from the traumatic collapse.',
+                text: 'Your vision goes grainy at the edges. You reach for the wall and miss, and the floor rushes up to meet you.\n\nYou wake up on your side with your cheek pressed to the floorboards. Jaewon\'s apartment is quiet around you, and her keys are gone from the hook by the door. She\'s still at work.\n\nThe clock on the microwave says you lost two hours. Your head\'s pounding, your hip aches where it hit the floor, and the thirst sits in your throat like a hot coal.\n\nYou went through all of it alone, and somehow that makes it worse.',
                 onEnter: () => {
                     // 2 hours pass
                     advanceTime(120);
@@ -76777,18 +76819,16 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: [
-                    { text: "Pull yourself up", nextScene: "jaewon_apartment_inside" }
+                    { text: "Pull yourself up", nextScene: "jaewon_apartment_main" }
                 ]
             },
 
+            // Private rooms: own apartment, motel, inn, hotel. The router stores the
+            // room's name and hub scene so she gets up where she fell.
             fatigue_passout_alone_apartment: {
                 text: function() {
-                    if (gameState.flags.hasApartment && (gameState.currentLocation === 'Your Apartment' || gameState.currentLocation === 'Apartment')) {
-                        return 'The exhaustion is too much.\n\nYour vision darkens at the edges. Legs wobble.\n\nYou try to make it to the bed, but you collapse halfway there.\n\n...\n\n<em>Nothing.</em>\n\n...\n\nYou wake up on the floor. Disoriented. Body aching.\n\nHow long were you out?\n\nThe clock says... two hours.\n\nYour head is pounding. <strong>The thirst is overwhelming.</strong>\n\n<em>You need to sleep properly. In an actual bed. Before you pass out again.</em>';
-                    } else if (gameState.flags.stayingWithJaewon) {
-                        return 'The exhaustion is too much.\n\nYour vision darkens at the edges. Legs wobble.\n\nYou try to make it to the couch, but your knees give out first.\n\n...\n\n<em>Nothing.</em>\n\n...\n\nYou wake up on Jaewon\'s floor. Disoriented. Body aching.\n\nHow long were you out?\n\nTwo hours. Maybe more.\n\nYour head is pounding. <strong>The thirst is overwhelming.</strong>\n\n<em>You need to sleep properly. Before you pass out again.</em>';
-                    }
-                    return 'The exhaustion is too much.\n\nYour vision goes dark at the edges. Your legs give out.\n\nYou go down where you stand.\n\n...\n\n<em>Nothing.</em>\n\n...\n\nYou wake up on the ground. Disoriented. Body aching.\n\nHow long were you out?\n\nYour phone says... two hours.\n\nYour head is pounding. <strong>The thirst is overwhelming.</strong>\n\n<em>You need to sleep properly. Before you pass out again.</em>';
+                    const place = gameState.flags._passoutPlace || 'room';
+                    return 'Your vision goes grainy at the edges. You try to make it to the bed and get about halfway before your knees give out.\n\nYou wake up on the floor with your cheek mashed against it and no memory of landing. Your ' + place + ' is dead quiet around you.\n\nThe clock says you lost two hours. Your head\'s pounding, every joint aches, and the thirst claws at the back of your throat.\n\n<em>You need real sleep, in an actual bed, before this happens somewhere worse.</em>';
                 },
                 onEnter: () => {
                     advanceTime(120);
@@ -76799,81 +76839,84 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    if (gameState.flags.hasApartment && (gameState.currentLocation === 'Your Apartment' || gameState.currentLocation === 'Apartment')) {
-                        return [{ text: '<img src="Images/icons/sleeping-face.png" class="icon" alt="wake"> Get up', nextScene: 'own_apartment_main' }];
-                    } else if (gameState.flags.stayingWithJaewon) {
-                        return [{ text: '<img src="Images/icons/sleeping-face.png" class="icon" alt="wake"> Get up', nextScene: 'jaewon_apartment_inside' }];
-                    }
-                    return [{ text: '<img src="Images/icons/sleeping-face.png" class="icon" alt="wake"> Get up', nextScene: 'jaewon_apartment_inside' }];
+                    const hub = gameState.flags._passoutReturnScene;
+                    const target = (hub && story[hub]) ? hub : 'city_exploration';
+                    return [{ text: '<img src="Images/icons/sleeping-face.png" class="icon" alt="wake"> Get up', nextScene: target, effect: () => {
+                        delete gameState.flags._passoutReturnScene;
+                        delete gameState.flags._passoutPlace;
+                    } }];
                 }
             },
 
+            // Public collapse. The router rolls hospital vs robbed once and stores it,
+            // along with the money she had, so text and effects always agree.
             fatigue_passout_city_streets: {
                 text: function() {
-                    // 50% chance of being robbed, 50% chance of good samaritan
-                    const isGoodSamaritan = Math.random() < 0.5;
+                    const outcome = gameState.flags._passoutPublicOutcome || 'hospital';
                     
-                    if (isGoodSamaritan) {
-                        return 'The world spins. Legs give out.\n\nYou collapse on the sidewalk.\n\n<em>Blackness.</em>\n\n...\n\n"—wake up? Miss? Can you hear me?"\n\nVoices. Distant. Echoing.\n\n"She\'s breathing. Call 911—"\n\nYou can\'t move. Can\'t respond.\n\n...\n\n<strong>Hospital.</strong>\n\nYou wake in a stark white room. Overhead panels. Beeping machines.\n\nA nurse notices you\'re awake.\n\n"Oh good! You\'re up. You collapsed on the street. Someone called an ambulance."\n\nShe checks your vitals.\n\n"Everything looks okay now. You seem severely dehydrated and exhausted. Have you been sleeping?"\n\nYour thirst is <em>screaming</em>. But...\n\nThere are <strong>blood bags</strong> nearby. In the medical supply room.\n\nThe nurse leaves to get paperwork.';
-                    } else {
-                        return 'The exhaustion overwhelms you.\n\nYour vision tunnels. Legs buckle.\n\nYou collapse on the sidewalk.\n\n...\n\n"; is she dead?"\n\n"Check her pockets—"\n\n"Hurry up before someone sees—"\n\nHands rifling through your clothes. Your money,\n\n<em>Gone.</em>\n\n...\n\nYou wake up in an alley. Dumped like trash.\n\nEverything aches. Your head is pounding.\n\nThey took your money. All ' + (gameState.money) + ' dollars.\n\nThe thirst is overwhelming. Your mental health has taken a severe hit.\n\nYou\'re alone. Robbed. Helpless.';
+                    if (outcome === 'hospital') {
+                        return 'Your vision goes grainy at the edges and the ground tilts out from under you. You hear someone gasp, then nothing.\n\nVoices drift in and out. "Miss? Miss, can you hear me?" A hand on your shoulder. "She\'s breathing. Somebody call 911."\n\nYou wake up under harsh fluorescent light, in a hospital bed with a thin blanket tucked around your legs. A monitor beeps somewhere beside your head.\n\nA nurse glances up from her clipboard. "Oh good, you\'re awake. You collapsed and someone called an ambulance."\n\n"Your vitals look okay now, but you\'re badly dehydrated and exhausted." She clicks her pen. "Have you been sleeping at all?"\n\nThe thirst is screaming in your skull. Past the nurses\' station, behind a door marked SUPPLY, you can smell the blood bags.\n\n"I\'ll grab your discharge paperwork," the nurse says. "Sit tight."';
                     }
+                    const lost = gameState.flags._passoutMoneyLost || 0;
+                    return 'Your vision goes grainy at the edges and the ground tilts out from under you. The last thing you feel is the hard slap of it against your palms.\n\nHands dig through your pockets, rough and quick. "Is she dead?" "Who cares, check her jacket." "Hurry up before somebody sees."\n\nYou wake up behind a dumpster in a narrow alley where somebody dragged you and dumped you. Your head\'s pounding and your whole body aches.\n\n' + (lost > 0 ? 'They took your money, every last one of your $' + lost + '.' : 'They went through everything you had, which wasn\'t much. At least there was no money for them to take.') + '\n\nThe thirst claws at your throat, and you feel small and stupid and scared.';
                 },
                 onEnter: () => {
+                    const outcome = gameState.flags._passoutPublicOutcome || 'hospital';
                     // 2 hours pass
                     advanceTime(120);
                     // Reset fatigue
                     gameState.fatigue = 0;
-                    // Check if good samaritan or robbed
-                    const isGoodSamaritan = Math.random() < 0.5;
                     
-                    if (isGoodSamaritan) {
-                        // In hospital
+                    if (outcome === 'hospital') {
                         gameState.currentLocationId = 'city_hospital';
-                        gameState.flags.atHospitalAfterCollapse = true;
                         // Moderate mental health loss
                         modifyMentalHealth(-15);
                         // High thirst
                         modifyThirst(20);
                     } else {
                         // Robbed
-                        gameState.money = 0; // Lose all money
+                        gameState.money = 0;
                         // Massive mental health loss
                         modifyMentalHealth(-30);
                         // Very high thirst
                         modifyThirst(25);
                     }
                     
+                    // Legacy flag from the old random-in-text version
+                    delete gameState.flags.atHospitalAfterCollapse;
                     gameState.flags.fatiguePassoutInProgress = false;
                     updateStatus();
                 },
                 choices: function() {
-                    if (gameState.flags.atHospitalAfterCollapse) {
+                    const outcome = gameState.flags._passoutPublicOutcome || 'hospital';
+                    const clearPassout = () => {
+                        delete gameState.flags._passoutPublicOutcome;
+                        delete gameState.flags._passoutMoneyLost;
+                    };
+                    const leave = { text: '<img src="Images/icons/person-running.png" class="icon" alt="leave"> Just leave before they ask questions', nextScene: "city_exploration", effect: clearPassout };
+                    if (outcome === 'hospital') {
                         // Angelic Kelsie won't steal from the hospital
                         if ((gameState.karma || 0) >= 1000) {
-                            return [
-                                { text: '<img src="Images/icons/person-running.png" class="icon" alt="leave"> Just leave before they ask questions', nextScene: "city_exploration" }
-                            ];
+                            return [leave];
                         }
                         if (gameState.flags.bloodTheftBlocked || gameState.flags.bloodBagTheftBlocked) {
                             return [
-                                { text: '<img src="Images/icons/person-running.png" class="icon" alt="leave"> Leave (security is too tight to steal)', nextScene: "city_exploration" }
+                                { text: '<img src="Images/icons/person-running.png" class="icon" alt="leave"> Leave (security is too tight to steal)', nextScene: "city_exploration", effect: clearPassout }
                             ];
                         }
                         return [
-                            { text: "Try to steal blood bags", nextScene: "hospital_blood_theft_attempt" },
-                            { text: '<img src="Images/icons/person-running.png" class="icon" alt="leave"> Just leave before they ask questions', nextScene: "city_exploration" }
-                        ];
-                    } else {
-                        return [
-                            { text: '<img src="Images/icons/drop-of-blood.png" class="icon" alt="blood"> Get up and find blood', nextScene: "city_exploration" }
+                            { text: "Try to steal blood bags", nextScene: "hospital_blood_theft_attempt", effect: clearPassout },
+                            leave
                         ];
                     }
+                    return [
+                        { text: '<img src="Images/icons/drop-of-blood.png" class="icon" alt="blood"> Get up and find blood', nextScene: "city_exploration", effect: clearPassout }
+                    ];
                 }
             },
 
             hospital_blood_theft_attempt: {
-                text: 'You wait until the nurse is distracted.\n\nThe medical supply room. <em>So close.</em>\n\nYou slip in quietly. Vampire speed helping.\n\nBlood bags. <strong>Right there.</strong>\n\nYou grab two and shove them in your clothes.\n\nHeart pounding. Thirst screaming.\n\nYou walk out casually. The nurse doesn\'t notice.\n\nYou\'re outside. Free.\n\nYou find a secluded spot and drink desperately.\n\n<em>Not as good as fresh blood. But it helps.</em>',
+                text: 'You wait until the nurse\'s footsteps fade down the hall, then slip out of bed and into the corridor, moving faster than anyone human should.\n\nThe supply room door isn\'t even locked. The blood bags sit in neat rows on a refrigerated shelf, and the smell of them hits you so hard your fangs drop.\n\nYou grab two and shove them under your clothes, then walk out past the nurses\' station like you belong there. Nobody looks up.\n\nOutside, you duck into the shadow between two parked ambulances and tear the first bag open with your teeth.\n\nIt\'s cold and flat and tastes faintly of plastic, but it takes the edge off.',
                 onEnter: function() {
                     modifyThirst(-35);
                     modifyCitySuspicion(5, 'theft'); // Hospital will notice missing blood
@@ -76902,7 +76945,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             fatigue_passout_slums: {
-                text: 'The exhaustion wins.\n\nYour legs give out mid-step. The cracked sidewalk comes up fast and you hit it hard, backpack bouncing off your shoulder, palms scraping concrete.\n\nSomeone nearby steps around you.\n\nNobody stops or calls for help. This is the slums. Bodies on the ground are not news here.\n\nThe dark takes you before you can even lift your head.\n\n...\n\nWeight.\n\nSomething pressing you into the ground.\n\nYour eyes open.',
+                text: 'The exhaustion wins.\n\nYour legs give out mid-step. The cracked sidewalk comes up fast and you hit it hard, backpack bouncing off your shoulder, palms scraping concrete.\n\nSomeone nearby steps around you without breaking stride. Nobody stops to help or calls anyone, because this is the slums, and bodies on the ground aren\'t news here.\n\nThe dark takes you before you can even lift your head.',
                 onEnter: () => {
                     advanceTime(120 + Math.floor(Math.random() * 60)); // 2-3 hours unconscious
                     gameState.fatigue = 0;
@@ -76912,9 +76955,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.fatiguePassoutInProgress = false;
                     updateStatus();
                 },
-                choices: [
-                    { text: 'Wake up.', nextScene: gameState.isVirgin ? 'slums_passout_rape_main_virgin' : 'slums_passout_rape_main' }
-                ]
+                // A function, so virginity is read when she wakes, not once at page load
+                choices: function() {
+                    return [
+                        { text: 'Wake up.', nextScene: gameState.isVirgin ? 'slums_passout_rape_main_virgin' : 'slums_passout_rape_main' }
+                    ];
+                }
             },
 
             // LOCATION ARRIVAL FALLBACK (safety net for missing scene references)
@@ -77915,7 +77961,6 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.dinerLastWorkedDay = gameState.time.day;
                     gameState.flags.dinerMissedDays = 0;
                     gameState.flags.currentShiftPhase = null;
-                    gameState.flags.workingAtDiner = false;
                     gameState.flags.wearingDinerUniform = false;
                     gameState.flags.dinerRaiseJustGiven = false;
                     gameState.flags.dinerRaiseOldRate = 0;
@@ -77928,7 +77973,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     updateStatus();
                 },
-                choices: [{ text: 'Continue', nextScene: 'residential_district' }]
+                choices: [{ text: 'Continue', nextScene: 'residential_district_street' }]
             },
 
             diner_quit_conversation: {
@@ -77990,7 +78035,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     advanceTime(10);
                     updateStatus();
                 },
-                choices: [{ text: 'Continue', nextScene: 'residential_district' }]
+                choices: [{ text: 'Continue', nextScene: 'residential_district_street' }]
             },
 
 
@@ -81989,7 +82034,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const tips = gameState.flags.lastShiftTips || 0;
                     const total = basePay + tips;
                     
-                    let text = 'Customers shift back. Ruby crouches beside you, one hand landing solid on your shoulder. Her eyes do a fast sweep of your face.\n\n\"What happened?\"\n\n\"She collapsed.\" Jaewon\'s jaw is tight. \"She\'s been going for hours. She wouldn\'t stop for a break.\"\n\n\"I\'m fine,\" you say. It comes out thinner than you\'d like.\n\nRuby looks at you steadily.\n\n\"You were on the floor,\" she says.\n\nJaewon gets her arm under yours before you can argue. \"Come on. Slow.\"\n\nShe works you upright, careful, keeping most of your weight until the room stops tilting. Your calves are burning. Your feet feel distant and wrong.\n\nYou\'re standing. Jaewon keeps her arm around your waist.\n\nRuby straightens. She crosses her arms and looks at you. Frustrated, clearly, but her eyes are sitting somewhere softer than her voice is about to go.\n\n\"Take care of yourself.\" Flat. Firm. \"Never let it get to this point.\" She stops. Exhales through her nose. \"For God\'s sake.\"\n\nShe holds your gaze a moment.\n\nThen she sighs.\n\n\"Go home, Kelsie. Your shift\'s over.\"\n\n\"Ruby, I can still—\"\n\n\"I\'m not asking.\" She reaches into her apron and presses the shift pay into your hand. Closes your fingers around it. \"Rest. That\'s it.\"\n\nShe turns back toward the register.\n\n';
+                    let text = 'Customers shift back. Ruby crouches beside you, one hand landing solid on your shoulder. Her eyes do a fast sweep of your face.\n\n\"What happened?\"\n\n\"She collapsed.\" Jaewon\'s jaw is tight. \"She\'s been going for hours. She wouldn\'t stop for a break.\"\n\n\"I\'m fine,\" you say. It comes out thinner than you\'d like.\n\nRuby looks at you steadily.\n\n\"You were on the floor,\" she says.\n\nJaewon gets her arm under yours before you can argue. \"Come on. Slow.\"\n\nShe works you upright, careful, keeping most of your weight until the room stops tilting. Your calves are burning. Your feet feel distant and wrong.\n\nYou\'re standing. Jaewon keeps her arm around your waist.\n\nRuby straightens. She crosses her arms and looks at you. Frustrated, clearly, but her eyes are sitting somewhere softer than her voice is about to go.\n\n\"Take care of yourself.\" Her voice is flat and firm. \"Never let it get to this point.\" She stops. Exhales through her nose. \"For God\'s sake.\"\n\nShe holds your gaze a moment.\n\nThen she sighs.\n\n\"Go home, Kelsie. Your shift\'s over.\"\n\n\"Ruby, I can still—\"\n\n\"I\'m not asking.\" She reaches into her apron and presses the shift pay into your hand. Closes your fingers around it. \"Rest. That\'s it.\"\n\nShe turns back toward the register.\n\n';
                     
                     text += '<div style="background: linear-gradient(135deg, rgba(80, 60, 100, 0.3), rgba(60, 40, 80, 0.3)); border: 2px solid #8b69a0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; box-shadow: 0 4px 15px rgba(139, 105, 160, 0.4);"><div style="font-family: \'Cinzel\', serif; font-size: 22px; color: #d4b8e8; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px;"><img src="Images/icons/money-bag.png" class="icon" alt="money"> Shift Earnings <img src="Images/icons/money-bag.png" class="icon" alt="money"></div><div style="font-size: 18px; color: #e8d4f0; line-height: 2;"><div style="display: flex; justify-content: space-between; padding: 8px 20px; border-bottom: 1px solid rgba(139, 105, 160, 0.3);"><span>Base Pay (8 hrs @ $' + (gameState.flags.dinerPayRate || 15) + '/hr):</span><span style="color: #b8e8b8; font-weight: bold;">$' + basePay + '</span></div><div style="display: flex; justify-content: space-between; padding: 8px 20px; border-bottom: 1px solid rgba(139, 105, 160, 0.3);"><span>Tips:</span><span style="color: #b8e8b8; font-weight: bold;">$' + tips + '</span></div><div style="display: flex; justify-content: space-between; padding: 12px 20px; margin-top: 10px; border-top: 2px solid #8b69a0;"><span style="font-size: 22px; font-weight: bold; color: #f0e6ff;">TOTAL:</span><span style="font-size: 24px; font-weight: bold; color: #90ee90;">$' + total + '</span></div></div></div>';
                     
@@ -142501,8 +142546,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                                 text: "You need blood. NOW.", 
                                 action: () => {
                                     clearOutcome();
-                                    updateStatus();
-                                    showScene("max_thirst_awakening");
+                                    triggerThirstOverflow();
                                 }
                             }
                         ];
@@ -163121,7 +163165,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         d += 'You try to push yourself up. Your arms shake and fold.\n\n';
                         d += '"Stop." She gets her arm under yours and pulls you upright against the wall. "You pushed it too far. You need to be done."\n\n';
                         d += '"I\'m fine, I can\u2014"\n\n';
-                        d += '"You\'re on the floor." She says it flat. Final. "Shift\'s over. I\'m getting Terrell."';
+                        d += '"You\'re on the floor." She says it flat and final. "Shift\'s over. I\'m getting Terrell."';
                     } else {
                         d += 'Your legs give out backstage. One second you\'re standing, the next you\'re on the floor, heels tangled under you, the cold tile against your cheek.\n\n';
                         d += '"Jesus." Trish\'s voice. Footsteps. She crouches beside you, fingers on your jaw, tilting your face up.\n\n';
