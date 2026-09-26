@@ -26249,12 +26249,24 @@ audioSystem.playSFX('buttonClick');
             ]);
         }
         function jensenGenericInfFriend() {
+            if (gameState.flags.datingOksana) return _pick([
+                'You put in another word for Oksana. Jensen nods slowly.\n\n"She\'s your girlfriend," he says. "But I\'d like to be her friend too. I\'m working on it."'
+            ]);
+            if (gameState.flags.datingJensen) return _pick([
+                'You point him toward Oksana again. Jensen gives you the look he saves for you, dry and fond.\n\n"I hear you," he says. "I\'m making time for her. Promise."'
+            ]);
             return _pick([
                 'You point him back toward Oksana again, easy about it.\n\nJensen doesn\'t shut it down anymore. \"She matches my pace,\" he says, which from him is close to fondness. He files the suggestion away, and you suspect he\'ll act on it.',
                 'You put in another word for Oksana. He takes it without the flat deflection he used to default to.\n\n\"I know,\" he says, measured as ever. But his eyes drift to where she\'s training, and they stay a second too long.'
             ]);
         }
         function jensenGenericInfRomance() {
+            if (gameState.flags.datingOksana) return _pick([
+                'You nudge toward Oksana again. Jensen\'s careful with it, like he\'s holding something that belongs to you.\n\n"You keep saying it\'s fine," he says.\n\n"Because it is."\n\nHe looks at her across the room. Lets himself.'
+            ]);
+            if (gameState.flags.datingJensen) return _pick([
+                'You nudge again. Jensen shakes his head, but there\'s a smile under it.\n\n"You really want this," he says.\n\n"I really want this."\n\nHe watches Oksana across the room for a long moment. He doesn\'t say no.'
+            ]);
             return _pick([
                 'You nudge, careful, toward the thing sitting under Jensen\'s composure where Oksana\'s concerned.\n\nHe goes still, the controlled stillness that means you\'ve landed close to something true. He doesn\'t deny it like he would\'ve once. He watches her across the room and lets the silence answer for him.',
                 'You leave another small crack in the wall around the Oksana question.\n\nJensen doesn\'t patch it over as fast as he used to. For a second the performance drops and something raw shows through. Then he gathers it back up. Progress, slow but real.'
@@ -26294,6 +26306,12 @@ audioSystem.playSFX('buttonClick');
             ]);
         }
         function gunwooGenericInfOksana() {
+            if (gameState.flags.datingOksana) return _pick([
+                'You touch the subject of Oksana again. Gunwoo looks at you for a long moment, still half expecting it to be a test.\n\n"She\'s yours," he says quietly.\n\n"She\'s her own," you say. "And she wants you." His composure thins another layer.'
+            ]);
+            if (gameState.flags.datingGunwoo) return _pick([
+                'You bring up Oksana again. Gunwoo sets down his clipboard and looks at you, grave and searching.\n\n"You\'re certain," he says.\n\n"I\'m certain." He doesn\'t answer, but his eyes find her in the mirror and stay.'
+            ]);
             return _pick([
                 'You touch the subject of Oksana again, careful with it. Gunwoo\'s composure holds, but you can see the cost of holding it.\n\nHe doesn\'t pretend not to understand you anymore. He sets his jaw and lets the silence carry what he won\'t say. Whatever he\'s holding back, it\'s wearing thinner each time.',
                 'You press, gently, on the thing Gunwoo keeps locked behind his discipline where Oksana\'s concerned.\n\nHe goes still. The control stays in place, but it costs him something visible now. He changes the subject like always, a moment slower than he used to. The wall is thinning, and you both know it.'
@@ -26339,12 +26357,24 @@ audioSystem.playSFX('buttonClick');
             ]);
         }
         function oksanaGenericInfJensenFriend() {
+            if (gameState.flags.datingOksana) return _pick([
+                'You nudge her toward Jensen again. Oksana sighs like you\'ve asked her to carry something heavy.\n\n"Yes, yes. I\'ll be friendly," she says. "Stop managing my social life, girlfriend."'
+            ]);
+            if (gameState.flags.datingJensen) return _pick([
+                'You steer her toward Jensen again. She gives you a dry look.\n\n"Your boyfriend," she says, "is going to think I\'m following him." She goes anyway.'
+            ]);
             return _pick([
                 'You steer her toward Jensen again, easy about it.\n\nOksana doesn\'t shut it down anymore. \"We understand each other,\" she allows, which from her is close to affection. Her eyes find him across the room and stay a second too long.',
                 'You put in another word for Jensen. She takes it without the flat dismissal she used to default to.\n\n\"Fine,\" she says. \"I\'ll make an effort.\" Then, drier: \"If he\'s weird about it, I\'m blaming you.\"'
             ]);
         }
         function oksanaGenericInfJensenRomance() {
+            if (gameState.flags.datingOksana) return _pick([
+                'You nudge again. Oksana fixes you with a stare.\n\n"You keep giving me permission to want someone else," she says. "It\'s very disorienting." She looks at Jensen anyway.'
+            ]);
+            if (gameState.flags.datingJensen) return _pick([
+                'You nudge again. Oksana\'s ears go pink.\n\n"He\'s yours," she mutters. "You keep forgetting that." You don\'t. She looks at him anyway.'
+            ]);
             return _pick([
                 'You nudge, lightly, toward the thing Oksana keeps refusing to name where Jensen\'s concerned.\n\nHer composure cracks a hairline, like it only does on this subject. She doesn\'t deny it like she would\'ve once. She looks at him, then away, ears going pink. Progress, slow but real.',
                 'You leave another small crack in the wall around the Jensen question.\n\nOksana Volkov, who never blushes, blushes. She smooths it away fast, but not fast enough, and she knows you caught it. \"Stop smiling,\" she mutters. You weren\'t. Much.'
@@ -26357,6 +26387,12 @@ audioSystem.playSFX('buttonClick');
             ]);
         }
         function oksanaGenericInfGunwooRomance() {
+            if (gameState.flags.datingOksana) return _pick([
+                'You press again on what burns between her and Gunwoo. Oksana glances at you, checking one more time that you mean it.\n\nYou do. She exhales, and some of the tension leaves her jaw.'
+            ]);
+            if (gameState.flags.datingGunwoo) return _pick([
+                'You press again on what burns between her and Gunwoo. Oksana\'s eyes flick to you, wary. "He\'s yours," she says.\n\n"And I\'m telling you it\'s okay." She doesn\'t argue this time.'
+            ]);
             return _pick([
                 'You press on the thing burning under Oksana\'s discipline where Gunwoo\'s concerned.\n\nShe goes still, then admits more than she means to with the set of her jaw. The wanting is plain now, and she has no practice managing it. She changes the subject, but the heat stays in the room.',
                 'You nudge Oksana toward what she feels for Gunwoo, careful with it.\n\nHer breathing shifts, the same tell she has during his corrections. She doesn\'t pretend not to understand you anymore. \"It\'s consuming,\" she says, low, like a confession she resents making. Then she squares her shoulders and lets the subject drop.'
@@ -200369,7 +200405,15 @@ wet_car_slowdown: {
                     advanceTime(10);
                     updateStatus();
                 },
-                text: 'You\'re heading to the water fountain when you see it.\n\nOksana and Jensen. Talking. Past sparring, past standing in proximity. Actually talking.\n\nOksana is saying something about a kick sequence from the session. Her hands are moving, demonstrating. Jensen watches her hands, then her face. He says something back. Short. Precise.\n\nOksana tilts her head, considers it, and nods once.\n\nThat nod. From Oksana, who doesn\'t concede anything to anyone, that nod is seismic.\n\nJensen says something else. Oksana responds. The exchange lasts maybe thirty seconds. Then she turns back to her stretching and he goes back to his wall. As if nothing happened.\n\nBut something happened. You saw it. The first real conversation after a year of circling each other without closing the distance.\n\nIt was about Taekwondo. Of course it was. The only language they trust.',
+                text: function() { return 'You\'re heading to the water fountain when you see it.\n\nOksana and Jensen. Talking. Past sparring, past standing in proximity. Actually talking.\n\nOksana is saying something about a kick sequence from the session. Her hands are moving, demonstrating. Jensen watches her hands, then her face. He says something back. Short. Precise.\n\nOksana tilts her head, considers it, and nods once.\n\nThat nod. From Oksana, who doesn\'t concede anything to anyone, that nod is seismic.\n\nJensen says something else. Oksana responds. The exchange lasts maybe thirty seconds. Then she turns back to her stretching and he goes back to his wall. As if nothing happened.\n\nBut something happened. You saw it. The first real conversation after a year of circling each other without closing the distance.\n\nIt was about Taekwondo. Of course it was. The only language they trust.' + (function() {
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dJ) return '\n\nAfterward they both glance your way at the same moment. You suddenly find your water bottle fascinating.';
+                    if (dO) return '\n\nOksana glances your way afterward, like she\'s checking that you saw. You give her a small nod. She looks almost relieved.';
+                    if (dJ) return '\n\nJensen catches your eye across the room. You smile at him. Something in his shoulders eases.';
+                    return '';
+                })(); },
                 choices: [
                     { text: 'Continue', nextScene: 'dojang_break_menu' }
                 ]
@@ -200381,7 +200425,15 @@ wet_car_slowdown: {
                     advanceTime(10);
                     updateStatus();
                 },
-                text: 'You come back from talking to Gunwoo and something has changed.\n\nOksana and Jensen are sitting near each other. Two meters of floor between them instead of ten. They\'re not talking. Oksana is stretching her calves. Jensen is drinking water. But the space they\'ve chosen says everything.\n\nYou watch Oksana say something without looking at him. Jensen responds without looking at her. The conversation happens in profile, aimed at the middle distance, as if admitting they\'re talking to each other would make it too real.\n\nThis keeps happening over the next few sessions. They drift closer during breaks. The distance shrinks by inches. Neither of them mentions it.\n\nGunwoo catches your eye from across the room. He\'s noticed too. He smiles. The proud kind.',
+                text: function() { return 'You come back from talking to Gunwoo and something has changed.\n\nOksana and Jensen are sitting near each other. Two meters of floor between them instead of ten. They\'re not talking. Oksana is stretching her calves. Jensen is drinking water. But the space they\'ve chosen says everything.\n\nYou watch Oksana say something without looking at him. Jensen responds without looking at her. The conversation happens in profile, aimed at the middle distance, as if admitting they\'re talking to each other would make it too real.\n\nThis keeps happening over the next few sessions. They drift closer during breaks. The distance shrinks by inches. Neither of them mentions it.\n\nGunwoo catches your eye from across the room. He\'s noticed too. He smiles, and there\'s pride in it.' + (function() {
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dJ) return '\n\nWhen the break ends, they both pass you on the way back to the mat. Oksana squeezes your wrist. Jensen\'s knuckles brush your shoulder. Neither of them says a word.';
+                    if (dO) return '\n\nWhen the break ends, Oksana brushes past you and squeezes your wrist, quick and hidden. Checking in. You squeeze back.';
+                    if (dJ) return '\n\nWhen the break ends, Jensen passes close enough to bump your shoulder with his. Checking in. You bump him back.';
+                    return '';
+                })(); },
                 choices: [
                     { text: 'Continue', nextScene: 'dojang_break_menu' }
                 ]
@@ -200401,6 +200453,11 @@ wet_car_slowdown: {
                     desc += '\n\nOksana turns to look at him. Really look. Maybe for the first time.\n\n"That sounds exhausting," she says. Soft. No edge.\n\n"It is."\n\nAnother silence. Longer. Then Oksana does something extraordinary. She reaches over and puts her hand on top of his. Just for a second. A gesture so brief you almost miss it.\n\n"I think you\'re more than your outside," she says. "For what that\'s worth."';
                     
                     desc += '\n\nJensen looks at her hand, then at her face. His whole expression shifts. The composure drops away for a second, and what\'s underneath is raw and open and aimed entirely at her.\n\n"It\'s worth a lot," he says.\n\nYou leave quietly. They don\'t notice. You glance back once from the door. They\'re still sitting there, shoulder to shoulder, looking at the floor. The gap between them finally closed.';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dJ) desc += '\n\nLater that night, Jensen texts you: <em>I told her about my mom.</em> A minute later: <em>Thank you for pushing.</em>';
+                    if (dO) desc += '\n\nLater that night, Oksana texts you one word: <em>Jensen.</em> Then: <em>He isn\'t what I thought.</em> From her, it reads like a paragraph.';
                     
                     return desc;
                 },
@@ -200415,7 +200472,14 @@ wet_car_slowdown: {
                     advanceTime(10);
                     updateStatus();
                 },
-                text: 'It\'s after a sparring session. Oksana and Jensen just finished a round. A real one. Both of them are breathing hard. Flushed. Alive.\n\nJensen says something about her form. Technical. Precise. Feedback only someone who truly understands her skill level could give.\n\nOksana listens. Nods. Starts to respond.\n\nThen stops.\n\nShe\'s looking at him. At his face, his jaw, the sweat on his neck. Her lips part slightly. Her eyes track across his features like she\'s only now realizing what she\'s been circling for a year.\n\nThe moment lasts two seconds. Maybe three.\n\nThen she blinks. Looks away. Says something sharp and dismissive about his back kick and walks to her bag.\n\nBut you saw it. That two-second window where Oksana, who\'s never once lost composure, forgot herself.\n\nJensen saw it too. He\'s not looking at her. But his ears are red.',
+                text: function() { return 'It\'s after a sparring session. Oksana and Jensen just finished a round. A real one. Both of them are breathing hard. Flushed. Alive.\n\nJensen says something about her form. Technical. Precise. Feedback only someone who truly understands her skill level could give.\n\nOksana listens. Nods. Starts to respond.\n\nThen stops.\n\nShe\'s looking at him. At his face, his jaw, the sweat on his neck. Her lips part slightly. Her eyes track across his features like she\'s only now realizing what she\'s been circling for a year.\n\nThe moment lasts two seconds. Maybe three.\n\nThen she blinks. Looks away. Says something sharp and dismissive about his back kick and walks to her bag.\n\nBut you saw it. That two-second window where Oksana, who\'s never once lost composure, forgot herself.\n\nJensen saw it too. He\'s not looking at her. But his ears are red.' + (function() {
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO) return '\n\nOksana catches you looking on her way past. Her eyes narrow, daring you to say something. You don\'t. She flushes anyway.';
+                    if (dJ) return '\n\nJensen glances at you afterward, something almost guilty in the set of his mouth. You smile at him until it goes away.';
+                    return '';
+                })(); },
                 choices: [
                     { text: 'Continue', nextScene: 'dojang_break_menu' }
                 ]
@@ -200427,7 +200491,14 @@ wet_car_slowdown: {
                     advanceTime(10);
                     updateStatus();
                 },
-                text: 'You walk in on something.\n\nOksana and Jensen are by the equipment rack. She\'s reaching for a pad on a high shelf. He reaches for the same one at the same time. Their hands touch.\n\nNeither pulls away.\n\nThe silence stretches. Oksana is looking at their hands. Jensen is looking at her face. The room feels ten degrees warmer than it did a second ago.\n\n"I had it first," Oksana says. Her voice is steady but the pulse in her throat is not.\n\n"You always think you had it first," Jensen says. And there\'s something in his voice you\'ve never heard before. Warm and teasing, with the mask nowhere in sight.\n\nOksana pulls the pad down. Turns away. But she doesn\'t turn fast enough to hide the color in her cheeks.\n\nJensen watches her go. His expression is the same as always. Controlled. Composed.\n\nExcept his hand is still raised where hers was. And he takes three full seconds to lower it.',
+                text: function() { return 'You walk in on something.\n\nOksana and Jensen are by the equipment rack. She\'s reaching for a pad on a high shelf. He reaches for the same one at the same time. Their hands touch.\n\nNeither pulls away.\n\nThe silence stretches. Oksana is looking at their hands. Jensen is looking at her face. The room feels ten degrees warmer than it did a second ago.\n\n"I had it first," Oksana says. Her voice is steady but the pulse in her throat is not.\n\n"You always think you had it first," Jensen says. And there\'s something in his voice you\'ve never heard before. Warm and teasing, with the mask nowhere in sight.\n\nOksana pulls the pad down. Turns away. But she doesn\'t turn fast enough to hide the color in her cheeks.\n\nJensen watches her go. His expression is the same as always. Controlled. Composed.\n\nExcept his hand is still raised where hers was. And he takes three full seconds to lower it.' + (function() {
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO) return '\n\nOn her way past, Oksana stops beside you. "Don\'t," she says. "Not a word." Then, lower, almost an accusation: "You\'re enjoying this."\n\nYou are.';
+                    if (dJ) return '\n\nJensen finds you by the water fountain a minute later. "Kelsie..."\n\n"I saw," you say. "It was sweet."\n\nHe searches your face. Whatever he finds there, his shoulders come down.';
+                    return '';
+                })(); },
                 choices: [
                     { text: 'Continue', nextScene: 'dojang_break_menu' }
                 ]
@@ -200445,6 +200516,20 @@ wet_car_slowdown: {
                     desc += '\n\nJensen is quiet. Then:\n\n"I\'ve been looking at you like that for a year, Oksana."\n\nSilence. Absolute silence.\n\n"What?" Her voice is small. Smaller than you\'ve ever heard it.\n\n"Since the day you walked into this dojang. Since the first time you sparred with me and I realized you were the only person who\'d ever made me fight for real." His voice is steady. The mask is off. All of it. "I look at you like that because you\'re the only person I don\'t want to perform for. You make me want to just... be. And mean it."';
                     
                     desc += '\n\nA long pause. When Oksana speaks, her voice is shaking.\n\n"I don\'t know how to do this. I don\'t know how to... let someone in. I push people away, Jensen. It\'s what I do. I\'ll hurt you."\n\n"Maybe."\n\n"That doesn\'t scare you?"\n\n"Everything about you scares me. That hasn\'t stopped me from wanting to be near you."';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dJ) {
+                        desc += '\n\n"We\'re both with Kelsie," she says.';
+                        desc += '\n\n"And she\'s been pushing us at each other for a while now." You can hear the ghost of a smile in it. "I think she knew before we did."';
+                    } else if (dJ) {
+                        desc += '\n\n"You have Kelsie," she says. Sharper. "You\'re <em>hers</em>."';
+                        desc += '\n\n"I am. And she\'s the one who told me to stop hiding this." His voice drops. "She meant it, Oksana. I asked her twice."';
+                    } else if (dO) {
+                        desc += '\n\n"You know I\'m with Kelsie," she says.';
+                        desc += '\n\n"I know." His voice doesn\'t waver. "She\'s the one who told me you felt it too."';
+                        desc += '\n\nA shaky breath. "Of course she did."';
+                    }
                     
                     desc += '\n\nAnother silence. Longer. You hear a sound that might be a sob or might be a laugh. Then Oksana\'s voice, barely a whisper:\n\n"I didn\'t say I don\'t feel it too."';
                     desc += '\n\nYou should leave. You know you should leave.';
@@ -200513,7 +200598,7 @@ wet_car_slowdown: {
                     desc += '\n\n\"Oksana.\" His voice is barely his anymore.';
                     desc += '\n\n\"Don\'t stop,\" she orders. Voice cracking on the last word.';
                     desc += '\n\nHe drives deeper. His thumb finds her clit. Her whole body pitches forward.';
-                    desc += '\n\nHe keeps going, cock and thumb both, relentless, and she\'s shaking apart against him, the orgasm cresting and then breaking —';
+                    desc += '\n\nHe keeps going, cock and thumb both, relentless, and she\'s shaking apart against him, the orgasm cresting and then breaking.';
                     desc += '\n\nIt hits like something final. Her whole body locks. She clenches around him in hard shuddering spasms, one after another, face pressed to his neck, voice spilling out past language: \"Hh—ah—hnnh—\" Her nails dragging down his back. Her thighs locked hard around his hips.';
                     desc += '\n\nShe\'s still trembling when he follows, buried deep, his hips stuttering through it, his face pressed into her hair. A sound pulled from somewhere below the sternum: \"Ngh—\" His cock surges inside her as he cums, one deep shudder rolling through him and then another, and then still.';
                     desc += '\n\nThe room settles.';
@@ -200522,6 +200607,9 @@ wet_car_slowdown: {
                     desc += '\n\nHis face is open like she\'s never seen, every piece of composure dissolved, nothing between her and whatever\'s been living behind it all year.';
                     desc += '\n\nNeither of them says anything.';
                     desc += '\n\nShe slides down until her feet find the floor, and they hold.';
+                    if (dO && dJ) desc += '\n\nBoth of them are yours, and they\'re in there with each other. You\'re the reason. That thought goes straight to your clit.';
+                    else if (dJ) desc += '\n\nThat\'s your boyfriend behind that door. You sent him there. The thought should sting. Instead it lands low and heavy and makes your clit throb.';
+                    else if (dO) desc += '\n\nThat\'s your girlfriend behind that door, making sounds you know by heart. The thought should sting. Instead it goes straight to your clit.';
                     desc += '\n\nYour back is against the wall. Your hand is down your ' + cv.bottomName + ', two fingers pressed hard against your clit, and you\'re already there. Have been for a while, your body wound tight from every sound through that door, every muffled cry.';
                     desc += '\n\nOksana\'s voice cracks behind the door and you stop trying to be quiet about it.';
                     desc += '\n\n\"Hh—\" The sound barely makes it out before you trap it between your teeth.';
@@ -200548,6 +200636,12 @@ wet_car_slowdown: {
                     desc += '\n\nDuring the break, Oksana sits next to Jensen. No gap. Her knee against his. She leans over and says something in his ear. Whatever it is makes Jensen\'s jaw tighten. His hand finds her thigh under the waterline of visibility and squeezes once. Quick. Deliberate.';
                     desc += '\n\nOksana stands. Stretches casually. Walks toward the hallway. She doesn\'t look back at him. She doesn\'t need to.';
                     desc += '\n\nJensen waits exactly thirty seconds. Then follows.';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dJ) desc += '\n\nThey both look at you before they go. You wave them off like you\'re shooing cats.';
+                    else if (dJ) desc += '\n\nOn his way past, Jensen catches your eye. A question, the way it always is with him. You nod. He goes.';
+                    else if (dO) desc += '\n\nOn her way past, Oksana drops a hand on your shoulder. Brief. Deliberate. Letting you know she\'s still yours.';
                     desc += '\n\nYou watch them disappear down the corridor. The equipment room door opens and closes. The lock clicks. Same room as the first time.';
                     desc += '\n\nBut this time it\'s different. No desperation, no urgency born from denial. They\'re choosing this with their eyes open. Wanting each other in broad daylight with a room full of people twenty feet away.';
                     desc += '\n\nYou hear Oksana laugh behind the door. Low. Warm. You\'ve never heard her laugh like that.';
@@ -200599,6 +200693,9 @@ wet_car_slowdown: {
                     desc += '\n\n<p>She feels every one.</p>';
                     desc += '\n\nYou\'ve heard them once before. Your body has the full map now: the rhythm of Oksana\'s breathing as it comes apart, the creak of the equipment chest, the exact pitch of her voice before she stops trying to be quiet. You didn\'t mean to catalog all of it.';
                     desc += '\n\nYour back settles against the wall.';
+                    if (dO && dJ) desc += '\n\nThe two people you\'re with, together, twenty feet away. Your pussy clenches just thinking it.';
+                    else if (dJ) desc += '\n\nYour boyfriend is behind that door with her. You put him there. Your pussy clenches at the thought.';
+                    else if (dO) desc += '\n\nYour girlfriend is behind that door with him. You put her there. Your pussy clenches at the thought.';
                     desc += '\n\nYour hand is already moving, slipping past your waistband, two fingers pressing flat against your clit. You\'re already wet.';
                     desc += '\n\nA sound carries through the door. "Nnh—"';
                     desc += '\n\nYour hips press forward. You start grinding, slow circles, tracking their rhythm through the wall. You know what all of it means from the inside now. That\'s what gets you so fast: knowing them, knowing what they are to each other, knowing that they came back for this with a full room twenty feet away.';
@@ -200610,6 +200707,8 @@ wet_car_slowdown: {
                     desc += '\n\nThen you pull your hand free, straighten your waistband, and push off the wall.';
                     desc += '\n\nThe hallway settles back around you. Ceiling panels. The faint smell of floor cleaner. Your face is hot and your legs are unsteady and somewhere behind a closed door, two people are taking their time.';
                     desc += '\n\nYou pocket your hands and head back to the training floor.';
+                    if (dJ) desc += '\n\nWhen Jensen comes back, he sits beside you instead of across the room. His knee rests against yours. He doesn\'t say anything. He doesn\'t have to.';
+                    if (dO) desc += '\n\nWhen Oksana comes back, she drops down next to you and steals your water without asking. "Don\'t look at me like that," she says. She leans into your shoulder anyway.';
                     return desc;
                 },
                 onEnter: () => {
@@ -200680,6 +200779,11 @@ wet_car_slowdown: {
                     desc += '\n\nJensen catches your eye too. His mouth twitches. That\'s a thank you, from Jensen.';
                     
                     desc += '\n\nYou head back to the training floor. Behind you, Oksana says something and Jensen actually laughs. Short. Surprised. Like he forgot he could.\n\nClose enough.';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dJ) desc += '\n\nJensen finds you at the door later. "That was you," he says. "Setting that up."\n\n"Maybe."\n\nHe bumps his shoulder into yours. "Thank you," he says. From him, it\'s a speech.';
+                    if (dO) desc += '\n\nOksana texts you that night: <em>You\'re a schemer.</em> Then: <em>It worked. Don\'t get smug.</em>';
                     
                     return desc;
                 },
@@ -200717,6 +200821,19 @@ wet_car_slowdown: {
                     
                     desc += '\n\n\"It\'s stuck.\" You lean against the wall. \"You\'re both miserable and you\'re both too proud to go first.\"';
                     
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dJ) {
+                        desc += '\n\n"We\'re both with you," she says. "This is insane."';
+                        desc += '\n\n"It\'s a little insane. Do it anyway."';
+                    } else if (dO) {
+                        desc += '\n\n"And you," she says, sharper. "Where do you fit in this? I\'m with <em>you</em>."';
+                        desc += '\n\n"Still with me. Nothing about that has to change for this to happen."';
+                    } else if (dJ) {
+                        desc += '\n\n"He\'s <em>yours</em>," she says, sharper. "What am I supposed to do with that?"';
+                        desc += '\n\n"Go to him anyway. I\'m telling you it\'s okay."';
+                    }
                     desc += '\n\nSilence. Her fingers tighten on the water bottle.';
                     
                     desc += '\n\n\"What if I mess it up?\" she says. Almost too quiet to hear. \"What if I push him away like I push everyone away?\"';
@@ -200734,6 +200851,13 @@ wet_car_slowdown: {
                     desc += '\n\n\"So are you.\"';
                     
                     desc += '\n\nHis jaw shifts. \"I know that too.\"';
+                    if (dJ && !dO) {
+                        desc += '\n\n"And you," he says. "You\'re sure."';
+                        desc += '\n\n"I\'m sure."';
+                    } else if (dO && !dJ) {
+                        desc += '\n\n"She\'s with you," he says quietly.';
+                        desc += '\n\n"She is. Go anyway."';
+                    }
                     
                     desc += '\n\n\"One of you has to go first.\" You glance back at Oksana. She\'s watching. Pretending she isn\'t. \"You\'ve spent your whole life waiting for someone to see through the mask. She sees through it. You know she does. Go talk to her. For real this time.\"';
                     
@@ -201543,6 +201667,18 @@ wet_car_slowdown: {
                 text: function() {
                     const oksanaFriendship = (gameState.relationships.oksana && gameState.relationships.oksana.friendship) || 0;
                     const ojFriendship = (gameState.npcRelationships && gameState.npcRelationships.oksana_jensen && gameState.npcRelationships.oksana_jensen.friendship) || 0;
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dJ) {
+                        return pickFreshOrGeneric('oksana', ['"You and Jensen should get to know each other without me in the middle," you say.\n\nOksana crosses her arms. "We\'re both dating you. That\'s already more knowing than I planned on."\n\n"Humor me."\n\nShe exhales through her nose. Looks at Jensen. Looks back at you. "You\'re building something," she says. "I can see it."\n\n"Maybe."\n\n"I haven\'t decided if I like it." She doesn\'t sound like she hates it.'], oksanaGenericInfJensenFriend());
+                    }
+                    if (dO) {
+                        return pickFreshOrGeneric('oksana', ['"You and Jensen should spend more time together," you say.\n\nOksana\'s eyes narrow. "You\'re my girlfriend. You\'re supposed to want me to yourself."\n\n"I want you to have more than just me."\n\nShe considers this like it\'s a trick question. "He\'s tolerable," she says finally. "I\'ll allow it."\n\n"You\'ll allow it."\n\n"Don\'t push your luck." But she brushes her knuckles against yours before she goes back to stretching.'], oksanaGenericInfJensenFriend());
+                    }
+                    if (dJ) {
+                        return pickFreshOrGeneric('oksana', ['"You should talk to Jensen more," you say.\n\nOksana gives you a long look. "He\'s your boyfriend. Why would you want me talking to him?"\n\n"Because he needs friends who aren\'t dating him. And because you two understand each other."\n\nShe snorts, which from her is practically a laugh. "That\'s the strangest reason anyone\'s ever given me for anything." She glances at him across the room. "Fine. For you."'], oksanaGenericInfJensenFriend());
+                    }
                     
                     if (oksanaFriendship < 35) {
                         return '"You and Jensen should hang out more," you say.\n\nOksana stares at you like you suggested she eat glass. "We spar. That\'s sufficient."\n\nHer tone could freeze water. Subject: closed.';
@@ -201586,8 +201722,32 @@ wet_car_slowdown: {
                     const ojRomance = (gameState.npcRelationships && gameState.npcRelationships.oksana_jensen && gameState.npcRelationships.oksana_jensen.romance) || 0;
                     const ojCouple = gameState.flags.ojAreCouples || false;
                     
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
                     if (ojCouple) {
-                        return 'They\'re already together. Whatever you did, it worked.\n\nOksana catches you looking at them and narrows her eyes. "What are you smiling about?"\n\n"Nothing," you say.\n\n"Liar."';
+                        let c = 'They\'re already together. Whatever you did, it worked.\n\nOksana catches you looking at them and narrows her eyes. "What are you smiling about?"\n\n"Nothing," you say.\n\n"Liar."';
+                        if (dO && dJ) c += '\n\nShe lets you have her hand for exactly three seconds. "Both of you," she says. "Somehow. Don\'t make it a whole thing."';
+                        else if (dO) c += '\n\nThen, quieter, without looking at you: "You\'re still mine. That hasn\'t changed." It\'s the closest Oksana gets to reassurance, and she means every word.';
+                        else if (dJ) c += '\n\nShe glances at Jensen, then back at you. "He told me what you said to him. About not having to choose." Her mouth tightens, which is how she hides being moved. "Thank you."';
+                        return c;
+                    }
+                    if (dO && dJ) {
+                        return pickFreshOrGeneric('oksana', ['"You\'re in love with him," you say. "Same as with me."\n\nOksana\'s jaw works. "Is it that obvious?"\n\n"Only to someone dating both of you."\n\nShe almost laughs. It comes out as a sharp exhale. "Tell him, then. You tell everyone everything."\n\n"No. You tell him."\n\nShe glares at you. Then she looks at Jensen across the room, and the glare softens into something she\'d never let him see. "Fine," she says. "Tomorrow."'], oksanaGenericInfJensenRomance());
+                    }
+                    if (dO) {
+                        const v = [];
+                        if (ojRomance >= 40) v.push('"You like him," you say.\n\nOksana goes rigid. "I\'m with you."\n\n"I know. I\'m not asking you to stop."\n\nShe stares at you like you\'ve started speaking Ukrainian badly. "Then what are you asking?"\n\n"For you to stop pretending around me. I see how you look at him. I don\'t mind."\n\nThe silence goes on long enough that you think she\'s going to walk away. Then, very quietly: "I don\'t know how to want two people. I barely know how to want one."\n\n"You\'re doing fine so far."\n\nShe looks at you, and for once her face hides nothing. "You\'re a very odd person, Kelsie."\n\n"You like odd."\n\n"Unfortunately."');
+                        else if (ojRomance >= 20) v.push('"Have you noticed how Jensen watches you?" you ask.\n\nOksana\'s eyes cut to you, sharp. "Is this a test?"\n\n"No test."\n\n"You\'re my girlfriend, and you\'re pointing out another man watching me." She says it slowly, checking the logic. "Most people would be jealous."\n\n"I\'m not most people."\n\n"No," she says. "You\'re not." She looks across the room at Jensen, and she doesn\'t look away as fast as she usually does.');
+                        else v.push('"Jensen\'s pretty good-looking, don\'t you think?" you say.\n\nOksana gives you a flat look. "You\'re my girlfriend."\n\n"And he\'s good-looking. Both things."\n\n"His bone structure is symmetrical," she says. "That\'s a genetic observation." Her ears are pink anyway. "Why are you smiling."\n\n"No reason."');
+                        return pickFreshOrGeneric('oksana', v, oksanaGenericInfJensenRomance());
+                    }
+                    if (dJ) {
+                        const v = [];
+                        if (ojRomance >= 40) v.push('"You like him," you say.\n\nOksana goes very still. Then her chin lifts. "He\'s yours. I\'m not going to do anything about it."\n\n"I know you wouldn\'t. That\'s why I\'m bringing it up."\n\nHer eyes narrow. "Explain."\n\n"He cares about you. More than he\'ll say. I don\'t want either of you choking on it for my sake."\n\nShe stares at you for a long time. Something cracks behind those ice-blue eyes. "You\'d be fine with that."\n\n"More than fine."\n\n"That\'s insane," she says. Quietly. She doesn\'t sound like she thinks it\'s insane.');
+                        else if (ojRomance >= 20) v.push('"You ever think about Jensen as more than a training partner?" you ask.\n\nOksana\'s head turns slowly. "He\'s your boyfriend."\n\n"Still not an answer."\n\nColor rises in her cheeks. Oksana Volkov, who never blushes. "I think about him," she says. Clipped. "Then I remember he\'s yours, and I stop."\n\n"You don\'t have to stop."\n\nShe looks at you like you just changed the rules of a match halfway through. She doesn\'t argue.');
+                        else v.push('"You two would make a good couple," you say.\n\nOksana freezes mid-stretch. "He\'s dating <em>you</em>."\n\n"I\'m aware."\n\n"Then why would you say that?"\n\n"Because it\'s true."\n\nShe resumes stretching. Her form is perfect. Her face is red. "You\'re very strange, Kelsie."');
+                        return pickFreshOrGeneric('oksana', v, oksanaGenericInfJensenRomance());
                     }
                     
                     if (oksanaFriendship < 35) {
@@ -201637,6 +201797,18 @@ wet_car_slowdown: {
                 text: function() {
                     const jensenFriendship = (gameState.relationships.jensen && gameState.relationships.jensen.friendship) || 0;
                     const ojFriendship = (gameState.npcRelationships && gameState.npcRelationships.oksana_jensen && gameState.npcRelationships.oksana_jensen.friendship) || 0;
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dJ) {
+                        return pickFreshOrGeneric('jensen', ['"You should spend time with Oksana," you say. "Without me."\n\nJensen raises an eyebrow. "We\'re both dating you. I assumed you were the common ground."\n\n"I\'m trying to make more common ground."\n\nHe considers that with the same focus he gives a sparring drill. "Library," he says. "Tomorrow. I\'ll ask her."'], jensenGenericInfFriend());
+                    }
+                    if (dJ) {
+                        return pickFreshOrGeneric('jensen', ['"You and Oksana should talk more," you say.\n\nJensen looks at you, measuring. "You want your boyfriend spending more time with another woman."\n\n"I want my boyfriend to have friends."\n\nThe corner of his mouth moves. "That\'s fair." He glances across the room at Oksana. "She\'d probably tell me to go away."\n\n"Probably. Ask anyway."'], jensenGenericInfFriend());
+                    }
+                    if (dO) {
+                        return pickFreshOrGeneric('jensen', ['"Oksana could use a friend," you say. "A real one."\n\nJensen\'s eyes flick to you. "She has a girlfriend."\n\n"A girlfriend and a friend are different things. She needs both. So do you."\n\nHe\'s quiet for a moment, weighing it. "I didn\'t want to crowd what you two have."\n\n"You won\'t."\n\n"Okay," he says. One word. From Jensen, a promise.'], jensenGenericInfFriend());
+                    }
                     
                     if (jensenFriendship < 30) {
                         return '"You and Oksana should talk more," you say.\n\nJensen\'s expression stays perfectly neutral. "We talk."\n\n"About things besides kicks."\n\nHe looks at you. The conversation dies right there.';
@@ -201657,7 +201829,7 @@ wet_car_slowdown: {
                     } else {
                         variants.push(
                             '"What do you think of Oksana?" you ask.\n\nJensen considers the question like it has weight. "She\'s the best sparring partner I\'ve had."\n\n"That\'s a start."\n\n"A start to what?"\n\n"Friendship."\n\nHe blinks. The word catches him off guard.\n\n"I\'ll think about it," he says. From Jensen, that\'s practically enthusiasm.',
-                            '"Ever tried having a real conversation with Oksana?" you ask.\n\nJensen\'s jaw shifts. "We talk."\n\n"You exchange tactical observations about kicks. That\'s different."\n\nSilence. The kind where you can hear someone reconsidering their entire social strategy.\n\n"She reads," he says. Carefully. "I\'ve seen the spines. Russian literature, mostly." He pauses. "I could ask her about that."\n\n"You could."\n\nHe nods. Once. Filed away.'
+                            '"Ever tried having a real conversation with Oksana?" you ask.\n\nJensen\'s jaw shifts. "We talk."\n\n"You exchange tactical observations about kicks. That\'s different."\n\nSilence. You can practically hear him reconsidering his entire social strategy.\n\n"She reads," he says. Carefully. "I\'ve seen the spines. Russian literature, mostly." He pauses. "I could ask her about that."\n\n"You could."\n\nHe nods. Once. Filed away.'
                         );
                     }
                     
@@ -201680,8 +201852,32 @@ wet_car_slowdown: {
                     const ojRomance = (gameState.npcRelationships && gameState.npcRelationships.oksana_jensen && gameState.npcRelationships.oksana_jensen.romance) || 0;
                     const ojCouple = gameState.flags.ojAreCouples || false;
                     
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
                     if (ojCouple) {
-                        return 'They\'re already together.\n\nJensen catches your eye. The corner of his mouth twitches. From Jensen, that\'s a standing ovation.\n\n"Thank you," he says. Two words that carry everything.';
+                        let c = 'They\'re already together.\n\nJensen catches your eye. The corner of his mouth twitches. From Jensen, that\'s a standing ovation.\n\n"Thank you," he says. Two words that carry everything.';
+                        if (dO && dJ) c += '\n\nHe looks from Oksana to you. "Both of you," he says, like he\'s still checking the math. "I don\'t know how I got here."';
+                        else if (dJ) c += '\n\nThen he finds your hand and holds it, brief and deliberate. "You\'re still mine," he says. "That was never in question."';
+                        else if (dO) c += '\n\n"She told me what you said to her," he adds. "You didn\'t have to." From him, it\'s the highest compliment he has.';
+                        return c;
+                    }
+                    if (dO && dJ) {
+                        return pickFreshOrGeneric('jensen', ['"You love her," you say. "Same as you love me."\n\nJensen exhales slowly. "You set this up."\n\n"Maybe."\n\n"You\'re dating both of us and you set it up anyway." He shakes his head, and for once the mask can\'t keep up with his face. "Tell me what to do, Kelsie."\n\n"Tell her. Just you and her."\n\nHe nods. Once. Decided.'], jensenGenericInfRomance());
+                    }
+                    if (dJ) {
+                        const v = [];
+                        if (ojRomance >= 40) v.push('"You\'re in love with her," you say.\n\nJensen doesn\'t flinch, but his hand closes on his towel. "Kelsie. I\'m with you."\n\n"I know. I\'m not asking you to stop."\n\nHe studies you for a long time, searching for the catch. There isn\'t one, and you watch him realize it.\n\n"I don\'t know how to feel two things at once," he says. Quiet. "I barely know how to feel one out loud."\n\n"You\'re doing it right now."\n\nSomething in his face gives way. "She might not want me."\n\n"She does. She watches you the same way you watch her."');
+                        else if (ojRomance >= 20) v.push('"You ever think about Oksana as more than a sparring partner?" you ask.\n\nJensen goes still. "You\'re asking your boyfriend that."\n\n"I\'m asking you that."\n\nHis jaw shifts. He picks his words like footwork. "I think about her. More than I should. Given."\n\n"Given me?" You nudge his knee. "I\'m the one bringing her up."\n\nThe mask slips for a second. "You are," he says. "I don\'t understand you at all."\n\n"You like that about me."\n\n"I do."');
+                        else v.push('"Oksana\'s pretty incredible, huh?" you say.\n\nJensen\'s eyes narrow a fraction. "Is this a test?"\n\n"Nope. Just saying it."\n\nHe watches you, trying to read the play. "She\'s incredible," he says finally. Carefully.\n\n"See? That wasn\'t hard."\n\n"It was a little hard." But there\'s the ghost of a smile.');
+                        return pickFreshOrGeneric('jensen', v, jensenGenericInfRomance());
+                    }
+                    if (dO) {
+                        const v = [];
+                        if (ojRomance >= 40) v.push('"You\'re in love with her," you say.\n\nJensen\'s face goes perfectly still. The mask, all the way on. "She\'s with you."\n\n"She is. And she\'s in love with you too. She\'d rather eat glass than say it."\n\nHis Adam\'s apple bobs. "You\'re telling me this."\n\n"I\'m telling you this. I don\'t want either of you swallowing it for my sake."\n\nHe looks at you for a long time, like he\'s rereading a page he thought he understood. "You mean that," he says.\n\n"Every word."');
+                        else if (ojRomance >= 20) v.push('"Have you noticed how Oksana looks at you?" you ask.\n\nJensen\'s composure holds, barely. "She\'s your girlfriend, Kelsie."\n\n"That\'s not an answer."\n\nSilence. His hands tighten on his towel. "I\'ve noticed," he says. "I\'ve been trying not to."\n\n"Stop trying."\n\nHe looks up at you, surprised all the way through the mask. He doesn\'t say anything. He doesn\'t say no, either.');
+                        else v.push('"You and Oksana would be good together," you say.\n\nJensen blinks. "She\'s dating you."\n\n"She is. And you two would still be good together."\n\nA long silence. His eyes drift across the room to Oksana and stay there three seconds before he catches himself. "I\'ll think about it," he says.\n\nComing from Jensen, that\'s practically a yes.');
+                        return pickFreshOrGeneric('jensen', v, jensenGenericInfRomance());
                     }
                     
                     if (jensenFriendship < 30) {
@@ -201698,7 +201894,7 @@ wet_car_slowdown: {
                     } else if (ojRomance >= 20) {
                         variants.push(
                             '"Have you noticed how Oksana looks at you?" you ask.\n\nJensen\'s composure cracks. Just a hairline fracture. "She looks at everyone like that."\n\n"She doesn\'t. Trust me." You lean forward. "When you spar, her eyes track you differently. That\'s not rivalry."\n\nHis jaw works. Something behind the mask is struggling to get out.\n\n"You\'re reading too much into it," he says. But his voice is rougher than usual.',
-                            '"You ever think about Oksana as more than a sparring partner?" you ask.\n\nJensen goes very still. The controlled kind of still.\n\n"She\'s important to me," he says. Each word chosen with surgical care.\n\n"That\'s not what I asked."\n\nSilence. His hands tighten on his towel.\n\n"I think about her," he says. "More than I should. In ways that have nothing to do with Taekwondo." He meets your eyes. "I\'ve never said that out loud before."'
+                            '"You ever think about Oksana as more than a sparring partner?" you ask.\n\nJensen goes very still, controlled and deliberate.\n\n"She\'s important to me," he says. Each word chosen with surgical care.\n\n"That\'s not what I asked."\n\nSilence. His hands tighten on his towel.\n\n"I think about her," he says. "More than I should. In ways that have nothing to do with Taekwondo." He meets your eyes. "I\'ve never said that out loud before."'
                         );
                     } else {
                         variants.push(
@@ -201737,6 +201933,8 @@ wet_car_slowdown: {
                         desc += '"He\'s..." She pauses. Swallows. "Have you ever watched him train? Really watched? How he moves. The control. The discipline." Her voice drops. "I\'ve been thinking about what it would take to make all that discipline break."\n\n';
                         desc += 'She catches herself. Looks away. Color in her cheeks.\n\n';
                         desc += '"He\'s a good instructor," she says. Too late. You saw everything.';
+                        if (gameState.flags.datingGunwoo) desc += '\n\nThen she remembers who she\'s talking to. Her jaw tightens. "He\'s yours," she says. "I shouldn\'t have said that."\n\n"You can say it to me," you tell her. She looks at you for a long moment and doesn\'t take it back.';
+                        else if (gameState.flags.datingOksana) desc += '\n\nShe glances at you sideways, checking whether she\'s allowed. You let her see you aren\'t bothered. Something in her shoulders eases.';
                         return pickFreshOrGeneric('oksana', [desc], oksanaGenericInfGunwoo());
                     }
                     
@@ -201760,6 +201958,22 @@ wet_car_slowdown: {
             dojang_oksana_inf_gunwoo_romance: {
                 text: function() {
                     const goRomance = (gameState.npcRelationships && gameState.npcRelationships.gunwoo_oksana && gameState.npcRelationships.gunwoo_oksana.romance) || 0;
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dG) {
+                        return pickFreshOrGeneric('oksana', ['"He wants you," you say. "And you want him. And I\'m dating both of you, so I\'d know."\n\nOksana closes her eyes. "This is absurd."\n\n"It\'s a little absurd."\n\n"He won\'t move first."\n\n"Then you do it." You squeeze her hand. "I\'ll hold your bag."\n\nShe laughs. Oksana actually laughs, sharp and startled. "Fine," she says. "Fine."'], oksanaGenericInfGunwooRomance());
+                    }
+                    if (dO) {
+                        if (goRomance >= 40) return pickFreshOrGeneric('oksana', ['"He wants you back," you say.\n\nOksana goes still. Then her eyes cut to you. "You\'re my girlfriend. And you\'re telling me another man wants me."\n\n"I\'m telling you Gunwoo wants you. And you want him. I\'ve watched you two."\n\n"And you don\'t care."\n\n"I care. I want you to have it."\n\nShe stares at you for a long moment. Then something ignites behind her eyes. "He\'ll never make the first move."\n\n"Then make it for him. I\'ll be right here after."'], oksanaGenericInfGunwooRomance());
+                        if (goRomance >= 20) return pickFreshOrGeneric('oksana', ['"You want him," you say.\n\nOksana\'s jaw works. "I\'m with you."\n\n"You can be with me and want him. I see it, Oksana, and I\'m okay with it."\n\nShe\'s quiet for a long time. "It\'s consuming," she says finally. Low. "Every correction. I\'m ashamed of how much." She looks at you. "You should be jealous."\n\n"I\'m not."\n\n"You\'re very strange." She doesn\'t move away from you.'], oksanaGenericInfGunwooRomance());
+                        return pickFreshOrGeneric('oksana', ['"You\'ve seen how you look at him during corrections," you say.\n\nOksana freezes. "I\'m with you. I don\'t look at anyone."\n\n"You look at him. It\'s okay."\n\nColor rises in her cheeks. "He\'s my instructor," she says. Her voice is thin. "And you\'re my girlfriend. This is a ridiculous conversation."\n\n"And?"\n\nShe doesn\'t answer that.'], oksanaGenericInfGunwooRomance());
+                    }
+                    if (dG) {
+                        if (goRomance >= 40) return pickFreshOrGeneric('oksana', ['"He wants you back," you say.\n\nOksana goes completely still. "He\'s with you." Her voice is flat and careful. "Everyone knows."\n\n"He is. And he wants you. He\'s been fighting it harder than he fights anything."\n\nHer eyes search your face for the trap. "And you\'re telling me this because."\n\n"Because I\'d rather he stop fighting. I love him. I want him to have what he wants."\n\nSomething tight in her uncoils. Then her eyes narrow, and something ignites. "He won\'t move first."\n\n"He won\'t. So you\'ll have to."'], oksanaGenericInfGunwooRomance());
+                        if (goRomance >= 20) return pickFreshOrGeneric('oksana', ['"You want him," you say.\n\nOksana\'s head snaps toward you. "He\'s yours. I\'d never."\n\n"I know you wouldn\'t. That\'s why I\'m the one saying it."\n\nShe stares at you, color climbing her throat. "You\'re not angry."\n\n"No."\n\n"That makes no sense." But her eyes drift across the room to Gunwoo, and this time she lets them stay.'], oksanaGenericInfGunwooRomance());
+                        return pickFreshOrGeneric('oksana', ['"You\'ve seen how you look at him during corrections," you say.\n\nOksana goes stiff. "He\'s your boyfriend. And my instructor. I don\'t look at him any way at all."\n\n"You do. And it\'s okay."\n\nShe looks at you like you\'ve said something unforgivable and kind at the same time. She doesn\'t answer. Her ears are red.'], oksanaGenericInfGunwooRomance());
+                    }
                     
                     if (goRomance >= 40) {
                         return pickFreshOrGeneric('oksana', ['"He wants you back."\n\nOksana goes completely still. "How do you know?"\n\n"How he watches you when you\'re not looking. He\'s not checking your technique, Oksana."\n\nShe breathes out. Her whole body changes. Something tight uncoiling.\n\n"Then why won\'t he move?"\n\n"Because he\'s Gunwoo. He\'ll destroy himself before he makes the first move."\n\nHer eyes narrow. Something ignites behind them.\n\n"Then I\'ll make it for him."'], oksanaGenericInfGunwooRomance());
@@ -201785,6 +201999,22 @@ wet_car_slowdown: {
             dojang_gunwoo_inf_oksana_romance: {
                 text: function() {
                     const goRomance = (gameState.npcRelationships && gameState.npcRelationships.gunwoo_oksana && gameState.npcRelationships.gunwoo_oksana.romance) || 0;
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dG) {
+                        return pickFreshOrGeneric('gunwoo', ['"She wants you," you say. "You want her. And you both have me. So stop acting like the sky\'s going to fall."\n\nGunwoo almost laughs. It\'s the most undisciplined sound you\'ve heard from him in days. "You make it sound simple."\n\n"It\'s simple. You\'re the one making it complicated."\n\nHe looks at you for a long moment. Then he takes your hand and presses his lips to your knuckles, formal and tender. "Thirty years of discipline," he says, "and you undo it in a sentence."'], gunwooGenericInfOksana());
+                    }
+                    if (dG) {
+                        if (goRomance >= 40) return pickFreshOrGeneric('gunwoo', ['"She wants you," you say.\n\nGunwoo closes his eyes. "Kelsie." Your name comes out quiet and pained. "I\'m with you. I shouldn\'t be having this conversation with you, of all people."\n\n"You should have it with me first. I\'m the one telling you it\'s okay."\n\nHe opens his eyes. They\'re dark and wary and something else. "You understand what you\'re saying."\n\n"I do. I love you. I\'ve seen how you look at her. I don\'t want you lying awake over it anymore."\n\nHe\'s silent for a long time. His hand finds yours on the desk and holds it, hard. "I don\'t know how much longer I can hold it," he says. "And you\'re telling me I don\'t have to."'], gunwooGenericInfOksana());
+                        if (goRomance >= 20) return pickFreshOrGeneric('gunwoo', ['"You should be honest with yourself about Oksana," you say.\n\nGunwoo sets down his pen. "Kelsie. You and I..."\n\n"Are together. I know. That\'s why I\'m the one saying it."\n\nHis composure holds, barely. "She makes professional distance difficult," he admits. "I\'d assumed that was something I should hide from you."\n\n"Don\'t hide it from me. Please."\n\nHe looks at you for a long, careful moment. Then he nods, once, and something in his shoulders lets go.'], gunwooGenericInfOksana());
+                        return pickFreshOrGeneric('gunwoo', ['"Oksana\'s not a girl anymore, is she?" you say.\n\nGunwoo\'s hands stop moving on the clipboard. "She\'s my student. And you\'re..." He stops. "This is an odd thing for you to bring up."\n\n"Odd, but true."\n\nHe doesn\'t look at you. His jaw shifts. "This conversation is over," he says. But his eyes go to the mirror, where Oksana\'s running forms, and they stay there.'], gunwooGenericInfOksana());
+                    }
+                    if (dO) {
+                        if (goRomance >= 40) return pickFreshOrGeneric('gunwoo', ['"She wants you," you say.\n\nGunwoo closes his eyes. The discipline visibly shudders. "She\'s with you, Kelsie."\n\n"She is. And she wants you. Both things."\n\n"You\'re telling me this."\n\n"I\'m telling you this, because she\'s never going to say it, and you\'re never going to move, and I\'m tired of watching both of you suffer."\n\nHe opens his eyes. They\'re dark with something you recognize. "You\'d allow it."\n\n"I\'d be glad. I want her happy. I want you happy."\n\n"Thirty-four years between us," he says quietly. "And you\'re the one giving me permission."'], gunwooGenericInfOksana());
+                        if (goRomance >= 20) return pickFreshOrGeneric('gunwoo', ['"You should be honest with yourself about Oksana," you say.\n\nGunwoo sets down his pen. "Oksana\'s with you."\n\n"She is. And you still watch her practice when you think nobody\'s looking."\n\nHis composure holds, barely. The effort shows in his throat. "I\'d assumed I was hiding that better. Especially from you."\n\n"You don\'t have to hide it from me."\n\nHe stares at you like you just handed him something he doesn\'t know how to hold.'], gunwooGenericInfOksana());
+                        return pickFreshOrGeneric('gunwoo', ['"Oksana\'s not a girl anymore, is she?" you say.\n\nGunwoo\'s knuckles tighten on the clipboard. "She\'s my student. And she\'s your girlfriend. Either one should end this conversation."\n\n"They don\'t, though."\n\nSilence. His jaw shifts. He doesn\'t look at you. "This conversation is over." But something in his eyes says it\'s just beginning.'], gunwooGenericInfOksana());
+                    }
                     
                     if (goRomance >= 40) {
                         return pickFreshOrGeneric('gunwoo', ['"She wants you."\n\nGunwoo closes his eyes. The discipline that holds him together visibly shudders.\n\n"I know."\n\n"Then what\'s stopping you?"\n\n"Everything. My responsibility. My position. The thirty-four years between us." His voice drops. "None of which matters at two in the morning when I\'m lying awake thinking about her."\n\nHe opens his eyes. They\'re dark with something you recognize.\n\n"I don\'t know how much longer I can hold this."'], gunwooGenericInfOksana());
@@ -201815,7 +202045,15 @@ wet_car_slowdown: {
                     advanceTime(10);
                     updateStatus();
                 },
-                text: 'You catch it during a correction. Gunwoo adjusts Oksana\'s hip angle for a turning kick. Standard technique. He\'s done it a hundred times.\n\nBut his hand stays. A half-second too long on the curve of her hip. His fingers press through the fabric of her dobok.\n\nOksana goes still. Her eyes find his in the mirror.\n\nShe doesn\'t step away. He doesn\'t pull his hand back. The room tightens around them.\n\nThen Gunwoo clears his throat. Steps back. "Again," he says. Professional. Measured.\n\nOksana kicks. Clean. Perfect. Her jaw is set. The line of her throat is flushed.\n\nYou saw the whole thing in the mirror. Both of them forgot you were there.',
+                text: function() { return 'You catch it during a correction. Gunwoo adjusts Oksana\'s hip angle for a turning kick. Standard technique. He\'s done it a hundred times.\n\nBut his hand stays. A half-second too long on the curve of her hip. His fingers press through the fabric of her dobok.\n\nOksana goes still. Her eyes find his in the mirror.\n\nShe doesn\'t step away. He doesn\'t pull his hand back. The room tightens around them.\n\nThen Gunwoo clears his throat. Steps back. "Again," he says. Professional. Measured.\n\nOksana kicks. Clean. Perfect. Her jaw is set. The line of her throat is flushed.\n\nYou saw the whole thing in the mirror. Both of them forgot you were there.' + (function() {
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dG) return '\n\nAfterward they both find your eyes in the mirror, one after the other. You give each of them the same small smile.';
+                    if (dO) return '\n\nWhen Oksana passes you afterward, her fingers brush yours, quick, almost an apology. You catch her hand and squeeze it so she knows she doesn\'t need one.';
+                    if (dG) return '\n\nGunwoo glances at you over her shoulder, a flicker of something like guilt. You give him a small smile, and the guilt goes out of his face.';
+                    return '';
+                })(); },
                 choices: [
                     { text: 'Continue', nextScene: 'dojang_break_menu' }
                 ]
@@ -201835,6 +202073,12 @@ wet_car_slowdown: {
                     desc += '\n\nHer eyes find his in the mirror. Hold.';
                     desc += '\n\nNeither speaks. The silence fills the room like heat.';
                     desc += '\n\nYou back out before either of them notices you. The air in that room could ignite.';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dG) desc += '\n\nBoth of them are yours, and neither of them is thinking about you at all right now. You wait for jealousy. What comes instead is heat, low and slow.';
+                    else if (dG) desc += '\n\nThat\'s your boyfriend in the doorway, looking at someone else like that. You wait for jealousy. What comes instead is heat, low and slow.';
+                    else if (dO) desc += '\n\nThat\'s your girlfriend on the mat, performing for someone else. You wait for jealousy. What comes instead is heat, low and slow.';
                     return desc;
                 },
                 choices: [
@@ -201852,6 +202096,19 @@ wet_car_slowdown: {
                     desc += '\n\nOksana\'s voice. Closer to him than a student should be. "Then stop looking at me like you do."';
                     desc += '\n\n"You\'re my student."';
                     desc += '\n\n"I know what I am. That\'s not what I asked."';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dG) {
+                        desc += '\n\n"We both belong to Kelsie," he says, like it\'s his last defense.';
+                        desc += '\n\n"Kelsie sent me in here," Oksana says. "Try again."';
+                    } else if (dG) {
+                        desc += '\n\n"And you know I\'m with Kelsie."';
+                        desc += '\n\n"I know. Kelsie\'s the one who told me you wanted me." Her voice sharpens. "So that\'s not your excuse either."';
+                    } else if (dO) {
+                        desc += '\n\n"You\'re with Kelsie," he says.';
+                        desc += '\n\n"Kelsie\'s the one who told me to come in here." Her breath catches. "She meant it, Gunwoo."';
+                    }
                     desc += '\n\nSilence. Heavy. Loaded. Two people standing too close with neither one moving away.';
                     desc += '\n\n"I think about you," he says. "When I shouldn\'t. In ways I shouldn\'t. It goes against everything I\'ve built."';
                     desc += '\n\n"Good." Her voice drops. "I think about making you lose control. Every session. Every correction. Every time your hands are on me." Her breath catches. "I want to see what\'s under all that discipline."';
@@ -201911,12 +202168,15 @@ wet_car_slowdown: {
                     desc += '\n\nHe follows. Buried deep, his rhythm stuttering through the last strokes, a sound torn from him low and raw and nothing like the man who straightens the photograph every morning. His cock surges inside her in thick, shuddering tremors, his forehead dropping to hers, his hands going from rigid to limp by degrees.';
                     desc += '\n\nThe shelving creaks.';
                     desc += '\n\nYou already know the full map of this: the catch in her breathing before it goes, the exact sound he made right before the end. Thirty years of everything he\'d built, giving way all at once. That\'s what your body\'s been tracking since the door clicked shut.';
+                    if (dO && dG) desc += '\n\nBoth of them are yours. You sent them to each other. That thought goes straight to your clit.';
+                    else if (dG) desc += '\n\nThat\'s your boyfriend in there, finally letting go. You told him he could. The thought makes your clit throb.';
+                    else if (dO) desc += '\n\nThat\'s your girlfriend in there, getting exactly what she wanted. You told her to go. The thought makes your clit throb.';
                     desc += '\n\nYour back is against the wall. Your hand is already past your waistband, two fingers pressed flat against your clit. You\'re wet enough that the first contact makes you bite down hard.';
                     desc += '\n\nYou circle slow. Steady pressure in the dim corridor while their breathing settles behind the door.';
                     desc += '\n\nYour thighs clench around your wrist. Your hips tip forward on their own.';
                     desc += '\n\nYou cum in hard, sustained shudders, your cunt gripping around nothing, the sound you make small and swallowed and entirely yours. You ride your own hand through every one.';
                     desc += '\n\nThen you pull your hand free, straighten your waistband, and push off the wall.';
-                    desc += '\n\nThe corridor settles back around you. Chalk dust and old rubber. The overhead hum. Behind the door, Oksana\'s voice, quiet like you\'ve never heard from her. Jensen\'s, lower still.';
+                    desc += '\n\nThe corridor settles back around you. Chalk dust and old rubber. The overhead hum. Behind the door, Oksana\'s voice, quiet like you\'ve never heard from her. Gunwoo\'s, lower still.';
                     desc += '\n\nYou pocket your hands and head back to the training floor.';
                     return desc;
                 },
@@ -201938,11 +202198,31 @@ wet_car_slowdown: {
                     desc += '\n\n"Just go to him."';
                     desc += '\n\nHer jaw sets. "He won\'t cross the line. He\'s too disciplined."';
                     desc += '\n\n"So cross it yourself."';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dG) {
+                        desc += '\n\n"We\'re both with you," she says. "You understand how strange this is."';
+                        desc += '\n\n"Completely. Go anyway."';
+                    } else if (dO) {
+                        desc += '\n\n"I\'m with you," she says.';
+                        desc += '\n\n"You are. Go anyway. I\'ll be right here after."';
+                    } else if (dG) {
+                        desc += '\n\n"He\'s with you," she says, very quietly.';
+                        desc += '\n\n"He is. And I want him to have this. Go."';
+                    }
                     desc += '\n\nShe stares at you. Her ice-blue eyes are doing something they almost never do. Considering surrender.';
                     desc += '\n\nYou find Gunwoo in his office. He\'s sitting behind his desk, staring at nothing.';
                     desc += '\n\n"She\'s waiting," you say.';
                     desc += '\n\nHis head comes up. "Kelsie—"';
                     desc += '\n\n"She\'s waiting, Gunwoo. And she won\'t wait forever."';
+                    if (dG) {
+                        desc += '\n\n"You\'re sure," he says. Low. Careful.';
+                        desc += '\n\n"I\'m sure. Go."';
+                    } else if (dO) {
+                        desc += '\n\n"She\'s with you," he says.';
+                        desc += '\n\n"She is. And she\'s waiting for you anyway. I sent her."';
+                    }
                     desc += '\n\nHis hands flatten on the desk. You watch thirty years of discipline fight against something older and more honest. His knuckles go white.';
                     desc += '\n\nThen he stands. The chair scrapes back.';
                     desc += '\n\nHe walks past you without a word. The door to the storage room closes behind him. You hear the lock turn.';
@@ -201972,23 +202252,23 @@ wet_car_slowdown: {
                     desc += '\n\nOksana reaches behind her and pushes it shut. The lock turns under her fingers. She\'s already pulling at the knot of his belt before the click finishes.';
                     desc += '\n\nHis hands slide up her thighs. Slow. Knowing. The hands of a man who\'s already learned exactly where to touch her and is taking his time getting there.';
                     desc += '\n\nOksana\'s breath catches. She pulls him closer by the collar and says his name against his mouth. The word is thick with wanting.';
-                    desc += '\n\nHis office smells like coffee and floor polish and now something else—something that wasn\'t in it yesterday.';
+                    desc += '\n\nHis office smells like coffee and floor polish and now something else, something that wasn\'t in it yesterday.';
                     desc += '\n\nShe finishes with his belt. Gets his pants open. His hands have stayed on her thighs the whole time, dragging slow deliberate lines along the inside seam, and the patience of it is its own kind of pressure.';
-                    desc += '\n\nShe pushes his hands up. He obliges—palms spreading across her stomach, her ribs, relearning what he already knows. When his thumbs brush her nipples through the fabric she pulls a sharp breath. He does it again. Watches her jaw flex.';
+                    desc += '\n\nShe pushes his hands up. He obliges, palms spreading across her stomach, her ribs, relearning what he already knows. When his thumbs brush her nipples through the fabric she pulls a sharp breath. He does it again. Watches her jaw flex.';
                     desc += '\n\nHe gets her jacket off. Her training top. He takes his time once she\'s bare, and she holds still under his gaze because she\'s stopped pretending that particular look doesn\'t do anything to her.';
                     desc += '\n\n\"Stop staring,\" she says.';
                     desc += '\n\n\"No.\"';
                     desc += '\n\nShe gets his dobok off his shoulders. His torso in the morning light: broad, dense, the scar ridge along his left ribs silver-pale. She knows that scar now. Knows exactly where to put her mouth to break his breathing. She files it and gets her hand around his cock instead.';
                     desc += '\n\nHe\'s thick in her grip, fully hard, and the sound he makes when she strokes him once is quiet and completely genuine.';
                     desc += '';
-                    desc += '\n\nShe strokes him again, slower, watching his jaw go tight. She knows his tells now—the whole careful inventory, the jaw, the exhale, the minute flex of his hands when he\'s holding something back. She\'s been cataloguing them since the storage room.';
+                    desc += '\n\nShe strokes him again, slower, watching his jaw go tight. She knows his tells now: the whole careful inventory, the jaw, the exhale, the minute flex of his hands when he\'s holding something back. She\'s been cataloguing them since the storage room.';
                     desc += '\n\nHis hand slides between her thighs.';
                     desc += '\n\nTwo fingers finding her cunt, already slick, and the sound she makes is fast and unguarded and nothing she manages to swallow in time.';
                     desc += '\n\n\"Nnh—\"';
                     desc += '\n\nHis thumb settles on her clit. The same angle he found the first time, held with the same exact pressure, and the fact that he simply already knows makes something give way in her chest before she can think to guard it.';
                     desc += '\n\n\"There—\" Her hips press toward his hand before she decides to let them. \"That—\"';
                     desc += '\n\nHe works her up without rushing anything. His thumb steady, the same spot, while the tension builds in her thighs and her grip on his shoulder goes from resting to gripping. The wet sound of it carries in the small room.';
-                    desc += '\n\nShe\'s close fast—her body reckless, the same way it was the first time.';
+                    desc += '\n\nShe\'s close fast, her body reckless, the same way it was the first time.';
                     desc += '\n\nThis time she doesn\'t pull back.';
                     desc += '\n\nShe cums with her forehead dropped to his neck, \"Nngh—ah—\" cracking between her teeth, her cunt gripping his fingers in hard rhythmic surges. He holds the angle through every one and works her all the way through until she\'s shaking and still and her grip on him has gone slack.';
                     desc += '\n\nShe lifts her head. Her breathing is shot.';
@@ -201996,10 +202276,10 @@ wet_car_slowdown: {
                     desc += '\n\nShe turns and settles back onto his lap facing him, thighs bracketing his hips. Takes him in hand and lines the angle herself.';
                     desc += '';
                     desc += '\n\nShe presses down.';
-                    desc += '\n\nThe stretch is familiar and still arresting—the broad head opening her, the full thick length of him filling her in degrees. Her breath comes out thin and stripped of anything held back. She seats fully. Neither of them moves.';
+                    desc += '\n\nThe stretch is familiar and still arresting: the broad head opening her, the full thick length of him filling her in degrees. Her breath comes out thin and stripped of anything held back. She seats fully. Neither of them moves.';
                     desc += '\n\n\"Oksana.\"';
                     desc += '\n\n\"I know,\" she says. \"I know.\" She starts to move.';
-                    desc += '\n\nShe rolls her hips first, finding the angle—his cock pressing against her front wall on every grind, the forward curve of him catching the spot she remembers. He lets her run it. His hands open on her hips, present without steering.';
+                    desc += '\n\nShe rolls her hips first, finding the angle: his cock pressing against her front wall on every grind, the forward curve of him catching the spot she remembers. He lets her run it. His hands open on her hips, present without steering.';
                     desc += '\n\nShe picks up the pace.';
                     desc += '\n\n\"Nnh—\" It escapes her. \"Fuck—\"';
                     desc += '\n\nHis hands tighten. The patience ends.';
@@ -202019,12 +202299,20 @@ wet_car_slowdown: {
                     desc += '\n\nOksana\'s forehead drops to his shoulder. He draws her in by the back of her neck and holds her against his chest, his thumb tracing one slow circle on her nape.';
                     desc += '\n\nYou already know what you\'re doing before you decide to do it.';
                     desc += '\n\nThe frosted glass doesn\'t give you anything to see, just the shape of them, her silhouette over his, the slow roll of her hips visible even blurred through the pane. The sounds carry fine. His name leaving her mouth twice, then losing its syllables entirely.';
+                    const dO = !!(gameState.flags.datingOksana || gameState.flags.dojangQuadruple);
+                    const dJ = !!(gameState.flags.datingJensen || gameState.flags.dojangQuadruple);
+                    const dG = !!(gameState.flags.datingGunwoo || gameState.flags.dojangQuadruple);
+                    if (dO && dG) desc += '\n\nBoth of them are yours, and they\'re in there with each other. Your pussy clenches just thinking it.';
+                    else if (dG) desc += '\n\nYour boyfriend is in there with her. You put him there. Your pussy clenches at the thought.';
+                    else if (dO) desc += '\n\nYour girlfriend is in there with him. You put her there. Your pussy clenches at the thought.';
                     desc += '\n\nYour back finds the wall beside the door. Your hand is already inside your waistband. You know the angle by now—two fingers pressing flat, the heel of your palm riding your clit—and the first contact pulls a breath through your teeth, sharp and swallowed.';
                     desc += '\n\nYou work yourself slow. Matching the rhythm carrying through the glass, the pace of her, the sounds she makes that she\'d never let anyone hear by accident. Except you. You\'ve made a habit of this now, and something about that sits low and liquid in your chest.';
                     desc += '\n\nYour thighs press together around your wrist. Your hips tip into your own hand.';
                     desc += '\n\nWhen she shatters behind the frosted glass you let yourself follow. Your cunt clenches in slow, rolling surges, the orgasm quieter than the first time but deeper, your back bowing off the wall and then settling. You stay through every aftershock until your legs stop shaking.';
                     desc += '\n\nYou pull your hand free. Straighten your waistband. Push off the wall.';
                     desc += '\n\nThe dojang hums around you, floor wax, chalk dust, the overhead buzz. The other students are starting to filter in. You grab your bag from where you dropped it and walk onto the mat, and when class starts twenty minutes later, Gunwoo runs warm-ups with his clipboard still on his desk where she left it.';
+                    if (dG) desc += '\n\nWhen he passes you on the mat, he rests his hand on your shoulder, once. Brief. Grateful.';
+                    if (dO) desc += '\n\nOksana takes her place beside you in line. Her pinky hooks yours for exactly one second.';
                     return desc;
                 },
                 choices: [
@@ -202042,7 +202330,7 @@ wet_car_slowdown: {
                     }
                     
                     if (jgFriendship >= 70) {
-                        return pickFreshOrGeneric('jensen', ['"How are things with Gunwoo?" you ask.\n\nJensen is quiet for a moment. The thoughtful kind.\n\n"He\'s the closest thing to a father I\'ve ever had," he says. Simply. No performance. "He took in a kid from the system who had nothing. Gave him structure. Purpose. A reason to get up in the morning."\n\nHe meets your eyes.\n\n"I would do anything for that man. And I think he knows it."'], jensenGenericInfGunwoo());
+                        return pickFreshOrGeneric('jensen', ['"How are things with Gunwoo?" you ask.\n\nJensen is quiet for a moment, thinking it over.\n\n"He\'s the closest thing to a father I\'ve ever had," he says. Simply. No performance. "He took in a kid from the system who had nothing. Gave him structure. Purpose. A reason to get up in the morning."\n\nHe meets your eyes.\n\n"I would do anything for that man. And I think he knows it."'], jensenGenericInfGunwoo());
                     }
                     
                     if (jgFriendship >= 50) {
