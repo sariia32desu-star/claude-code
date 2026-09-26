@@ -26069,12 +26069,24 @@ audioSystem.playSFX('buttonClick');
             ]);
         }
         function stephGenericInfFriend() {
+            if (gameState.flags.datingDante) return _pick([
+                'You steer her toward Dante again. She rolls her eyes, but she\'s smiling.\n\n"Your boyfriend, my best friend," she says. "Weirdest group project ever."'
+            ]);
+            if (gameState.flags.datingStephanie) return _pick([
+                'You tell her to go spend time with Dante again. Stephanie pretends to be offended for three whole seconds.\n\n"Fine," she says. "But I\'m bringing you a smoothie after."'
+            ]);
             return _pick([
                 'You steer her toward Dante again, gentle about it.\n\nShe doesn\'t fight you on it anymore. \"Yeah,\" she says, watching him stretch across the infield. \"He\'s good people.\" The word lands warmer than she means it to.',
                 'You put in another word for Dante. She takes it without the eye-roll she used to give you.\n\n\"I hear you,\" she says. And for once, you think she actually does.'
             ]);
         }
         function stephGenericInfRomance() {
+            if (gameState.flags.datingDante) return _pick([
+                'You nudge again. Stephanie covers her face with both hands.\n\n"You keep giving me permission to have a crush on your boyfriend," she says through her fingers. "Do you know how weird that is?"\n\n"Very weird."\n\n"So weird." She peeks at him through her fingers anyway.'
+            ]);
+            if (gameState.flags.datingStephanie) return _pick([
+                'You nudge her toward Dante again. Stephanie goes pink and swats your arm.\n\n"You\'re supposed to be <em>jealous</em>," she hisses.\n\n"I\'m not."\n\n"I know. It\'s so confusing." She looks at him anyway.'
+            ]);
             return _pick([
                 'You nudge, the lightest touch, toward what\'s sitting under the surface with Dante.\n\nStephanie\'s grin goes complicated. She doesn\'t deny it like she used to. She looks at him a second too long and changes the subject. Progress, of a kind.',
                 'You leave another small crack in the wall she keeps around the Dante question.\n\nShe doesn\'t fill it with a joke this time. She goes quiet and pink at the ears instead. You let her.'
@@ -26114,12 +26126,24 @@ audioSystem.playSFX('buttonClick');
             ]);
         }
         function danteGenericInfFriend() {
+            if (gameState.flags.datingDante) return _pick([
+                'You bring up Steph again. Dante gives you the look he saves for you, half fond and half exasperated.\n\n"I hear you, Kels," he says. "I\'m making time for her. Promise."'
+            ]);
+            if (gameState.flags.datingStephanie) return _pick([
+                'You put in another word for Steph. Dante nods slowly.\n\n"She\'s your girl," he says. "But she\'s my friend too. I ain\'t forgetting that."'
+            ]);
             return _pick([
                 'You point him back toward Steph again, light about it.\n\nDante doesn\'t shut it down anymore. \"She\'s in the same trench,\" he says, eyes on the track.',
                 'You put in another word for Steph. He takes it without the flat deflection he used to give you.\n\n\"I know,\" he says. Doesn\'t sound like the end of the conversation this time.'
             ]);
         }
         function danteGenericInfRomance() {
+            if (gameState.flags.datingDante) return _pick([
+                'You nudge again toward what sits between him and Steph. Dante shakes his head, but he\'s smiling.\n\n"You really want this," he says.\n\n"I really want this."\n\nHe looks across the track at her for a long moment. He doesn\'t say no.'
+            ]);
+            if (gameState.flags.datingStephanie) return _pick([
+                'You nudge toward Steph again. Dante\'s careful with it, like he\'s holding something that belongs to you.\n\n"You keep saying it\'s okay," he says.\n\n"Because it is."\n\nHe looks at her across the track. Lets himself.'
+            ]);
             return _pick([
                 'You nudge toward what sits under the surface with Steph.\n\nDante goes quiet. He doesn\'t deny it like he would\'ve once. Looks across the track and says nothing. The nothing says plenty.',
                 'You leave another crack in whatever he\'s built around the Steph question.\n\nHe holds your gaze a second, then lets it go. Progress.'
@@ -62543,6 +62567,23 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var cv = getSceneClothingVars();
                     const danteFriendship = (gameState.relationships.dante && gameState.relationships.dante.friendship) || 0;
                     const dsFriendship = (gameState.npcRelationships && gameState.npcRelationships.dante_stephanie && gameState.npcRelationships.dante_stephanie.friendship) || 0;
+                    const dD = !!gameState.flags.datingDante;
+                    const dS = !!gameState.flags.datingStephanie;
+                    if (dD && dS) {
+                        return pickFreshOrGeneric('dante', ['"You two should get some time without me," you say.\n\nDante gives you a look. "You dating both of us and trying to ditch us at the same time?"\n\n"I\'m trying to make sure you two are good. Not just good with me."\n\nHe considers that. Then he looks across the track at Stephanie, and his face goes warm and unguarded.\n\n"We\'re good," he says. "But yeah. I\'ll take her to get food."'], danteGenericInfFriend());
+                    }
+                    if (dD) {
+                        if (dsFriendship >= 45) {
+                            return pickFreshOrGeneric('dante', ['"Steph misses you, you know," you say. "Since you and me started. She won\'t say it, but she does."\n\nDante goes still. "She said that?"\n\n"She didn\'t have to."\n\nHe rubs the back of his neck. "Didn\'t want her feeling like a third wheel." He glances at you. "Or you feeling like I\'m splitting myself."\n\n"You\'re not. I want her around. I want you two close."\n\nHe holds your gaze a long moment. Then he nods. "Aight. I\'ll fix it."'], danteGenericInfFriend());
+                        }
+                        return pickFreshOrGeneric('dante', ['"You and Steph should hang out more," you say. "Off the track."\n\nDante looks at you sideways. "You trying to get rid of me, Kels?"\n\n"I\'m trying to share you."\n\nThat gets the corner of his mouth. He looks across the infield to where Stephanie\'s stretching, and his face goes soft for a second before he catches it.\n\n"She\'d like that," he says. "Aight. For you."'], danteGenericInfFriend());
+                    }
+                    if (dS) {
+                        if (dsFriendship >= 45) {
+                            return pickFreshOrGeneric('dante', ['"When\'s the last time you and Steph did something that wasn\'t intervals?" you ask.\n\nDante doesn\'t pretend not to know why you\'re asking. "Didn\'t want to step on anything."\n\n"You\'re not stepping on anything. I want you two to have that."\n\nHe looks at you for a long moment, reading you like a race. Whatever he finds there, it settles him.\n\n"Aight," he says. "Tell her I\'m buying."'], danteGenericInfFriend());
+                        }
+                        return pickFreshOrGeneric('dante', ['"You should hang out with Steph more," you say. "Just you two."\n\nDante\'s eyebrows lift, barely. "She\'s your girl, Kels."\n\n"She\'s also your best friend. Dating me didn\'t cancel that."\n\nHe\'s quiet, turning his water bottle in his hands. "Been giving y\'all space," he admits. "Figured that was the right thing."\n\n"It\'s not. She misses you. So do I, when you disappear on us."\n\nSomething in his shoulders loosens. "Aight," he says. "I hear you."'], danteGenericInfFriend());
+                    }
                     if (danteFriendship < 35) {
                         return '"You and Steph should spend more time together off the track," you say.\n\nDante gives you a flat look. "We train together. That\'s enough."';
                     }
@@ -62567,7 +62608,40 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const danteFriendship = (gameState.relationships.dante && gameState.relationships.dante.friendship) || 0;
                     const dsRomance = (gameState.npcRelationships && gameState.npcRelationships.dante_stephanie && gameState.npcRelationships.dante_stephanie.romance) || 0;
                     const dsCouple = gameState.flags.dsAreCouple || false;
-                    if (dsCouple) { return 'They\'re already together.\n\nDante catches you looking. The faintest twitch at the corner of his mouth.\n\n"Stop smiling," he says.\n\n"I\'m not smiling."\n\n"You\'re smiling with your eyes. It\'s worse."'; }
+                    const dD = !!gameState.flags.datingDante;
+                    const dS = !!gameState.flags.datingStephanie;
+                    if (dsCouple) {
+                        let c = 'They\'re already together.\n\nDante catches you looking. The faintest twitch at the corner of his mouth.\n\n"Stop smiling," he says.\n\n"I\'m not smiling."\n\n"You\'re smiling with your eyes. It\'s worse."';
+                        if (dD && dS) c += '\n\nHe pulls you in by the back of your neck and presses a kiss to your temple. "Both of y\'all," he says. "Still don\'t know how I got this lucky."';
+                        else if (dD) c += '\n\nHe glances at Stephanie, then back at you. "You know you did this," he says. "Both of us. I ain\'t forgetting it."';
+                        else if (dS) c += '\n\nThen, quieter: "She told me what you said to her. About not having to choose." He shakes his head slowly. "Thank you, Kels."';
+                        return c;
+                    }
+                    if (dD && dS) {
+                        return pickFreshOrGeneric('dante', ['"You love her," you say. "Same as you love me."\n\nDante\'s quiet. His eyes move from you to Stephanie, stretching on the far side of the infield, and back.\n\n"Yeah," he says. Just that.\n\n"So tell her. Not through me. Just you and her."\n\nHe nods slowly. "You set this whole thing up, didn\'t you."\n\n"Maybe."\n\n"Kels." The real smile. "You\'re dangerous."'], danteGenericInfRomance());
+                    }
+                    if (dD) {
+                        const v = [];
+                        if (dsRomance >= 50) {
+                            v.push('"You\'re in love with her," you say.\n\nDante\'s head comes up fast. He looks at you like you just pulled the pin on something.\n\n"Kels." Low. Careful. "I\'m with you."\n\n"I know. I\'m not asking you to stop being with me." You hold his gaze. "I\'m asking you to stop pretending you don\'t feel it. I see how you look at her. I\'ve always seen it."\n\nHe\'s quiet for a long time. His thumb moves over your knuckles, slow.\n\n"You\'d be okay with that?" he says finally. "Me and her?"\n\n"I\'d be okay with you being happy. All the way happy."\n\nHe exhales, and something he\'s carried for years finally gets set down. "I don\'t know how to do this," he says. "Love two people."\n\n"You\'ll figure it out. You\'re Dante. You figure everything out."');
+                        } else if (dsRomance >= 25) {
+                            v.push('"You ever think about Steph?" you ask. "Like that?"\n\nDante goes very still. "I\'m with you, Kels."\n\n"That\'s not what I asked."\n\nHe looks at you a long time, searching for the trap. There isn\'t one, and he sees that too.\n\n"Sometimes," he says. Low. "More than I should, maybe. Given."\n\n"Given me?" You bump his shoulder. "Dante. I\'m the one bringing it up."\n\nThe corner of his mouth moves. "Yeah. You are." He looks at Stephanie across the track, and he doesn\'t look away as fast as he usually does.');
+                        } else {
+                            v.push('"Steph looked good out there today," you say.\n\nDante gives you a sideways look. "You testing me?"\n\n"Nope. Just saying it. She looked good."\n\nHe watches you for a second. Then, carefully: "She did."\n\n"See? That wasn\'t so hard."\n\n"Kels." He shakes his head, but there\'s a smile hiding in it. "You\'re something else."');
+                        }
+                        return pickFreshOrGeneric('dante', v, danteGenericInfRomance());
+                    }
+                    if (dS) {
+                        const v = [];
+                        if (dsRomance >= 50) {
+                            v.push('"You\'re in love with her," you say.\n\nDante\'s jaw tightens. He looks away, across the track, where Stephanie\'s laughing at something Coach Warren said.\n\n"She\'s your girl," he says. Quiet. "I\'d never."\n\n"I know you wouldn\'t. That\'s why I\'m the one saying it." You wait until he looks at you. "She loves you too, Dante. She always has. Me being with her doesn\'t change that. I don\'t want it to."\n\nHe stares at you, like the words are in a language he\'s still learning.\n\n"You mean that."\n\n"I mean it."\n\nHe breathes out slow. "I need to sit with this, Kels."\n\n"Sit with it. Just don\'t sit on it."');
+                        } else if (dsRomance >= 25) {
+                            v.push('"You ever think about Steph as more than a training partner?" you ask.\n\nDante\'s eyes cut to you, sharp. "She\'s with you."\n\n"Still not what I asked."\n\nSilence. He pulls at a blade of grass.\n\n"I think about her," he says finally. Low. "Then I remember she\'s with you, and I stop."\n\n"You don\'t have to stop on my account."\n\nHe looks at you like you just changed the rules of a race halfway through. He doesn\'t say anything. But he doesn\'t say no.');
+                        } else {
+                            v.push('"Steph\'s pretty gorgeous, don\'t you think?" you say.\n\nDante\'s expression goes carefully blank. "She\'s your girlfriend, Kelsie."\n\n"And she\'s gorgeous. Both things."\n\nHe exhales through his nose, half a laugh. "Yeah," he admits. "Both things."\n\nHis eyes drift to her across the infield and stay there a second longer than they should. He doesn\'t apologize for it, and you don\'t want him to.');
+                        }
+                        return pickFreshOrGeneric('dante', v, danteGenericInfRomance());
+                    }
                     if (danteFriendship < 35) { return '"Steph\'s pretty incredible, huh?" you say.\n\nDante\'s expression goes blank. "She\'s a good athlete."\n\nDoor: closed.'; }
                     const variants = [];
                     if (dsRomance >= 50) {
@@ -63071,6 +63145,23 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const stephFriendship = (gameState.relationships.stephanie && gameState.relationships.stephanie.friendship) || 0;
                     const dsFriendship = (gameState.npcRelationships && gameState.npcRelationships.dante_stephanie && gameState.npcRelationships.dante_stephanie.friendship) || 0;
+                    const dD = !!gameState.flags.datingDante;
+                    const dS = !!gameState.flags.datingStephanie;
+                    if (dD && dS) {
+                        return pickFreshOrGeneric('stephanie', ['"You and Dante need a night without me," you say.\n\nStephanie gasps, scandalized. "Are you kicking us out of our own relationship?"\n\n"I\'m telling you to go have dinner with him. Just you two."\n\nShe considers this. Then her grin goes slow and a little wicked. "Is this a setup? This feels like a setup."\n\n"It\'s absolutely a setup."\n\n"God, I love you." She kisses your cheek, loud. "Fine. But I\'m telling him it was your idea."'], stephGenericInfFriend());
+                    }
+                    if (dS) {
+                        if (dsFriendship >= 45) {
+                            return pickFreshOrGeneric('stephanie', ['"When\'s the last time you and Dante did anything that wasn\'t intervals?" you ask.\n\nStephanie opens her mouth. Closes it. "I don\'t remember," she admits.\n\n"That\'s because you\'ve been hanging back since you and me got together."\n\nShe fidgets with the end of her ponytail. "Maybe a little. It felt greedy. Having you and still wanting him around all the time."\n\n"It\'s not greedy. Go get dinner with him. Tell him I said so."\n\nShe grins, slow and wobbly. "He\'s going to ask a million questions."\n\n"He\'s going to ask two. Quietly."\n\nShe laughs. "Yeah. That\'s worse."'], stephGenericInfFriend());
+                        }
+                        return pickFreshOrGeneric('stephanie', ['"You should spend more time with Dante," you say. "Just you two."\n\nStephanie\'s head whips around. "Are you breaking up with me? Is this a breakup? Because that\'s a weird way to\u2014"\n\n"Steph. No." You grab her hand. "You\'ve been pulling back from him since we started dating. I see it."\n\nShe deflates. "I didn\'t want you thinking I was still hung up on him."\n\n"You can be hung up on him. He\'s your person too. I\'m not trying to take that from you."\n\nHer eyes go shiny. She squeezes your hand so hard it hurts. "You\'re kind of the best, you know that?"'], stephGenericInfFriend());
+                    }
+                    if (dD) {
+                        if (dsFriendship >= 45) {
+                            return pickFreshOrGeneric('stephanie', ['"Dante misses you," you tell her.\n\nStephanie laughs too loud. "He sees me every day."\n\n"He misses you, Steph. You\'ve been keeping your distance since he and I got together. He noticed. He just won\'t say it."\n\nThe laugh dies. She picks at the label on her water bottle. "I was trying to be respectful," she says quietly. "Give you guys room."\n\n"We don\'t need room from you."\n\nShe looks at you for a long moment. Then her mouth trembles into a smile. "Okay," she says. "I can stop being respectful. I was bad at it anyway."'], stephGenericInfFriend());
+                        }
+                        return pickFreshOrGeneric('stephanie', ['"You and Dante should hang out more," you say. "Without me."\n\nStephanie\'s smile flickers. "He\'s your boyfriend, Kelsie. I\'m not gonna..." She waves a hand vaguely. "Hover."\n\n"You\'re not hovering. You\'re his best friend. You were his best friend first."\n\nShe goes quiet. Her eyes find Dante on the infield, and her face does what it always does when she looks at him, soft and aching, before she tucks it away.\n\n"You really don\'t mind?" she asks.\n\n"I\'d mind if you disappeared on him because of me."\n\nShe swallows. Then she bumps your shoulder, hard. "Okay. Fine. But if he gets weird about it, I\'m blaming you."'], stephGenericInfFriend());
+                    }
                     if (stephFriendship < 35) { return '"You and Dante should hang out more," you say.\n\n"We literally spend every waking hour together." She laughs. "But sure, I\'ll add another hour. Why not."\n\nDeflection. Bright. Practiced.'; }
                     const variants = [];
                     if (dsFriendship >= 70) {
@@ -63091,7 +63182,40 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const stephFriendship = (gameState.relationships.stephanie && gameState.relationships.stephanie.friendship) || 0;
                     const dsRomance = (gameState.npcRelationships && gameState.npcRelationships.dante_stephanie && gameState.npcRelationships.dante_stephanie.romance) || 0;
                     const dsCouple = gameState.flags.dsAreCouple || false;
-                    if (dsCouple) { return 'They\'re already together.\n\nStephanie catches your eye and grins. "I know," she says. "I can\'t stop grinning either. It\'s disgusting. I love it."'; }
+                    const dD = !!gameState.flags.datingDante;
+                    const dS = !!gameState.flags.datingStephanie;
+                    if (dsCouple) {
+                        let c = 'They\'re already together.\n\nStephanie catches your eye and grins. "I know," she says. "I can\'t stop grinning either. It\'s disgusting. I love it."';
+                        if (dD && dS) c += '\n\nShe drags you into a hug. "My two favorite people," she says into your hair. "Both of you. I don\'t know what I did to deserve this."';
+                        else if (dD) c += '\n\nThen she catches your hand. "Hey. None of this happens without you. You know that, right? He still looks at you like you hung the moon."';
+                        else if (dS) c += '\n\nShe pulls you in and kisses you, quick and loud. "You\'re still mine too," she says against your cheek. "Just so we\'re clear. Greedy. That\'s me."';
+                        return c;
+                    }
+                    if (dD && dS) {
+                        return pickFreshOrGeneric('stephanie', ['"You should tell him how you feel," you say. "The real version. Not the one you tell me."\n\nStephanie groans and flops back against the bleacher. "You\'re the worst. You\'re dating both of us and you\'re still playing matchmaker."\n\n"Somebody has to. You two are hopeless."\n\n"We are <em>not</em> hopeless." She peeks at Dante across the track. Her whole face goes soft. "Okay. We\'re a little hopeless."'], stephGenericInfRomance());
+                    }
+                    if (dS) {
+                        const v = [];
+                        if (dsRomance >= 50) {
+                            v.push('"You\'re in love with him," you say.\n\nStephanie\'s face drains. "Kelsie. No. I\'m with you. I\'m <em>happy</em> with you. I\'d never\u2014"\n\n"Steph. Breathe." You take both her hands. "I\'m not accusing you of anything. I\'m saying I know. I\'ve always known. And it\'s okay."\n\nShe stares at you. Her eyes fill up fast. "How is it okay?"\n\n"Because loving him doesn\'t mean you love me less. I know you. You\'ve got enough in you for the whole stadium."\n\nShe laughs, wet and broken. "That\'s the nicest thing anyone\'s ever said to me, and you said it while basically telling me to go get another boyfriend."\n\n"Multitasking."\n\nShe pulls you into a hug and holds on for a long time. "I don\'t even know if he feels it," she whispers into your shoulder.\n\n"He does."');
+                        } else if (dsRomance >= 25) {
+                            v.push('"Have you noticed how Dante watches you?" you ask.\n\nStephanie goes still. Then, fast: "He watches everyone. Also, I have a girlfriend. Who is you. Hi."\n\n"Hi." You grin. "He watches you differently. And you watch him back."\n\nColor floods her cheeks. "Is this a trap? This feels like a trap."\n\n"No trap. I just want you to stop pretending for my sake."\n\nShe studies your face. Whatever she finds there makes her shoulders drop an inch. "You\'re serious."\n\n"Dead serious."\n\n"Okay," she says, very small. Then she looks across the track at Dante, and she doesn\'t look away.');
+                        } else {
+                            v.push('"You and Dante would make a gorgeous couple," you say.\n\nStephanie chokes on her water. "I\'m sorry, I have a <em>girlfriend</em>, and she\'s <em>you</em>, and you\'re saying what now?"\n\n"I\'m saying you two would be gorgeous."\n\n"You\'re insane." Her ears are crimson. "Completely insane." But she glances at Dante across the infield, and for a second she forgets to look annoyed.');
+                        }
+                        return pickFreshOrGeneric('stephanie', v, stephGenericInfRomance());
+                    }
+                    if (dD) {
+                        const v = [];
+                        if (dsRomance >= 50) {
+                            v.push('"You\'re in love with him," you say.\n\nStephanie flinches like you hit her. Then the smile snaps on, too bright. "Okay, wow, that\'s a lot to say to someone about <em>your own boyfriend</em>, Kelsie."\n\n"Steph."\n\nThe smile cracks. Her eyes fill. "I\'m not going to do anything," she says, fast and low. "I swear. I\'d never do that to you. I\'m <em>glad</em> it\'s you, I told you that, I meant it."\n\n"I know. Listen to me." You take her hands. "I\'m not asking you to swear anything. I\'m telling you it\'s okay. He loves you too. He has for a long time. I don\'t want either of you pretending around me anymore."\n\nShe stares at you. Tears spill over, and she doesn\'t wipe them.\n\n"You\'d share him," she says. "With me."\n\n"With you. Nobody else. Don\'t get cocky."\n\nShe laughs so hard she hiccups. Then she hugs you, fierce, her face pressed into your neck. "You\'re insane," she whispers. "I love you. You\'re insane."');
+                        } else if (dsRomance >= 25) {
+                            v.push('"Have you noticed how Dante watches you?" you ask.\n\nStephanie\'s smile freezes. "He\'s dating you, Kelsie. He watches <em>you</em>."\n\n"He watches both of us. And you watch him back."\n\nShe opens her mouth to deny it. Nothing comes out. Color climbs her throat.\n\n"I\'m not mad," you say. "I promise. I\'d kind of like it if you both stopped hiding it."\n\nShe studies your face for a long, careful moment, looking for the catch. "You\'re serious," she says.\n\n"Completely."\n\n"Oh my god." She presses both hands over her face. Through her fingers: "Okay. I need to go run a lap."');
+                        } else {
+                            v.push('"Dante\'s pretty handsome, don\'t you think?" you say.\n\nStephanie gives you a look. "He\'s your boyfriend. Of course I think he\'s handsome. I have eyes."\n\n"So you\'re admitting it."\n\n"I\'m admitting I have <em>eyes</em>, Kelsie." But her ears are pink, and she steals a look at him across the infield when she thinks you aren\'t watching.');
+                        }
+                        return pickFreshOrGeneric('stephanie', v, stephGenericInfRomance());
+                    }
                     if (stephFriendship < 35) { return '"Dante\'s pretty handsome, don\'t you think?" you say.\n\nStephanie\'s smile freezes for a fraction of a second. "He\'s alright." She says it way too fast.\n\nYou don\'t push it.'; }
                     const variants = [];
                     if (dsRomance >= 50) {
