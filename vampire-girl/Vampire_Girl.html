@@ -23299,6 +23299,20 @@ audioSystem.playSFX('buttonClick');
         // ── Mesh & Sheer Overhaul, Step 11: harassment, slums, night assault ──
         // Sheer sub-state for the harassment scenes' exhibState. Framed keeps the regular
         // clothed sub-state and only gains a line, so this returns '' for it.
+        // Exhibition scene a harassment grope leads into, or null when she's in no exhibition
+        // state. area 'district' or 'slums'. Sheer runs ahead of wet: mesh was see-through first.
+        function getHarassExhibScene(area) {
+            var p = area === 'slums' ? 'slums' : 'district';
+            var exposure = getExposureLevel();
+            var scene = null;
+            if (exposure === 'underwear_only' || exposure === 'topless' || exposure === 'bottomless' || exposure === 'naked') {
+                scene = p + '_exhibition_' + (exposure === 'underwear_only' ? 'underwear' : exposure);
+            }
+            if (getSheerHarassState()) scene = p + '_sheer_exhibition';
+            if (!scene && ((gameState.weather && gameState.weather.clothesWetness) || 0) >= 60) scene = p + '_wet_exhibition';
+            return scene;
+        }
+
         function getSheerHarassState() {
             var st = getSheerState().state;
             if (st === 'sheer_lingerie' || st === 'sheer_lingerie_top' || st === 'sheer_lingerie_bottom') return 'sheer_lingerie';
@@ -109335,7 +109349,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         }
                     }
 
-                    desc += '<p>What do you do?</p>';
+                    if (!getHarassExhibScene('district')) desc += '<p>What do you do?</p>';
 
                     return desc;
                 },
@@ -109354,24 +109368,11 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 },
                 choices: function() {
                     var corruption = gameState.corruption || 0;
-                    var exposure = (typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed';
                     var choices = [];
 
-                    // Exhibition routing — district exhibition scenes (Step 10C)
-                    var _exhibScene = null;
-                    if (exposure === 'underwear_only') _exhibScene = 'district_exhibition_underwear';
-                    if (exposure === 'topless') _exhibScene = 'district_exhibition_topless';
-                    if (exposure === 'bottomless') _exhibScene = 'district_exhibition_bottomless';
-                    if (exposure === 'naked') _exhibScene = 'district_exhibition_naked';
-                    // Mesh Step 11B/17A: bare behind mesh, or sheer lingerie, routes to the sheer scene
-                    // (ahead of the wet route: mesh was see-through before the rain). Framed stays as is.
-                    if (getSheerHarassState()) _exhibScene = 'district_sheer_exhibition';
-
-                    // ── Wet clothing exhibition routing (Wet Clothing Overhaul, District 5C) ──
-                    if (!_exhibScene) {
-                        var _wetExhib = (gameState.weather && gameState.weather.clothesWetness || 0) >= 60;
-                        if (_wetExhib) _exhibScene = 'district_wet_exhibition';
-                    }
+                    // In any exhibition state the scene that follows is already decided, at every tier
+                    var _exhibScene = getHarassExhibScene('district');
+                    if (_exhibScene) return [{ text: 'They take you away', nextScene: _exhibScene }];
 
                     if (corruption < 6000) {
                         choices.push({ text: "Shove them back hard", nextScene: "street_harassment_aggressive" });
@@ -109381,11 +109382,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     choices.push({ text: "Don't do anything", nextScene: "street_harassment_passive" });
 
                     if (corruption >= 6000) {
-                        if (_exhibScene) {
-                            choices.push({ text: "Let them have you", nextScene: _exhibScene });
-                        } else {
-                            choices.push({ text: "Moan softly; encourage them", nextScene: "street_harassment_flirt" });
-                        }
+                        choices.push({ text: "Moan softly; encourage them", nextScene: "street_harassment_flirt" });
                     } else {
                         choices.push({
                             text: '<img src="Images/icons/prohibition.png" class="icon" alt="locked"> Moan softly, encourage them (6000+ corruption required)',
@@ -111371,46 +111368,26 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 },
                 choices: function() {
                     const corruption = gameState.corruption || 0;
-                    const exposure = getExposureLevel();
                     const choices = [];
 
-                    // Exhibition states: redirect to exhibition assault/sex scenes
-                    var _exhibScene = null;
-                    if (exposure === 'underwear_only') _exhibScene = 'slums_exhibition_underwear';
-                    if (exposure === 'topless') _exhibScene = 'slums_exhibition_topless';
-                    if (exposure === 'bottomless') _exhibScene = 'slums_exhibition_bottomless';
-                    if (exposure === 'naked') _exhibScene = 'slums_exhibition_naked';
-                    // Mesh Step 17B: bare behind mesh, or sheer lingerie, routes to the sheer scene
-                    // (ahead of the wet route: mesh was see-through before the rain). Framed stays as is.
-                    if (getSheerHarassState()) _exhibScene = 'slums_sheer_exhibition';
-
-                    // ── Wet clothing exhibition routing (Wet Clothing Overhaul, Step 5C) ──
-                    if (!_exhibScene) {
-                        var _wetExhib = (gameState.weather && gameState.weather.clothesWetness || 0) >= 60;
-                        if (_wetExhib) _exhibScene = 'slums_wet_exhibition';
-                    }
+                    // In any exhibition state the scene that follows is already decided, at every tier
+                    var _exhibScene = getHarassExhibScene('slums');
+                    if (_exhibScene) return [{ text: 'They take you away', nextScene: _exhibScene }];
 
                     if (corruption < 6000) {
                         choices.push({ text: "Shove them back; HARD (vampiric strength)", nextScene: "slums_harassment_aggressive" });
                         choices.push({ text: "Step back firmly; 'Back off. Now.'", nextScene: "slums_harassment_firm" });
                     }
 
-                    if (_exhibScene) {
-                        // Exhibition state: passive/moan choices lead to exhibition-specific scene
-                        choices.push({ text: corruption >= 6000 ? "Let them take what they want" : "Don't do anything", nextScene: _exhibScene });
-                    } else {
-                        choices.push({ text: "Don't do anything", nextScene: "slums_harassment_passive" });
-                    }
+                    choices.push({ text: "Don't do anything", nextScene: "slums_harassment_passive" });
 
-                    if (!_exhibScene) {
-                        if (corruption >= 6000) {
-                            choices.push({ text: "Moan and press into their hands", nextScene: "slums_harassment_moan_choice" });
-                        } else {
-                            choices.push({ 
-                                text: '<img src="Images/icons/prohibition.png" class="icon" alt="locked"> Moan and press into their hands (6000+ corruption required)', 
-                                nextScene: "slums_harassment_flirt_locked" 
-                            });
-                        }
+                    if (corruption >= 6000) {
+                        choices.push({ text: "Moan and press into their hands", nextScene: "slums_harassment_moan_choice" });
+                    } else {
+                        choices.push({ 
+                            text: '<img src="Images/icons/prohibition.png" class="icon" alt="locked"> Moan and press into their hands (6000+ corruption required)', 
+                            nextScene: "slums_harassment_flirt_locked" 
+                        });
                     }
                     
                     return choices;
