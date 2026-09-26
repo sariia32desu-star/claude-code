@@ -366,6 +366,24 @@ Cut it entirely and commit to the sentence:
 
 ---
 
+## 16. "Cum" for Orgasms
+
+**Rule:** When the word means orgasm, always spell it "cum." Never use "come," "comes," or "coming" for an orgasm.
+
+| ❌ WRONG | ✅ RIGHT |
+|----------|----------|
+| She comes first. | She cums first. |
+| He comes hard. | He cums hard. |
+| while he's still coming | while he's still cumming |
+| Watching a man come twice | Watching a man cum twice |
+| "I'm gonna come—" | "I'm gonna cum—" |
+
+**Past tense:** "came" stays "came," matching the game's established usage (`he came inside you`, `you came on her tongue`).
+
+**Does NOT apply to** non-sexual uses of the word: "You come up behind him," "let him hear you coming," "the blood comes away on your sleeve."
+
+---
+
 ## Quick Reference Checklist
 
 Before declaring any writing work complete, verify:
@@ -381,6 +399,7 @@ Before declaring any writing work complete, verify:
 - [ ] No "The way" as a sentence or clause opener (e.g. "The way he looked at her")
 - [ ] No "In a way" as a hedging phrase — banned in all forms
 - [ ] Crude prose for erotic scenes
+- [ ] "Cum," "cums," "cumming" for orgasms, never "come," "comes," "coming" (past tense stays "came")
 - [ ] No wall-of-text paragraphs — break any prose block over ~300 characters into shorter paragraphs
 - [ ] No staccato chains of one- and two-word sentences — short paragraphs, full sentences
 - [ ] All apostrophes properly escaped in JS strings (`\'` not `'`) — including before em dashes and all other characters
