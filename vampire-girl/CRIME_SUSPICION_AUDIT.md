@@ -82,3 +82,4 @@ Reputation is attention.
 
 ## Still open (design calls, not bugs)
 
+Nothing outstanding. Masked players who are never booked can now be caught through surrender at a hunt interrupt or a blood theft; blood thefts go into the ledger by method; the cop-killer aftermath is rewritten; and Cruz has her own trigger on the hero path.
