@@ -62216,7 +62216,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         specials += btn(ico('Images/icons/sparkling-heart.png') + ' Tell him what he means', 'dante_romance_milestone', 'intimate-btn');
                     }
                     if (!gameState.flags.danteKnowsVampire) {
-                        const revealScene = friendship >= 100 ? 'stadium_reveal_vampire_dante' : 'stadium_reveal_not_ready_dante';
+                        // Reveal requires 100 friendship AND two full weeks in game (day 1 + 14)
+                        const revealScene = (friendship >= 100 && gameState.time.day >= 15) ? 'stadium_reveal_vampire_dante' : 'stadium_reveal_not_ready_dante';
                         specials += btn(ico('Images/icons/vampire.png') + ' Tell him your secret', revealScene);
                     }
                     if (gameState.flags.danteKnowsVampire && gameState.flags.danteOfferedBlood && (gameState.flags.lastDanteFeedDay || -1) < gameState.time.day) {
@@ -62793,7 +62794,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         specials += btn(ico('Images/icons/sparkling-heart.png') + ' Tell her what she means', 'stephanie_romance_milestone', 'intimate-btn');
                     }
                     if (!gameState.flags.stephanieKnowsVampire) {
-                        const revealScene = friendship >= 100 ? 'stadium_reveal_vampire_stephanie' : 'stadium_reveal_not_ready_stephanie';
+                        // Reveal requires 100 friendship AND two full weeks in game (day 1 + 14)
+                        const revealScene = (friendship >= 100 && gameState.time.day >= 15) ? 'stadium_reveal_vampire_stephanie' : 'stadium_reveal_not_ready_stephanie';
                         specials += btn(ico('Images/icons/vampire.png') + ' Tell her your secret', revealScene);
                     }
                     if (gameState.flags.stephanieKnowsVampire && gameState.flags.stephanieOfferedBlood && (gameState.flags.lastStephanieFeedDay || -1) < gameState.time.day) {
@@ -64591,7 +64593,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             stadium_reveal_not_ready_dante: {
                 text: function() {
                     const friendship = (gameState.relationships.dante && gameState.relationships.dante.friendship) || 0;
-                    return 'You open your mouth to tell him.\n\nTo reveal your secret. Your truth.\n\nBut...\n\n<em>I can\'t.</em>\n\nYou don\'t know him well enough. Don\'t trust him that much yet. Dante notices everything. If he looks at you differently after this, if that quiet acceptance turns to quiet fear, you\'ll never get it back.\n\nThis is too big. Too soon.\n\n<em>Maybe after getting to know him better.</em>\n\nYou close your mouth. Change what you were going to say.\n\n"Never mind. It\'s nothing."\n\nDante studies your face. He knows it\'s not nothing. But he doesn\'t push. He never pushes.\n\n<div style="background: linear-gradient(135deg, rgba(139, 105, 160, 0.3), rgba(107, 85, 128, 0.3)); border: 2px solid #8b69a0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; font-size: 18px; font-weight: bold; color: #d4a5f5;">\n+100 Friendship Required To Tell Dante Your Secret\n<div style="font-size: 14px; font-weight: normal; margin-top: 10px; color: #b896d0;">\nCurrent: ' + friendship + '/100 (Friendship)\n</div>\n</div>';
+                    const daysPassed = Math.max(0, (gameState.time.day || 1) - 1);
+                    const box = '\n\n<div style="background: linear-gradient(135deg, rgba(139, 105, 160, 0.3), rgba(107, 85, 128, 0.3)); border: 2px solid #8b69a0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; font-size: 18px; font-weight: bold; color: #d4a5f5;">\n+100 Friendship and 2 Weeks Required To Tell Dante Your Secret\n<div style="font-size: 14px; font-weight: normal; margin-top: 10px; color: #b896d0;">\nFriendship: ' + friendship + '/100<br>Days Passed: ' + Math.min(daysPassed, 14) + '/14\n</div>\n</div>';
+                    if (friendship >= 100) {
+                        return 'You open your mouth to tell him.\n\nThe words are right there. Dante would hear every one of them without flinching. You trust him that much. You always have.\n\nBut you only just got him back. And you barely understand what you are yet, never mind how to explain it to someone who\'s going to ask the careful, quiet questions Dante always asks.\n\n<em>Give it time. Let yourself have him back first.</em>\n\n"Never mind," you say. "It\'s nothing."\n\nDante studies your face. He knows it\'s something. He lets it go anyway, and you\'re so grateful your throat aches.' + box;
+                    }
+                    return 'You open your mouth to tell him.\n\nTo reveal your secret. Your truth.\n\nBut...\n\n<em>I can\'t.</em>\n\nYou don\'t know him well enough. Don\'t trust him that much yet. Dante notices everything. If he looks at you differently after this, if that quiet acceptance turns to quiet fear, you\'ll never get it back.\n\nThis is too big. Too soon.\n\n<em>Maybe after getting to know him better.</em>\n\nYou close your mouth. Change what you were going to say.\n\n"Never mind. It\'s nothing."\n\nDante studies your face. He knows it\'s not nothing. But he doesn\'t push. He never pushes.' + box;
                 },
                 choices: [
                     { text: 'Change the subject', nextScene: 'stadium_talk_dante' }
@@ -64601,7 +64608,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             stadium_reveal_not_ready_stephanie: {
                 text: function() {
                     const friendship = (gameState.relationships.stephanie && gameState.relationships.stephanie.friendship) || 0;
-                    return 'You open your mouth to tell her.\n\nTo reveal your secret. Your truth.\n\nBut...\n\n<em>I can\'t.</em>\n\nStephanie is warm and open and loud and trusting. But what if this is the thing that silences her? What if the girl who fills every room goes quiet when she finds out what you are?\n\nThis is too big. Too soon.\n\n<em>Maybe after getting to know her better.</em>\n\nYou close your mouth. Pivot.\n\n"Never mind. It\'s nothing."\n\n"Liar," Stephanie says. But she\'s smiling. She doesn\'t push.\n\n<div style="background: linear-gradient(135deg, rgba(139, 105, 160, 0.3), rgba(107, 85, 128, 0.3)); border: 2px solid #8b69a0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; font-size: 18px; font-weight: bold; color: #d4a5f5;">\n+100 Friendship Required To Tell Stephanie Your Secret\n<div style="font-size: 14px; font-weight: normal; margin-top: 10px; color: #b896d0;">\nCurrent: ' + friendship + '/100 (Friendship)\n</div>\n</div>';
+                    const daysPassed = Math.max(0, (gameState.time.day || 1) - 1);
+                    const box = '\n\n<div style="background: linear-gradient(135deg, rgba(139, 105, 160, 0.3), rgba(107, 85, 128, 0.3)); border: 2px solid #8b69a0; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; font-size: 18px; font-weight: bold; color: #d4a5f5;">\n+100 Friendship and 2 Weeks Required To Tell Stephanie Your Secret\n<div style="font-size: 14px; font-weight: normal; margin-top: 10px; color: #b896d0;">\nFriendship: ' + friendship + '/100<br>Days Passed: ' + Math.min(daysPassed, 14) + '/14\n</div>\n</div>';
+                    if (friendship >= 100) {
+                        return 'You open your mouth to tell her.\n\nYou trust her with anything. That\'s what makes it hard. Stephanie doesn\'t do anything halfway, and if you tell her now, she\'ll throw herself into this with you before you even know what <em>this</em> is.\n\nYou only just got her back. You\'re still learning the rules of your own body. You need a little more time before you hand her something this big.\n\n<em>Soon. Just not today.</em>\n\n"Never mind," you say. "It\'s nothing."\n\n"Liar," Stephanie says softly. She bumps your shoulder with hers. She doesn\'t push.' + box;
+                    }
+                    return 'You open your mouth to tell her.\n\nTo reveal your secret. Your truth.\n\nBut...\n\n<em>I can\'t.</em>\n\nStephanie is warm and open and loud and trusting. But what if this is the thing that silences her? What if the girl who fills every room goes quiet when she finds out what you are?\n\nThis is too big. Too soon.\n\n<em>Maybe after getting to know her better.</em>\n\nYou close your mouth. Pivot.\n\n"Never mind. It\'s nothing."\n\n"Liar," Stephanie says. But she\'s smiling. She doesn\'t push.' + box;
                 },
                 choices: [
                     { text: 'Change the subject', nextScene: 'stadium_talk_stephanie' }
@@ -192190,14 +192202,14 @@ wet_car_slowdown: {
                         desc += '[[PAGE]]';
                         // ── DATING PATHS ──────────────────────────────────────────
                         if (gameState.flags.datingDante) {
-                            desc += '\n\nYou\'re watching him finish the set. He rounds the final turn and pulls up, hands on his knees for a second, catching his breath. Stephanie says something beside him. He lifts his head.\n\nHe sees you.\n\nThe stillness he carries around himself cracks at the edges. It\'s small, because this is Dante, but anyone who knows him well enough would read it clearly: that\'s the one.\n\nYour chest goes tight. Under the oak tree, gown on, his arms around you, you told him you\'d be here. You said it like it was the easiest promise in the world. Then you turned, and the months piled up, and you didn\'t come.\n\nHe starts walking toward you. Then he\'s not walking.\n\nYou rehearsed a dozen versions of this on the way over. Every single one of them falls straight out of your head.\n\nStephanie watches him go. Her eyes follow the line of his movement across the track to you, standing by the gate. One second. Two. Then she sees you. Really sees you.\n\nHer expression does something that happens too fast for her to stop it. A fraction of a second where something real surfaces, unguarded, before the performance catches back up with her. Then it\'s gone. Covered in warmth that she means, because she does love you, and she does mean it, and it\'s only the timing of that pivot that tells the full story.\n\n"Oh my god, Kelsie!" The voice, loud and bright across the whole stadium.';
+                            desc += '\n\nYou\'re watching him finish the set. He rounds the final turn and pulls up, hands on his knees for a second, catching his breath. Stephanie says something beside him. He lifts his head.\n\nHe sees you.\n\nThe stillness he carries around himself cracks at the edges. It\'s small, because this is Dante, but anyone who knows him well enough would read it clearly: that\'s the one.\n\nYour chest goes tight. Under the oak tree, gown on, his arms around you, you told him you\'d be here. You said it like it was the easiest promise in the world. Then two months slid by, one <em>next week</em> at a time, and you didn\'t come. And now you\'re finally here, and you\'re not even the same girl who made the promise.\n\nHe starts walking toward you. Then he\'s not walking.\n\nYou rehearsed a dozen versions of this on the way over. Every single one of them falls straight out of your head.\n\nStephanie watches him go. Her eyes follow the line of his movement across the track to you, standing by the gate. One second. Two. Then she sees you. Really sees you.\n\nHer expression does something that happens too fast for her to stop it. A fraction of a second where something real surfaces, unguarded, before the performance catches back up with her. Then it\'s gone. Covered in warmth that she means, because she does love you, and she does mean it, and it\'s only the timing of that pivot that tells the full story.\n\n"Oh my god, Kelsie!" The voice, loud and bright across the whole stadium.';
                         } else if (gameState.flags.datingStephanie) {
-                            desc += '\n\nThey\'re in the middle of something; Stephanie hammering the straight, Dante matching her stride for stride with the infuriating calm he brings to everything. You watch for a moment.\n\nThen she looks up during the turn and sees you.\n\nThe set ends right there. She doesn\'t check whether they\'ve finished. She doesn\'t consult Dante or the clock or anyone. She just changes direction entirely, the competitive athlete replaced in the span of one breath by something that has nothing to do with running.\n\nDante pulls up behind her, confused, then follows her gaze to you. His posture shifts. Something in his face settles. He nods once, like he nods at things that are already decided and good, and he lets her go.\n\nShe\'s already crossing the infield.\n\nYour heart does something stupid and painful. Two months of her texts ending in <em>come to the stadium</em>, and two months of you typing back <em>soon</em>. You told yourself you needed more time to get steady. Mostly you were scared she\'d take one look at you and know something was wrong.\n\nShe\'s running at you like she doesn\'t care what\'s wrong. You forget how to breathe.';
+                            desc += '\n\nThey\'re in the middle of something; Stephanie hammering the straight, Dante matching her stride for stride with the infuriating calm he brings to everything. You watch for a moment.\n\nThen she looks up during the turn and sees you.\n\nThe set ends right there. She doesn\'t check whether they\'ve finished. She doesn\'t consult Dante or the clock or anyone. She just changes direction entirely, the competitive athlete replaced in the span of one breath by something that has nothing to do with running.\n\nDante pulls up behind her, confused, then follows her gaze to you. His posture shifts. Something in his face settles. He nods once, like he nods at things that are already decided and good, and he lets her go.\n\nShe\'s already crossing the infield.\n\nYour heart does something stupid and painful. Two months of her texts ending in <em>come to the stadium</em>, and two months of you typing back <em>soon</em>. Soon kept sliding. Then you turned, and now you\'re scared she\'ll take one look at you and know something\'s changed.\n\nShe\'s running at you like nothing in the world could stop her. You forget how to breathe.';
                         // The recognition moment - based on friendship levels
                         } else if (closeBoth) {
                             desc += '\n\nStephanie sees you first. She stops mid-stride. Dante almost runs into her.\n\n"Oh my god," she says. She says it loud enough that three other runners look over. Then she\'s crossing the infield grass, and she\'s fast even when she\'s not trying, and before you can say anything she\'s got her arms around you.\n\n"Kelsie." She pulls back. Holds your shoulders. Looks at you like she\'s checking you\'re real. "What are you doing here?"\n\n"Hi," you manage. It comes out wobbly. You had a whole joke ready on the walk over, and it\'s gone.\n\nDante is right behind her. He\'s smiling. The real smile, the one that took you years to earn. "About time," he says.\n\nYou laugh, and it catches halfway in your throat. He\'s right, and all three of you know it.';
                         } else if (knowsBoth) {
-                            desc += '\n\nStephanie spots you first. She slows, then stops, nudging Dante with her elbow. He looks up. Across the length of the track, both of them stare at you.\n\nThen Stephanie waves. One hand, lifted casual, like it hasn\'t been months. Dante nods. That nod you know.\n\nThey jog over together. Stephanie\'s breathing is barely elevated. Dante isn\'t breathing hard at all.\n\n"Kelsie Summers," Stephanie says. "Look who finally showed up."\n\n"Hi." Heat climbs your neck. You\'d planned to play this cool, and now they\'re both looking at you and you\'ve forgotten what your hands are for. You wave. Actually wave. "Surprise?"';
+                            desc += '\n\nStephanie spots you first. She slows, then stops, nudging Dante with her elbow. He looks up. Across the length of the track, both of them stare at you.\n\nThen Stephanie waves. One hand, lifted casual, like it hasn\'t been two months. Dante nods. That nod you know.\n\nThey jog over together. Stephanie\'s breathing is barely elevated. Dante isn\'t breathing hard at all.\n\n"Kelsie Summers," Stephanie says. "Look who finally showed up."\n\n"Hi." Heat climbs your neck. You\'d planned to play this cool, and now they\'re both looking at you and you\'ve forgotten what your hands are for. You wave. Actually wave. "Surprise?"';
                         } else if (closeDante) {
                             desc += '\n\nDante sees you first. He pulls up mid-sprint, and Stephanie blows past him with a confused look before circling back.\n\nHe\'s already walking toward you. The kid from the staircase, the boy at the picnic table with his family, the Olympic gold medalist. All the same person. He grins when he reaches you.\n\n"Kelsie." He says your name like he\'s been waiting to say it. "You came."\n\nStephanie stops beside him. She looks at you, then at Dante, reading the warmth in his voice. "You two know each other?"\n\n"Yeah," Dante says. "We go way back."\n\nYou\'re grinning so hard it hurts. He looks good. He looks happy, and you missed that face more than you let yourself admit.\n\n"He means I used to eat half his fries," you tell her.\n\n"You still owe me for those," Dante says.';
                         } else if (closeSteph) {
@@ -192391,17 +192403,17 @@ wet_car_slowdown: {
                     
                     desc += '\n\nWhen she sets you down she keeps a hand on your arm like she\'s not done verifying you\'re solid.';
                     
-                    desc += '\n\n"Where have you been?" she demands. The grip on your arm tightens. "We graduated months ago. You said you\'d come."';
+                    desc += '\n\n"Where have you been?" she demands. The grip on your arm tightens. "We graduated two months ago. You said you\'d come."';
                     
                     desc += '\n\nGuilt drops through you like a stone.';
                     
-                    desc += '\n\n"I know. I know, Steph, I\'m sorry." It tumbles out too fast. "I kept meaning to. Every week I\'d tell myself this is the week, and then..."';
+                    desc += '\n\n"I know. I know, Steph, I\'m sorry." It tumbles out too fast. "I kept meaning to. Every week I\'d tell myself this is the week, and then it just... wasn\'t."';
                     
-                    desc += '\n\nAnd then you turned. The rest of those months went to learning how to stand near people without hurting them. That part stays behind your teeth.';
+                    desc += '\n\nTwo months of next week. Then you turned, and the girl who kept putting this off is standing here with fangs in her gums and a secret she can\'t say. That part stays behind your teeth.';
                     
-                    desc += '\n\n"Then life got weird," you finish, lamely. "Really weird. That\'s a crappy excuse. I should\'ve come anyway."';
+                    desc += '\n\n"I suck," you finish, lamely. "I know I suck. There\'s no good excuse. I should\'ve just come."';
                     
-                    desc += '\n\n"Months, Kelsie." Her voice wobbles on your name, and that\'s so much worse than if she\'d yelled.';
+                    desc += '\n\n"Two months, Kelsie." Her voice wobbles on your name, and that\'s so much worse than if she\'d yelled.';
                     
                     desc += '\n\n"I know." You find her hand on your arm and hold onto it. "I missed you so much it was stupid. I\'m here now, okay? I\'m done disappearing."';
                     
@@ -192442,9 +192454,9 @@ wet_car_slowdown: {
                     
                     desc += '\n\nYou didn\'t let yourself think about how much you missed this. It was easier that way. Now it\'s right in front of you, loud and sunburnt and grinning, and it\'s almost too much.';
                     
-                    desc += '\n\n"Come sit," Stephanie says. She tugs your wrist toward the bleachers. "I have approximately nine months of news and I\'m delivering all of it right now."';
+                    desc += '\n\n"Come sit," Stephanie says. She tugs your wrist toward the bleachers. "I have two months of news and I\'m delivering all of it right now."';
                     
-                    desc += '\n\n"Only nine?" You let her drag you. "I figured you\'d have a slideshow."';
+                    desc += '\n\n"Only two months?" You let her drag you. "I figured you\'d have a slideshow."';
                     
                     desc += '\n\n"Don\'t tempt me. I have a slideshow."';
                     
@@ -192484,7 +192496,7 @@ wet_car_slowdown: {
                     
                     desc += '\n\n"I know." Your eyes sting. "I know. I\'m so sorry. I told you I\'d be here, and then I just... wasn\'t."';
                     
-                    desc += '\n\nYou can\'t tell him why. The night you turned and the weeks you spent scared of your own mouth don\'t fit into anything you can say at a stadium gate. So you give him the part that\'s true.';
+                    desc += '\n\nThere\'s no good reason. Two months of next week, that\'s all it was. And now there\'s the night you turned, still so new it scares you, and you can\'t say one word about it at a stadium gate. So you give him the part that\'s true.';
                     
                     desc += '\n\n"I missed you every single day."';
                     
@@ -192705,13 +192717,13 @@ wet_car_slowdown: {
                     
                     desc += '\n\n"I\'ve been telling you to come for two months."';
                     
-                    desc += '\n\n"I know. I\'m so sorry, Steph." Your arms tighten around her. "Every time you texted, I wanted to come so bad. I just had some stuff to figure out first."';
+                    desc += '\n\n"I know. I\'m so sorry, Steph." Your arms tighten around her. "Every time you texted, I wanted to come so bad. I kept saying next week, and then there was the move, and then..."';
                     
-                    desc += '\n\nStuff. Like how to stand this close to the girl you love and hear her heartbeat without your fangs sliding down. You figured it out, mostly. Her pulse is hammering against your cheek right now, and you hold very still and let yourself have the hug and nothing else.';
+                    desc += '\n\nAnd then you turned. It\'s so new you still flinch at mirrors, and now you\'re standing this close to the girl you love, hearing her heartbeat, praying your fangs stay put. Her pulse is hammering against your cheek. You hold very still and let yourself have the hug and nothing else.';
                     
-                    desc += '\n\n"You could\'ve figured it out here," she says, muffled. "I would\'ve helped."';
+                    desc += '\n\n"You could\'ve told me you were moving," she says, muffled. "I would\'ve helped."';
                     
-                    desc += '\n\nThat almost breaks you. She would have. She\'d help you with anything, and this is the one thing you can\'t let her anywhere near.';
+                    desc += '\n\nThat almost breaks you. She would have. She\'d help you with anything, and the biggest thing you\'re carrying now is the one thing you can\'t let her anywhere near.';
                     
                     desc += '\n\nShe pulls back. Her hands are still on your arms. Her cheeks are flushed from running and from this, and the smile on her face is the full one. Unperformed. The one that only exists when Stephanie isn\'t thinking about being looked at.';
                     
@@ -192950,7 +192962,7 @@ wet_car_slowdown: {
                     
                     desc += '\n\nYou snort. It slips out before you can stop it, and Stephanie looks so pleased with herself you have to bite your cheek.';
                     
-                    desc += '\n\nThen she leans in, voice dropping. "You\'re not off the hook for the months thing, by the way."';
+                    desc += '\n\nThen she leans in, voice dropping. "You\'re not off the hook for the two months thing, by the way."';
                     
                     desc += '\n\nYour stomach sinks. "I know. I\'m sorry, Steph. For real."';
                     
@@ -193090,7 +193102,7 @@ wet_car_slowdown: {
                     desc += '\n\nShe doesn\'t wait for an answer. She walks, and you fall into step beside her, and Dante follows on your other side. The three of you cross the infield together, shoes pressing into the trimmed grass. The sun is warm on the back of your neck. A sprinkler clicks somewhere beyond the far bleachers, and the air smells like heated rubber and chalk dust.';
                     
                     if (hasTrack) {
-                        desc += '\n\nYour feet find the track surface and your body wakes up. The slight give underfoot, the grip of the rubber, the lane curving away from you at exactly the angle your stride wants to follow. You haven\'t run competitively in months. The track doesn\'t care.';
+                        desc += '\n\nYour feet find the track surface and your body wakes up. The slight give underfoot, the grip of the rubber, the lane curving away from you at exactly the angle your stride wants to follow. You haven\'t run competitively since graduation. The track doesn\'t care.';
                         desc += '\n\nDante sees it in your legs. "You miss it," he says.';
                         desc += '\n\n"Maybe." You try to sound casual. Your calves are already twitching. "A little. Okay, a lot."';
                         desc += '\n\n"She misses it," Stephanie says, grinning at Dante over your head. "Look at her feet. She\'s already in the blocks."';
@@ -193146,7 +193158,7 @@ wet_car_slowdown: {
                     
                     if (hasTrack) {
                         desc += '\n\nYou know what you\'re watching. You ran with these two. You felt the gap between yourself and them widen with every practice, every season, until you understood the gap never closed with effort. They were built for this. You were good. They were something else.';
-                        desc += '\n\nSitting here now, months later, the gap looks like a canyon. Your legs twitch anyway.';
+                        desc += '\n\nSitting here now, two months later, the gap looks like a canyon. Your legs twitch anyway.';
                     } else {
                         desc += '\n\nYou knew they were fast. You watched them at school meets, heard the announcements, saw the headlines after Paris. Knowing and seeing are different things. Up close, the speed is almost violent. The air in their wake doesn\'t settle for a full second after they pass.';
                     }
