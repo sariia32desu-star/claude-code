@@ -23302,7 +23302,7 @@ audioSystem.playSFX('buttonClick');
         // ── Mesh & Sheer Overhaul, Step 18: discovery scenes ──
         // Scenes a Step 9 event can lead into, by event key and stranger gender. Each entry is
         // added as its scene is written; the follow offer only appears for listed pairs.
-        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m', backlight_f: 'sheer_backlight_sex_f', flash_m: 'sheer_flash_sex_m' };
+        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m', backlight_f: 'sheer_backlight_sex_f', flash_m: 'sheer_flash_sex_m', flash_f: 'sheer_flash_sex_f' };
 
         // The follow offer: 8001+ (the scenes are DC only), bare behind mesh, a written scene,
         // and for the Backlight, after dark (its scene is a lit shop doorway after close).
@@ -48003,6 +48003,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'sheer_backlight_sex_m', label: 'Discovery: The Backlight (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_backlight_sex_2_m' } },
                     { sceneId: 'sheer_backlight_sex_f', label: 'Discovery: The Backlight (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'sheer_flash_sex_m', label: 'Discovery: The Flash (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_flash_sex_2_m' } },
+                    { sceneId: 'sheer_flash_sex_f', label: 'Discovery: The Flash (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_crowd_press_sex', label: 'The Crowd Press', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_doorway_sex', label: 'The Doorway', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_car_slowdown_sex', label: 'The Car Slowdown', tiers: [{l:'Deeply Corrupted',v:8001}] },
@@ -177063,6 +177064,110 @@ wet_car_slowdown: {
                     return [{ text: 'Keep walking.', action: function() {
                         gameState.flags._sheerDiscovery = null;
                         gameState.flags._sheerDiscoveryCondom = null;
+                        showScene(back);
+                    } }];
+                }
+            },
+
+            // The Flash, female: the same stairwell. One extended scene; the shoot turns around.
+            sheer_flash_sex_f: {
+                galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                        top: null, bottom: null, bra: null, panties: null, outerwear: null,
+                        dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
+                    });
+                },
+                text: function() {
+                    var g = _sheerDiscoveryGarb('f');
+                    var b = g.b, n = g.n;
+                    var desc = '';
+                    var shot = (b.seeChest && b.seeHips)
+                        ? 'You\'re naked on the screen. ' + capFirst(b.tits) + ', nipples dark and stiff, the bare slit of your pussy, and the ' + n + ' gone to a faint grid of shadow.'
+                        : b.seeChest ? 'You\'re topless on the screen, ' + b.tits + ' and your stiff nipples bright under a faint grid of shadow.'
+                        : 'Your bare pussy\'s the brightest thing on the screen, slit and folds under a faint grid of shadow.';
+
+                    // ── THE STAIRWELL ──
+                    desc += '<p>You head for the parking structure. Her footsteps follow you through the open door.</p>';
+                    desc += '<p>Concrete steps, a painted P2, a single fluorescent tube buzzing over the landing. The air\'s cold and smells like motor oil, and every footstep echoes up four floors.</p>';
+                    desc += '<p>Under the light you get your first good look at her. Early thirties, box braids pulled back, a denim jacket over a crop top. She holds the phone like she knows what she\'s doing with it.</p>';
+
+                    // ── THE SHOOT ──
+                    desc += '<p>"Stand under the light," she says.</p>';
+                    desc += '<p>You do. The flash goes off and the ' + n + ' vanishes for an instant, bright spots swimming in your eyes.</p>';
+                    desc += '<p>She shows you. ' + shot + '</p>';
+                    desc += '<p>She shoots you like she means it. Chin up. Turn. Hand on the rail. Arch. ' + _bt5(b,
+                        'Your slight little frame looks almost breakable in the flash, every inch of it on show.',
+                        'The flash carves every line of your stomach out of the gray concrete.',
+                        'The flash catches every curve she tells you to give her.',
+                        'The flash catches your soft belly and thick thighs, bare and bright behind the ' + n + '.',
+                        'The flash catches all of you, bare and bright behind the ' + n + '.') + '</p>';
+                    desc += '<p>Every flash goes straight through the ' + n + ', and your clit throbs each time it fires. She can tell. "You like this," she says, smiling behind the phone.</p>';
+                    desc += '<p>She steps in close, the phone in one hand. ' + g.chestTouch + ' The flash fires from a foot away. "Mmh—"</p>';
+                    desc += '<p>"Now show me," she says.</p>';
+                    desc += '<p>' + g.chestPeel + ' The flash fires.</p>';
+                    desc += '<p>' + g.hipsPeel + ' It fires again, and your slick shines in it.</p>';
+
+                    // ── ACT 1: HER MOUTH ON THE STAIRS — ENTRY & BUILD ──
+                    desc += '<p>She points at the steps. You sit on the third one up, the concrete cold under your bare ass, and spread your knees for her.</p>';
+                    desc += '<p>She kneels on the landing between your thighs with the phone still raised. The first shot is straight up between your legs. Then she puts her mouth on you.</p>';
+                    desc += '<p>Her tongue drags up your slit, slow and flat, and you grab the rail. "Hhh—fuck—"</p>';
+                    desc += '<p>She finds your clit and circles it, light at first, then harder. Her free hand pushes two fingers into your cunt and curls. The flash keeps going off, the phone held up blind over her own head.</p>';
+                    desc += '<p>You lean back on your elbows on the step above. Your tits, ' + g.frame + ', rise and fall with every breath. ' + _bt5(b,
+                        'Your small body arches off the concrete toward her mouth.',
+                        'The muscle in your stomach jumps with every flick of her tongue.',
+                        'Your soft hips roll up into her face.',
+                        'Your thick thighs spread wide around her shoulders.',
+                        'Your hips roll up into her face.') + '</p>';
+                    desc += '<p>Keys jingle on the flight above. A man coming down to his car stops dead on the flight above, staring through the railing. She lifts her mouth long enough to say, "Stay or go. Don\'t talk." He stays.</p>';
+                    desc += '<p>You meet his eyes and spread your knees wider. Your hips rock against her face. "Mmh—ah—right there—"</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>Your thighs start shaking around her head. Your cunt clenches around her fingers in quickening squeezes, and your heels scrape the concrete.</p>';
+
+                    // ── KELSIE\'S FIRST ORGASM ──
+                    desc += '<p>You cum on the stairs with her tongue on your clit. Your cunt seizes around her fingers in hard spasms, your back arches off the step, and the flash goes off right in the middle of it. "Ahh—fuck—ahh—"</p>';
+                    desc += '<p>She licks you slow through every aftershock, then sits back on her heels and checks the screen. She turns it around: your face mid-orgasm, mouth open, the ' + n + ' bunched and white in the flash.</p>';
+
+                    // ── ACT 2: KELSIE SHOOTS HER ──
+                    desc += '<p>You take the phone out of her hand. "My turn."</p>';
+                    desc += '<p>She laughs and stands under the light for you. You shoot her pulling the crop top over her head. No bra. Heavy breasts, dark nipples, a gold bar through the left one.</p>';
+                    desc += '<p>Then the jeans, shoved down and kicked off with her sneakers. Her pussy\'s trimmed and swollen, already slick. You shoot that too, close enough that she laughs again.</p>';
+                    desc += '<p>On the flight above, the man with the keys hasn\'t moved.</p>';
+                    desc += '<p>You prop the phone on the railing, set it to fire every few seconds, and pull her down onto the landing with you.</p>';
+
+                    // ── 69 ON THE LANDING — ENTRY & BUILD ──
+                    desc += '<p>She straddles your face, facing your feet, and lowers her pussy onto your mouth. Then she folds forward and buries her face between your thighs again.</p>';
+                    desc += '<p>You spread her open with your thumbs and lick into her. She tastes sharp and sweet. "Mmf—" Her moan hums straight into your clit.</p>';
+                    desc += '<p>You eat each other on the cold concrete, her hips grinding down on your face, her tongue working your clit, still swollen and raw from the first time. The flash fires on its timer every few seconds and catches you both.</p>';
+                    desc += '<p>You push two fingers into her cunt and curl them. She does the same to you. Every time you moan into her, she moans back into you, and the sounds stack up the stairwell.</p>';
+                    desc += '<p>Her hands find your tits, ' + g.frame + ', and knead. ' + (b.bs === 'large' ? 'Your heavy tits spill between her fingers.' : b.bs === 'small' ? 'She pinches your stiff little nipples until you whimper into her.' : 'She rolls your nipples until you whimper into her.') + '</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>Her cunt starts clenching around your fingers. Yours answers around hers, faster and faster. Her thighs clamp on your head. "Mmh—mmh—"</p>';
+
+                    // ── ORGASMS ──
+                    desc += '<p>She cums first, grinding down on your mouth, her cunt spasming around your fingers and slick running down your chin. Her scream crushes itself against your pussy.</p>';
+                    desc += '<p>The vibration of it tips you over. You cum into her mouth with your hips bucking off the concrete, your cunt clamping down on her fingers in hard, rolling spasms, and the flash fires right in the middle of both of you.</p>';
+                    desc += '<p>You lie tangled on the landing, breathing hard, her cheek on your thigh. Aftershocks keep twitching through your pussy under her slow tongue until you push her off, laughing.</p>';
+
+                    // ── AFTERMATH ──
+                    desc += '<p>She gets the phone off the railing and scrolls. Dozens of shots, the two of you on the concrete, every angle frozen white. "Want me to delete them?"</p>';
+                    desc += '<p>"Keep them," you tell her.</p>';
+                    desc += '<p>' + g.chestFix + ' ' + g.hipsFix + ' On the flight above, the man with the keys is gone.</p>';
+                    desc += '<p>She pulls her crop top back on and snaps one last shot of you at the top of the stairs. You blow her a kiss for it and push out through the door onto the street.</p>';
+                    return desc;
+                },
+                onEnter: function() {
+                    trackGalleryScene('sheer_flash_sex_f');
+                    completeSexConsensualFemale({ time: 30, hygiene: -15, thrill: 20 });
+                },
+                choices: function() {
+                    var d = gameState.flags._sheerDiscovery || {};
+                    var back = d.district ? d.district + '_district_street' : 'city_exploration';
+                    return [{ text: 'Keep walking.', action: function() {
+                        gameState.flags._sheerDiscovery = null;
                         showScene(back);
                     } }];
                 }
