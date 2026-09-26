@@ -72,6 +72,13 @@ A warrant severity of 60+ bumps the class up one step. When a warrant is cleared
 
 Caught choices: run at vampire speed, empty-handed (face on camera: FR +15, theft entry, plus fleeing at the hospital); compel them to wipe the recording and take the bags (clean, +15 thirst); knock them out and take the bags (theft plus assault on camera, assault on law enforcement at the hospital); surrender (theft tied to her on the spot, booking).
 
+## Follow-up: Cruz on the hero path
+
+Reputation is attention.
+- **Tier 2 (named in the media):** Cruz takes the vigilante file herself (the scanner scene). There's a first-meeting variant for a hero who's never crossed her criminal case.
+- **Tier 3 (City Hero) with vigilante suspicion 30+, or Tier 4 (Legend) regardless:** Cruz identifies Kelsie. The hero-only variant has her matching Kelsie's face on traffic cameras near nine of eleven interventions.
+- **Street sightings, the probing conversation, the walk and the admission** open up on the hero track. Her lines are adjusted where they assumed the criminal case.
+- **Criminal-path triggers still work:** vigilante suspicion 30+ with Cruz on the case, and a failed compulsion plus vigilante suspicion 50+.
+
 ## Still open (design calls, not bugs)
 
-- **Hero-only players never meet Cruz.** Her vigilante awareness requires her to be assigned to Kelsie's criminal case.

@@ -8108,8 +8108,9 @@
 
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #c084fc; font-size: 13px;">DETECTIVE CRUZ</strong></li>
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
-                            <li style="margin: 3px 0;">Cruz investigates both the criminal and the hero. At vigilante suspicion 30+, she becomes aware of the vigilante.</li>
-                            <li style="margin: 3px 0;">If compulsion has failed on her and vigilante suspicion reaches 50+, she may suspect Kelsie and the hero are the same person.</li>
+                            <li style="margin: 3px 0;">Cruz investigates both the criminal and the hero. Reputation is attention: once your hero is <strong>named in the media (Tier 2)</strong>, she takes the vigilante file herself. If she's already on your criminal case, vigilante suspicion 30+ does it too.</li>
+                            <li style="margin: 3px 0;">She works out that Kelsie and the hero are the same person once your hero is a <strong>City Hero (Tier 3)</strong> and vigilante suspicion is 30+, or a <strong>Legend (Tier 4)</strong> no matter how careful you've been. On the criminal path, a failed compulsion plus vigilante suspicion 50+ gets her there too.</li>
+                            <li style="margin: 3px 0;">Once she's on the vigilante file, she turns up on the street. Ask her what she thinks the hero is, or walk with her once she knows.</li>
                             <li style="margin: 3px 0;">High-karma Kelsie (500+) can acknowledge this. Cruz&#39;s response matters. A lot.</li>
                         </ul>
 
@@ -20910,7 +20911,7 @@ audioSystem.playSFX('buttonClick');
                 { id: 'rand_event_purse_snatch',     chance: 0.10, districts: ['commercial','downtown'],                                                                      condition: () => !isNight },
                 { id: 'rand_event_scaffold',         chance: 0.09, districts: ['commercial','downtown'],                                                                      condition: () => !isNight }
                 ,{ id: 'rand_event_cruz_direct_question', repeatable: true, chance: 0.10, districts: ['commercial','downtown','residential'], condition: () => !!gameState.flags.gabriellaCruzAssigned && !!gameState.flags.gabriellaCompulsionFailed && !gameState.flags.warrantIssued && gameState.citySuspicion >= 30 && !gameState.flags.cruzQuestionToday }
-                ,{ id: 'rand_event_cruz_spotted', repeatable: true, chance: 0.08, districts: ['commercial','downtown','residential','medical'], condition: () => !!gameState.flags.gabriellaCruzAssigned && !!gameState.flags.sawCruzIntro && !gameState.flags.warrantIssued && !gameState.flags.cruzSpottedToday && !gameState.flags.cruzQuestionToday }
+                ,{ id: 'rand_event_cruz_spotted', repeatable: true, chance: 0.08, districts: ['commercial','downtown','residential','medical'], condition: () => ((!!gameState.flags.gabriellaCruzAssigned && !!gameState.flags.sawCruzIntro) || !!gameState.flags.cruzVigilanteAware) && !gameState.flags.warrantIssued && !gameState.flags.cruzSpottedToday && !gameState.flags.cruzQuestionToday }
                 ,{ id: 'rand_event_social_recognition', repeatable: true, chance: 0.10, districts: ['commercial','downtown','residential'], condition: () => (gameState.socialMediaHeat || 0) >= 30 && !gameState.flags.socialRecognitionToday }
                 ,{ id: 'exhibition_wind_trigger', repeatable: true, chance: 0.20, districts: ['park','commercial','residential'],                                                              condition: () => !isNight && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionWindDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_staircase_trigger', repeatable: true, chance: 0.18, districts: ['commercial','downtown','residential'], condition: () => (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionStaircaseDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
@@ -30580,6 +30581,7 @@ audioSystem.playSFX('buttonClick');
             if (rep >= 250) tier = 4;   // Legend — mayor reaches out
             if (rep >= 400) tier = 5;   // Official — city formally recognizes
             gameState.flags.heroReputationTier = tier;
+            if (typeof checkCruzHeroTriggers === 'function') checkCruzHeroTriggers();
 
             // Trigger mayor meeting at tier 4
             if (tier >= 4 && !gameState.flags.mayorMeetingPending && !gameState.flags.mayorMeetingComplete) {
@@ -30660,26 +30662,35 @@ audioSystem.playSFX('buttonClick');
             return null;
         }
 
+        // ── Cruz on the hero path ──
+        // Reputation is attention. Once the vigilante is named in the media (tier 2),
+        // Cruz takes the file herself. Once the vigilante is a city hero (tier 3) and
+        // people are starting to wonder about Kelsie, or a legend (tier 4) no matter
+        // how careful Kelsie is, Cruz finds her. The criminal path's older triggers
+        // (Cruz already on Kelsie's case) still work alongside these.
+        function checkCruzHeroTriggers() {
+            var F = gameState.flags;
+            var tier = F.heroReputationTier || 0;
+            var vig = F.vigilanteSuspicion || 0;
+
+            if (!F.cruzVigilanteAware && !F.cruzVigilanteAwarePending) {
+                if (tier >= 2 || (vig >= 30 && F.gabriellaCruzAssigned)) {
+                    F.cruzVigilanteAwarePending = true;
+                }
+            }
+
+            if (F.cruzVigilanteAware && !F.cruzSuspectsKelsieIsHero && !F.cruzSuspectsHeroPending) {
+                var criminalRoute = vig >= 50 && F.gabriellaCompulsionFailed;
+                var heroRoute = tier >= 4 || (tier >= 3 && vig >= 30);
+                if (criminalRoute || heroRoute) F.cruzSuspectsHeroPending = true;
+            }
+        }
+
         function modifyVigilanteSuspicion(amount) {
             gameState.flags.vigilanteSuspicion =
                 Math.max(0, Math.min(100, (gameState.flags.vigilanteSuspicion || 0) + amount));
 
-            // Cruz becomes aware of the vigilante at 30+
-            if (gameState.flags.vigilanteSuspicion >= 30 &&
-                gameState.flags.gabriellaCruzAssigned &&
-                !gameState.flags.cruzVigilanteAware) {
-                gameState.flags.cruzVigilanteAwarePending = true;
-            }
-
-            // Cruz suspects Kelsie specifically if:
-            // 1. Compulsion has failed (she knows Kelsie is supernatural)
-            // 2. Vigilante suspicion is 50+
-            // 3. She hasn't already connected the dots
-            if (gameState.flags.vigilanteSuspicion >= 50 &&
-                gameState.flags.gabriellaCompulsionFailed &&
-                !gameState.flags.cruzSuspectsKelsieIsHero) {
-                gameState.flags.cruzSuspectsHeroPending = true;
-            }
+            checkCruzHeroTriggers();
             updateSidebarStats();
         }
 
@@ -136732,7 +136743,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                         desc += '"Something\'s been running the rooftops." She sips her coffee. "Fast. Careful. Thinks nobody\'s paying attention." She lowers the cup. "Somebody always is."\n\n';
 
-                        desc += '"Probably nothing," she adds, in a voice that means the opposite. "Stay out of trouble, Kelsie."';
+                        // Hero path: she doesn't have Kelsie's name until she's found her
+                        const knowsName = !!gameState.flags.gabriellaCruzAssigned || !!gameState.flags.cruzSuspectsKelsieIsHero || !!gameState.flags.gabriellaCompulsionFailed;
+                        desc += '"Probably nothing," she adds, in a voice that means the opposite. "Stay out of trouble' + (knowsName ? ', Kelsie' : '') + '."';
 
                     } else if (gameState.flags.servantCrimeStats?.cruzAwareOfVampireGang && gameState.flags.gabriellaCompulsionFailed) {
                         desc += 'Cruz is across the street with two plainclothes officers you\'ve never seen before. She\'s holding a tablet and pointing at something on the screen. One of them nods. The other writes it down.\n\n';
@@ -136983,20 +136996,31 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const name = gameState.flags.heroName || 'Demigirl';
                     const compulsionFailed = !!gameState.flags.gabriellaCompulsionFailed;
+                    // Hero path: she may never have crossed Kelsie's criminal case
+                    const onKelsiesCase = !!gameState.flags.gabriellaCruzAssigned;
+                    const knowsCruz = onKelsiesCase || !!gameState.flags.sawCruzIntro || compulsionFailed;
 
                     let text = '';
 
                     text += 'You\'re passing a newsstand when you hear it.\n\n';
 
-                    text += 'The vendor has a police scanner tucked between the register and a stack of yesterday\'s papers. The frequency\'s live, and the voice coming through the static is one you\'d know anywhere.\n\n';
+                    if (knowsCruz) {
+                        text += 'The vendor has a police scanner tucked between the register and a stack of yesterday\'s papers. The frequency\'s live, and the voice coming through the static is one you\'d know anywhere.\n\n';
 
-                    text += 'Cruz.\n\n';
+                        text += 'Cruz.\n\n';
+                    } else {
+                        text += 'The vendor has a police scanner tucked between the register and a stack of yesterday\'s papers. The frequency\'s live, and a woman\'s voice is cutting through the static, calm and level and somehow louder than everyone else on the channel.\n\n';
+
+                        text += '"Who\'s that?" you ask.\n\n';
+
+                        text += 'The vendor doesn\'t look up from his magazine. "Cruz. Runs the detectives. Runs SWAT too, somehow." He turns a page. "Scariest cop in the city, if you ask anybody who\'s met her."\n\n';
+                    }
 
                     text += '"...consistent with a single individual. Superhuman capability." Clinical, level, and a little bored, like she\'s reading a grocery list to people who can\'t keep up. "Intervening in street-level crimes across multiple districts. Slums, Downtown, Commercial. Timing says one operator with high mobility."\n\n';
 
                     text += 'A crackle. Someone answers. You can\'t make out the words.\n\n';
 
-                    text += '"Possibly the same profile as my assault-pattern suspect. Possibly not. Pull the traffic cams at every intervention site and cross-reference against the existing timeline." The scanner hisses. "And pull the social media. Everything tagged with that name they\'re using. ' + name + '."\n\n';
+                    text += (onKelsiesCase ? '"Possibly the same profile as my assault-pattern suspect. Possibly not. ' : '"No match to any open case. That\'ll change. ') + 'Pull the traffic cams at every intervention site and cross-reference against the existing timeline." The scanner hisses. "And pull the social media. Everything tagged with that name they\'re using. ' + name + '."\n\n';
 
                     text += 'Your name. In her mouth. On a police frequency.\n\n';
 
@@ -137020,7 +137044,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     } else {
                         text += 'You walk away from the newsstand. Your reflection slides across a storefront window and keeps going.\n\n';
 
-                        text += 'She\'s investigating the vigilante. She\'s investigating you. She doesn\'t know they\'re the same person.\n\n';
+                        if (onKelsiesCase) {
+                            text += 'She\'s investigating the vigilante. She\'s investigating you. She doesn\'t know they\'re the same person.\n\n';
+                        } else {
+                            text += 'She\'s taken the vigilante file herself. The scariest cop in the city is looking for you now, and from the sound of her, she\'s never failed to find anything she went looking for.\n\n';
+                        }
 
                         text += '<em>Yet.</em>';
 
@@ -137050,6 +137078,44 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const crimes = gameState.flags.suitedCrimesStopped || 0;
 
                     let text = '';
+                    // Hero path: Cruz found Kelsie through footage, not through her criminal case
+                    const heroOnly = !gameState.flags.gabriellaCruzAssigned && !gameState.flags.gabriellaCompulsionFailed;
+                    if (heroOnly) {
+                        text += 'A woman\'s sitting in the window seat of the coffee shop on Elm with a cold cup at her elbow, reading something on her phone. Dark braid over one shoulder. Blazer open over a white tee. A badge on her belt.\n\n';
+
+                        text += 'She says "Excuse me" to a barista squeezing past her chair, and you know the voice before you\'ve placed the face. It\'s the one from the police scanner at the newsstand.\n\n';
+
+                        text += 'She looks up and finds you through the glass like she\'s been expecting you, and waves you in with two fingers.\n\n';
+
+                        text += 'You should keep walking. Instead you push through the door, the bell chimes, and she nudges the chair across from her with her foot.\n\n';
+
+                        text += '"Sit," she says. "Detective Gabriella Cruz. You\'re Kelsie Summers. Let\'s skip the part where you pretend you don\'t know why I\'m here."\n\n';
+
+                        text += 'You sit. She buys you a coffee and takes her time, talking about the bakery on Elm and the pigeon on Fourth Street she\'s convinced is following her, until you\'ve almost relaxed.\n\n';
+
+                        text += 'Then she sets her cup down.\n\n';
+
+                        text += '"There\'s a woman in a suit who\'s been stopping crimes across the city."\n\n';
+
+                        text += 'She watches you over the rim.\n\n';
+
+                        text += '"I pulled the traffic cameras within four blocks of every one of her interventions. The suit shows up for about ten seconds each time." She turns her phone around and slides it across the table. "And a few minutes later, so does a girl in a hoodie, walking home with her head down."\n\n';
+
+                        text += 'Nine stills. Nine different street corners. Your face in every one of them.\n\n';
+
+                        text += '"Nine out of eleven," she says. "It was raining for the other two."\n\n';
+
+                        text += 'The phone sits between you like a knife on a tablecloth.\n\n';
+
+                        text += '"I\'m not asking you to confirm anything," she says, taking the phone back. "I just thought you should know it took me one afternoon."\n\n';
+
+                        text += 'She picks up her coffee and takes a sip.\n\n';
+
+                        text += '"Get some sleep, Kelsie. You look like you were out late."\n\n';
+
+                        text += 'She said your name twice. Both times, it sounded like she had her hand on a door she was choosing not to open, and she wanted you to see it.';
+                        return text;
+                    }
 
                     text += 'Cruz is at the coffee shop.\n\n';
 
@@ -137109,7 +137175,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     advanceTime(30);
                     updateStatus();
                     trackGalleryScene('hero_cruz_suspects_identity');
-                    showNotification('<img src="Images/icons/hero-detective.png" class="icon" alt="detective"> Cruz is connecting the dots. Point nine four.');
+                    showNotification('<img src="Images/icons/hero-detective.png" class="icon" alt="detective"> ' + ((!gameState.flags.gabriellaCruzAssigned && !gameState.flags.gabriellaCompulsionFailed) ? 'Cruz has your face on nine traffic cameras.' : 'Cruz is connecting the dots. Point nine four.'));
                 },
                 choices: function() {
                     const choices = [];
@@ -137132,6 +137198,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const name = gameState.flags.heroName || 'Demigirl';
 
                     let text = '';
+                    const heroOnly = !gameState.flags.gabriellaCruzAssigned && !gameState.flags.gabriellaCompulsionFailed;
 
                     text += '"You already know."\n\n';
 
@@ -137151,11 +137218,19 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     text += '"The suit\'s useful. The people you pull out of alleys and parking garages and van doors are people I don\'t have to pull out myself. It\'s doing more for my city than half my officers." She shrugs. "I\'d be an idiot to take it off the board. I\'m not an idiot."\n\n';
 
-                    text += '"What about the other thing?" you say.\n\n';
+                    if (heroOnly) {
+                        text += '"And the rest of it?" you say. "What I am?"\n\n';
 
-                    text += '"We both know what I mean." Her eyes stay level. "Keep the suit on more than you take it off, and we won\'t have to talk about the other thing."\n\n';
+                        text += '"I\'ve watched you pull a car door off its hinges with one hand." She shrugs. "I don\'t need a word for it. Whatever you are, it\'s on my side of the line. Keep it there."\n\n';
 
-                    text += 'You know what she means. The blood. The hunting. The version of you that exists when the suit\'s off and the mask is different.\n\n';
+                        text += 'Keep it there. She doesn\'t know about the blood, or the nights you don\'t wear the suit. You get the feeling she\'d find out fast if you gave her a reason to look.\n\n';
+                    } else {
+                        text += '"What about the other thing?" you say.\n\n';
+
+                        text += '"We both know what I mean." Her eyes stay level. "Keep the suit on more than you take it off, and we won\'t have to talk about the other thing."\n\n';
+
+                        text += 'You know what she means. The blood. The hunting. The version of you that exists when the suit\'s off and the mask is different.\n\n';
+                    }
 
                     text += 'Cruz finishes her coffee and stands. Badge visible, holster visible, completely at ease in a room with a vampire.\n\n';
 
@@ -137167,7 +137242,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     text += '"Yeah."\n\n';
 
-                    text += '"The correlation coefficient was actually point nine seven." One corner of her mouth lifts. "I rounded down so you wouldn\'t panic in public."\n\n';
+                    if (heroOnly) {
+                        text += '"It was ten out of eleven, by the way." One corner of her mouth lifts. "I left one out so you wouldn\'t panic in public."\n\n';
+                    } else {
+                        text += '"The correlation coefficient was actually point nine seven." One corner of her mouth lifts. "I rounded down so you wouldn\'t panic in public."\n\n';
+                    }
 
                     text += 'The bell chimes, and she\'s gone.\n\n';
 
@@ -137300,7 +137379,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             hero_cruz_probing: {
                 text: function() {
                     const name = gameState.flags.heroName || 'Demigirl';
-                    const compulsionFailed = !!gameState.flags.gabriellaCompulsionFailed;
+                    // She's past the small talk if she's felt Kelsie push at her, or already found her
+                    const compulsionFailed = !!gameState.flags.gabriellaCompulsionFailed || !!gameState.flags.cruzSuspectsKelsieIsHero;
 
                     let text = '';
 
@@ -137368,7 +137448,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 onEnter: () => {
                     advanceTime(10);
-                    if (gameState.flags.gabriellaCompulsionFailed) {
+                    if (gameState.flags.gabriellaCompulsionFailed || gameState.flags.cruzSuspectsKelsieIsHero) {
                         modifyMentalHealth(3);
                         modifyVigilanteSuspicion(-3);
                     }
@@ -137381,7 +137461,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         action: () => showScene(gameState.flags.randEventReturn || 'city_exploration')
                     });
                     // If compulsion failed and she basically confirmed she knows
-                    if (gameState.flags.gabriellaCompulsionFailed && !gameState.flags.cruzKnowsIdentity && (gameState.karma || 0) >= 500) {
+                    if ((gameState.flags.gabriellaCompulsionFailed || gameState.flags.cruzSuspectsKelsieIsHero) && !gameState.flags.cruzKnowsIdentity && (gameState.karma || 0) >= 500) {
                         choices.push({
                             text: '"You already know."',
                             nextScene: 'hero_cruz_admission'
