@@ -24016,7 +24016,8 @@ audioSystem.playSFX('buttonClick');
             var _naked = gameState.isNaked || isEffectivelyNaked();
             var _topless = isEffectivelyTopless();
             var _bottomless = isEffectivelyBottomless();
-            if (!_naked && !_topless && !_bottomless) return null;
+            // Mesh Step 14D: bare behind mesh, or the full sheer set, counts too
+            if (!_naked && !_topless && !_bottomless && !getSheerPoseState()) return null;
 
             // Cooldown (30 game-minutes)
             var _nowMin = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
@@ -24031,6 +24032,218 @@ audioSystem.playSFX('buttonClick');
             };
         }
         
+        // ── Mesh & Sheer Overhaul, Step 14: deliberate sheer actions ──
+        // Bare behind mesh (braless, commando or bare). Three verbs: stop covering up (4001+),
+        // step into the light (6001+), peel the mesh down (8001+, chest only).
+        function _sheerBareBehindMesh(st) {
+            return st.state === 'sheer_braless' || st.state === 'sheer_commando' || st.state === 'sheer_bare';
+        }
+
+        function _sheerActionMessage(text, gains) {
+            var stat = '\n\n<span style="color: #ff69b4;">Arousal +' + gains.arousal + '</span>  · <span style="color: #ffaacc;">Exhibition Thrill +' + gains.thrill + '</span>'
+                + (gains.susp ? '  · <span style="color: #8b0000;">Suspicion +' + gains.susp + '</span>' : '');
+            showMessage(text + stat, function() { updateStatus(); });
+        }
+
+        function _applySheerActionGains(thrill, arousal, corruption, susp) {
+            applyExhibitionThrillGain(thrill);
+            gameState.arousal = Math.min(100, (gameState.arousal || 0) + arousal);
+            gameState.corruption = (gameState.corruption || 0) + corruption;
+            gameState.flags.corruptionChangedPassively = true;
+            if (susp) gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + susp);
+            if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+            gameState.exhibitionStats.exhibitionEventsCompleted = (gameState.exhibitionStats.exhibitionEventsCompleted || 0) + 1;
+            var _ct = gameState.exhibitionismThrill || 0;
+            if (_ct > (gameState.exhibitionStats.peakThrill || 0)) gameState.exhibitionStats.peakThrill = _ct;
+            return { thrill: thrill, arousal: arousal, susp: susp || 0 };
+        }
+
+        function _sheerHowItSits(b) {
+            return _bt5(b, 'On your slight frame it hangs loose, and every gap in it shows more.',
+                'It lies flat over your stomach, and every line of you shows through.',
+                'It clings to every curve, and the curves are the point now.',
+                'It stretches over your hips and thighs, and all of it shows.',
+                'It sits close on your skin and hides none of it.');
+        }
+
+        function _sheerLitBody(b) {
+            return _bt5(b, 'Every inch of your slight little body is lit up.', 'Every line of muscle down your stomach is lit.',
+                'The light pours over every curve.', 'The light pours over your soft belly and your thick thighs.', 'The light pours over all of you.');
+        }
+
+        // 14A. Stop covering up.
+        function doSheerStopCovering() {
+            var b = _sheerBodyCtx();
+            var n = b.noun;
+            var c = gameState.corruption || 0;
+            gameState.flags._sheerStopCoveringDay = gameState.time.day || 0;
+            var t;
+            if (c < 6001) {
+                t = 'You\'ve had your arms folded for three blocks' + (b.seeChest ? ', forearms pressed over your nipples' : '') + (b.seeHips ? (b.seeChest ? ' and' : ',') + ' your bag held low over the front of your ' + b.bottom : '') + '. It isn\'t working. Everyone looks anyway.'
+                    + '\n\nYou drop your arms. Straighten up. Slow down.'
+                    + '\n\nNow there\'s nothing between the street and ' + b.shows + ' but the ' + n + '. ' + _sheerHowItSits(b)
+                    + '\n\nYour face burns. A man at the corner stares straight at your ' + (b.seeHips ? 'pussy' : 'nipples') + ' and you keep walking anyway, slow, your clit throbbing with every step.';
+            } else {
+                var sway = b.seeChest ? (b.bs === 'large' ? 'Your heavy tits sway behind the ' + n + ' with every step.' : b.bs === 'small' ? 'Your small tits sit high and bare behind the ' + n + ', nipples sharp.' : 'Your tits move behind the ' + n + ' with every step.')
+                    : (b.butt === 'large' ? 'Your full ass rolls behind the ' + n + ' with every step.' : b.butt === 'small' ? 'Your tight little ass shows through the ' + n + ' with every step.' : 'Your ass sways behind the ' + n + ' with every step.');
+                t = 'You catch yourself tugging at your ' + b.outfit + ' and stop. There\'s no point. The ' + n + ' shows everything, and you picked it because it does.'
+                    + '\n\nArms at your sides. Shoulders back. You slow to a stroll.'
+                    + '\n\nNow there\'s nothing between the street and ' + b.shows + ' but the ' + n + '. ' + _sheerHowItSits(b)
+                    + '\n\n' + sway + ' Heads turn. You meet every pair of eyes that lands on you, and your pussy gets wetter with each one.';
+            }
+            var g = _applySheerActionGains(10, 8, 25, 0);
+            advanceTime(5);
+            _sheerActionMessage(t, g);
+        }
+
+        // 14B. Step into the light.
+        function doSheerStepIntoLight() {
+            var b = _sheerBodyCtx();
+            var n = b.noun;
+            var c = gameState.corruption || 0;
+            var dark = isDark();
+            gameState.flags._lastSheerLightMinute = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+            var open = dark
+                ? 'You stop under a streetlight. Its cone is bright and white, and you step into the middle of it.'
+                : 'You stop in front of a shop with every display light burning. You stand with your back to the window and let it pour through you.';
+            var gone = 'The ' + n + ' disappears. ' + (dark ? 'Light from above' : 'Light from behind') + ' goes straight through it, and all that\'s left is a faint dark grid over ' + b.shows + '.';
+            var t;
+            if (c < 8001) {
+                t = open + '\n\n' + gone + '\n\n' + _sheerLitBody(b)
+                    + '\n\nTwo people on the far sidewalk stop. Then three. You stand there and let them look, and your clit throbs so hard your thighs press together on their own.'
+                    + '\n\nYou count to ten before you step out of the light.';
+            } else {
+                t = open + '\n\n' + gone
+                    + '\n\nYou turn. Slow. A full circle, so the whole sidewalk gets both sides. They get ' + b.shows + ' first. Then you keep turning and give them ' + (b.seeHips ? b.ass + ', bare and lit behind the ' + n : 'the bare line of your back') + '.'
+                    + '\n\n' + _sheerLitBody(b)
+                    + '\n\nSomebody whistles. Somebody lifts a phone. Your pussy\'s dripping, and you finish the turn and hold it facing them before you step out of the light.';
+            }
+            var mult = b.st.weaveMult * getExhibitionDrawMultiplier();
+            var g = _applySheerActionGains(Math.round(18 * mult), Math.round(12 * mult), Math.round(20 * mult), 0);
+            advanceTime(5);
+            _sheerActionMessage(t, g);
+        }
+
+        // 14C. Peel the mesh down. The chest garment decides how it comes off.
+        function doSheerPeelDown() {
+            var b = _sheerBodyCtx();
+            var st = b.st;
+            var g = st.chestGarment;
+            var n = getFabricNoun(g);
+            var p = getMeshProfile(g) || { shape: {} };
+            var sh = p.shape || {};
+            var isTop = g && (g.category === 'tops' || g.category === 'top');
+            gameState.flags._lastSheerPeelMinute = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+            var peel, restore;
+            if (sh.offShoulder) {
+                peel = 'You hook your thumbs in the neckline of your ' + b.top + ' and push. It\'s already halfway off your shoulders. It slides the last few inches down over your tits and catches under them.';
+                restore = 'tug the neckline back up onto your arms';
+            } else if (sh.oneShoulder) {
+                peel = 'You reach up and pull the halter string on your bare shoulder. The knot gives. The neckline drops, and you peel the ' + n + ' down off both tits and let it hang at your ribs, bell sleeves swinging.';
+                restore = 'retie the string';
+            } else if (sh.oRing) {
+                peel = 'You hook a finger through the O-ring between your cups and pull it down. The sheer cups drag down with it, off your tits, and gather under them, the ring hanging over your underbust window.';
+                restore = 'drag the O-ring back up';
+            } else if (p.weave === 'fishnet') {
+                peel = 'You grab the fishnet at your neckline and stretch it down. The diamonds widen and slide, and you drag the whole net under your tits and let it snap tight beneath them.';
+                restore = 'stretch the net back up';
+            } else if (sh.jaewons) {
+                peel = 'You pull Jaewon\'s top up over your tits and bunch it under your chin. It smells like her.';
+                restore = 'pull her top back down';
+            } else if (isTop) {
+                peel = 'You grab the hem of your ' + b.top + ' and pull it up over your tits. It bunches at your collarbone.';
+                restore = 'pull the hem back down';
+            } else {
+                peel = 'You hook your fingers in the neckline of your ' + b.top + ' and peel it down off your tits, and let it sit bunched under them.';
+                restore = 'pull it back up';
+            }
+            var bare = b.bs === 'large' ? 'Your heavy tits hang bare in the open air, no ' + n + ' and no haze, nipples dark and stiff.'
+                : b.bs === 'small' ? 'Your small tits are bare in the open air, nipples stiff little points with nothing over them.'
+                : 'Your tits are bare in the open air, nipples dark and stiff.';
+            var walk = _bt5(b, 'your slight little body bare to the waist', 'bare to the ribs, your stomach tight', 'bare to the waist, your curves swaying', 'bare to the waist, your soft belly on show under it', 'bare to the waist');
+            var t = peel + '\n\n' + bare + ' You\'re topless on a public sidewalk in ' + (isTop ? 'a top' : 'a dress') + ' you\'re technically still wearing.'
+                + '\n\nA man on the corner drops his cigarette. The woman beside him grabs his arm and stares too.'
+                + '\n\nYou leave it. You walk a full block like that, ' + walk + '. Your nipples ache in the air, and your clit throbs every time someone turns around.'
+                + '\n\nAt the next corner you ' + restore + '. The ' + n + ' goes back over your tits and shows everything anyway.';
+            gameState.flags.hasBeenSeenTopless = true;
+            var gn = _applySheerActionGains(25, 15, 15, 2);
+            advanceTime(10);
+            _sheerActionMessage(t, gn);
+        }
+
+        // District choice list entries, beside the flash, pose and wet choices.
+        function getSheerExhibitionChoices() {
+            var st = getSheerState();
+            if (!_sheerBareBehindMesh(st)) return null;
+            var c = gameState.corruption || 0;
+            var thrill = gameState.exhibitionismThrill || 0;
+            var now = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+            var out = [];
+            if (c >= 4001 && thrill >= 30 && (gameState.flags._sheerStopCoveringDay || 0) !== (gameState.time.day || 0)) {
+                out.push({ text: '<img src="Images/icons/fire.png" class="icon" alt="fire"> Stop covering up.', action: doSheerStopCovering });
+            }
+            if (c >= 6001 && thrill >= 50 && (now - (gameState.flags._lastSheerLightMinute || -9999)) >= 60) {
+                out.push({ text: '<img src="Images/icons/fire.png" class="icon" alt="fire"> Step into the light.', action: doSheerStepIntoLight });
+            }
+            if (c >= 8001 && thrill >= 70 && st.chest === 'veiled' && (now - (gameState.flags._lastSheerPeelMinute || -9999)) >= 45) {
+                out.push({ text: '<img src="Images/icons/fire.png" class="icon" alt="fire"> Peel the ' + getFabricNoun(st.chestGarment) + ' down.', action: doSheerPeelDown });
+            }
+            return out.length ? out : null;
+        }
+
+        // 14D. Pose and flash with mesh. Pose accepts sheer & bare and the full sheer set.
+        function getSheerPoseState() {
+            var s = getSheerState().state;
+            return (s === 'sheer_bare' || s === 'sheer_lingerie') ? s : '';
+        }
+
+        function getSheerPoseText(kind) {
+            var s = getSheerPoseState();
+            if (!s) return '';
+            var b = _sheerBodyCtx();
+            var n = b.noun;
+            var ling = s === 'sheer_lingerie';
+            var wearing = ling ? 'your ' + b.bra + ' and ' + b.panties : 'your ' + b.outfit;
+            var what = ling ? 'your nipples dark through the cups and your bare slit through the crotch' : b.shows;
+            if (kind === 'standing') {
+                return 'You find a wall under a light and lean back against it. Roll your shoulders back. Plant your feet apart.'
+                    + '\n\nThe light hits the ' + n + ' and it stops hiding anything. ' + capFirst(what) + ', all of it on show through ' + wearing + '. ' + _sheerLitBody(b)
+                    + '\n\nA man on the sidewalk slows, then stops. His coffee tilts in his hand. You hold his gaze and let him work out that you\'re technically dressed.'
+                    + '\n\nYou hold the pose until your clit is throbbing and your thighs are slick, then push off the wall.';
+            }
+            if (kind === 'seated') {
+                var ride = ling ? 'Your ' + b.panties + ' pull tight between your thighs, and the ' + n + ' shows your bare slit through the crotch.'
+                    : 'The ' + n + ' rides up your thighs as you sit, and it was never hiding your bare pussy anyway.';
+                return 'You find a bench and sit. Lean back. Spread your knees.'
+                    + '\n\n' + ride + ' ' + (b.bs === 'large' ? 'Your heavy tits settle behind the ' + n + ', nipples stiff.' : b.bs === 'small' ? 'Your small tits sit high behind the ' + n + ', nipples sharp.' : 'Your tits sit bare behind the ' + n + ', nipples stiff.')
+                    + '\n\nA woman walking past glances down and stops dead. Her eyes go from the ' + n + ' to what\'s behind it and back, like she can\'t decide if it counts.'
+                    + '\n\nYou rest your hands on your knees and let her decide. Your cunt clenches, wet, under the grid.';
+            }
+            return 'You spot him on a low wall, eating a sandwich. You walk toward him. Slow.'
+                + '\n\nEvery step moves ' + what + ' behind the ' + n + '. ' + (b.butt === 'large' ? 'Behind you, your full ass rolls bare under it.' : b.butt === 'small' ? 'Behind you, your tight little ass shows bare under it.' : 'Behind you, your bare ass sways under it.')
+                + '\n\nHe looks up at ten feet and his jaw stops working. At three feet he can see the wet shine on your slit through the grid.'
+                + '\n\nYou walk past close enough to brush his knee. You don\'t look back. Your clit throbs every step to the corner.';
+        }
+
+        // Flash: when the lifted garment is sheer, he's already seen the shape. Now he gets the color.
+        function getSheerFlashOpening(zone) {
+            var cv = getSceneClothingVars();
+            var o = gameState.currentOutfit || {};
+            var b = _sheerBodyCtx();
+            if (zone === 'top') {
+                if (!cv.topSheer) return '';
+                var tn = getFabricNoun(o.top || o.dress);
+                return cv.hasBra
+                    ? 'He\'s already had your ' + b.bra + ' through the ' + tn + ' since you walked up. Lifting it gives him the color, the real shade of it and the skin around it, with no haze.'
+                    : 'He\'s already had the shape of ' + b.tits + ' through the ' + tn + ' since you walked up. Lifting it gives him the color: the real pink of your nipples, with no haze.';
+            }
+            if (!cv.bottomSheer) return '';
+            var bn = getFabricNoun(o.bottom || o.dress);
+            return cv.hasPanties
+                ? 'He\'s already had your ' + b.panties + ' through the ' + bn + '. Lifting it gives him the color, and the damp patch, with no haze.'
+                : 'He\'s already had the dark line of your slit through the ' + bn + ' since you walked up. Lifting it gives him the color: pink and wet, with no haze.';
+        }
+
         // ── Exhibition Masturbation Gate (Exhibition Overhaul, Step 7A) ──
         // Corruption 6001+ and exhibition thrill >= 60 and arousal >= 70.
         // Each scene is once-per-day. This is the shared gate function.
@@ -105227,6 +105440,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     var _flashChoice = getFlashExhibitionChoice('commercial'); if (_flashChoice) choices.push(_flashChoice);
                     var _poseChoice = getPoseExhibitionChoice('commercial'); if (_poseChoice) choices.push(_poseChoice);
                     var _wetExhibChoices = getWetExhibitionChoices(); if (_wetExhibChoices) _wetExhibChoices.forEach(function(c) { choices.push(c); });
+                    var _sheerExhibChoices = getSheerExhibitionChoices(); if (_sheerExhibChoices) _sheerExhibChoices.forEach(function(c) { choices.push(c); }); // Mesh Step 14
                     var _exhibMastChoice = getExhibitionMasturbationChoice('commercial'); if (_exhibMastChoice) choices.push(_exhibMastChoice);
                     var _bralessAlleyChoice = getBralessCommandoAlleyChoice('commercial_district_street'); if (_bralessAlleyChoice) choices.push(_bralessAlleyChoice);
                     choices.push({ text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Open map to travel elsewhere', action: () => openMap() });
@@ -105406,6 +105620,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     var _flashChoice = getFlashExhibitionChoice('residential'); if (_flashChoice) choices.push(_flashChoice);
                     var _poseChoice = getPoseExhibitionChoice('residential'); if (_poseChoice) choices.push(_poseChoice);
                     var _wetExhibChoices = getWetExhibitionChoices(); if (_wetExhibChoices) _wetExhibChoices.forEach(function(c) { choices.push(c); });
+                    var _sheerExhibChoices = getSheerExhibitionChoices(); if (_sheerExhibChoices) _sheerExhibChoices.forEach(function(c) { choices.push(c); }); // Mesh Step 14
                     var _exhibMastChoice = getExhibitionMasturbationChoice('residential'); if (_exhibMastChoice) choices.push(_exhibMastChoice);
                     var _bralessAlleyChoice = getBralessCommandoAlleyChoice('residential_district_street'); if (_bralessAlleyChoice) choices.push(_bralessAlleyChoice);
                     choices.push({ text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Open map to travel elsewhere', action: () => openMap() });
@@ -111065,6 +111280,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     var _flashChoice = getFlashExhibitionChoice('downtown'); if (_flashChoice) choices.push(_flashChoice);
                     var _poseChoice = getPoseExhibitionChoice('downtown'); if (_poseChoice) choices.push(_poseChoice);
                     var _wetExhibChoices = getWetExhibitionChoices(); if (_wetExhibChoices) _wetExhibChoices.forEach(function(c) { choices.push(c); });
+                    var _sheerExhibChoices = getSheerExhibitionChoices(); if (_sheerExhibChoices) _sheerExhibChoices.forEach(function(c) { choices.push(c); }); // Mesh Step 14
                     var _exhibMastChoice = getExhibitionMasturbationChoice('downtown'); if (_exhibMastChoice) choices.push(_exhibMastChoice);
                     var _bralessAlleyChoice = getBralessCommandoAlleyChoice('downtown_district_street'); if (_bralessAlleyChoice) choices.push(_bralessAlleyChoice);
                     choices.push({ text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Open map to travel elsewhere', action: () => openMap() });
@@ -171516,6 +171732,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     return 'Your skin is humming. The thrill sits between your legs like a second heartbeat and the crowd around you is full of eyes that haven\'t seen you yet.\n\nYou want to fix that.\n\nYou scan the street. Pick your target. A man standing alone, attention elsewhere. Close enough to see, far enough that you can walk away after.\n\nWhat do you show him?';
                 },
                 choices: function() {
+                    var cv = getSceneClothingVars(); // was undeclared: the menu threw for any top or dress
                     var o = gameState.currentOutfit;
                     var choices = [];
                     var hasBra = !!o.bra;
@@ -171553,11 +171770,13 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var hasBra = cv.hasBra;
                     var corruption = gameState.corruption || 0;
                     var npcReaction = getFlashNPCReaction('top');
+                    var _sheerOpen = getSheerFlashOpening('top'); // Mesh Step 14D
+                    var _sheerIns = function(t) { return _sheerOpen ? t.replace('\n\n', '\n\n' + _sheerOpen + '\n\n') : t; };
 
                     if (hasBra) {
-                        return 'You step close. Three feet away. He\'s on his phone.\n\nYou grab the hem of your ' + cv.topName + ' with both hands and lift. Your bra fills his field of vision, cups straining, the shape of ' + exhibitionCrowdFixation() + ' visible through the fabric, your nipple\'s outline pressing through the cup.\n\nHe looks up from his screen.' + npcReaction + '\n\nYou hold it for three seconds. Let him memorize the lace, the underwire, the soft weight of you in the cup. Then you drop the ' + cv.topName + ' and smooth it flat.\n\nYour nipples are stiff against the inside of your bra. Your clit throbs once, sharp, and slickness builds between your thighs as you walk away.' + (corruption >= 8001 ? '\n\nYou\'re already thinking about doing it again.' : '\n\nYour hands are shaking. Your pussy doesn\'t care.');
+                        return _sheerIns('You step close. Three feet away. He\'s on his phone.\n\nYou grab the hem of your ' + cv.topName + ' with both hands and lift. Your bra fills his field of vision, cups straining, the shape of ' + exhibitionCrowdFixation() + ' visible through the fabric, your nipple\'s outline pressing through the cup.\n\nHe looks up from his screen.' + npcReaction + '\n\nYou hold it for three seconds. Let him memorize the lace, the underwire, the soft weight of you in the cup. Then you drop the ' + cv.topName + ' and smooth it flat.\n\nYour nipples are stiff against the inside of your bra. Your clit throbs once, sharp, and slickness builds between your thighs as you walk away.' + (corruption >= 8001 ? '\n\nYou\'re already thinking about doing it again.' : '\n\nYour hands are shaking. Your pussy doesn\'t care.'));
                     } else {
-                        return 'You step close. Three feet away. He\'s on his phone.\n\nYou grab the hem of your ' + cv.topName + ' with both hands and lift. Your bare tits spill free, ' + exhibitionCrowdFixation() + ', nipples stiff and dark in the daylight. You hold the ' + cv.topName + ' bunched at your collarbones and let him see everything.\n\nHe looks up from his screen.' + npcReaction + '\n\nYou give him four full seconds of your bare chest. Your nipples aching in the open air, your tits exposed to a stranger on a city street because you wanted them to be.\n\nYou drop the ' + cv.topName + '. Walk.\n\nYour clit is throbbing. Your inner thighs are slick. You can still feel the air where the fabric isn\'t.' + (corruption >= 8001 ? '\n\nYou\'re soaked. You could do that all afternoon.' : '\n\nYour pussy\'s clenching in steady, wet pulses and you keep walking because stopping would mean touching yourself.');
+                        return _sheerIns('You step close. Three feet away. He\'s on his phone.\n\nYou grab the hem of your ' + cv.topName + ' with both hands and lift. Your bare tits spill free, ' + exhibitionCrowdFixation() + ', nipples stiff and dark in the daylight. You hold the ' + cv.topName + ' bunched at your collarbones and let him see everything.\n\nHe looks up from his screen.' + npcReaction + '\n\nYou give him four full seconds of your bare chest. Your nipples aching in the open air, your tits exposed to a stranger on a city street because you wanted them to be.\n\nYou drop the ' + cv.topName + '. Walk.\n\nYour clit is throbbing. Your inner thighs are slick. You can still feel the air where the fabric isn\'t.' + (corruption >= 8001 ? '\n\nYou\'re soaked. You could do that all afternoon.' : '\n\nYour pussy\'s clenching in steady, wet pulses and you keep walking because stopping would mean touching yourself.'));
                     }
                 },
                 onEnter: function() {
@@ -171589,11 +171808,13 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var hasPanties = cv.hasPanties;
                     var corruption = gameState.corruption || 0;
                     var npcReaction = getFlashNPCReaction('bottom');
+                    var _sheerOpen = getSheerFlashOpening('bottom'); // Mesh Step 14D
+                    var _sheerIns = function(t) { return _sheerOpen ? t.replace('\n\n', '\n\n' + _sheerOpen + '\n\n') : t; };
 
                     if (hasPanties) {
-                        return 'You find your angle. He\'s at a crosswalk, waiting for the light. You step close and reach down.\n\nYou grab your hem and lift. Slow. Past your knees, your thighs, up to your hips. Your panties on full display, the ' + cv.pantiesFabric + ' pulled taut across your cunt, the damp shadow visible through the fabric.\n\nThe light changes. He doesn\'t cross.' + npcReaction + '\n\nYou hold the hem at your hips for three long seconds. Let him see the shape of you through the ' + cv.pantiesFabric + ', the fabric clinging to the wet between your legs.\n\nYou drop it. Smooth it down. Walk.\n\nYour clit throbs against the damp ' + cv.pantiesFabric + '. Your pussy clenches once, tight and warm.' + (corruption >= 8001 ? '\n\nNext time you\'ll do it without the panties.' : '\n\nYour pulse is hammering. Your thighs are slick.');
+                        return _sheerIns('You find your angle. He\'s at a crosswalk, waiting for the light. You step close and reach down.\n\nYou grab your hem and lift. Slow. Past your knees, your thighs, up to your hips. Your panties on full display, the ' + cv.pantiesFabric + ' pulled taut across your cunt, the damp shadow visible through the fabric.\n\nThe light changes. He doesn\'t cross.' + npcReaction + '\n\nYou hold the hem at your hips for three long seconds. Let him see the shape of you through the ' + cv.pantiesFabric + ', the fabric clinging to the wet between your legs.\n\nYou drop it. Smooth it down. Walk.\n\nYour clit throbs against the damp ' + cv.pantiesFabric + '. Your pussy clenches once, tight and warm.' + (corruption >= 8001 ? '\n\nNext time you\'ll do it without the panties.' : '\n\nYour pulse is hammering. Your thighs are slick.'));
                     } else {
-                        return 'You find your angle. He\'s at a crosswalk, waiting for the light. You step close and reach down.\n\nYou grab your hem and lift. Past your knees. Past your thighs. All the way up.\n\nYour bare pussy. The flushed slit of your cunt. Your inner thighs, slick already, the wet catching the daylight. Everything below your waist on display for one man because you decided he should see it.\n\nThe light changes. He doesn\'t cross.' + npcReaction + '\n\nYou hold it. Four seconds. Five. Your bare cunt exposed to a stranger on a city street and your clit is throbbing so hard you can feel your pulse in it.\n\nYou drop the hem. Walk.\n\nSlickness smears between your thighs with every step.' + (corruption >= 8001 ? '\n\nYou\'re dripping. The look on his face will keep you wet for the next hour.' : '\n\nYour cunt\'s clenching in rhythmic pulses and you press your thighs together on the next stride because the alternative is stopping right here.');
+                        return _sheerIns('You find your angle. He\'s at a crosswalk, waiting for the light. You step close and reach down.\n\nYou grab your hem and lift. Past your knees. Past your thighs. All the way up.\n\nYour bare pussy. The flushed slit of your cunt. Your inner thighs, slick already, the wet catching the daylight. Everything below your waist on display for one man because you decided he should see it.\n\nThe light changes. He doesn\'t cross.' + npcReaction + '\n\nYou hold it. Four seconds. Five. Your bare cunt exposed to a stranger on a city street and your clit is throbbing so hard you can feel your pulse in it.\n\nYou drop the hem. Walk.\n\nSlickness smears between your thighs with every step.' + (corruption >= 8001 ? '\n\nYou\'re dripping. The look on his face will keep you wet for the next hour.' : '\n\nYour cunt\'s clenching in rhythmic pulses and you press your thighs together on the next stride because the alternative is stopping right here.'));
                     }
                 },
                 onEnter: function() {
@@ -171676,7 +171897,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     var cv = getSceneClothingVars();
                     var _naked = gameState.isNaked || isEffectivelyNaked();
-                    var stateDesc = _naked ? 'naked' : (isEffectivelyTopless() ? 'topless' : 'bare below the waist');
+                    var _sps = getSheerPoseState();
+                    var stateDesc = _naked ? 'naked' : isEffectivelyTopless() ? 'topless' : isEffectivelyBottomless() ? 'bare below the waist'
+                        : _sps === 'sheer_lingerie' ? 'in nothing but see-through underwear' : 'naked behind a layer of ' + getSheerNoun();
                     return 'The thrill is a living thing in your blood. You\'re ' + stateDesc + ' on a public street and you\'re past the point where that\'s something that happens to you. This is something you do.\n\nYou scan the block. Find a spot. Find a target.\n\nHow do you want him to see you?';
                 },
                 choices: function() {
@@ -171695,6 +171918,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             exhibition_pose_standing: {
                 text: function() {
                     var cv = getSceneClothingVars();
+                    var _sheerPose = getSheerPoseText('standing'); // Mesh Step 14D
+                    if (_sheerPose) return _sheerPose;
                     var _naked = gameState.isNaked || isEffectivelyNaked();
                     var _topless = isEffectivelyTopless();
                     var _bottomless = isEffectivelyBottomless();
@@ -171735,6 +171960,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             exhibition_pose_seated: {
                 text: function() {
                     var cv = getSceneClothingVars();
+                    var _sheerPose = getSheerPoseText('seated'); // Mesh Step 14D
+                    if (_sheerPose) return _sheerPose;
                     var _naked = gameState.isNaked || isEffectivelyNaked();
                     var _topless = isEffectivelyTopless();
                     var _bottomless = isEffectivelyBottomless();
@@ -171774,6 +172001,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             exhibition_pose_walkby: {
                 text: function() {
                     var cv = getSceneClothingVars();
+                    var _sheerPose = getSheerPoseText('walkby'); // Mesh Step 14D
+                    if (_sheerPose) return _sheerPose;
                     var _naked = gameState.isNaked || isEffectivelyNaked();
                     var _topless = isEffectivelyTopless();
                     var _bottomless = isEffectivelyBottomless();
