@@ -22207,8 +22207,8 @@ audioSystem.playSFX('buttonClick');
                 return true;
             }
 
-            // Gate passed. Vignettes and district reactions arrive in Step 8.
-            return false;
+            // Gate passed. Step 8A: NPC vignette + Kelsie's response (shared 20-minute cooldown).
+            return fireSheerDistrictVignette(districtId, st);
         }
 
         // 4B: sheer lingerie police clock. Three hours in a mesh bra and panties with
@@ -22347,6 +22347,355 @@ audioSystem.playSFX('buttonClick');
                 : 'Your driver\'s eyes flick to the mirror when you slide into the back seat. He says nothing for three blocks. Then: "You know that\'s see-through, right?"\n\nYour clit throbs. "I know."' };
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // ── Mesh & Sheer Overhaul, Step 8: district vignettes & awareness ──
+        // Strangers negotiating what they're allowed to call it. With naked there's
+        // no argument. With mesh, somebody always says "she's wearing something" and
+        // somebody else says "I can see her pussy."
+        // Every vignette and response takes the body context from _sheerBodyCtx().
+        // ══════════════════════════════════════════════════════════════
+
+        // Body and garment context for sheer prose. Body axes follow the branching standards:
+        // breastSize / buttSize (large, small, average), bodyType (petite, athletic, curvy, thick, ordinary).
+        function _sheerBodyCtx() {
+            var ba = gameState.bodyAppearance || {};
+            var bs = ba.breastSize || 'average', butt = ba.buttSize || 'average', bt = ba.bodyType || 'ordinary';
+            var st = getSheerState();
+            var o = gameState.currentOutfit || {};
+            var noun = getSheerNoun(st);
+            var top = st.chestGarment ? proseItemName(st.chestGarment) : 'top';
+            var bottom = st.hipsGarment ? proseItemName(st.hipsGarment) : 'skirt';
+            var same = !!(st.chestGarment && st.chestGarment === st.hipsGarment);
+            var outfit = same ? top : (st.chestGarment && st.hipsGarment) ? top + ' and ' + bottom : (st.chestGarment ? top : bottom);
+            var seeChest = st.chest === 'veiled' || st.chest === 'lingerie';
+            var seeHips = st.hips === 'veiled' || st.hips === 'lingerie';
+            var tits = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your tits';
+            var ass = butt === 'large' ? 'your full ass' : butt === 'small' ? 'your tight little ass' : 'your ass';
+            var hips = butt === 'large' ? 'the wide swing of your hips' : butt === 'small' ? 'the narrow line of your hips' : 'the sway of your hips';
+            var frame = bt === 'petite' ? 'your slight little frame' : bt === 'athletic' ? 'the lean muscle of your stomach' : bt === 'curvy' ? 'your curves' : bt === 'thick' ? 'your thick thighs and soft belly' : 'your body';
+            var chestShows = bs === 'large' ? 'your heavy tits and dark nipples' : bs === 'small' ? 'your small tits and stiff nipples' : 'your tits and dark nipples';
+            var shows = seeChest && seeHips ? chestShows + ' and the bare slit of your pussy'
+                : seeChest ? chestShows : 'the bare slit of your pussy';
+            var hipsWord = (st.hipsGarment && (st.hipsGarment === st.chestGarment || st.hipsGarment.category === 'dress' || st.hipsGarment.category === 'dresses')) ? 'dress' : 'skirt';
+            var braF = !!(st.framedChest && st.chestUnder), panF = !!(st.framedHips && st.hipsUnder);
+            var under = braF && panF ? proseItemName(st.chestUnder) + ' and ' + proseItemName(st.hipsUnder)
+                : braF ? proseItemName(st.chestUnder) : panF ? proseItemName(st.hipsUnder) : 'underwear';
+            return {
+                st: st, bs: bs, butt: butt, bt: bt, noun: noun, top: top, bottom: bottom, outfit: outfit, same: same,
+                seeChest: seeChest, seeHips: seeHips, tits: tits, ass: ass, hips: hips, frame: frame,
+                shows: shows, Shows: capFirst(shows), hipsWord: hipsWord, lookWord: same ? 'dress' : 'outfit',
+                under: under, braF: braF, panF: panF, sheer: braF ? top : bottom,
+                bra: o.bra ? proseItemName(o.bra) : 'bra', panties: o.panties ? proseItemName(o.panties) : 'panties'
+            };
+        }
+
+        var SHEER_NPC_VIGNETTES = {
+            sheer_framed: [
+                function(b) { return 'A woman outside a boutique looks you over slowly, the professional once-over women give other women\'s outfits. Your ' + b.under + ', framed in the ' + b.noun + '. She nods once like you passed something.\n\nHer boyfriend doesn\'t nod. He just stares at ' + b.tits + '.'; },
+                function(b) { return 'Two guys waiting for a table outside a restaurant clock your ' + b.under + ' through your ' + b.sheer + '.\n\n"Is that on purpose?" one of them asks the other, not quietly.\n\n"Look at her. Everything on her\'s on purpose."\n\nThe second one\'s eyes drop to ' + b.hips + ' and stay there.'; },
+                function(b) { return 'A saleswoman smoking outside her shop points her cigarette at you. "That\'s the look," she says to nobody. "Mesh over good underwear. People think it\'s easy."\n\nShe looks at your ' + b.under + ' a little longer than a professional would. ' + (b.bt === 'petite' ? 'You\'re small enough that the ' + b.noun + ' hangs loose, and the underwear does all the work.' : b.bt === 'athletic' ? 'The ' + b.noun + ' lies flat over your stomach and makes the muscle look drawn on.' : b.bt === 'curvy' ? 'The ' + b.noun + ' clings to every curve and the underwear sits right in the middle of them.' : b.bt === 'thick' ? 'The ' + b.noun + ' stretches over your hips and thighs, and the underwear shows through it like a frame.' : 'The ' + b.noun + ' sits close to your skin and frames the underwear like it was cut for it.'); },
+                function(b) { return 'A delivery driver double-parks to watch you cross. Your ' + b.under + ' shows through your ' + b.sheer + ', every line of it.\n\nHe says nothing. His eyes go from ' + b.tits + ' to ' + b.ass + ' and back while the car behind him honks.'; }
+            ],
+            sheer_braless: [
+                function(b) { return 'Two women at a café table stop mid-sentence as you pass.\n\n"She\'s wearing a top," one says.\n\n"She\'s wearing a window," the other says. "I can see her nipples from here."\n\nThey both keep looking at ' + b.tits + ' until you\'re past the next table.'; },
+                function(b) { return 'A man at a crosswalk looks at your face, then down. ' + (b.bs === 'large' ? 'Your heavy tits sit right there behind your ' + b.top + ', nipples dark and stiff.' : b.bs === 'small' ? 'Your small tits and the stiff points of your nipples show straight through your ' + b.top + '.' : 'Your bare tits show straight through your ' + b.top + ', nipples dark and stiff.') + '\n\n"Is that legal?" he asks. He sounds like he hopes so.\n\nThe light changes. He stays on the curb.'; },
+                function(b) { return 'A security guard outside a bank watches you come up the block. He opens his mouth like he\'s going to say something official. Then he sees your nipples through the ' + b.noun + ' and closes it again.\n\n"Ma\'am," he says, to ' + b.tits + '.'; },
+                function(b) { return 'A couple walks past arguing. The woman stops arguing to stare at your chest. "She\'s not wearing a bra," she says.\n\n"I noticed," the man says.\n\n"You noticed fast." The argument starts over, louder, and he\'s still looking at ' + b.tits + ' over his shoulder.'; },
+                function(b) { return 'A guy handing out flyers holds one out to you and forgets to let go. His eyes are on your nipples, dark and stiff through your ' + b.top + '. ' + (b.bt === 'petite' ? 'You\'re so slight the ' + b.noun + ' barely touches you, and there\'s nothing to hide behind.' : b.bt === 'athletic' ? 'The ' + b.noun + ' lies flat over the muscle of your stomach and frames your tits like they\'re the point.' : b.bt === 'curvy' ? 'The ' + b.noun + ' stretches over your curves and hides none of them.' : b.bt === 'thick' ? 'The ' + b.noun + ' strains over your full chest and soft belly, and it hides none of it.' : 'The ' + b.noun + ' sits close to your skin and hides nothing.') + '\n\n"It\'s, uh. It\'s a sale," he says. "Everything\'s on sale."'; },
+                function(b) { return 'Three college guys on a bench go dead quiet.\n\n"That shirt\'s see-through."\n\n"It\'s mesh, dumbass. It\'s supposed to be."\n\n"So she\'s supposed to be showing us her tits?"\n\nNobody answers. All three of them keep staring at ' + b.tits + '.'; }
+            ],
+            sheer_commando: [
+                function(b) { return 'A man on a bench lowers his newspaper. His eyes go to your ' + b.bottom + ', then through it, to the bare slit of your pussy behind the ' + b.noun + '.\n\n"Huh," he says. He lifts the paper again. His eyes stay over the top of it.'; },
+                function(b) { return 'Two women waiting for a bus look at you, then at each other.\n\n"Is she wearing underwear?"\n\n"She\'s wearing a ' + b.hipsWord + '."\n\n"That\'s not what I asked."\n\nThe first one\'s eyes stay on your crotch until the bus pulls in between you.'; },
+                function(b) { return 'A cyclist coasts past slowly enough to look. ' + (b.butt === 'large' ? 'He gets your full ass through the ' + b.noun + ' first, then turns his head for the front.' : b.butt === 'small' ? 'He gets your tight little ass through the ' + b.noun + ', then twists around for the front.' : 'He gets your ass through the ' + b.noun + ', then twists around to see the front.') + '\n\nThe front is your bare slit, dark behind the ' + b.noun + '. He nearly rides into a parked car.'; },
+                function(b) { return 'A woman selling flowers from a cart holds a bouquet out and then lowers it. She\'s looking at your ' + b.bottom + '.\n\n"Honey," she says, quiet and kind, "I can see everything."\n\nThe man buying roses beside her says nothing. He\'s looking too.'; },
+                function(b) { return 'Outside a gym, a man in a tank top stops mid-stretch. His eyes drop to your hips and stay. ' + (b.bt === 'petite' ? 'You\'re small enough that the ' + b.noun + ' stretches flat across your hips, and your bare slit shows through it like a line drawn on.' : b.bt === 'athletic' ? 'The ' + b.noun + ' clings to your lean hips, and your bare slit shows through it plain as anything.' : b.bt === 'curvy' ? 'The ' + b.noun + ' clings to the curve of your hips, and your bare slit sits right between them.' : b.bt === 'thick' ? 'The ' + b.noun + ' stretches tight over your thick thighs, and your bare slit shows where they meet.' : 'The ' + b.noun + ' sits close over your hips, and your bare slit shows straight through.') + '\n\n"Nice," he says. He means your pussy.'; },
+                function(b) { return 'A pair of construction workers on a lunch break watch you come down the sidewalk.\n\n"She\'s got a ' + b.hipsWord + ' on," one says.\n\n"Yeah? Then why can I see her pussy?"\n\n"Because it\'s see-through."\n\n"So she\'s got a see-through ' + b.hipsWord + ' on and no panties." He takes a bite of his sandwich. "That\'s what I said."'; }
+            ],
+            sheer_bare: [
+                function(b) { return 'Two guys at a bus shelter stop talking. The closer one squints at your ' + b.outfit + ', then at what\'s under it.\n\n"Bro. She\'s got nothing on under that."\n\n"It\'s see-through."\n\n"I know it\'s see-through. That\'s what I\'m saying."'; },
+                function(b) { return 'A woman in a business suit looks you up and down and her mouth goes flat. "Is that ' + (b.same ? 'a dress' : 'an outfit') + ' or a dare?" she asks the man next to her, loud enough for you to hear.\n\nHe doesn\'t answer. He\'s looking at ' + b.tits + ', then lower, at your bare slit through the ' + b.noun + '.'; },
+                function(b) { return 'A man walking his dog lets the leash go slack. The dog keeps walking. He stops.\n\n' + (b.bs === 'large' ? 'Your heavy tits sway behind the ' + b.noun + ' with every step, nipples dark and stiff,' : b.bs === 'small' ? 'Your small tits sit high and bare behind the ' + b.noun + ', nipples sharp,' : 'Your tits move behind the ' + b.noun + ' with every step, nipples dark and stiff,') + ' and below them your bare pussy shows as plain as your face.\n\nThe dog barks from the end of the block. He still hasn\'t moved.'; },
+                function(b) { return 'A girl handing out samples outside a bakery offers you one, then stares.\n\n"Oh my god. Are you wearing anything under that?"\n\nShe answers herself before you can. "You\'re not. Oh my god." Her eyes go down your body and back up. "That\'s so brave. Or insane. I can see your whole..." She gestures at your crotch.'; },
+                function(b) { return 'Four men at a sidewalk table turn their chairs to watch. None of them pretends otherwise.\n\n' + (b.bt === 'petite' ? '"She\'s tiny," one says. "You can see everything on her."' : b.bt === 'athletic' ? '"Look at her stomach," one says. "Look at the rest of her."' : b.bt === 'curvy' ? '"Look at those hips," one says. "Look at what\'s between them."' : b.bt === 'thick' ? '"Look at those thighs," one says. "Look at what\'s at the top of them."' : '"She\'s naked," one says. "She\'s walking around naked."') + '\n\n"She\'s wearing ' + (b.same ? 'a dress' : 'clothes') + '."\n\n"She\'s wearing a suggestion."'; },
+                function(b) { return 'An old woman at a bus stop watches you pass with her lips pressed white.\n\n"In my day," she says, to no one, "you at least wore underwear under the see-through things."\n\nThe old man beside her says nothing. He\'s watching ' + b.ass + ' through the ' + b.noun + ' like it\'s the best thing he\'s seen in years.'; }
+            ],
+            // Lingerie entries carry a requirement: 'set' (both zones), 'top' (sheer bra only),
+            // 'bottom' (sheer panties only).
+            sheer_lingerie: [
+                { req: 'set', fn: function(b) { return 'A barista wiping tables outside a café looks up and freezes, rag in hand.\n\nHer eyes go to your chest, where your nipples show dark through your ' + b.bra + '. Then lower, to your ' + b.panties + ' and the bare slit behind them.\n\n"Is that... are you wearing anything?"\n\nShe answers herself before you can. "You\'re wearing something. I can see right through it."'; } },
+                { req: 'set', fn: function(b) { return 'A man in a suit steps out of a bank, sees you, and steps right back in. Through the glass door you watch him tell the teller. They both come to the door.\n\nThey get ' + b.tits + ' through your ' + b.bra + ' and your bare pussy through your ' + b.panties + ', and they make no effort to look busy.'; } },
+                { req: 'set', fn: function(b) { return 'Two guys in a parked car roll the window down.\n\n"Is that a bikini?"\n\n"It\'s see-through, dude. Bikinis aren\'t see-through."\n\n"So it\'s underwear."\n\n"It\'s underwear you can see through." He leans out further, eyes on ' + b.tits + '. "It\'s basically nothing."'; } },
+                { req: 'set', fn: function(b) { return 'A woman walking a pair of greyhounds stops dead. The dogs keep going. She gets pulled two steps and her eyes stay on your ' + b.panties + ', on the bare slit showing through the crotch.\n\n"Do you need help?" she calls. She means it. She also means something else, and you can hear it.'; } },
+                { req: 'set', fn: function(b) { return 'A man selling watches off a folding table holds one up to show you and then just holds it there.\n\n' + (b.bt === 'petite' ? '"You\'re, uh," he says. "You\'re very small. And very visible."' : b.bt === 'athletic' ? '"You work out," he says, like it\'s the only thing he can think of. His eyes are on your nipples through the ' + b.noun + '.' : b.bt === 'curvy' ? '"Wow," he says, to your hips.' : b.bt === 'thick' ? '"Damn, girl," he says, to your thighs, and then to your tits.' : '"I can see..." he says, and gives up on the sentence.') + '\n\nYour nipples show dark through your ' + b.bra + '. Your bare slit shows through your ' + b.panties + '. He never sells you the watch.'; } },
+                { req: 'set', fn: function(b) { return 'A crowd at a food truck goes quiet in a ripple. Somebody near the back says, "Is that underwear?" and somebody else says, "It\'s see-through underwear," like that settles it.\n\n' + (b.butt === 'large' ? 'Everyone behind you gets your full ass through the ' + b.noun + '.' : b.butt === 'small' ? 'Everyone behind you gets your tight little ass through the ' + b.noun + '.' : 'Everyone behind you gets your ass through the ' + b.noun + '.') + ' Everyone in front of you gets the rest.'; } },
+                { req: 'top', fn: function(b) { return 'A woman at a crosswalk takes one look at your ' + b.bra + ' and says, "Oh, honey. You forgot your shirt."\n\nThen she sees your nipples, dark and stiff through the cups, and her face changes. "You didn\'t forget it."'; } },
+                { req: 'top', fn: function(b) { return 'Two guys loading a van stop loading it. "Is she in her bra?"\n\n"She\'s in a see-through bra." The taller one squints at ' + b.tits + '. "I can see her nipples, man. Like, completely."\n\n"Keep loading."\n\nHe keeps staring.'; } },
+                { req: 'bottom', fn: function(b) { return 'A man on a bench looks at your ' + b.panties + ' and then up at your face, like he\'s checking whether you know.\n\nYou know. Your bare slit shows through the crotch, plain as anything. He looks back down and stays there.'; } },
+                { req: 'bottom', fn: function(b) { return 'A woman leaving a salon stops with her keys in her hand. She looks at your ' + b.panties + ', at the bare slit showing through the crotch, and then at ' + b.hips + ' like she\'s trying to decide what counts.\n\n"Okay," she says finally. "Okay. Good for you." She sounds like she means the opposite. She keeps looking.'; } }
+            ]
+        };
+
+        // Kelsie's responses: low (<2001) is shame with the body betraying her, mid is conflicted
+        // and wet, high (6001+) is deliberate and hungry. Every tier names nipples, pussy or clit.
+        function _bt5(b, petite, athletic, curvy, thick, ordinary) {
+            return b.bt === 'petite' ? petite : b.bt === 'athletic' ? athletic : b.bt === 'curvy' ? curvy : b.bt === 'thick' ? thick : ordinary;
+        }
+
+        var SHEER_KELSIE_RESPONSES = {
+            sheer_framed: {
+                low: [
+                    function(b) { return 'Your face heats. It\'s a look. You picked it. You still want to fold your arms over it.\n\nYour nipples tighten ' + (b.braF ? 'in the cups' : 'under the ' + b.noun) + ' and your pussy goes damp.'; },
+                    function(b) { return 'You tug your ' + b.sheer + ' straighter like that\'ll change what it shows. It shows the same. Your clit throbs under the attention and you hate how much you like it.'; }
+                ],
+                mid: [
+                    function(b) { return 'You let them look. That\'s what the look is for. Your nipples stiffen and your pussy clenches, slick, and you keep walking at the same easy pace.'; },
+                    function(b) { return 'You catch your reflection in the glass: your ' + b.under + ' framed in ' + b.noun + ', ' + b.frame + ' under it. It looks good. The stares make your clit throb.'; }
+                ],
+                high: [
+                    function(b) { return 'You roll your shoulders back and give them the whole outfit. ' + (b.bs === 'large' ? 'Your heavy tits sit high and full behind the ' + b.noun + '.' : b.bs === 'small' ? 'Your small tits sit high and neat behind the ' + b.noun + '.' : 'Your tits sit high behind the ' + b.noun + '.') + ' Your pussy\'s wet and you like knowing they can almost tell.'; },
+                    function(b) { return 'You smile at them. The underwear is on purpose, the ' + b.noun + ' is on purpose, and the heat pooling in your cunt is the best part of the plan.'; }
+                ]
+            },
+            sheer_braless: {
+                low: [
+                    function(b) { return 'Your arms come up over your chest before you can think. It doesn\'t help. ' + (b.bs === 'large' ? 'Your heavy tits spill around your forearms, nipples still showing dark through the ' + b.noun + '.' : b.bs === 'small' ? 'Your nipples poke stiff against your forearms, still dark through the ' + b.noun + ' at the edges.' : 'Your nipples show around the edges of your arms, dark through the ' + b.noun + '.') + ' Your pussy clenches and your face burns.'; },
+                    function(b) { return 'Your eyes sting. You wanted to look good. You forgot how much of you everyone would see. Your nipples are stiff and aching, and your clit throbs every time someone stares.'; },
+                    function(b) { return 'You hunch forward to make the ' + b.noun + ' hang loose. ' + _bt5(b, 'On your small frame it just swings free, and your nipples show anyway.', 'It lies right back against your flat stomach, and your nipples show anyway.', 'It catches on your curves and falls right back, and your nipples show anyway.', 'It clings to your full chest whatever you do, and your nipples show anyway.', 'It falls right back against you, and your nipples show anyway.') + ' You\'re wet and it makes everything worse.'; }
+                ],
+                mid: [
+                    function(b) { return 'Heat floods your face. It floods lower, too. Your nipples tighten behind the ' + b.noun + ' under every stare and your pussy\'s slick by the next block.'; },
+                    function(b) { return 'You drop your arms. Pick them back up. Drop them again. ' + (b.bs === 'large' ? 'Your heavy tits sway with it, nipples dark and stiff.' : b.bs === 'small' ? 'Your small tits barely move, but your nipples stay stiff and dark.' : 'Your tits shift with it, nipples dark and stiff.') + ' Your clit throbs with every stare.'; },
+                    function(b) { return 'You keep walking with your arms at your sides. Your nipples scrape the ' + b.noun + ' and the ache runs straight down to your clit. You can\'t tell which part of this you\'re enjoying.'; }
+                ],
+                high: [
+                    function(b) { return 'You roll your shoulders back and let the ' + b.noun + ' pull tight. ' + (b.bs === 'large' ? 'Your heavy tits push against it, nipples dark and stiff and right there.' : b.bs === 'small' ? 'Your small tits sit high behind it, nipples sharp and dark.' : 'Your tits press against it, nipples dark and stiff.') + ' Your pussy\'s dripping.'; },
+                    function(b) { return 'You meet their eyes and hold them. Your nipples stiffen behind the ' + b.noun + ' while they look. Your clit throbs, and you slow down so they can keep looking.'; },
+                    function(b) { return 'You stop to fix a strap that doesn\'t need fixing. ' + _bt5(b, 'Your arms lift and your slight frame stretches out under the ' + b.noun + '.', 'Your arms lift and the ' + b.noun + ' pulls flat over the muscle of your stomach.', 'Your arms lift and the ' + b.noun + ' pulls tight over your curves.', 'Your arms lift and the ' + b.noun + ' strains over your full chest.', 'Your arms lift and the ' + b.noun + ' pulls tight across your chest.') + ' Everyone within twenty feet gets your tits. Your cunt clenches, wet.'; }
+                ]
+            },
+            sheer_commando: {
+                low: [
+                    function(b) { return 'You press your thighs together and walk stiff-legged. It hides nothing. ' + (b.butt === 'large' ? 'Your full ass sways behind the ' + b.noun + ' with every step.' : b.butt === 'small' ? 'Your tight little ass shows through the ' + b.noun + ' with every step.' : 'Your ass shows through the ' + b.noun + ' with every step.') + ' Your pussy clenches, wet, and you hate it.'; },
+                    function(b) { return 'You hold your bag over your crotch. Your arm shakes. Your clit throbs against nothing and you can feel yourself getting wetter behind the ' + b.noun + '.'; },
+                    function(b) { return 'Your eyes burn. Everyone can see your pussy. ' + _bt5(b, 'On your small frame the ' + b.noun + ' stretches flat and hides even less.', 'The ' + b.noun + ' clings to your lean hips and shows every line.', 'The ' + b.noun + ' clings to your hips and frames your slit between them.', 'The ' + b.noun + ' stretches over your thick thighs and your slit shows where they meet.', 'The ' + b.noun + ' sits right against you and shows everything.') + ' You\'re slick, and that shows too.'; }
+                ],
+                mid: [
+                    function(b) { return 'You keep your pace even. Your bare slit shows through the ' + b.noun + ' with every step and your clit throbs with every stare that drops.'; },
+                    function(b) { return 'Heat climbs your neck. Your pussy clenches, and you feel the ' + b.noun + ' cling where you\'re wet. Anyone looking can see that too.'; },
+                    function(b) { return 'You think about crossing the street. You stay on this side. ' + (b.butt === 'large' ? 'You let your full hips roll instead.' : b.butt === 'small' ? 'You let your narrow hips sway instead.' : 'You let your hips sway instead.') + ' Your pussy\'s dripping.'; }
+                ],
+                high: [
+                    function(b) { return 'You walk slow. Your bare cunt\'s a dark slit behind the ' + b.noun + ', folds swollen and shining, and you want every one of them to see you dripping.'; },
+                    function(b) { return 'You stop and shift your weight onto one hip. ' + (b.butt === 'large' ? 'Your full ass rounds out behind the ' + b.noun + '.' : b.butt === 'small' ? 'Your tight little ass sits high behind the ' + b.noun + '.' : 'Your ass rounds out behind the ' + b.noun + '.') + ' Your slit shows up front. Your clit throbs and you let them take their time.'; },
+                    function(b) { return 'You smile. Your pussy clenches, slick, and the ' + b.noun + ' clings to your folds. ' + _bt5(b, 'You\'re small enough that there\'s nowhere on you they can\'t see.', 'Lean hips, bare slit, all of it on show.', 'Every curve on show, and your slit right in the middle of them.', 'Thick thighs, bare slit, everything they want.', 'All of it on show.'); }
+                ]
+            },
+            sheer_bare: {
+                low: [
+                    function(b) { return 'You don\'t know what to cover first. ' + (b.bs === 'large' ? 'An arm over your heavy tits leaves them spilling around it.' : b.bs === 'small' ? 'An arm over your small tits covers them and nothing else.' : 'An arm over your tits covers them and nothing else.') + ' Your bare slit stays on show. Your pussy clenches and your eyes sting.'; },
+                    function(b) { return 'You might as well be naked. You know it. Everyone knows it. Your nipples are stiff, your clit\'s throbbing, and the heat in your face keeps running down to your pussy.'; },
+                    function(b) { return 'You walk faster. It only makes ' + _bt5(b, 'your small frame', 'your lean body', 'your curves', 'your thick thighs and full tits', 'everything') + ' move behind the ' + b.noun + '. You\'re wet and shaking, and you hate that the wet part is winning.'; }
+                ],
+                mid: [
+                    function(b) { return 'The stares land everywhere at once. Tits, nipples, slit. Your pussy clenches and you feel slick on your inner thighs.'; },
+                    function(b) { return 'You tell yourself you\'re dressed. ' + (b.bs === 'large' ? 'Your heavy tits, bare behind the ' + b.noun + ', say otherwise.' : b.bs === 'small' ? 'Your small bare tits, nipples sharp behind the ' + b.noun + ', say otherwise.' : 'Your bare tits behind the ' + b.noun + ' say otherwise.') + ' Your clit throbs.'; },
+                    function(b) { return 'You leave your arms at your sides. ' + (b.butt === 'large' ? 'Your full ass sways behind you,' : b.butt === 'small' ? 'Your tight little ass shows behind you,' : 'Your ass shows behind you,') + ' and your nipples and your slit show in front. You\'re dripping.'; }
+                ],
+                high: [
+                    function(b) { return 'You walk like you\'re fully dressed, and technically you\'re right. Your nipples are stiff behind the ' + b.noun + ' and your bare cunt\'s on show, and every stare makes you wetter.'; },
+                    function(b) { return 'You stop under the brightest light on the block and stretch. ' + _bt5(b, 'Your slight body goes long under the ' + b.noun + ', every inch of you on show.', 'Your stomach pulls taut under the ' + b.noun + ', every line of you on show.', 'Your curves pull tight under the ' + b.noun + ', every one of them on show.', 'Your thick body fills the ' + b.noun + ' out, every soft inch of it on show.', 'Your body pulls long under the ' + b.noun + ', all of it on show.') + ' Your clit throbs.'; },
+                    function(b) { return 'You let them have all of it. Tits, nipples, the bare slit of your pussy, the wet shine on your thighs. Your cunt clenches and you smile at the nearest one.'; }
+                ]
+            },
+            sheer_lingerie: {
+                low: [
+                    function(b) { return 'It\'s underwear. You keep telling yourself it\'s underwear. ' + b.lingShows + ' Your pussy clenches and your face won\'t stop burning.'; },
+                    function(b) { return 'You wrap your arms around yourself. ' + _bt5(b, 'You\'re small enough that it almost helps.', 'Your arms cover your stomach and nothing that matters.', 'Your arms can\'t cover your curves.', 'Your arms can\'t cover half of you.', 'It covers almost nothing.') + ' Your clit throbs and you\'re wet, and your eyes are stinging.'; },
+                    function(b) { return 'Your eyes sting. You can feel the ' + b.noun + ' on ' + b.lingZones + ', and everyone can see exactly what it\'s touching. You\'re wet anyway.'; }
+                ],
+                mid: [
+                    function(b) { return b.lingShows + ' You walk through the stares with your chin up and your pussy slick.'; },
+                    function(b) { return 'Technically you\'re dressed. The stares say otherwise. Your clit throbs with every one, and ' + (b.seeChest ? (b.bs === 'large' ? 'your heavy tits ache behind the cups.' : b.bs === 'small' ? 'your small tits ache behind the cups.' : 'your tits ache behind the cups.') : 'your pussy clenches behind the crotch.'); },
+                    function(b) { return 'Heat runs down your neck and pools between your legs. ' + (b.seeHips ? (b.butt === 'large' ? 'Your full ass is bare behind the ' + b.noun + ' for everyone behind you.' : b.butt === 'small' ? 'Your tight little ass is bare behind the ' + b.noun + ' for everyone behind you.' : 'Your ass is bare behind the ' + b.noun + ' for everyone behind you.') : (b.bs === 'large' ? 'Your heavy tits are bare behind the cups for everyone in front of you.' : b.bs === 'small' ? 'Your small tits are bare behind the cups for everyone in front of you.' : 'Your tits are bare behind the cups for everyone in front of you.')) + ' You\'re dripping.'; }
+                ],
+                high: [
+                    function(b) { return 'You walk like you\'re fully dressed. ' + b.lingShows + ' Your pussy\'s dripping and you love the technicality.'; },
+                    function(b) { return 'You stop and let them look. ' + _bt5(b, 'Small and bare behind the ' + b.noun + ', every inch of you on show.', 'Lean and bare behind the ' + b.noun + ', every line of you on show.', 'All curves behind the ' + b.noun + ', every one of them on show.', 'Thick and soft behind the ' + b.noun + ', every inch of you on show.', 'Bare behind the ' + b.noun + ', every inch of you on show.') + ' Your clit throbs.'; },
+                    function(b) { return 'You smile at the nearest one. "It\'s lingerie," you say. Your ' + b.lingZones.replace(/^your /, '') + (b.seeChest ? ' tell' : ' tells') + ' a different story, and your cunt clenches, wet.'; }
+                ]
+            }
+        };
+
+        // 8A stats per state: arousal / MH by tier (low, mid, high), suspicion, thrill, heat.
+        var SHEER_VIGNETTE_STATS = {
+            sheer_framed:   { arousal: [2, 4, 6],   mh: [0, 0, 0],   susp: 0, thrill: [3, 5, 7],    heat: 0, chance: 0.30 },
+            sheer_braless:  { arousal: [4, 8, 12],  mh: [-2, 0, 2],  susp: 1, thrill: [10, 10, 10], heat: 5, chance: 1 },
+            sheer_commando: { arousal: [5, 10, 15], mh: [-3, 0, 3],  susp: 2, thrill: [12, 12, 12], heat: 5, chance: 1 },
+            sheer_bare:     { arousal: [6, 12, 18], mh: [-4, 0, 3],  susp: 2, thrill: [16, 16, 16], heat: 8, chance: 1 },
+            sheer_lingerie: { arousal: [6, 14, 20], mh: [-5, 0, 3],  susp: 3, thrill: [24, 24, 24], heat: 8, chance: 1 }
+        };
+
+        // 8A: vignette after the Step 4 gate passes. Shares the 20-minute
+        // lastExhibStateEventMinute cooldown with the naked/underwear entries.
+        function fireSheerDistrictVignette(districtId, st) {
+            var key = st.state.indexOf('sheer_lingerie') === 0 ? 'sheer_lingerie' : st.state;
+            var stats = SHEER_VIGNETTE_STATS[key];
+            if (!stats) return false;
+            var _nowMin = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+            if ((_nowMin - (gameState.flags.lastExhibStateEventMinute || 0)) < 20) return false;
+            if (Math.random() >= stats.chance) return false;
+            gameState.flags.lastExhibStateEventMinute = _nowMin;
+
+            var b = _sheerBodyCtx();
+            b.lingShows = b.seeChest && b.seeHips ? 'Your nipples show dark through the cups and your bare slit shows through the crotch.'
+                : b.seeChest ? 'Your nipples show dark and stiff through the cups.' : 'Your bare slit shows through the crotch.';
+            b.lingZones = b.seeChest && b.seeHips ? 'your nipples and your slit' : b.seeChest ? 'your nipples' : 'your slit';
+
+            // NPC vignette, avoiding the last few used
+            var pool = SHEER_NPC_VIGNETTES[key];
+            if (key === 'sheer_lingerie') {
+                var req = st.state === 'sheer_lingerie' ? 'set' : st.state === 'sheer_lingerie_top' ? 'top' : 'bottom';
+                pool = pool.filter(function(e) { return e.req === req; }).map(function(e) { return e.fn; });
+            }
+            if (!gameState.flags._sheerNpcVignetteIndex) gameState.flags._sheerNpcVignetteIndex = [];
+            var recent = gameState.flags._sheerNpcVignetteIndex;
+            var choices = [];
+            for (var i = 0; i < pool.length; i++) if (recent.indexOf(key + ':' + i) === -1) choices.push(i);
+            if (choices.length === 0) choices = pool.map(function(_, i) { return i; });
+            var pick = choices[Math.floor(Math.random() * choices.length)];
+            recent.push(key + ':' + pick);
+            while (recent.length > 4) recent.shift();
+            var npcScene = pool[pick](b);
+
+            var corruption = gameState.corruption || 0;
+            var tier = corruption >= 6001 ? 2 : corruption >= 2001 ? 1 : 0;
+            var tierKey = ['low', 'mid', 'high'][tier];
+            var responses = SHEER_KELSIE_RESPONSES[key][tierKey];
+            var response = '\n\n' + responses[Math.floor(Math.random() * responses.length)](b);
+
+            // Stats
+            var drawMult = (typeof getExhibitionDrawMultiplier === 'function') ? getExhibitionDrawMultiplier() : 1.0;
+            var arousal = Math.round(stats.arousal[tier] * drawMult);
+            gameState.arousal = Math.min(100, (gameState.arousal || 0) + arousal);
+            var mh = stats.mh[tier];
+            if (mh) modifyMentalHealth(mh);
+            if (stats.susp) gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + stats.susp);
+            var thrill = Math.round(stats.thrill[tier] * (st.weaveMult || 1) * drawMult);
+            if (thrill > 0) applyExhibitionThrillGain(thrill);
+            if (stats.heat && !isDark() && districtId !== 'slums' && districtId !== 'residential') {
+                gameState.socialMediaHeat = Math.min(100, (gameState.socialMediaHeat || 0) + stats.heat);
+            }
+            if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+            gameState.exhibitionStats.npcReactionsTriggered = (gameState.exhibitionStats.npcReactionsTriggered || 0) + 1;
+
+            var statText = '\n\n' + (mh < 0 ? '<span style="color: #4488ff;">Mental Health ' + mh + '</span>  · ' : '') +
+                '<span style="color: #ff69b4;">Arousal +' + arousal + '</span>  · <span style="color: #cc99ff;">Thrill +' + thrill + '</span>' +
+                (mh > 0 ? '  · <span style="color: #88ff88;">Mental Health +' + mh + '</span>' : '') +
+                (stats.susp ? '  · <span style="color: #8b0000;">Suspicion +' + stats.susp + '</span>' : '');
+
+            showMessage(npcScene + response + statText, function() { updateStatus(); });
+            return true;
+        }
+
+        // ── 8B: Ruby's diner line ──
+        // Once per shift, when Kelsie walks into the diner on a workday bare or commando
+        // behind mesh (she changes into the uniform after). Ruby reads Kelsie's standing
+        // with her (friendship), never her corruption; Kelsie's inner line scales with corruption.
+        function getRubySheerLine() {
+            if (!gameState.flags.hasDinerJob || gameState.flags.firedFromDiner) return '';
+            var wd = gameState.time.weekday;
+            if (wd === 'Saturday' || wd === 'Sunday') return '';
+            var hr = gameState.time.hour;
+            if (hr < 7 || hr >= 17) return '';
+            var st = getSheerState();
+            if (st.state !== 'sheer_bare' && st.state !== 'sheer_commando') return '';
+            var day = gameState.time.day || 0;
+            if ((gameState.flags._rubySheerLineShift || 0) === day) return '';
+            gameState.flags._rubySheerLineShift = day;
+
+            var b = _sheerBodyCtx();
+            var bare = st.state === 'sheer_bare';
+            var f = (gameState.relationships && gameState.relationships.ruby) ? (gameState.relationships.ruby.friendship || 0) : 0;
+            var ruby;
+            if (f >= 50) {
+                ruby = 'Ruby clocks you from across the room and moves before anyone else does. ' + (bare ? 'She\'s got her cardigan off her chair and around your shoulders by the time you reach the counter.' : 'She\'s got an apron off the hook and tied around your waist by the time you reach the counter.') +
+                    '\n\n"Hold that there," she says quietly. "Whatever this is, you\'re not doing it in front of my regulars." She steers you toward the staffroom with a hand on your back. "You okay, honey?"';
+            } else if (f >= 20) {
+                ruby = 'Ruby watches you walk in. She takes a long sip of coffee.\n\n"Bold choice for a ' + (wd || 'weekday') + '," she says. "Uniform. Before one of the regulars has a heart attack."';
+            } else {
+                ruby = 'Ruby looks up from the register and her whole face tightens.\n\n"Kelsie." She comes around the counter fast and plants herself between you and the booths. ' + (bare ? '"I can see your nipples. I can see everything else, too."' : '"I can see that you\'re not wearing underwear. Everyone can see that."') +
+                    ' She points at the staffroom. "Uniform. Now. And stay clear of table six."';
+            }
+            var c = gameState.corruption || 0;
+            var inner;
+            if (c >= 6001) {
+                inner = 'You smile at her and take your time getting to the staffroom. ' + (b.butt === 'large' ? 'Your full ass sways behind the ' + b.noun + ' the whole walk, and half the counter watches it go.' : b.butt === 'small' ? 'Your tight little ass shows through the ' + b.noun + ' across the whole floor, and half the counter watches it go.' : 'Your ass shows through the ' + b.noun + ' across the whole floor, and half the counter watches it go.') + ' Your pussy\'s wet.';
+            } else if (c >= 2001) {
+                inner = 'You mumble something about laundry. Your clit throbs the whole walk to the staffroom anyway.';
+            } else {
+                inner = '<em>Oh god.</em> Your face burns the whole walk to the staffroom. ' + (bare ? 'Your nipples are stiff and your pussy\'s wet' : 'Your pussy\'s wet') + ', and Ruby saw all of it.';
+            }
+            return ruby + '\n\n' + inner;
+        }
+
+        // ── 8C: getSheerDistrictAwareness(districtId) ──
+        // Appended to each district street text() after the wet awareness call. Once per
+        // district per day, for bare-behind-mesh and sheer lingerie states. When the wet
+        // version fires in the same district on the same entry, sheer waits for the next district.
+        function getSheerDistrictAwareness(districtId) {
+            var st = getSheerState();
+            if (!isSheerExposureState(st.state)) return '';
+            if (!gameState.flags._sheerDistrictAwarenessFired) gameState.flags._sheerDistrictAwarenessFired = {};
+            var today = gameState.time.day || 0;
+            if (gameState.flags._sheerDistrictAwarenessFired[districtId] === today) return '';
+            var nowMin = (today * 1440) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+            if (gameState.flags._wetAwarenessJustFired === districtId + '@' + nowMin) return '';
+            gameState.flags._sheerDistrictAwarenessFired[districtId] = today;
+
+            var b = _sheerBodyCtx();
+            var c = gameState.corruption || 0;
+            var t = c >= 6001 ? 'high' : c >= 2001 ? 'mid' : 'low';
+            var n = b.noun;
+            var buttSway = b.butt === 'large' ? 'Your full ass sways' : b.butt === 'small' ? 'Your tight little ass sways' : 'Your ass sways';
+            var frameShow = _bt5(b, 'Small and bare and on show.', 'Lean and bare and on show.', 'Curves and bare skin on show.', 'Thick and soft and on show.', 'Bare and on show.');
+            var lines = {
+                commercial: {
+                    low: 'You catch yourself in a storefront window. The ' + n + ' turns to nothing in the glass. ' + b.Shows + ', all of it printed on the reflection for everyone walking behind you. You cross your arms and walk faster, and your pussy clenches anyway.',
+                    mid: 'Shop windows everywhere, and every one of them shows you what the street sees: ' + b.shows + ' behind the ' + n + '. A saleswoman in a doorway follows you with her eyes for a whole block. Your clit throbs.',
+                    high: 'You slow down past the shop windows and watch yourself in them. ' + b.Shows + ', right there behind the ' + n + '. ' + frameShow + ' Behind you, the foot traffic slows down with you.'
+                },
+                residential: {
+                    low: 'The quiet streets make it worse. A man mowing his lawn cuts the engine when you pass. There\'s no crowd to hide in, only ' + b.shows + ' behind the ' + n + ' and one man staring at them. Your pussy clenches and you walk faster.',
+                    mid: 'A woman on her porch lowers her coffee cup. Her eyes go to ' + b.shows + ' behind the ' + n + ' and stay. You feel her watching the whole length of the block. You\'re slick by the corner.',
+                    high: 'Porches, lawns, curtains twitching. You walk down the middle of the sidewalk like you live here, ' + b.shows + ' on show through the ' + n + '. ' + buttSway + ' for every window. Your clit throbs.'
+                },
+                downtown: {
+                    low: 'Crowds everywhere, and every one of them gets ' + b.shows + ' through the ' + n + '. Someone bumps into you and apologizes without once looking at your face. Your face burns. Your pussy clenches anyway.',
+                    mid: 'Office workers on lunch break stop mid-bite. ' + b.Shows + ', behind the ' + n + ', in the middle of all those suits. You keep walking. Your nipples ache and your clit throbs.',
+                    high: 'Neon hits the ' + n + ' and it glows. The crowd sees ' + b.shows + ' in color. You slow down and let it. ' + _bt5(b, 'Your small frame', 'Your lean body', 'Your curves', 'Your thick body', 'Your body') + ' moves through them like it\'s on a stage, and your pussy\'s dripping.'
+                },
+                slums: {
+                    low: 'Hungry eyes here, and the ' + n + ' gives them everything. A man on a stoop says something low about ' + b.shows + '. Your hands shake. Your pussy clenches and you hate yourself for it.',
+                    mid: 'The slums skip the whistling. They stare. Three men outside a bodega track ' + b.shows + ' through the ' + n + ' without a word. Your stomach tightens and your clit throbs.',
+                    high: 'Darker streets and hungrier eyes, and you give them ' + b.shows + ' through the ' + n + '. ' + buttSway + ' with every step. You know what these streets do to girls dressed like this. Your cunt clenches, wet.'
+                },
+                park: {
+                    low: 'Open grass, joggers, nowhere to hide from the light, and it goes straight through the ' + n + '. ' + b.Shows + ', lit up for every jogger on the path. You fold your arms and your pussy clenches.',
+                    mid: 'A jogger passes and his stride breaks. The light\'s behind you and the ' + n + ' might as well be gone. You feel him look at ' + b.shows + '. Your clit throbs.',
+                    high: 'You take the long path around the pond, where the light\'s best. ' + b.Shows + ', lit up behind the ' + n + '. ' + frameShow + ' Every jogger gets the full show and your pussy\'s dripping.'
+                },
+                medical: {
+                    low: 'Nurses on a smoke break outside the clinic go quiet. One of them looks at ' + b.shows + ' through the ' + n + ' with professional pity. Your face burns and your pussy clenches.',
+                    mid: 'An orderly pushing an empty wheelchair stops to let you pass and forgets to start again. His eyes are on ' + b.shows + ' through the ' + n + '. Your clit throbs.',
+                    high: 'Scrubs, lanyards, tired faces, and every one of them wakes up when you pass. ' + b.Shows + ', plain behind the ' + n + '. A doctor walks into a glass door. Your pussy\'s wet.'
+                }
+            };
+            var d = lines[districtId];
+            if (!d) return '';
+            return '\n\n' + d[t];
+        }
+
         function handleUnderwearDistrictEntry(districtId) {
             const type = getUnderwearExposureType();
             var _isTopless = isEffectivelyTopless();
@@ -22384,6 +22733,10 @@ audioSystem.playSFX('buttonClick');
                 );
                 return true;
             }
+
+            // Mesh Overhaul Step 8A: sheer lingerie passed the gate; its vignettes live in
+            // handleSheerDistrictEntry(), which runs right after this in every district.
+            if (!_isTopless && !_isBottomless && typeof getSheerState === 'function' && getSheerState().state.indexOf('sheer_lingerie') === 0) return false;
 
             // Global cooldown: 20 game-minutes between any undress-state district reactions
             var _nowMin = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
@@ -36334,6 +36687,8 @@ audioSystem.playSFX('buttonClick');
                 }
             }
 
+            // Mesh Overhaul Step 8C: wet takes precedence; sheer awareness waits for the next district
+            if (prose) gameState.flags._wetAwarenessJustFired = districtId + '@' + ((_today * 1440) + (gameState.time.hour * 60) + (gameState.time.minute || 0));
             return prose ? '\n\n' + prose : '';
         }
 
@@ -103846,6 +104201,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
                     
                     desc += getWetDistrictAwareness('commercial');
+                    desc += getSheerDistrictAwareness('commercial'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('commercial');
                     desc += "\n\nWhat do you want to do?";
                     return desc;
@@ -104010,6 +104366,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     
                     
                     desc += getWetDistrictAwareness('residential');
+                    desc += getSheerDistrictAwareness('residential'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('residential');
                     desc += "\n\nWhat do you want to do?";
                     return desc;
@@ -104297,6 +104654,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
                     
                     desc += getWetDistrictAwareness('slums');
+                    desc += getSheerDistrictAwareness('slums'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('slums');
                     return desc;
                 },
@@ -109542,6 +109900,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
                     
                     
+                    desc += getSheerDistrictAwareness('medical'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('medical');
                     desc += "\n\nWhat do you want to do?";
                     return desc;
@@ -109661,6 +110020,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     
                     
                     desc += getWetDistrictAwareness('downtown');
+                    desc += getSheerDistrictAwareness('downtown'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('downtown');
                     desc += "\n\nWhat do you want to do?";
                     return desc;
@@ -136845,6 +137205,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     }
                     
                     desc += getWetDistrictAwareness('park');
+                    desc += getSheerDistrictAwareness('park'); // Mesh Overhaul Step 8C
                     
                     return desc;
                 },
@@ -199828,6 +200189,15 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.flags._boTierBeatReturn = sceneId;
                     showScene('bo_tier_beat');
                     return;
+                }
+
+                // ── Mesh Overhaul Step 8B: Ruby catches a sheer walk-in at shift start ──
+                if (part === 0 && (sceneId === 'diner_entrance' || sceneId === 'diner_main_floor') && typeof getRubySheerLine === 'function') {
+                    const _rubySheerLine = getRubySheerLine();
+                    if (_rubySheerLine) {
+                        showMessage(_rubySheerLine, () => { showScene(sceneId); });
+                        return;
+                    }
                 }
 
                 // ── EXPOSURE BUILDING CHECK ──
