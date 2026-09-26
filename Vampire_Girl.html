@@ -142447,267 +142447,111 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const fatigue = gameState.fatigue || 0;
                     const isNight = isNightTime();
                     
-                    return 'You approach one of the park benches.\n\nIt\'s not a bed. Not even close. Hard wood. Without a pillow or blanket.\n\n' + (isNight ? "But it\'s late, you\'re exhausted, and you have nowhere else to go." : 'Your fatigue is at ' + (fatigue) + '%. You need rest.') + '\n\nSleeping on a public park bench is risky. Someone might rob you while you sleep. But you need rest.\n\n<em>You\'ll sleep here until morning.</em>';
+                    return 'You approach one of the park benches.\n\nIt\'s a slab of hard wood with no pillow or blanket, about as far from a bed as you can get.\n\n' + (isNight ? "But it\'s late, you\'re exhausted, and you\'ve got nowhere else to go." : 'Your fatigue is at ' + (fatigue) + '%. Your body\'s begging for rest.') + '\n\nSleeping out in the open like this is risky, and someone could rob you while you\'re out cold. You need the rest anyway.\n\n<em>You\'ll sleep here until morning.</em>';
                 },
                 choices: [
-                    { text: "Sleep on the bench", nextScene: "park_bench_sleep" },
+                    { text: "Sleep on the bench", action: () => {
+                        // Roll the night ONCE, here, before any scene renders.
+                        // 80% assault, 10% robbery, 10% nothing.
+                        // Assaults play the dedicated park_bench_assault* scenes, whose
+                        // "Get up." leads to park_bench_sleep (the morning aftermath).
+                        const roll = Math.random();
+                        const timesRaped = gameState.flags.parkBenchRapedCount || 0;
+                        if (roll < 0.8) {
+                            let assaultScene;
+                            if (timesRaped > 0) {
+                                gameState.flags._parkBenchOutcome = 'rape';
+                                assaultScene = 'park_bench_assault_repeat';
+                            } else if (gameState.isVirgin) {
+                                gameState.flags._parkBenchOutcome = 'rape_virgin';
+                                assaultScene = 'park_bench_assault_virgin';
+                            } else {
+                                gameState.flags._parkBenchOutcome = 'rape';
+                                assaultScene = 'park_bench_assault';
+                            }
+                            showScene(assaultScene);
+                        } else {
+                            gameState.flags._parkBenchOutcome = roll < 0.9 ? 'robbed' : 'nothing';
+                            showScene('park_bench_sleep');
+                        }
+                    } },
                     { text: "Never mind", nextScene: "riverside_park" }
                 ]
             },
 
+            // Morning after a night on the park bench. The outcome was rolled in
+            // park_bench_sleep_choice and stored in _parkBenchOutcome, so onEnter,
+            // parts, and text all read the same result. Assault nights arrive here
+            // from the park_bench_assault* scenes, which handle the sex mechanics.
             park_bench_sleep: {
                 parts: function() {
-                    // Determine what happens during sleep
-                    const roll = Math.random();
-                    const timesRaped = gameState.flags.parkBenchRapedCount || 0;
-                    
-                    // 80% chance of rape, 10% chance of robbery, 10% chance of nothing
-                    if (roll < 0.8) {
-                        // RAPE EVENT
-                        gameState.flags.parkBenchRape = true;
-                        gameState.flags.parkBenchRobbed = false;
-                        
-                        const isFirstTime = timesRaped === 0;
-                        const corr = gameState.corruption || 0;
-                        
-                        if (isFirstTime) {
-                            // FIRST TIME
-                            var cv = getSceneClothingVars();
-                            const noBra = cv.noBra;
-                            const noPanties = cv.noPanties;
-                            
-                            let wakingText = '';
-                            if (noBra && noPanties) {
-                                wakingText = 'She wakes to weight.\n\nPressure on her hips. Something wrong between her thighs. Her brain floods white before her eyes open.\n\nA man she\'s never seen: heavy-built, mid-forties, thick shoulders and a gut beneath a grey Henley dark at the collar with sweat.\n\nShort hair silvered at the temples, jaw rough with days of stubble. His knuckles are broad and scarred, planted on either side of her shoulders.\n\nHe\'s inside her. Moving with the steady rhythm of someone who\'s been at it awhile.\n\nHer pants and panties are gone. She hadn\'t worn a bra. Each thrust rocks her bare breasts while the night air runs cold across her chest.\n\n<em>She\'s up now,</em> he registers, and doesn\'t stop.';
-                            } else if (noBra) {
-                                wakingText = 'She wakes to weight.\n\nPressure on her hips. Something wrong between her thighs. Her brain floods white before her eyes open.\n\nA man she\'s never seen: heavy-built, mid-forties, thick shoulders and a gut beneath a grey Henley dark at the collar with sweat.\n\nShort hair silvered at the temples, jaw rough with days of stubble. His knuckles are broad and scarred, planted on either side of her shoulders.\n\nHe\'s inside her. Her pants and panties are bunched at her ankles.\n\nShe hadn\'t worn a bra. His gaze drops to her chest and stays there.\n\n<em>She\'s awake,</em> he clocks, and doesn\'t slow down.';
-                            } else if (noPanties) {
-                                wakingText = 'She wakes to weight.\n\nPressure on her hips. Something wrong between her thighs. Her brain floods white before her eyes open.\n\nA man she\'s never seen: heavy-built, mid-forties, thick shoulders and a gut beneath a grey Henley dark at the collar with sweat.\n\nShort hair silvered at the temples, jaw rough with days of stubble. His knuckles are broad and scarred, planted on either side of her shoulders.\n\nHer pants are around her ankles. She hadn\'t worn panties.\n\n\"No panties,\" he says, his rhythm slowing, deliberate. \"Made it real easy.\"\n\n<em>She\'s awake now. Doesn\'t change anything.</em>';
-                            } else {
-                                wakingText = 'She wakes to weight.\n\nPressure on her hips. Something wrong between her thighs. Her brain floods white before her eyes open.\n\nA man she\'s never seen: heavy-built, mid-forties, thick shoulders and a gut beneath a grey Henley dark at the collar with sweat.\n\nShort hair silvered at the temples, jaw rough with days of stubble. His knuckles are broad and scarred, planted on either side of her shoulders.\n\nHer pants are around her ankles. He\'s moving between her thighs with the patience of someone who\'s taken his time getting there.\n\n<em>She\'s up. Still got a while before anyone comes through.</em>';
-                            }
-                            
-                            return [
-                                'The bench presses hard through the backpack she\'s folded under her cheek, wood grain cool against her skin. The park\'s gone quiet, down to crickets and the far-off roll of traffic, a low wind through the trees that carries damp grass and wet concrete.\n\nShe draws her knees in. Closes her eyes.\n\nSleep pulls her under before she\'s finished deciding to let it.',
-
-                                wakingText,
-
-                                'The shock hits first.\n\nThen sensation catches up to it.\n\nHis cock is thick, filling her in a way that stretches and burns, and her body is already responding around him, already slick, and she can\'t parse how that happened while she was unconscious.\n\n<em>Oh god.</em>\n\nShe tries to shift away and his weight settles heavier, not violent, just immovable, like he knows exactly how this plays out.',
-
-                                isVirgin ? 
-                                'The pain is a wave — sharp, tearing, seated deep where she\'s never been touched — and a sound comes out of her she doesn\'t recognize, high and cracked.\n\nHe stills for one breath. Then pushes through anyway.\n\n\"Fuck,\" he exhales, low and impressed. \"First time.\"\n\nHer pussy clamps around him involuntarily, pain and stretch and something else she won\'t name all landing at once. Her hips roll up before she\'s decided anything.' :
-
-                                corr < 4000 ?
-                                'He\'s thick, the head pressing somewhere deep that curls her toes inside her shoes, and she\'s wet, already, her body having understood before she did.\n\n<em>How am I already wet?</em>\n\n*Nnh.* The sound gets out before she can catch it.\n\n\"That\'s it,\" he grunts, finding his rhythm. \"Knew you\'d be a good one.\"' :
-                                corr < 8000 ?
-                                'He\'s thick, the stretch of him arriving in layers as she wakes up fully, and she\'s already soaked, already clenching around him.\n\nShe makes a sound. Doesn\'t bother trying to stop it.\n\nHer hips roll up to meet the next thrust before she\'s thought about it. He adjusts the angle and *hhng* — that lands somewhere specific — and her fingers find the bench slat.' :
-                                'The stretch of him is immediate and her body answers before she\'s decided anything.\n\n\"Harder,\" she tells him. Already.\n\nHe blinks — stalls half a second — and she rolls her hips up into him to make the point. He gives her harder.',
-
-                                corr < 4000 ?
-                                'She should fight. Scream. Get her hands between them.\n\nHer hips roll back instead.\n\nThe motion is involuntary and then it isn\'t, her body finding his rhythm, the bench creaking under them in the empty park.\n\n\"Oh yeah,\" he breathes. \"That\'s exactly what I thought.\"\n\nHer fingers find the bench slat and grip. She can\'t stop the sounds coming out of her.' :
-                                corr < 8000 ?
-                                'She\'s arching up into every thrust now, fingers gripping the bench slat above her head, chasing the specific angle that sends static up her spine.\n\nHe finds it inside the first minute. *Ahhh*, cracked and open.\n\n\"There it is,\" he says, and goes straight back to it.' :
-                                'Her heel digs into the bench for leverage and she drives her hips up to meet every stroke.\n\n\"Right there,\" she tells him. \"Don\'t stop.\"\n\nHe doesn\'t.',
-
-                                corr < 4000 ?
-                                'He goes harder. Faster. His thighs slapping hers, the wet sound of it carrying in the dark.\n\n\"Gonna fill this cunt,\" he grunts. \"Don\'t move.\"\n\nShe\'s not staying still. She\'s arching up into each thrust, her moans embarrassingly loud now, no composure left, just sensation cresting over itself.\n\n<em>Please,</em> she thinks, and doesn\'t finish it.' :
-                                corr < 8000 ?
-                                'He picks up the pace. Both of them in rhythm now, the bench creaking, the wet sounds carrying in the empty park.\n\n\"You\'re so fucking wet,\" he grunts.\n\nHer moan answers for her. She\'s past words.' :
-                                'He fucks her the way she asked for it. Deep, hard, each stroke landing exactly where she wants it.\n\n\"Harder,\" she says again, greedy now.\n\nHe obliges and the sound she makes carries out across the empty park with no attempt to muffle it.',
-
-                                'He drives in deep and comes.\n\nHot, flooding inside her, and she cums with him, the orgasm crashing through so hard her vision whites at the edges, thighs clamping around him as he empties inside her.\n\nShe shakes. She can\'t stop shaking.\n\nHe pulls out slow and the wet sound of it in the quiet park is obscene.',
-
-                                isVirgin ?
-                                'He stands. Adjusts himself. Doesn\'t look at her face.\n\n\"Sleep here again,\" he says, casual as a weather report, \"I\'ll find you.\"\n\nHe walks off into the dark and the footsteps fade.\n\nShe lies there with her pants at her ankles, the cold air moving back across her hips, and the sensation of him still seated inside her, her body not caught up yet to the fact of his absence.' :
-                                corr < 4000 ?
-                                'He stands. Adjusts himself.\n\n\"Sleep here again,\" he says, light and certain, like it\'s already decided.\n\nHe walks off into the trees. She lies there on her back with her chest still heaving, the cold bench under her shoulders and the wet warmth of him cooling between her thighs, the park settling back to crickets and wind.' :
-                                corr < 8000 ?
-                                'He stands. Adjusts himself.\n\n\"Sleep here again,\" he says.\n\nHe walks off between the trees. She sits up slowly, presses the heels of her palms against her eyes, and stays like that until the park goes quiet around her.' :
-                                'He stands. Adjusts himself. Doesn\'t say anything this time.\n\nShe\'s already dragging her pants back into place by the time his footsteps fade. She leans back against the bench and looks up through the branches, hands loose on her thighs, watching the sky lighten.'
-                            ];
-                        } else {
-                            // REPEAT ENCOUNTER - he recognizes her
-                            return [
-                                'The same bench. Same backpack-pillow. The park smells like damp grass and cold stone, a faint trace of cigarette smoke caught somewhere in the hedge line.\n\nShe tells herself it\'s just the only option. She\'s exhausted. That\'s all.\n\n<em>That\'s all this is,</em> she decides, and closes her eyes.',
-
-                                'Hands on her hips. Her pants coming down.\n\nHer eyes open on the same face — grey temples, heavy jaw, that grey Henley — and her stomach drops and her body floods warm in the same instant.\n\n\"Well,\" he says, low and pleased, \"look who came back.\"\n\n<em>Knew she would.</em>',
-
-                                corr < 4000 ?
-                                'He pushes inside before she\'s said anything.\n\nNo warning, no waiting. Just his cock filling her in one slow stroke, thick and certain, and a sound tears out of her so fast she bites down on her own cheek.\n\n\"That\'s what I thought,\" he says. \"You weren\'t here by accident.\"\n\n<em>I was,</em> she thinks, her hips already rolling back against him.' :
-                                corr < 8000 ?
-                                'He pushes inside without waiting.\n\nThe stretch of him lands familiar and immediate, her body already knowing the shape of him. She makes a sound that doesn\'t bother with pretense.\n\n\"Thought so,\" he says, adjusting his angle, finding what worked last time inside the first thrust.' :
-                                'She rolls her hips before he\'s fully settled his weight.\n\nHe pushes in and she exhales long and grips the bench slat. They\'re already in rhythm, both of them knowing it now. He goes deep on the first real stroke and she tips her head back and lets the sound out.',
-
-                                '\"Such a good girl,\" he grunts, pace picking up. \"Coming back for more.\"\n\nHe\'s more confident this time, repositioning her hips without asking, finding the angle until she gasps.\n\nHer moans carry in the empty park. She\'s past quiet now.\n\n\"That\'s it,\" he says. \"Let \'em hear.\"',
-
-                                corr < 4000 ?
-                                'She cums before she means to.\n\nSharp and sudden, thighs clamping, fingers going white on the bench slat, a sound getting out anyway around her teeth.\n\nHe doesn\'t slow down. Works her through every second of it.\n\n\"My park bench slut,\" he says, deep and satisfied, and she hates how warm it lands.' :
-                                corr < 8000 ?
-                                'The orgasm breaks fast — faster than last time — and she doesn\'t try to muffle it, just lets it cum, gripping him tight through every throb.\n\n\"My park bench slut,\" he says. She doesn\'t flinch from it this time.' :
-                                'She cums hard and doesn\'t soften it, clamping around him and grabbing his forearm to pull him deeper on every spasm.\n\n\"My park bench slut,\" he says.\n\n\"Yeah,\" she breathes between her teeth. \"Keep going.\"',
-
-                                'He follows a minute later, driving in deep and holding there while he cums—hot and flooding—his fingers pressing bruises into her hips.\n\nHe exhales slow. Steps back.\n\n\"I\'ll find you,\" he says, already zipping up.\n\nShe doesn\'t answer. He walks off between the trees like it doesn\'t matter.',
-
-                                corr < 4000 ?
-                                'She lies there in the dark.\n\nThe park\'s gone quiet again, just wind and the creak of the bench, cum cooling between her thighs.\n\n<em>I came back. Slept on the same bench.</em>\n\nShe pulls her pants up slowly and sits with her palms flat on her knees, watching the sky begin to grey above the treeline.' :
-                                corr < 8000 ?
-                                'She stays there after he\'s gone.\n\nThe park settles — wind in the leaves, distant traffic, cum cooling between her thighs. She sits up eventually, elbows on her knees, watching the sky lighten over the treeline.' :
-                                'She lies back on the bench while her breathing slows, the park quiet around her.\n\n<em>Wednesday,</em> she thinks. Already thinking about next time.\n\nShe pulls her pants up eventually and looks up through the branches, watching the sky go from black to grey, completely satisfied.'
-                            ];
-                        }
-                    } else if (roll < 0.9) {
-                        // ROBBERY EVENT (10% - between 0.8 and 0.9)
-                        gameState.flags.parkBenchRobbed = true;
-                        gameState.flags.parkBenchRape = false;
-                        
+                    const outcome = gameState.flags._parkBenchOutcome || 'nothing';
+                    const fallAsleep = 'You curl up on the bench and use your backpack as a pillow.\n\nThe night\'s cold and the wood\'s hard under your hip, but exhaustion drags you under anyway.';
+                    if (outcome === 'robbed') {
                         return [
-                            'You curl up on the park bench. Use your backpack as a pillow.\n\nThe night is cold. Uncomfortable. But exhaustion pulls you under.\n\nYou close your eyes. Try to rest.',
-
-                            'Something wakes you in the middle of the night.\n\nHands rifling through your backpack.\n\nYou grab the thief\'s wrist, but they\'re fast.\n\nThey wrench free and run into the darkness.\n\nYou check your pockets. <em>Fuck.</em> They got your money. All of it.',
-
-                            'Dawn breaks. You\'re exhausted. Robbed. Penniless.\n\nThis can\'t continue. You need a real place to stay.'
-                        ];
-                    } else {
-                        // NOTHING HAPPENS (10% - above 0.9)
-                        gameState.flags.parkBenchRobbed = false;
-                        gameState.flags.parkBenchRape = false;
-                        
-                        return [
-                            'You curl up on the park bench. Use your backpack as a pillow.\n\nThe night is cold. Uncomfortable. But exhaustion pulls you under.\n\nYou close your eyes. Try to rest.',
-
-                            'You wake several times during the night.\n\nEvery sound makes you tense. Every footstep nearby.\n\nBut no one bothers you. You\'re lucky tonight.',
-
-                            'Dawn breaks. You\'re exhausted but at least you weren\'t robbed.\n\nStill, this can\'t continue. You need a real place to stay.'
+                            fallAsleep,
+                            'Something wakes you in the middle of the night: hands rifling through your backpack.\n\nYou grab the thief\'s wrist, but they\'re fast. They wrench free and sprint off into the dark before you\'re even upright.\n\nYou check your pockets. <em>Fuck.</em> They got your money, every last dollar of it.',
+                            'Dawn breaks grey over the treeline. You\'re exhausted and stiff and broke.\n\nYou can\'t keep doing this. You need a real place to stay.'
                         ];
                     }
+                    if (outcome === 'nothing') {
+                        return [
+                            fallAsleep,
+                            'You wake a handful of times during the night, tensing at every footstep on the path and every rustle in the hedges.\n\nNobody bothers you. You got lucky tonight.',
+                            'Dawn breaks grey over the treeline. You\'re exhausted, but at least your money\'s still in your pocket.\n\nYou can\'t keep doing this. You need a real place to stay.'
+                        ];
+                    }
+                    // Assault nights already played out in the dedicated scene
+                    return null;
                 },
                 text: function() {
-                    var cv = getSceneClothingVars();
-                    const wasRaped = gameState.flags.parkBenchRape;
-                    const wasRobbed = gameState.flags.parkBenchRobbed;
+                    const outcome = gameState.flags._parkBenchOutcome || 'nothing';
                     const corruption = gameState.corruption || 0;
-                    const timesRaped = gameState.flags.parkBenchRapedCount || 0;
-                    
-                    if (wasRaped) {
-                        if (corruption < 6000) {
+                    const isFirst = (gameState.flags.parkBenchRapedCount || 0) <= 1;
+
+                    if (outcome === 'rape' || outcome === 'rape_virgin') {
+                        if (corruption < 4001) {
                             // Low corruption - traumatized
-                            if (timesRaped === 1) {
-                                // First time
-                                return 'You ' + (cv.liftable ? 'smooth your ' + cv.bottomName + ' down' : 'pull your ' + cv.bottomName + ' up') + ' with shaking hands.\n\nYour whole body trembles. Cum drips down your thighs.\n\n<em>What just happened?</em>\n\nYou were raped. Violated while you slept.\n\nAnd you... you came. You moaned for him. Encouraged him.\n\n<em>What\'s wrong with me?</em>\n\nTears sting your eyes. Shame. Confusion. Self-loathing.\n\nHow could your body betray you like that?';
-                            } else {
-                                // Repeat
-                                return 'You ' + (cv.liftable ? 'smooth your ' + cv.bottomName + ' down' : 'pull your ' + cv.bottomName + ' up') + ' slowly.\n\n<em>It happened again. The same man.</em>\n\nHe\'s been waiting for you. Watching the park.\n\nAnd you... you came back. Slept on the same bench.\n\n<em>Did part of me want this?</em>\n\nNo. You\'re just desperate for a place to sleep.\n\nBut your body... your body wanted it.\n\nThe shame burns deeper this time.';
+                            if (isFirst) {
+                                return 'Dawn comes up grey over the treeline while you\'re still curled on the bench.\n\nYour thighs are sticky with him. Every time you shift, more of his cum slides out of your pussy and soaks into your underwear, cold now, and your whole body starts shaking again.\n\n' + (outcome === 'rape_virgin' ? 'That was your first time. A stranger took it on a park bench while you slept, and he never once looked at your face.\n\n' : '') + '<em>You came.</em> The thought won\'t leave you alone. He pinned your wrists and your cunt clenched around him anyway, and you heard yourself begging him for something you didn\'t want.\n\nYour eyes sting. You press your palms against them until you see colors and wait for your hands to stop shaking.';
                             }
-                        } else if (corruption < 6000) {
+                            return 'Dawn comes up grey over the treeline. You\'re still curled on your side with your knees pulled tight against your chest.\n\nHe was waiting for you. He\'s been watching this bench, and you walked right back to it because you had nowhere else to sleep.\n\nThat\'s what you tell yourself. It doesn\'t explain why your pussy\'s still throbbing, or why you came harder than last time with tears running into your hair.\n\nHis cum is drying on your thighs. You sit up slowly and wait for the shame to settle somewhere you can carry it.';
+                        } else if (corruption < 8001) {
                             // Medium corruption - conflicted
-                            if (timesRaped === 1) {
-                                return 'You ' + (cv.liftable ? 'smooth your ' + cv.bottomName + ' down' : 'pull your ' + cv.bottomName + ' up') + ' slowly.\n\nCum drips from your used pussy. You can still feel him inside you.\n\nPart of you feels violated. Used. Dirty.\n\nBut another part... feels satisfied.\n\n<em>I came so hard...</em>\n\nYou shake your head. Try to push the thought away.\n\nIt was rape. You should be traumatized.\n\nBut instead... you\'re just confused.\n\nDid you want that? Did some part of you enjoy being used?';
-                            } else {
-                                return 'You lie there for a moment.\n\n<em>He was waiting for me.</em>\n\nThe same rapist. He called you his park bench slut.\n\nSaid he\'d use you every time he sees you here.\n\nAnd you... you came. Harder than last time.\n\nPart of you is horrified.\n\nBut another part... another part is already wondering when you\'ll sleep here again.\n\n<em>What\'s happening to me?</em>';
+                            if (isFirst) {
+                                return 'Dawn comes up grey over the treeline while you sit on the edge of the bench.\n\nYour pussy aches, stretched and used, and his cum keeps seeping out of you into your underwear. You can still feel the exact shape of him inside you.\n\nPart of you feels filthy. The rest of you keeps replaying the moment his thumb found your clit and you told him to go harder.\n\n<em>I came so hard.</em> You shake your head like that\'ll knock the thought loose. He took you without asking, and your body lit up for him anyway.\n\nYou pull your jacket tight and try to decide what that makes you.';
                             }
-                        } else {
-                            // High corruption - enjoyed it
-                            if (timesRaped === 1) {
-                                return 'You lie there for a moment. Savoring the afterglow.\n\nCum drips from your pussy. Your body still tingles.\n\n<em>Fuck, that was good.</em>\n\nYou should feel violated. Traumatized.\n\nBut instead... you feel satisfied. Used. Fulfilled.\n\nHe saw you as a slut. Treated you like one.\n\nAnd you loved every second of it.\n\nYou clean yourself up with a smile.\n\nMaybe sleeping in the park isn\'t so bad after all.';
-                            } else {
-                                return 'You bask in the afterglow.\n\nYour regular park bench rapist. Your night-time visitor.\n\n<em>His park bench slut. That\'s what he called me.</em>\n\nAnd god help you, it turned you on.\n\nYou\'re dripping with his cum. Satisfied. Complete.\n\nThis is who you are now.\n\nA slut who sleeps in parks hoping to be raped.\n\nAnd you\'re okay with that.\n\nYou smile as you clean yourself up.\n\nSame bench tomorrow night?';
-                            }
+                            return 'Dawn comes up grey over the treeline. You stay on the bench longer than you need to.\n\nHe was waiting for you again, and you came harder than last time, your cunt clenching around him while you told him not to stop.\n\nPart of you is horrified. Another part is already counting how many nights you can sleep somewhere else before you end up right back here.\n\nHis cum is still warm between your thighs. You press your knees together and watch the sky lighten until the first jogger comes down the path.';
                         }
+                        // High corruption - enjoyed it
+                        if (isFirst) {
+                            return 'You stay stretched out on the bench while dawn comes up grey over the treeline.\n\nYour pussy\'s sore and dripping, his cum sliding out of you every time you shift your hips. You clench on purpose just to feel it.\n\nHe took you in your sleep and you still set the pace. You came on his cock with your fingers on your clit and told him exactly where to finish.\n\n<em>Fuck, that was good.</em>\n\nYou lick your fingers clean, stretch until your back pops, and swing your legs off the bench with a slow, satisfied smile.';
+                        }
+                        return 'Dawn comes up grey over the treeline and you\'re still lying on your back, legs loose, his cum drying on your inner thighs.\n\nYour regular. He was right where you knew he\'d be, and you came twice on his cock before he finished inside you.\n\nYour clit\'s still swollen. You press two fingers to it and feel the aftershocks answer, small and lazy.\n\n<em>Wednesday.</em> You grin up at the branches, then sit up and stretch until your spine cracks.';
                     }
                     
-                    // Check if we woke up with max thirst
+                    // Woke up at max thirst
                     if (gameState.thirst >= getThirstCap()) {
-                        return 'You finally get up from the bench. Stiff. Cold. And the thirst... unbearable.';
+                        return 'You push yourself up off the bench, stiff and cold, and the thirst hits you all at once, so sharp your fangs ache in your gums.';
                     }
                     
-                    if (wasRobbed) {
-                        return 'You finally get up from the bench. Stiff. Cold. Penniless.\n\nThe day starts again. But you\'re worse off than before.';
+                    if (outcome === 'robbed') {
+                        return 'You push yourself up off the bench, stiff and cold and penniless.\n\nThe day starts again, and you\'re worse off than you were last night.';
                     }
                     
-                    return 'You finally get up from the bench. Stiff. Cold. Exhausted.\n\nThe day starts again. At least you still have your money.';
+                    return 'You push yourself up off the bench, stiff and cold and exhausted.\n\nThe day starts again. At least you\'ve still got your money.';
                 },
                 onEnter: () => {
-                    const wasRaped = gameState.flags.parkBenchRape;
-                    const wasRobbed = gameState.flags.parkBenchRobbed;
-                    const corruption = gameState.corruption || 0;
+                    const outcome = gameState.flags._parkBenchOutcome || 'nothing';
                     
-                    if (wasRaped) {
-                        // Rape happened
-                        
-                        // Capture virgin state before loseVirginity changes it
-                        const wasVirgin = gameState.isVirgin;
-                        
-                        // Increment park bench rape counter
+                    if (outcome === 'rape' || outcome === 'rape_virgin') {
+                        // Sex mechanics, virginity, rape tracking, MH, and pregnancy were
+                        // handled by the park_bench_assault* scene. Only the counter here.
                         gameState.flags.parkBenchRapedCount = (gameState.flags.parkBenchRapedCount || 0) + 1;
-                        const newRapeCount = gameState.flags.parkBenchRapedCount;
-                        
-                        // Unlock appropriate gallery scene
-                        if (newRapeCount === 1) {
-                            if (wasVirgin) {
-                                trackGalleryScene('park_bench_assault_virgin');
-                            } else {
-                                trackGalleryScene('park_bench_assault');
-                            }
-                        } else {
-                            trackGalleryScene('park_bench_assault_repeat');
-                        }
-                        
-                        // Virginity loss if virgin (only first time)
-                        if (gameState.isVirgin) {
-                            loseVirginity('park bench rapist', 'rape_penetration_male');
-                        }
-
-                        // Rape trauma system
-                        gameState.flags.hasBeenRaped = true;
-                        gameState.flags.rapeCount = (gameState.flags.rapeCount || 0) + 1;
-                        if (!Array.isArray(gameState.flags.rapeTypes)) gameState.flags.rapeTypes = [];
-                        if (gameState.flags.rapeTypes.indexOf('park_bench_assault') === -1) {
-                            gameState.flags.rapeTypes.push('park_bench_assault');
-                        }
-
-                        // Mental health: applyRapeTraumaMH for assault tiers, MH+8 for DC
-                        if (corruption < 8001) {
-                            applyRapeTraumaMH();
-                        } else {
-                            if (typeof modifyMentalHealth === 'function') modifyMentalHealth(8);
-                        }
-
-                        // Arousal reset
-                        gameState.arousal = 0;
-
-                        // Corruption gain
-                        gameState.corruption = (gameState.corruption || 0) + 35;
-                        
-                        // Hygiene penalty
-                        modifyHygiene(-35);
-
-                        // Sex count
-                        gameState.sexCount = (gameState.sexCount || 0) + 1;
-
-                        // Pregnancy check
-                        gameState.flags.currentSexEncounter = {
-                            partner: 'park_bench_rapist',
-                            payment: 0,
-                            partnerGender: 'male',
-                            partnerLabel: 'the man',
-                            returnScene: 'riverside_park',
-                            condomUsed: false,
-                            finishLocation: 'inside',
-                            positionHistory: ['missionary'],
-                            kelsieOrgasmed: true,
-                            kelsieOrgasmCount: 1,
-                            partnerOrgasmCount: 1
-                        };
-                        var _benchPregnant = (typeof checkPregnancy === 'function') ? checkPregnancy() : false;
-                        if (_benchPregnant) gameState.flags._parkBenchPregnancy = true;
-                        gameState.flags.currentSexEncounter = null;
-                        
-                    } else if (wasRobbed) {
-                        // Robbery
+                    } else if (outcome === 'robbed') {
                         gameState.money = 0;
                         if (typeof modifyMentalHealth === 'function') modifyMentalHealth(-30);
                     } else {
-                        // Nothing happened
                         if (typeof modifyMentalHealth === 'function') modifyMentalHealth(-10);
                     }
                     
@@ -142720,19 +142564,22 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const hoursToMorning = (24 - gameState.time.hour + 7) % 24;
                     advanceTime(hoursToMorning * 60);
                     
-                    // Clean up flags
+                    // Legacy flags from the old roll-in-parts version (stale in older saves)
                     delete gameState.flags.parkBenchRobbed;
                     delete gameState.flags.parkBenchRape;
                     
                     updateStatsUI();
                 },
                 choices: function() {
+                    const clearOutcome = () => { delete gameState.flags._parkBenchOutcome; };
+
                     // Check for birth day FIRST (Day 5 of pregnancy)
                     if (isBirthDay()) {
                         return [
                             { 
                                 text: "...", 
                                 action: () => {
+                                    clearOutcome();
                                     updateStatus();
                                     showScene("birth_day_awakening");
                                 }
@@ -142746,6 +142593,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             { 
                                 text: "You need blood. NOW.", 
                                 action: () => {
+                                    clearOutcome();
                                     updateStatus();
                                     showScene("max_thirst_awakening");
                                 }
@@ -142756,7 +142604,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     // Normal wake up
                     updateStatus();
                     return [
-                        { text: "Get up and face the day", nextScene: "riverside_park" }
+                        { text: "Get up and face the day", nextScene: "riverside_park", effect: clearOutcome }
                     ];
                 }
             },
@@ -142841,6 +142689,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: function() {
                     if (gameState.flags._galleryMode) {
                         return [{ text: 'Leave Gallery', action: function() { exitGalleryMode(); } }];
+                    }
+                    // From a night on the bench: continue to the morning aftermath
+                    if (gameState.flags._parkBenchOutcome) {
+                        return [{ text: 'Get up.', nextScene: 'park_bench_sleep' }];
                     }
                     return [{ text: 'Get up.', nextScene: 'riverside_park' }];
                 }
@@ -142936,6 +142788,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (gameState.flags._galleryMode) {
                         return [{ text: 'Leave Gallery', action: function() { exitGalleryMode(); } }];
                     }
+                    // From a night on the bench: continue to the morning aftermath
+                    if (gameState.flags._parkBenchOutcome) {
+                        return [{ text: 'Get up.', nextScene: 'park_bench_sleep' }];
+                    }
                     return [{ text: 'Get up.', nextScene: 'riverside_park' }];
                 }
             },
@@ -143002,6 +142858,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: function() {
                     if (gameState.flags._galleryMode) {
                         return [{ text: 'Leave Gallery', action: function() { exitGalleryMode(); } }];
+                    }
+                    // From a night on the bench: continue to the morning aftermath
+                    if (gameState.flags._parkBenchOutcome) {
+                        return [{ text: 'Get up.', nextScene: 'park_bench_sleep' }];
                     }
                     return [{ text: 'Get up.', nextScene: 'riverside_park' }];
                 }
