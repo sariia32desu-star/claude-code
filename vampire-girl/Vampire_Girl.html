@@ -35147,15 +35147,16 @@ audioSystem.playSFX('buttonClick');
                 // hunger sharper. A Desperate Kelsie's thirst climbs 30% faster.
                 var _arousalThirstMods = { cold: 1.0, cool: 1.0, warm: 1.05, heated: 1.10, burning: 1.20, desperate: 1.30 };
                 var _arousalThirstMod = _arousalThirstMods[getArousalTierId()] || 1.0;
-                const thirstIncrease = Math.round(hoursPassedPartial * 5 * mentalHealthFactor * strengthThirstMod * pregnancyThirstMod * _arousalThirstMod);
-                if (thirstIncrease > 0) {
-                    // CLOTHING EFFECT: Thirst reduction from worn items
-                    var _clothFxThirst = getActiveClothingEffects();
-                    var adjustedThirst = _clothFxThirst.thirst_reduction > 0
-                        ? Math.max(1, Math.round(thirstIncrease * (1 - _clothFxThirst.thirst_reduction)))
-                        : thirstIncrease;
+                // CLOTHING EFFECT: Thirst reduction from worn items scales the hourly rate
+                var _clothFxThirst = getActiveClothingEffects();
+                var _thirstRate = 5 * mentalHealthFactor * strengthThirstMod * pregnancyThirstMod * _arousalThirstMod;
+                if (_clothFxThirst.thirst_reduction > 0) _thirstRate *= (1 - _clothFxThirst.thirst_reduction);
+                const adjustedThirst = accruePassive('thirst', _thirstRate, minutes);
+                if (adjustedThirst > 0) {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + adjustedThirst);
                 }
+            } else {
+                clearPassiveAccum('thirst');
             }
             
             // Fatigue increases over time: +3 per hour base rate
@@ -35191,18 +35192,19 @@ audioSystem.playSFX('buttonClick');
                 else if (_mhFatigueTier === 'fractured') fatigueRate *= 1.15;
             }
             
-            const fatigueIncrease = Math.round(hoursPassedPartial * fatigueRate);
+            const fatigueIncrease = accruePassive('fatigue', fatigueRate, minutes);
             if (fatigueIncrease > 0) {
                 gameState.fatigue = Math.min(100, (gameState.fatigue || 0) + fatigueIncrease);
-                
-                // Additional thirst from high fatigue (also frozen during shifts)
-                // Vampiric strength also dampens this bonus thirst
-                // 60-79: +50% (base * 2.5), 80-100: +80% (base * 4.0)
-                if (gameState.fatigue >= 60 && !gameState.flags.freezeThirstForFirstShift && !gameState.flags._lazySundayActive && !gameState.flags.isSleeping) {
-                    const fatigueThirstMult = gameState.fatigue >= 80 ? 4.0 : 2.5;
-                    const additionalThirst = Math.round(hoursPassedPartial * fatigueThirstMult * strengthThirstMod);
-                    gameState.thirst = Math.min(getThirstCap(), gameState.thirst + additionalThirst);
-                }
+            }
+            // Additional thirst from high fatigue (also frozen during shifts)
+            // Vampiric strength also dampens this bonus thirst
+            // 60-79: +50% (base * 2.5), 80-100: +80% (base * 4.0)
+            if ((gameState.fatigue || 0) >= 60 && !gameState.flags.freezeThirstForFirstShift && !gameState.flags._lazySundayActive && !gameState.flags.isSleeping) {
+                const fatigueThirstMult = gameState.fatigue >= 80 ? 4.0 : 2.5;
+                const additionalThirst = accruePassive('fatigueThirst', fatigueThirstMult * strengthThirstMod, minutes);
+                if (additionalThirst > 0) gameState.thirst = Math.min(getThirstCap(), gameState.thirst + additionalThirst);
+            } else {
+                clearPassiveAccum('fatigueThirst');
             }
             
             // Reset arousal gain flag at start of each time tick
@@ -35578,12 +35580,16 @@ audioSystem.playSFX('buttonClick');
                 if (!decaySuppressed) {
                     const a = gameState.arousal;
                     const decayRate = a >= 85 ? 3 : a >= 70 ? 5 : a >= 50 ? 4 : a >= 30 ? 3 : 2;
-                    const arousalDecay = Math.round(hoursPassedPartial * decayRate);
+                    const arousalDecay = accruePassive('arousalDecay', decayRate, minutes);
                     if (arousalDecay > 0) {
                         gameState.arousal = Math.max(0, gameState.arousal - arousalDecay);
                         gameState.flags.arousalChangedPassively = true;
                     }
+                } else {
+                    clearPassiveAccum('arousalDecay');
                 }
+            } else {
+                clearPassiveAccum('arousalDecay');
             }
 
             // Track peak arousal reached (lifetime stat)
@@ -35843,7 +35849,8 @@ audioSystem.playSFX('buttonClick');
             }
             
             // Hygiene decays with time: -2 per hour
-            modifyHygiene(Math.round(-2 * hoursPassedPartial));
+            var _hygieneDecay = accruePassive('hygieneDecay', 2, minutes);
+            if (_hygieneDecay > 0) modifyHygiene(-_hygieneDecay);
             
             // Update clothing cleanliness (passive dirt accumulation)
             updateClothingCleanliness(hoursPassedPartial);
