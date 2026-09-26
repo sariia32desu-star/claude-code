@@ -29574,7 +29574,12 @@ audioSystem.playSFX('buttonClick');
             const minDuration = 2000; // Minimum 2 seconds
             const startTime = Date.now();
             
+            // The video's ended/error events and the fallback timer can all call this;
+            // only the first one counts (a second removeChild used to throw)
+            let cleanedUp = false;
             const cleanup = () => {
+                if (cleanedUp) return;
+                cleanedUp = true;
                 const elapsed = Date.now() - startTime;
                 const remainingTime = Math.max(0, minDuration - elapsed);
                 
@@ -29895,11 +29900,14 @@ audioSystem.playSFX('buttonClick');
                 choices: encounter.choices.map(choice => ({
                     text: typeof choice.text === 'function' ? choice.text() : choice.text,
                     action: () => {
-                        choice.effect();
+                        if (choice.effect) choice.effect();
                         setCurrentLocation(location.locationId, location.districtId);
                         updateStatus();
                         
-                        if (finalScene && story[finalScene]) {
+                        // A choice can send her somewhere else instead of the destination
+                        if (choice.nextScene && story[choice.nextScene]) {
+                            showScene(choice.nextScene);
+                        } else if (finalScene && story[finalScene]) {
                             showScene(finalScene);
                         } else {
                             showScene('location_placeholder');
@@ -55378,6 +55386,29 @@ audioSystem.playSFX('buttonClick');
         };
 
         // Location-specific encounters
+        const DOCKYARD_ENCOUNTERS = [
+            {
+                id: "drug_deal",
+                chance: 0.4,
+                text: "You spot a drug deal going down between two stacks of containers. They notice you watching.",
+                choices: [
+                    { text: "Back away slowly", effect: () => advanceTime(2) },
+                    { text: "Walk past confidently like you belong", effect: () => {} },
+                    { text: "One of them looks weak; easy prey", nextScene: 'search_for_prey' }
+                ]
+            },
+            {
+                id: "police_raid",
+                chance: 0.15,
+                text: "Police sirens tear through the air. A raid\'s going down a block over, and people scatter in every direction.",
+                choices: [
+                    { text: "Leave immediately", effect: () => advanceTime(5) },
+                    { text: "Use vampire speed to disappear", effect: () => { modifyThirst(10); } },
+                    { text: "Walk calmly; you\'re not involved", effect: () => advanceTime(3) }
+                ]
+            }
+        ];
+
         const locationEncounters = {
             convenience_store: [
                 { 
@@ -55393,28 +55424,11 @@ audioSystem.playSFX('buttonClick');
                     text: "Another customer browses the aisles. Tired eyes. Night shift worker, probably."
                 }
             ],
-            warehouse_district: [
-                {
-                    id: "drug_deal",
-                    chance: 0.4,
-                    text: "You spot a drug deal in progress. They notice you watching.",
-                    choices: [
-                        { text: "Back away slowly", effect: () => advanceTime(2) },
-                        { text: "Walk past confidently like you belong", effect: () => {} },
-                        { text: "One of them looks weak; easy prey", effect: () => showScene('warehouse_prey_hunt') }
-                    ]
-                },
-                {
-                    id: "police_raid",
-                    chance: 0.15,
-                    text: "Police sirens! A raid happening nearby. People scatter.",
-                    choices: [
-                        { text: "Leave immediately", effect: () => advanceTime(5) },
-                        { text: "Use vampire speed to disappear", effect: () => { gameState.thirst += 10; } },
-                        { text: "Walk calmly; you\'re not involved", effect: () => advanceTime(3) }
-                    ]
-                }
-            ]
+            // Dockyard: drug deals and police raids around the shipping containers.
+            // (This pool used to sit under warehouse_district, which isn't a map
+            // location key, so it never fired.)
+            warehouse_row: DOCKYARD_ENCOUNTERS,
+            container_yard: DOCKYARD_ENCOUNTERS
         };
 
         // Appearance and Shopping Functions
