@@ -98879,7 +98879,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                 },
-                text: 'Dark alleys. Narrow passages. Shadows everywhere.\n\nThis is the underbelly. Where crime thrives.\n\nYou hear voices. Movement. People who don\'t want to be seen.\n\nEasy prey. But also dangerous if you\'re not careful.',
+                text: 'You\'re in the Industrial Slums, down in the back alleys.\n\nYou hear voices in the dark, and the movement of people who don\'t want to be seen.',
                 choices: function() {
                     const choices = [
                         { text: '<img src="Images/icons/target.png" class="icon" alt="target"> Hunt for prey', nextScene: "search_for_prey" },
@@ -99857,23 +99857,19 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const timeOfDay = getTimeOfDay();
                     const karma = gameState.karma || 0;
-                    let desc = '';
+                    let desc = 'You\'re in the Industrial Slums, standing at the edge of the basketball court.\n\n';
 
                     if (timeOfDay === 'morning') {
-                        desc += 'The basketball court\'s empty this early. Cracked asphalt, faded lines, chain nets that rattle in the breeze. A rusted hoop at each end.\n\n';
-                        desc += 'Someone left a ball wedged under the bleachers. A candy wrapper blows across the free-throw line. The court looks different without people on it. Smaller.';
+                        desc += 'The court\'s empty this early. Cracked asphalt, faded lines, chain nets rattling in the breeze.';
                     } else if (timeOfDay === 'afternoon') {
-                        desc += 'Pickup game. Five on five, shirts versus skins on cracked asphalt. The ball echoes off the concrete. Chain nets rattle with every made shot.\n\n';
-                        desc += 'Kids from the block, mostly. Fourteen, fifteen years old. All elbows and trash talk. An older guy in a lawn chair watches from the sideline, shouting instructions nobody listens to.';
+                        desc += 'A pickup game\'s going, five on five, shirts versus skins. Kids from the block, mostly, all elbows and trash talk.';
                         if (karma >= 1000) {
-                            desc += '\n\nThey\'re just kids. Playing a game. For a second, the slums don\'t feel like the slums.';
+                            desc += '\n\nThey\'re just kids playing a game. For a second, the slums don\'t feel like the slums.';
                         }
                     } else if (timeOfDay === 'evening') {
-                        desc += 'The court shifts after sunset. The kids clear out. Older faces show up. The games get rougher, and money starts changing hands on the sideline.\n\n';
-                        desc += 'A boombox on the bleachers plays something with heavy bass. The streetlight on the far end flickers. Somebody\'s smoking something that isn\'t tobacco at the edge of the court.';
+                        desc += 'The kids clear out after sunset and older faces show up. The games get rougher, and money starts changing hands on the sideline.';
                     } else {
-                        desc += 'Late. The court\'s lit by one working streetlight and the glow of phone screens. Three guys stand near the far hoop, talking low. A car idles at the curb with its headlights off.\n\n';
-                        desc += 'This isn\'t about basketball anymore. The court\'s a meeting point after midnight. Deals, handoffs, conversations that don\'t happen in daylight.';
+                        desc += 'The court\'s lit by one working streetlight and the glow of phone screens. Three guys stand near the far hoop, talking low.';
                         if (karma <= -1000) {
                             desc += '\n\nYour territory. Or it could be. Good foot traffic, low police presence. You file it away.';
                         }
@@ -99882,9 +99878,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Drug rep recognition
                     var drugRep = gameState.drugReputation || 0;
                     if (drugRep >= 50) {
-                        desc += '\n\nThe court goes quiet when you walk past. Conversations drop. A kid on the bleachers elbows his friend and nods your way. They know your name. They know what you do.';
+                        desc += '\n\nThe court goes quiet when you walk past. A kid on the bleachers elbows his friend and nods your way. They know your name and what you do.';
                     } else if (drugRep >= 30) {
-                        desc += '\n\nA couple of the older kids watch you from the sideline. One of them whispers something to his friend. You catch the tail end of it: your name.';
+                        desc += '\n\nA couple of the older kids watch you from the sideline. One of them whispers to his friend, and you catch the tail end of it: your name.';
                     }
 
                     return desc;
@@ -99953,27 +99949,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const timeOfDay = getTimeOfDay();
                     const karma = gameState.karma || 0;
-                    let desc = '';
+                    let desc = 'You\'re in the Industrial Slums, standing in the abandoned lot.\n\n';
 
                     if (timeOfDay === 'morning' || timeOfDay === 'afternoon') {
-                        desc += 'An overgrown lot wedged between two condemned buildings. Weeds push through cracked concrete. Somebody dumped a couch here months ago and nobody\'s moved it.\n\n';
-                        desc += 'A stained mattress leans against the far wall. Empty bottles. Fast food wrappers. The remnants of a bonfire, ash and charred wood, in a circle of bricks near the center.';
+                        desc += 'Weeds push through cracked concrete between two condemned buildings. Somebody dumped a couch here months ago and nobody\'s moved it.';
                         if (karma >= 1000) {
                             desc += '\n\nPeople sleep here. You can see the shapes worn into the weeds where bodies have lain. Your chest tightens.';
                         } else if (karma <= -1000) {
-                            desc += '\n\nZero cameras. Zero sightlines from the street. Nobody comes here unless they\'re looking for trouble or hiding from it. Perfect.';
-                        } else {
-                            desc += '\n\nA dead zone. The city forgot this lot exists, and so did everyone who matters.';
+                            desc += '\n\nThere isn\'t a camera or a sightline from the street anywhere. Perfect.';
                         }
                     } else {
-                        desc += 'The lot goes pitch black after dark. Streetlights don\'t reach this far, and neither building has a window facing it.\n\n';
-                        desc += 'Your vampire vision cuts through it like daylight. You see everything: the rats in the weeds, the empty syringes in the dirt, the boot prints in the mud near the back fence where someone climbed over recently.';
+                        desc += 'The lot goes pitch black after dark, but your vampire vision cuts through it like daylight.';
                         if (karma >= 1000) {
                             desc += '\n\nThis place feels wrong. Like something bad happens here regularly and the ground remembers.';
                         } else if (karma <= -1000) {
                             desc += '\n\nYou breathe in. Stale blood, old and dried, somewhere in the dirt. Someone bled here. Recently enough that you can still smell it.';
-                        } else {
-                            desc += '\n\nYour skin prickles. Every instinct says this is a place where people disappear.';
                         }
                     }
 
@@ -107584,16 +107574,16 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const timeOfDay = getTimeOfDay();
                     const nearby = getNearbyLocations();
                     
-                    let desc = "You walk the streets of the Commercial District.\n\n";
+                    let desc = "You're in the Commercial District.\n\n";
                     
                     if (timeOfDay === 'morning') {
-                        desc += "Morning shoppers browse window displays. Coffee shops are packed. Business people rush past with briefcases.";
+                        desc += "Morning shoppers browse window displays, and business people rush past with briefcases.";
                     } else if (timeOfDay === 'afternoon') {
-                        desc += "The sidewalks are crowded with shoppers. Store music spills onto the street. The smell of food vendors fills the air.";
+                        desc += "The sidewalks are crowded with shoppers. Store music spills onto the street.";
                     } else if (timeOfDay === 'evening') {
-                        desc += "Stores are starting to close. Workers head home. A few restaurants light up their 'OPEN' signs.";
+                        desc += "Stores are starting to close, and a few restaurants light up their 'OPEN' signs.";
                     } else {
-                        desc += "Most shops are closed now. A few 24-hour places stay lit. The occasional drunk stumbles past.";
+                        desc += "Most shops are closed now. A few 24-hour places stay lit.";
                     }
                     
                     // Surveillance/manhunt flavor text
@@ -107755,16 +107745,16 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const timeOfDay = getTimeOfDay();
                     const nearby = getNearbyLocations();
                     
-                    let desc = "You walk the streets of the Residential District.\n\n";
+                    let desc = "You're in the Residential District.\n\n";
                     
                     if (timeOfDay === 'morning') {
-                        desc += "Residents leave for work. A woman walks her dog. Kids wait for the school bus.";
+                        desc += "Residents leave for work. A woman walks her dog while kids wait for the school bus.";
                     } else if (timeOfDay === 'afternoon') {
-                        desc += "The neighborhood is quiet. A few people come home from work. Birds chirp in the trees.";
+                        desc += "The neighborhood is quiet. A few people come home from work.";
                     } else if (timeOfDay === 'evening') {
-                        desc += "Lights glow in apartment windows. You can smell someone cooking dinner. TV sounds drift from open windows.";
+                        desc += "Lights glow in apartment windows, and you can smell someone cooking dinner.";
                     } else {
-                        desc += "The street is dark and quiet. Most residents are asleep. A cat crosses the road.";
+                        desc += "The street is dark and quiet. A cat crosses the road.";
                     }
                     
                     // Surveillance flavor
@@ -108011,20 +108001,16 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const timeOfDay = getTimeOfDay();
                     
-                    let desc = '';
+                    let desc = 'You\'re in the Industrial Slums.\n\n';
                     
                     if (timeOfDay === 'morning') {
-                        desc += 'The slums wake up slow. Manny\'s already out front of his corner store, sweeping the sidewalk with a broom that\'s more handle than bristle. A stray picks through an overturned garbage bag.\n\n';
-                        desc += 'Graffiti covers every surface. The air tastes like exhaust and old cooking oil. Somewhere down the block, a kid bounces a basketball on cracked asphalt.';
+                        desc += 'The slums wake up slow. Manny\'s already out front of his corner store, sweeping the sidewalk with a broom that\'s more handle than bristle.';
                     } else if (timeOfDay === 'afternoon') {
-                        desc += 'The block sits quiet under hazy afternoon light. Heat shimmers off cracked pavement. A woman hangs laundry from a fire escape three stories up.\n\n';
-                        desc += 'Manny leans in his doorway, watching nothing. The basketball court\'s empty. Even the stray dogs have found shade.';
+                        desc += 'The block sits quiet under hazy afternoon light. Manny leans in his doorway, watching nothing.';
                     } else if (timeOfDay === 'evening') {
-                        desc += 'The slums shift as the sun drops. Different faces on the corners now. Music thumps from somewhere you can\'t quite place.\n\n';
-                        desc += 'Rosa\'s red light flickers on above The Hole\'s unmarked door. The basketball court fills up with older kids, louder voices. The real neighborhood shows itself after dark.';
+                        desc += 'The slums shift as the sun drops, different faces on the corners now. Rosa\'s red light flickers on above The Hole\'s unmarked door.';
                     } else {
-                        desc += 'The block belongs to the night shift now. Half the streetlights are dead. Shadows slide between buildings, and you hear everything: heartbeats behind thin walls, whispered conversations, glass breaking two streets over.\n\n';
-                        desc += 'Your fangs ache. The slums at night feel like home. That should bother you more than it does.';
+                        desc += 'The block belongs to the night shift now. Half the streetlights are dead, and you can hear heartbeats behind thin walls.';
                     }
                     
                     // Post-takeover: the neighborhood knows who you are
@@ -113676,13 +113662,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     let desc = "You're in the Medical District.\n\n";
                     
                     if (timeOfDay === 'morning') {
-                        desc += "Ambulances rush past. Doctors in scrubs grab coffee. Anxious family members smoke outside the hospital entrance.";
+                        desc += "Ambulances rush past. Doctors in scrubs grab coffee on their way in.";
                     } else if (timeOfDay === 'afternoon') {
-                        desc += "The hospital parking lot is full. People with casts and bandages leave the clinic. A pharmacy is busy across the street.";
+                        desc += "The hospital parking lot is full, and the pharmacy across the street is busy.";
                     } else if (timeOfDay === 'evening') {
-                        desc += "The ER entrance glows bright. Fewer people around. Night shift nurses arrive.";
+                        desc += "The ER entrance glows bright as the night shift nurses arrive.";
                     } else {
-                        desc += "Only the emergency room is busy now. Security guards patrol. This is a clean, well-lit area even at night.";
+                        desc += "Only the emergency room is busy now. Security guards patrol the well-lit sidewalks.";
                     }
                     
                     
@@ -113779,13 +113765,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     let desc = "You're in Downtown.\n\n";
                     
                     if (timeOfDay === 'morning') {
-                        desc += "Business people everywhere. Suits and briefcases. Coffee cups. Everyone\'s in a hurry.";
+                        desc += "Business people everywhere, suits and briefcases and coffee cups. Everyone's in a hurry.";
                     } else if (timeOfDay === 'afternoon') {
-                        desc += "The city center buzzes with activity. Street performers. Food trucks. High-rise buildings tower overhead.";
+                        desc += "The city center buzzes with street performers and food trucks.";
                     } else if (timeOfDay === 'evening') {
-                        desc += "The nightlife begins. Clubs open their doors. Well-dressed people line up outside bars. Music clenches from multiple directions.";
+                        desc += "The nightlife begins. Well-dressed people line up outside bars, and music pulses from every direction.";
                     } else {
-                        desc += "Downtown at night: clubs, bars, restaurants. Drunk people everywhere. Taxis and Ubers. This is where the wealthy play.";
+                        desc += "The clubs and bars are packed, taxis lined up out front. This is where the wealthy play.";
                     }
                     
                     // Surveillance/manhunt flavor text
@@ -113920,13 +113906,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     let desc = "You're in Wendale.\n\n";
                     
                     if (timeOfDay === 'morning') {
-                        desc += "Quiet residential streets. Manicured lawns. Soccer moms in SUVs. Kids ride bikes.";
+                        desc += "Soccer moms in SUVs pull out of driveways, and kids ride bikes past manicured lawns.";
                     } else if (timeOfDay === 'afternoon') {
-                        desc += "Peaceful and safe. White picket fences. The sound of lawn mowers. This is where normal families live.";
+                        desc += "Lawn mowers drone behind white picket fences. This is where normal families live.";
                     } else if (timeOfDay === 'evening') {
-                        desc += "Porch lights turn on. Families have dinner. Through windows you can see TVs flickering. Normal. Safe. Boring.";
+                        desc += "Porch lights turn on. Through the windows you can see TVs flickering.";
                     } else {
-                        desc += "Wendale sleeps early. Everything is dark and quiet. This is your mother\'s world; the one you left behind.";
+                        desc += "Wendale sleeps early. This is your mother's world, the one you left behind.";
                     }
                     
                     
@@ -141950,16 +141936,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const exposure = getExposureLevel();
                     const corruption = gameState.corruption || 0;
                     
-                    let desc = "You enter Riverside Park. A small public park in the residential district.\n\n";
+                    let desc = "You're in the Residential District, standing in Riverside Park.\n\n";
                     
                     if (timeOfDay === 'morning') {
-                        desc += "The morning sun filters through the trees. A few joggers pass by. Birds chirp. The grass is still wet with dew.";
+                        desc += "The morning sun filters through the trees, and the grass is still wet with dew.";
                     } else if (timeOfDay === 'afternoon') {
-                        desc += "Families picnic on the grass. Kids play. An elderly couple feeds the ducks by the pond. It\'s peaceful here.";
+                        desc += "Families picnic on the grass. An elderly couple feeds the ducks by the pond.";
                     } else if (timeOfDay === 'evening') {
-                        desc += "The park is quieter now. Most families have gone home. The benches are mostly empty. Street lamps cast pools of yellow light.";
+                        desc += "Most families have gone home. Street lamps cast pools of yellow light over the empty benches.";
                     } else {
-                        desc += "The park is nearly empty at this hour. The benches sit in shadow. A few streetlights provide dim illumination. Quiet and isolated.";
+                        desc += "The park is nearly empty at this hour, the benches sitting in shadow.";
                     }
                     
                     // Naked park acknowledgement
@@ -148529,29 +148515,25 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 text: function() {
                     var timeOfDay = getTimeOfDay();
-                    var desc = '';
+                    var desc = 'You\'re in the Dockyard District.\n\n';
 
                     if (timeOfDay === 'morning') {
-                        desc += 'The docks wake up loud. Forklifts beep. Cranes groan overhead, swinging containers from ship to shore. The air tastes like salt and diesel and rust.\n\n';
-                        desc += 'Dock workers in hard hats and reflective vests stream past in loose groups. A coffee truck idles at the gate, line ten deep. Seagulls fight over something in the parking lot.';
+                        desc += 'The docks wake up loud. Forklifts beep, and cranes groan overhead, swinging containers from ship to shore.';
                     } else if (timeOfDay === 'afternoon') {
-                        desc += 'Afternoon heat cooks off the asphalt. The container yard shimmers in the sun, stacked metal boxes in faded reds and blues stretching back in rows.\n\n';
-                        desc += 'The cranes are still moving. They\'re always moving. A cargo ship sits at berth with its hull streaked brown, crew visible on deck. The docks smell like fish and tar and hot metal.';
+                        desc += 'Afternoon heat cooks off the asphalt. The container yard shimmers in the sun, stacked metal boxes in faded reds and blues stretching back in rows.';
                     } else if (timeOfDay === 'evening') {
-                        desc += 'The day shift filters out as the sun drops. Fewer hard hats, more hoodies. The container yard\'s floodlights snap on in sections, throwing hard shadows between the rows.\n\n';
-                        desc += 'This is when the docks shift. The legitimate business winds down and the other business starts. A truck idles at a gate that shouldn\'t be open. Two men carry something heavy between containers without talking.';
+                        desc += 'The day shift filters out as the sun drops. The container yard\'s floodlights snap on in sections, throwing hard shadows between the rows.';
                     } else {
-                        desc += 'The docks at night. Floodlights carve white circles into the dark. Beyond them, the water is black and flat. A foghorn somewhere out in the harbor.\n\n';
-                        desc += 'The legitimate workers are gone. Security patrols, camera blind spots, and people who do their best work after midnight. Your fangs ache. Salt air and heartbeats.';
+                        desc += 'Floodlights carve white circles into the dark. Beyond them, the water is black and flat.';
                     }
 
                     // Post-takeover flavor
                     if (gameState.flags.vajarosTakeoverComplete) {
                         desc += '\n\n';
                         var dockBossLines = [
-                            'A dock worker in a Vajaros chain nods as you pass. He makes a call on his phone without breaking eye contact. Checking in. Reporting your presence. Your presence is always noted here.',
+                            'A dock worker in a Vajaros chain nods as you pass, then makes a call on his phone without breaking eye contact. Your presence is always noted here.',
                             'Two men loading a truck see you and straighten. One touches his cap. The docks are Boruski territory for weapons, but the drug shipments that come through here belong to you now.',
-                            'A foreman watches you from the gate office. He knows who you are. Everyone down here knows. The docks run on information, and information about you travels fast.'
+                            'A foreman watches you from the gate office. Everyone down here knows who you are, and information about you travels fast.'
                         ];
                         desc += dockBossLines[Math.floor(Math.random() * dockBossLines.length)];
                     }
@@ -167119,24 +167101,19 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         desc = "You step back from the forest\'s depths, returning to the edge.\n\n";
                     } else {
                         // Warping in from outside the forest
-                        desc = 'You focus your will on the <strong>Culmida Forest</strong>.\n\nThe dimensional boundary recognizes you.\n\nReality warps...\n\nAnd you\'re there.\n\nStanding at the forest\'s edge.\n\n';
+                        desc = 'You focus your will on the <strong>Culmida Forest</strong>, and reality warps around you. You\'re standing at the forest\'s edge.\n\n';
                     }
                     
                     if (timeOfDay === 'morning') {
-                        desc += "Morning mist clings to the ancient trees. Bird calls echo through the canopy... but they sound wrong somehow. Distorted. The forest feels primordial, untouched by civilization.\n\n";
-                        desc += "Sunlight struggles to penetrate the thick foliage. Even in daylight, the forest\'s interior is draped in shadow. You can make out a narrow trail leading deeper into the wilderness.";
+                        desc += "Morning mist clings to the ancient trees. You can make out a narrow trail leading deeper into the wilderness.";
                     } else if (timeOfDay === 'afternoon') {
-                        desc += "Afternoon light filters weakly through the dense canopy. The forest looms before you like a living wall. Dark, impenetrable, breathing.\n\n";
-                        desc += "Strange sounds drift from within: rustling that\'s too heavy to be wind, distant growls that could be animal or something worse. The trees seem to lean inward, watching.";
+                        desc += "Afternoon light filters weakly through the dense canopy. Strange sounds drift from within, rustling too heavy to be wind.";
                     } else if (timeOfDay === 'evening') {
-                        desc += "Dusk settles over the forest edge. The trees cast long, twisted shadows across the ground. The last rays of sunlight paint the canopy in blood-red hues.\n\n";
-                        desc += "This is the dangerous hour. When nocturnal predators wake and day creatures flee to their dens. The forest seems to rush with anticipation.";
+                        desc += "Dusk settles over the forest edge, and the trees cast long, twisted shadows across the ground.";
                     } else {
-                        desc += "Night has claimed the forest completely. Moonlight barely penetrates the canopy, leaving the interior pitch-black save for occasional pairs of glowing eyes that watch from the darkness.\n\n";
-                        desc += "Howls echo in the distance. Wolves, certainly, but something else too, something that makes your vampire instincts tingle with both hunger and wariness. The forest is fully awake now, and it\'s hunting.";
+                        desc += "Night has claimed the forest completely. Pairs of glowing eyes watch you from the darkness.";
                     }
                     
-                    desc += "\n\nThe scent of something wicked reaches your nostrils. Something that smells almost like you. Feral vampires.";
                     
                     if (isNight) {
                         desc += '\n\n<img src="Images/icons/warning.png" class="icon" alt="warning">️ <strong style=\'color: #ff6b8a;\'>Night has fallen. The forest is at its most dangerous... and most rewarding.</strong>';
@@ -186010,16 +185987,16 @@ wet_car_slowdown: {
                     const hour = gameState.time.hour;
                     const isNight = hour >= 20 || hour < 6;
                     
-                    let desc = "You walk the streets of the Fitness District.\n\n";
+                    let desc = "You're in the Fitness District.\n\n";
                     
                     if (isNight) {
-                        desc += "The district is quieter at night. Most of the training facilities have closed, their windows dark. A few 24-hour gyms still glow with overhead light, and you can see silhouettes moving behind frosted glass. The sidewalks smell like rubber mats and chalk.";
+                        desc += "Most of the training facilities have closed for the night, but a few 24-hour gyms still glow with overhead light.";
                     } else if (hour < 10) {
-                        desc += "The morning crowd is out. Joggers pass in pairs. Someone carries a gym bag over one shoulder, protein shake in the other hand. A boxing gym across the street has its garage door up and you can hear the rhythmic thud of heavy bags inside.";
+                        desc += "The morning crowd is out. Joggers pass in pairs, and a boxing gym across the street has its garage door up.";
                     } else if (hour < 17) {
-                        desc += "The district hums with activity. People move between training facilities, supplement shops, and smoothie bars. The sound of effort bleeds through walls. Somewhere, someone is counting reps loud enough for you to hear from the sidewalk.";
+                        desc += "The district hums with activity. People move between training facilities, supplement shops, and smoothie bars.";
                     } else {
-                        desc += "The after-work rush fills the district. Every gym and studio is packed. People stream in and out of buildings with bags slung over their shoulders. The evening air carries the faint, honest smell of sweat.";
+                        desc += "The after-work rush fills the district. Every gym and studio is packed.";
                     }
                     
                     desc += getFugitiveFlavor('fitness');
