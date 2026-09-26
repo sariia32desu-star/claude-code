@@ -4813,6 +4813,54 @@
             color: #b896d0;
             margin-bottom: 5px;
         }
+
+        .mesh-tag-row { margin-top: 2px; line-height: 1; }
+        .mesh-tag {
+            display: inline-block;
+            font-family: 'Cinzel', serif;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #d9c2f0;
+            background: rgba(143, 115, 184, 0.15);
+            border: 1px solid #8f73b8;
+            border-radius: 3px;
+            padding: 2px 6px;
+            cursor: help;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .mesh-tag:hover, .mesh-tag:focus, .mesh-tag.mesh-tag-open {
+            outline: none;
+            color: #f0e4ff;
+            border-color: #c7a8f0;
+            background: rgba(143, 115, 184, 0.32);
+        }
+        #mesh-tooltip {
+            position: fixed;
+            z-index: 100000;
+            display: none;
+            max-width: 240px;
+            padding: 8px 10px;
+            background: #1a1428;
+            border: 1px solid #8f73b8;
+            border-radius: 6px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+            color: #e6d9f5;
+            font-size: 12px;
+            line-height: 1.45;
+            text-align: left;
+            pointer-events: none;
+        }
+        #mesh-tooltip .mesh-tip-head {
+            font-family: 'Cinzel', serif;
+            color: #c7a8f0;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        #mesh-tooltip .mesh-tip-line { margin-top: 3px; }
+        #mesh-tooltip .mesh-tip-weave { margin-top: 5px; color: #b896d0; font-size: 11px; }
         
         .item-price-tag {
             font-size: 1em;
@@ -19713,7 +19761,7 @@ audioSystem.playSFX('buttonClick');
                 return '<div class="wardrobe-item ' + (isEquipped ? 'equipped' : '') + _ciCondClass + '" onclick="handleClothingInvClick(' + clickIndex + ')" style="' + dimStyle + '">' +
                     '<div class="wardrobe-item-image">' + itemVisual + '</div>' +
                     '<div class="wardrobe-item-name">' + item.name + '</div>' +
-                    '<div class="wardrobe-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' +
+                    '<div class="wardrobe-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' + getMeshTagHTML(item) +
                     descHTML + cleanlinessDisplay + damageDisplay + _ciMatBadge + _ciEffBadge + _ciCombatBadge + (isBOItem(item) ? '<div style="font-size:10px;color:#ffb3e6;margin-top:2px;"><img src="Images/icons/mirror.png" class="icon" alt="collection" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"> Your Collection</div>' : '') + equippedBadge +
                     '</div>';
             }).join('');
@@ -20045,7 +20093,7 @@ audioSystem.playSFX('buttonClick');
                 return '<div class="wardrobe-item ' + (isEquipped ? 'equipped' : '') + condClass + '" onclick="handleWardrobeClick(' + clickIndex + ')" style="' + itemDim + '">' +
                     '<div class="wardrobe-item-image">' + itemVisual + '</div>' +
                     '<div class="wardrobe-item-name">' + item.name + '</div>' +
-                    '<div class="wardrobe-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' +
+                    '<div class="wardrobe-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' + getMeshTagHTML(item) +
                     descHTML + cleanlinessDisplay + damageDisplay + materialBadge + effectBadge + synergyBadge + setBadge + (isBOItem(item) ? '<div style="font-size:10px;color:#ffb3e6;margin-top:2px;"><img src="Images/icons/mirror.png" class="icon" alt="collection" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;"> Your Collection</div>' : '') + equippedBadge + ownerBadge +
                     '</div>';
             }).join('');
@@ -20172,7 +20220,7 @@ audioSystem.playSFX('buttonClick');
                 } else if (currentWardrobeType) {
                     actions = '<button class="storage-action-btn" onclick=\'moveItemToWardrobe("' + item.id + '", "' + currentWardrobeType + '")\''+'>' + wardrobeLabel + '</button>';
                 }
-                return '<div class="storage-item"><div class="storage-item-name">' + item.name + borrowed + '</div><div class="storage-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' + actions + '</div>';
+                return '<div class="storage-item"><div class="storage-item-name">' + item.name + borrowed + (getMeshProfile(item) ? ' ' + getMeshTagHTML(item, true) : '') + '</div><div class="storage-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' + actions + '</div>';
             }).join('');
             
             updateStorageDisplay();
@@ -20205,7 +20253,7 @@ audioSystem.playSFX('buttonClick');
                     html += '<div style="font-size:0.8em;letter-spacing:2px;color:#8870aa;text-transform:uppercase;margin:6px 0 4px;border-bottom:1px solid #2a1a40;padding-bottom:3px;">Your Stored Clothes</div>';
                 }
                 html += myItems.map(item => {
-                    return '<div class="storage-item"><div class="storage-item-name">' + item.name + '</div><div class="storage-item-appeal">Appeal: +' + (item.appeal || 0) + '</div><button class="storage-action-btn" onclick=\'moveItemFromWardrobe("' + item.id + '", "' + currentWardrobeType + '")\'>To Backpack</button></div>';
+                    return '<div class="storage-item"><div class="storage-item-name">' + item.name + (getMeshProfile(item) ? ' ' + getMeshTagHTML(item, true) : '') + '</div><div class="storage-item-appeal">Appeal: +' + (item.appeal || 0) + '</div><button class="storage-action-btn" onclick=\'moveItemFromWardrobe("' + item.id + '", "' + currentWardrobeType + '")\'>To Backpack</button></div>';
                 }).join('');
             }
             
@@ -20220,7 +20268,7 @@ audioSystem.playSFX('buttonClick');
                     let btn = canBorrow
                         ? '<button class="storage-action-btn" onclick=\'borrowItemFromJaewon("' + item.id + '")\'>Borrow</button>'
                         : '<button class="storage-action-btn" disabled style="opacity:0.5;" title="Need 60 Friendship to borrow"><img src="Images/icons/lock.png" class="icon" alt="locked"> 60 Friendship needed</button>';
-                    return '<div class="storage-item"><div class="storage-item-name">' + item.name + '</div><div class="storage-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' + btn + '</div>';
+                    return '<div class="storage-item"><div class="storage-item-name">' + item.name + (getMeshProfile(item) ? ' ' + getMeshTagHTML(item, true) : '') + '</div><div class="storage-item-appeal">Appeal: +' + (item.appeal || 0) + '</div>' + btn + '</div>';
                 }).join('');
             }
             
@@ -40677,6 +40725,98 @@ audioSystem.playSFX('buttonClick');
             return !!(p && p.zones.indexOf(zone) !== -1);
         }
 
+        // ── Mesh status tag: stores, wardrobe, clothing inventory ──
+        var MESH_WEAVE_LABEL = { semi: 'Semi-Sheer', sheer: 'Sheer', fishnet: 'Fishnet' };
+
+        function getMeshTagHTML(item, inline, weaveOnly) {
+            var p = getMeshProfile(item);
+            if (!p) return '';
+            var tag = '<span class="mesh-tag" tabindex="0" role="button" aria-label="Mesh details" data-mesh-id="' + item.id + '" onclick="event.stopPropagation(); toggleMeshTooltip(this);">' + (weaveOnly ? '' : 'Mesh: ') + MESH_WEAVE_LABEL[p.weave] + '</span>';
+            return inline ? tag : '<div class="mesh-tag-row">' + tag + '</div>';
+        }
+
+        function getMeshTooltipHTML(id) {
+            var p = MESH_GARMENTS[id];
+            if (!p) return '';
+            var chest = p.zones.indexOf('chest') !== -1, hips = p.zones.indexOf('hips') !== -1;
+            var where = chest && hips ? 'the chest and hips' : chest ? 'the chest' : 'the hips';
+            var underwear = /_(bra|panties)$/.test(id);
+            var head = p.weave === 'fishnet' ? 'Fishnet' : MESH_WEAVE_LABEL[p.weave] + ' Mesh';
+            var effect = underwear
+                ? 'Under opaque clothes it has no effect. Under mesh, or with nothing over it, strangers see straight through. That builds Exhibition Thrill and Corruption while you\'re out.'
+                : 'Whatever\'s underneath shows through. Go ' + (chest && hips ? 'braless or commando' : chest ? 'braless' : 'commando') + ' under it and strangers see bare skin. That builds Exhibition Thrill and Corruption while you\'re out.';
+            var weave = p.weave === 'semi' ? 'Semi-sheer weave: effects at 70%.'
+                : p.weave === 'fishnet' ? 'Fishnet weave: effects at 110%. Bare skin shows in every hole.'
+                : 'Sheer weave: full effect.';
+            return '<div class="mesh-tip-head">' + head + '</div>'
+                + '<div class="mesh-tip-line">See-through over ' + where + '.</div>'
+                + '<div class="mesh-tip-line">' + effect + '</div>'
+                + '<div class="mesh-tip-weave">' + weave + '</div>';
+        }
+
+        function _meshTooltipEl() {
+            var el = document.getElementById('mesh-tooltip');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'mesh-tooltip';
+                el.setAttribute('role', 'tooltip');
+                document.body.appendChild(el);
+            }
+            return el;
+        }
+
+        var _meshTipAnchor = null, _meshTipShownAt = 0;
+        function showMeshTooltip(tag) {
+            var el = _meshTooltipEl();
+            el.innerHTML = getMeshTooltipHTML(tag.getAttribute('data-mesh-id'));
+            el.style.display = 'block';
+            var r = tag.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, m = 8;
+            var left = Math.max(m, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - m));
+            var top = r.top - h - 6;
+            if (top < m) top = r.bottom + 6;
+            el.style.left = left + 'px';
+            el.style.top = top + 'px';
+            if (_meshTipAnchor && _meshTipAnchor !== tag) _meshTipAnchor.classList.remove('mesh-tag-open');
+            if (_meshTipAnchor !== tag) _meshTipShownAt = Date.now();
+            _meshTipAnchor = tag;
+            tag.classList.add('mesh-tag-open');
+        }
+
+        function hideMeshTooltip() {
+            var el = document.getElementById('mesh-tooltip');
+            if (el) el.style.display = 'none';
+            if (_meshTipAnchor) _meshTipAnchor.classList.remove('mesh-tag-open');
+            _meshTipAnchor = null;
+        }
+
+        function toggleMeshTooltip(tag) {
+            // A tap fires focus and mouseover before click; keep the tooltip that tap just opened.
+            if (_meshTipAnchor === tag && Date.now() - _meshTipShownAt > 400) hideMeshTooltip(); else showMeshTooltip(tag);
+        }
+
+        // Hover is mouse-only; taps open and close through focus and click.
+        document.addEventListener('pointerover', function(e) {
+            if (e.pointerType !== 'mouse') return;
+            var tag = e.target.closest && e.target.closest('.mesh-tag');
+            if (tag) showMeshTooltip(tag);
+        });
+        document.addEventListener('pointerout', function(e) {
+            if (e.pointerType !== 'mouse') return;
+            var tag = e.target.closest && e.target.closest('.mesh-tag');
+            if (tag && !(e.relatedTarget && tag.contains(e.relatedTarget))) hideMeshTooltip();
+        });
+        document.addEventListener('focusin', function(e) {
+            if (e.target.classList && e.target.classList.contains('mesh-tag')) showMeshTooltip(e.target);
+        });
+        document.addEventListener('focusout', function(e) {
+            if (e.target.classList && e.target.classList.contains('mesh-tag')) hideMeshTooltip();
+        });
+        document.addEventListener('click', function(e) {
+            if (!(e.target.closest && e.target.closest('.mesh-tag'))) hideMeshTooltip();
+        });
+        window.addEventListener('scroll', hideMeshTooltip, true);
+        window.addEventListener('resize', hideMeshTooltip);
+
         // ── Step 2B: getSheerState() ──
         // What can strangers see right now? Zones are evaluated separately, then combined.
         // Zone status: opaque | framed | veiled | lingerie | underwear | bare
@@ -58198,10 +58338,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 
                 if (isPurchased) {
                     // Greyed out purchased item
-                    return '\n<div class="shop-item purchased-item">\n<div class="item-image" style="opacity: 0.3;">' + (svg) + '</div>\n<div class="purchased-overlay">PURCHASED</div>\n<div class="item-name" style="color: #666;">' + (item.name) + '</div>\n<div class="item-appeal" style="color: #666;">Appeal: +' + (item.appeal) + '</div>\n' + (getItemEffectHTML(item) ? '<div style="font-size:10px;color:#448866;margin-top:2px;">' + getItemEffectHTML(item) + '</div>\n' : '') + (getItemCombatBonusHTML(item) ? '<div style="font-size:10px;color:#aa6655;margin-top:2px;">' + getItemCombatBonusHTML(item) + '</div>\n' : '') + '<div class="item-price-tag" style="color: #666;">$' + (item.price) + '</div>\n</div>\n';
+                    return '\n<div class="shop-item purchased-item">\n<div class="item-image" style="opacity: 0.3;">' + (svg) + '</div>\n<div class="purchased-overlay">PURCHASED</div>\n<div class="item-name" style="color: #666;">' + (item.name) + '</div>\n<div class="item-appeal" style="color: #666;">Appeal: +' + (item.appeal) + '</div>\n' + getMeshTagHTML(item) + '\n' + (getItemEffectHTML(item) ? '<div style="font-size:10px;color:#448866;margin-top:2px;">' + getItemEffectHTML(item) + '</div>\n' : '') + (getItemCombatBonusHTML(item) ? '<div style="font-size:10px;color:#aa6655;margin-top:2px;">' + getItemCombatBonusHTML(item) + '</div>\n' : '') + '<div class="item-price-tag" style="color: #666;">$' + (item.price) + '</div>\n</div>\n';
                 } else {
                     // Normal clickable item - pass index instead of JSON
-                    return '\n<div class="shop-item" onclick=\'viewItemByIndex(' + (index) + ', "' + (category) + '")\'>\n<div class="item-image">' + (svg) + '</div>\n<div class="item-name">' + (item.name) + '</div>\n<div class="item-appeal">Appeal: +' + (item.appeal) + '</div>\n' + (getItemEffectHTML(item) ? '<div style="font-size:10px;color:#66cc88;margin-top:2px;">' + getItemEffectHTML(item) + '</div>\n' : '') + (getItemCombatBonusHTML(item) ? '<div style="font-size:10px;color:#ff8866;margin-top:2px;">' + getItemCombatBonusHTML(item) + '</div>\n' : '') + '<div class="item-price-tag">$' + (item.price) + '</div>\n</div>\n';
+                    return '\n<div class="shop-item" onclick=\'viewItemByIndex(' + (index) + ', "' + (category) + '")\'>\n<div class="item-image">' + (svg) + '</div>\n<div class="item-name">' + (item.name) + '</div>\n<div class="item-appeal">Appeal: +' + (item.appeal) + '</div>\n' + getMeshTagHTML(item) + '\n' + (getItemEffectHTML(item) ? '<div style="font-size:10px;color:#66cc88;margin-top:2px;">' + getItemEffectHTML(item) + '</div>\n' : '') + (getItemCombatBonusHTML(item) ? '<div style="font-size:10px;color:#ff8866;margin-top:2px;">' + getItemCombatBonusHTML(item) + '</div>\n' : '') + '<div class="item-price-tag">$' + (item.price) + '</div>\n</div>\n';
                 }
             }).join('');
         }
@@ -58421,7 +58561,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             let statsHTML = '<div class="stat-line"><span>Category:</span><span>' + (category.charAt(0).toUpperCase() + category.slice(1)) + '</span></div>'
                 + '<div class="stat-line"><span>Appeal:</span><span>+' + (item.appeal) + '</span></div>'
                 + '<div class="stat-line" style="border-top:1px solid rgba(100,80,120,0.3);padding-top:6px;margin-top:6px;"><span>If worn:</span><span>' + tryOn.previewAppeal + ' (now ' + (tryOn.previewAppeal - tryOn.change) + ') ' + diffStr + '</span></div>'
-                + synergyStr + coherenceStr + effectStr + matStr;
+                + synergyStr + coherenceStr + effectStr + matStr
+                + (getMeshProfile(item) ? '<div class="stat-line"><span>Mesh:</span><span>' + getMeshTagHTML(item, true, true) + '</span></div>' : '');
             
             document.getElementById('item-stats').innerHTML = statsHTML;
             
