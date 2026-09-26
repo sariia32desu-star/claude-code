@@ -13031,6 +13031,7 @@
             // Exhibitionism/Naked System
             isNaked: false, // Is Kelsie currently naked?
             nakedStartTime: null, // When she got naked (for 2-hour timer)
+            sheerLingerieStartTime: null, // Mesh Overhaul Step 4B: sheer lingerie police clock (3 hours)
             nakedDistrictsVisited: [], // Track which districts she\'s visited naked
             exhibitionismThrill: 0, // Increases while naked in public (0-100)
             exhibitionStats: {     // Exhibition Overhaul, Step 4D: Lifetime stat tracking
@@ -21967,6 +21968,216 @@ audioSystem.playSFX('buttonClick');
             }
         }
         
+        // ══════════════════════════════════════════════════════════════
+        // ── Mesh & Sheer Overhaul, Step 4: exposure rules ──
+        // ══════════════════════════════════════════════════════════════
+
+        // 4A: corruption each sheer state needs before she'll walk out in it.
+        // Lingerie states are also visible underwear, so checkVisibleUnderwearCorruption()
+        // gates them first; the table repeats them so this stays the single reference.
+        var SHEER_STATE_GATES = {
+            sheer_framed: 0,
+            sheer_braless: 2001,
+            sheer_commando: 4001,
+            sheer_bare: 4001,
+            sheer_lingerie_top: 6001,
+            sheer_lingerie_bottom: 6001,
+            sheer_lingerie: 8001
+        };
+
+        function getSheerStateGate(state) {
+            return SHEER_STATE_GATES[state] || 0;
+        }
+
+        // Low-voice description of what she sees when she looks down. Names the real garments.
+        function getSheerBlockDesc(st) {
+            var noun = getSheerNoun(st);
+            var cName = st.chestGarment ? proseItemName(st.chestGarment) : 'top';
+            var hName = st.hipsGarment ? proseItemName(st.hipsGarment) : 'skirt';
+            var chestUnder = (st.chest === 'veiled' && st.chestUnder) ? proseItemName(st.chestUnder) : '';
+            var hipsUnder = (st.hips === 'veiled' && st.hipsUnder) ? proseItemName(st.hipsUnder) : '';
+            if (st.state === 'sheer_bare' && st.chestGarment === st.hipsGarment && !chestUnder && !hipsUnder) {
+                return 'There\'s nothing under your ' + cName + '. Your nipples are right there through the ' + noun + ', dark and stiff, and your bare pussy shows straight through below them. You might as well be naked.';
+            }
+            var chestLine = (chestUnder ? 'Your ' + chestUnder + ' under it doesn\'t help. ' : 'There\'s nothing under your ' + cName + '. ') +
+                'Your nipples are right there through the ' + noun + ', dark and stiff, for anyone who looks.';
+            var hipsLine = (hipsUnder ? 'Your ' + hipsUnder + ' under it don\'t help. ' : 'There\'s nothing under your ' + hName + '. ') +
+                'Your bare pussy shows straight through: the dark slit, your folds, all of it.';
+            if (st.state === 'sheer_braless') return chestLine;
+            if (st.state === 'sheer_commando') return hipsLine;
+            return chestLine + '\n\n' + hipsLine;
+        }
+
+        // 4A: called in every district street onEnter after the underwear block.
+        // Returns true when it showed something (a block now, vignettes in Step 8).
+        function handleSheerDistrictEntry(districtId) {
+            if (gameState.isNaked || isEffectivelyNaked()) return false;
+            var st = getSheerState();
+            if (st.state === 'none') return false;
+
+            var gate = getSheerStateGate(st.state);
+            var corruption = gameState.corruption || 0;
+            if (gate > 0 && corruption < gate && !gameState.flags.clothesDestroyedInCombat) {
+                var fix = st.state === 'sheer_braless' ? 'Put a bra on first, or something over it.'
+                    : st.state === 'sheer_commando' ? 'Put panties on first, or something over it.'
+                    : st.state === 'sheer_bare' ? 'Put underwear on first, or something over all of it.'
+                    : 'Put real clothes on first.';
+                var desc = (st.state === 'sheer_braless' || st.state === 'sheer_commando' || st.state === 'sheer_bare')
+                    ? getSheerBlockDesc(st)
+                    : 'Your underwear\'s see-through. Your nipples, your bare slit, all of it right there behind the mesh.';
+                var worst = st.state === 'sheer_braless' ? 'Everyone would see your tits.'
+                    : st.state === 'sheer_commando' ? 'Anyone who glances down gets your cunt.'
+                    : 'You\'d rather die.';
+                showMessage(
+                    '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> No Way</strong>\n\nYou look down at yourself. ' + desc + '\n\nYou\'re not walking out there like this. ' + worst + ' Your pussy clenches at the thought, and you hate that it does.\n\n' + fix + '\n\n<span style="color:#888;">At <strong>' + gate + ' Corruption</strong>, you\'d be willing. You\'re at ' + corruption + '.</span>',
+                    function() {
+                        var returnScene = gameState.previousScene || 'apartment_bedroom';
+                        showScene(returnScene);
+                    }
+                );
+                return true;
+            }
+
+            // Gate passed. Vignettes and district reactions arrive in Step 8.
+            return false;
+        }
+
+        // 4B: sheer lingerie police clock. Three hours in a mesh bra and panties with
+        // nothing over them (naked gets two). Runs on district street entry.
+        // Returns true when the police arrive (the caller stops processing the street).
+        function tickSheerLingeriePolice() {
+            var st = getSheerState();
+            var eligible = st.state === 'sheer_lingerie' && !gameState.isNaked &&
+                ((gameState.corruption || 0) >= getSheerStateGate('sheer_lingerie') || gameState.flags.clothesDestroyedInCombat);
+            if (!eligible) {
+                if (st.state !== 'sheer_lingerie') gameState.sheerLingerieStartTime = null;
+                return false;
+            }
+            var t = gameState.time;
+            var nowMin = (t.day * 24 * 60) + (t.hour * 60) + (t.minute || 0);
+            if (!gameState.sheerLingerieStartTime) {
+                gameState.sheerLingerieStartTime = { day: t.day, hour: t.hour, minute: t.minute || 0 };
+                return false;
+            }
+            var s = gameState.sheerLingerieStartTime;
+            var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
+            if (nowMin - startMin < 180) return false;
+            handleSheerPoliceArrive();
+            return true;
+        }
+
+        function handleSheerPoliceArrive() {
+            var corruption = gameState.corruption || 0;
+            var o = gameState.currentOutfit || {};
+            var bra = o.bra ? proseItemName(o.bra) : 'bra';
+            var pan = o.panties ? proseItemName(o.panties) : 'panties';
+            var text = '';
+            if (corruption >= 6001) {
+                text = 'The cruiser pulls up and the officer gets out with his notepad already open. He looks at you anyway. Your nipples dark behind your ' + bra + '. The bare slit of your pussy behind your ' + pan + '.\n\n' +
+                    '"Ma\'am, is that..." He stops and tries again. "Is that underwear?"\n\n"Lingerie."\n\n' +
+                    '"I can see your..." He doesn\'t finish. His ears go red.\n\n' +
+                    'His partner leans on the car door and doesn\'t bother pretending to look anywhere else. "It\'s see-through, Dave. That\'s the whole point of it."\n\n' +
+                    'Your clit throbs. Three hours on the street and this is the first time anyone\'s tried to argue about it.\n\n' +
+                    '"You need to come with us, ma\'am. Indecent exposure."\n\n"I\'m dressed."\n\nHe looks at your nipples again. "Not really."\n\nYou smile at him. Then you\'re gone.';
+            } else if (corruption >= 2001) {
+                text = 'A squad car slows beside you and stays there, matching your pace.\n\n' +
+                    'The officer in the passenger seat looks at your ' + bra + ', at your nipples showing dark through it, then lower, to your ' + pan + ' and the bare slit behind them. He clears his throat.\n\n' +
+                    '"Miss. You can\'t walk around like that."\n\n"I\'m wearing something."\n\n"I can see everything you\'re wearing it over."\n\n' +
+                    'Heat floods your face. Your pussy clenches anyway, and you know he can see that too.\n\nThe door opens. You don\'t wait to hear the rest.';
+            } else {
+                text = 'The siren chirps once behind you and your whole body locks.\n\n' +
+                    'Two officers get out. The woman takes one look and her mouth goes flat. "Ma\'am. Are you aware we can see through that?"\n\n' +
+                    'You look down. Your nipples, dark and stiff behind your ' + bra + '. Your bare slit behind your ' + pan + ', clear as anything in the light.\n\n' +
+                    'You\'ve been telling yourself for three hours that it counts as clothes.\n\n"I... it\'s..."\n\n"Indecent exposure. Hands where I can see them."\n\n' +
+                    'Your eyes burn. Your pussy clenches, and that\'s the worst part. You run.';
+            }
+            gameState.sheerLingerieStartTime = null;
+            showMessage(text, function() {
+                handleNakedEscape();
+            });
+        }
+
+        // 4C: venue policy for sheer states that getExposureLevel() calls 'clothed'.
+        // framed: allowed everywhere. braless: blocked at the hospital, library, blood bank and dojang.
+        // commando / bare: blocked everywhere restricted except Lucius' Lounge, the Hardy Bar,
+        // Urban Edge (it sells the mesh) and the diner (she changes into the uniform).
+        // lingerie top / bottom: blocked everywhere restricted, like visible underwear.
+        var SHEER_BRALESS_BLOCKED_VENUES = ['outside_hospital', 'outside_library', 'outside_blood_bank', 'outside_dojang'];
+        var SHEER_BARE_ALLOWED_VENUES = ['outside_lucius_lounge', 'outside_hardy_bar', 'outside_urban_edge', 'outside_diner'];
+
+        function getSheerVenueBlockMessage(restriction) {
+            var st = getSheerState();
+            var s = st.state;
+            if (s === 'none' || s === 'sheer_framed') return null;
+            if (s === 'sheer_braless' && SHEER_BRALESS_BLOCKED_VENUES.indexOf(restriction.redirect) === -1) return null;
+            if ((s === 'sheer_commando' || s === 'sheer_bare') && SHEER_BARE_ALLOWED_VENUES.indexOf(restriction.redirect) !== -1) return null;
+
+            var noun = getSheerNoun(st);
+            // pos: 'your' in narration, 'my' inside her italic thought
+            var descFor = function(pos) {
+                return s === 'sheer_braless' ? 'with ' + pos + ' nipples right there through the ' + noun
+                    : s === 'sheer_commando' ? 'with ' + pos + ' bare pussy showing through the ' + noun
+                    : s === 'sheer_bare' ? 'with ' + pos + ' tits and ' + pos + ' bare pussy on show through the ' + noun
+                    : s === 'sheer_lingerie_top' ? 'with ' + pos + ' nipples showing through a see-through bra'
+                    : s === 'sheer_lingerie_bottom' ? 'with ' + pos + ' bare slit showing through see-through panties'
+                    : 'in see-through underwear';
+            };
+            var desc = descFor('your');
+            var b = restriction.name;
+            var corruption = gameState.corruption || 0;
+            if (corruption >= 6001) {
+                return 'You glance down at yourself and smirk. ' + capFirst(b) + ' isn\'t letting you through the door ' + desc + '.\n\nYour clit throbs at the thought anyway. Cover up first.';
+            } else if (corruption >= 2001) {
+                return 'You catch yourself reaching for the door and stop.\n\n<em>I can\'t walk into ' + b + ' ' + descFor('my') + '.</em>\n\nYour cheeks warm. Your nipples tighten anyway. You step back from the entrance and look for something to cover up with.';
+            }
+            return 'You look at the entrance to ' + b + ' and your stomach drops.\n\n<em>Everyone in there would see.</em>\n\nYou can\'t walk in ' + desc + '. You fold your arms and back away, and your pussy clenches the whole time.';
+        }
+
+        // 4C: Lucius' doorman, once per day, evening or night, when she walks up in a sheer state.
+        // Returns '' when nothing fires. Step 13C widens this to three variants per state.
+        function getLuciusSheerDoorLine() {
+            var st = getSheerState();
+            if (st.state === 'none') return '';
+            var day = (gameState.time && gameState.time.day) || 1;
+            if ((gameState.flags._luciusSheerDoorDay || 0) === day) return '';
+            var noun = getSheerNoun(st);
+            var line = '';
+            if (st.state === 'sheer_framed') {
+                var under = st.chestUnder || st.hipsUnder;
+                line = 'The bouncer\'s eyes go to your ' + (under ? proseItemName(under) : 'underwear') + ' through the ' + noun + ' and stay there a second longer than the job needs. He unhooks the rope.\n\n';
+            } else if (st.state === 'sheer_braless') {
+                line = 'The bouncer\'s eyes drop to your tits, bare behind the ' + noun + ', nipples stiff. He takes his time. Then he unhooks the rope.\n\n';
+            } else if (st.state === 'sheer_commando') {
+                line = 'The bouncer glances down and stops. Your bare slit shows straight through the ' + noun + '. He clears his throat and unhooks the rope without checking anything else.\n\n';
+            } else if (st.state === 'sheer_bare') {
+                line = 'The bouncer doesn\'t check your face, or your shoes. He checks your tits through the ' + noun + ' and waves you through. Your clit throbs all the way to the bar.\n\n';
+            }
+            if (line) gameState.flags._luciusSheerDoorDay = day;
+            return line;
+        }
+
+        // 4D: transit. Lingerie with nothing over a zone gets refused like underwear;
+        // bare-behind-mesh boards with a reaction. Returns { refuse, text } or null.
+        function getSheerTransitReaction(method) {
+            var st = getSheerState();
+            var s = st.state;
+            if (s === 'sheer_lingerie_top' || s === 'sheer_lingerie_bottom') {
+                return { refuse: true, text: method === 'bus'
+                    ? 'The driver takes one look at your see-through underwear and shakes his head.'
+                    : 'Your driver pulls up, sees straight through your underwear, and cancels.' };
+            }
+            if (s !== 'sheer_bare' && s !== 'sheer_commando') return null;
+            var g = st.hipsGarment ? proseItemName(st.hipsGarment) : 'skirt';
+            if (method === 'bus') {
+                return { refuse: false, text: s === 'sheer_bare'
+                    ? 'The driver\'s eyes go straight through your ' + g + ': nipples, bare pussy, all of it. He swallows and waves you on. You ride with your thighs pressed together and your clit throbbing at every bump.'
+                    : 'The driver glances down as you tap your card, and his eyes stay on the bare slit showing through your ' + g + '. He waves you on. You keep your knees together, and your pussy stays wet the whole ride.' };
+            }
+            return { refuse: false, text: s === 'sheer_bare'
+                ? 'Your driver does a long double take in the rearview mirror. "Uh. Nice ' + (st.chestGarment && st.chestGarment === st.hipsGarment ? 'dress' : 'outfit') + '," he says, and spends the ride looking at your tits through it. Your nipples stay stiff the whole way.'
+                : 'Your driver\'s eyes flick to the mirror when you slide into the back seat. He says nothing for three blocks. Then: "You know that\'s see-through, right?"\n\nYour clit throbs. "I know."' };
+        }
+
         function handleUnderwearDistrictEntry(districtId) {
             const type = getUnderwearExposureType();
             var _isTopless = isEffectivelyTopless();
@@ -21985,6 +22196,9 @@ audioSystem.playSFX('buttonClick');
                     _blockDesc = 'Your chest is completely exposed. No bra, no top, nothing.';
                 } else if (_isBottomless) {
                     _blockDesc = 'You\'re bare from the waist down. No panties, no bottoms, nothing.';
+                } else if (type === 'both' && getVisibleUnderwearGate() === 8001) {
+                    // Mesh Overhaul Step 4A: the sheer set alone
+                    _blockDesc = 'Your ' + proseItemName(gameState.currentOutfit.bra) + ' and ' + proseItemName(gameState.currentOutfit.panties) + '. That\'s it. Your nipples show dark and stiff through the cups and your bare slit shows through the crotch. It\'s underwear the way a window\'s a wall.';
                 } else if (type === 'both') {
                     _blockDesc = 'Bra and panties. That\'s it.';
                 } else if (type === 'bra_only') {
@@ -21993,7 +22207,7 @@ audioSystem.playSFX('buttonClick');
                     _blockDesc = 'Your panties are showing. No bottoms, no dress.';
                 }
                 showMessage(
-                    '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> No Way</strong>\n\nYou look down at yourself. ' + _blockDesc + '\n\nYou\'re not walking out there like this. You\'d rather die.\n\nPut on real clothes first.\n\n<span style="color:#888;">At <strong>6001 Corruption</strong>, you\'d be willing. You\'re at ' + _blockCorruption + '.</span>',
+                    '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> No Way</strong>\n\nYou look down at yourself. ' + _blockDesc + '\n\nYou\'re not walking out there like this. You\'d rather die.\n\nPut on real clothes first.\n\n<span style="color:#888;">At <strong>' + (getVisibleUnderwearGate() || 6001) + ' Corruption</strong>, you\'d be willing. You\'re at ' + _blockCorruption + '.</span>',
                     function() {
                         var returnScene = gameState.previousScene || 'apartment_bedroom';
                         showScene(returnScene);
@@ -22866,7 +23080,7 @@ audioSystem.playSFX('buttonClick');
                         setTimeout(() => {
                         if (nowExposed && !checkVisibleUnderwearCorruption()) {
                             var _ueCorruption = gameState.corruption || 0;
-                            showMessage('✓ ' + result.message + '\n\n<strong style="color:#ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> You\'re not fully dressed.</strong>\n\nYou can\'t leave like this. Put on proper clothes before going outside.\n\n<span style="color:#888;">Requires <strong>6001 Corruption</strong> to go out exposed willingly. You\'re at ' + _ueCorruption + '.</span>', () => {});
+                            showMessage('✓ ' + result.message + '\n\n<strong style="color:#ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> You\'re not fully dressed.</strong>\n\nYou can\'t leave like this. Put on proper clothes before going outside.\n\n<span style="color:#888;">Requires <strong>' + (getVisibleUnderwearGate() || 6001) + ' Corruption</strong> to go out exposed willingly. You\'re at ' + _ueCorruption + '.</span>', () => {});
                         } else {
                             showMessage('✓ ' + result.message, () => {});
                         }
@@ -23026,7 +23240,7 @@ audioSystem.playSFX('buttonClick');
                         const corruption = gameState.corruption || 0;
                         
                         showMessage(
-                            '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> Underwear Only</strong>\n\nYou\'re ' + (getUnderwearVisibilityDesc()) + '.\n\nYou can\'t go outside like this. Put on a top, bottom, or dress before leaving.\n\nThe only way you\'d end up outside in your underwear is if your clothes got destroyed in a fight.\n\n<span style="color:#888;">At <strong>6001 Corruption</strong>, you can walk out like this willingly. You\'re at ' + corruption + '.</span>',
+                            '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> Underwear Only</strong>\n\nYou\'re ' + (getUnderwearVisibilityDesc()) + '.\n\nYou can\'t go outside like this. Put on a top, bottom, or dress before leaving.\n\nThe only way you\'d end up outside in your underwear is if your clothes got destroyed in a fight.\n\n<span style="color:#888;">At <strong>' + (getVisibleUnderwearGate() || 6001) + ' Corruption</strong>, you can walk out like this willingly. You\'re at ' + corruption + '.</span>',
                             () => {}
                         );
                     }
@@ -27114,6 +27328,21 @@ audioSystem.playSFX('buttonClick');
                 return;
             }
             
+            // Mesh Overhaul Step 4D: sheer states the slot check calls 'clothed'
+            var _sheerTransit = (method === 'bus' || method === 'uber') ? getSheerTransitReaction(method) : null;
+            var _sheerTransitLine = '';
+            if (_sheerTransit && _sheerTransit.refuse && getExposureLevel() === 'clothed') {
+                if (method === 'bus') {
+                    showMessage('<strong>Boarding Refused</strong>\n\n' + _sheerTransit.text + '\n\n<em>Find something to wear over it, or walk.</em>', () => {});
+                } else {
+                    gameState.uberRating = Math.max(1.0, parseFloat((gameState.uberRating - 0.2).toFixed(2)));
+                    showMessage('Trip Canceled\n\n' + _sheerTransit.text + '\n\nUber rating: ' + (gameState.uberRating + 0.2).toFixed(2) + ' → ' + gameState.uberRating.toFixed(2) + '\n\nFind something to wear over it, or walk.', () => {});
+                }
+                return;
+            } else if (_sheerTransit && !_sheerTransit.refuse) {
+                _sheerTransitLine = _sheerTransit.text;
+            }
+
             // Block bus in any exhibitionism state
             if (method === 'bus') {
                 const exposure = getExposureLevel();
@@ -27273,13 +27502,21 @@ audioSystem.playSFX('buttonClick');
                     return;
                 }
 
-                if (destinationScene && story[destinationScene]) {
-                    showScene(destinationScene);
-                } else if (scene && story[scene]) {
-                    // Fallback to original scene if outside scene doesn't exist
-                    showScene(scene);
+                var _arrive = function() {
+                    if (destinationScene && story[destinationScene]) {
+                        showScene(destinationScene);
+                    } else if (scene && story[scene]) {
+                        // Fallback to original scene if outside scene doesn't exist
+                        showScene(scene);
+                    } else {
+                        showScene('location_placeholder');
+                    }
+                };
+                // Mesh Overhaul Step 4D: the driver's reaction to what shows through the mesh
+                if (_sheerTransitLine) {
+                    showMessage('<em>' + _sheerTransitLine.split('\n\n').join('</em>\n\n<em>') + '</em>', _arrive);
                 } else {
-                    showScene('location_placeholder');
+                    _arrive();
                 }
             });
             }
@@ -38999,14 +39236,24 @@ audioSystem.playSFX('buttonClick');
          * Check corruption requirement for wearing visible underwear in public
          * Returns true if allowed, false if not
          */
+        // Mesh Overhaul Step 4A: visible underwear needs 6001. When every visible piece is
+        // sheer (the mesh set with nothing over it), it's naked with a technicality: 8001.
+        function getVisibleUnderwearGate() {
+            var o = gameState.currentOutfit || {};
+            var braVisible = isBraVisible();
+            var pantiesVisible = arePantiesVisible();
+            if (!braVisible && !pantiesVisible) return 0;
+            var allSheer = (!braVisible || !!getMeshProfile(o.bra)) && (!pantiesVisible || !!getMeshProfile(o.panties));
+            return (braVisible && pantiesVisible && allSheer) ? 8001 : 6001;
+        }
+
         function checkVisibleUnderwearCorruption() {
             const corruption = gameState.corruption || 0;
-            const braVisible = isBraVisible();
-            const pantiesVisible = arePantiesVisible();
+            const gate = getVisibleUnderwearGate();
             
-            // Any visible underwear requires Corrupted tier (6001+)
-            if (braVisible || pantiesVisible) {
-                return corruption >= 6001;
+            // Any visible underwear requires Corrupted tier (6001+); the sheer set alone needs 8001
+            if (gate > 0) {
+                return corruption >= gate;
             }
             
             return true; // Not in visible underwear state
@@ -101777,8 +102024,12 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     // Inside descriptions by time
                     let desc = '';
 
+                    // Mesh Overhaul Step 4C: the doorman reads the mesh first (evening/night, once a day)
+                    var _luciusSheerLine = (gameState.flags._luciusJustArrived && (isNightTime || timeOfDay === 'evening')) ? getLuciusSheerDoorLine() : '';
+                    if (_luciusSheerLine) {
+                        desc += _luciusSheerLine;
                     // BEAUTY OBSESSED: the bouncer's once-over on a regular visit
-                    if (gameState.flags._luciusJustArrived && meetsUpscaleDressCode().via === 'beauty') {
+                    } else if (gameState.flags._luciusJustArrived && meetsUpscaleDressCode().via === 'beauty') {
                         var _lw = getBOLookWords().dress;
                         var _lDay = (gameState.time && gameState.time.day) || 1;
                         var _lPool = (isNightTime || timeOfDay === 'evening') ? [
@@ -103047,6 +103298,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (!gameState.isNaked && !isEffectivelyNaked() && (isWearingVisibleUnderwear() || isEffectivelyTopless() || isEffectivelyBottomless())) {
                         if (handleUnderwearDistrictEntry('commercial')) return;
                     }
+
+                    // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
+                    if (handleSheerDistrictEntry('commercial')) return;
+                    if (tickSheerLingeriePolice()) return;
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('commercial')) return;
@@ -103212,6 +103467,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (!gameState.isNaked && !isEffectivelyNaked() && (isWearingVisibleUnderwear() || isEffectivelyTopless() || isEffectivelyBottomless())) {
                         if (handleUnderwearDistrictEntry('residential')) return;
                     }
+
+                    // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
+                    if (handleSheerDistrictEntry('residential')) return;
+                    if (tickSheerLingeriePolice()) return;
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('residential')) return;
@@ -103396,6 +103655,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (!gameState.isNaked && !isEffectivelyNaked() && (isWearingVisibleUnderwear() || isEffectivelyTopless() || isEffectivelyBottomless())) {
                         if (handleUnderwearDistrictEntry('slums')) return;
                     }
+
+                    // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
+                    if (handleSheerDistrictEntry('slums')) return;
+                    if (tickSheerLingeriePolice()) return;
                     
                     // Check for harassment event (once per day)
                     const lastHarassmentDay = gameState.flags.lastSlumsHarassmentDay || 0;
@@ -108752,6 +109015,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (!gameState.isNaked && !isEffectivelyNaked() && (isWearingVisibleUnderwear() || isEffectivelyTopless() || isEffectivelyBottomless())) {
                         if (handleUnderwearDistrictEntry('medical')) return;
                     }
+
+                    // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
+                    if (handleSheerDistrictEntry('medical')) return;
+                    if (tickSheerLingeriePolice()) return;
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('medical')) return;
@@ -108844,6 +109111,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (!gameState.isNaked && !isEffectivelyNaked() && (isWearingVisibleUnderwear() || isEffectivelyTopless() || isEffectivelyBottomless())) {
                         if (handleUnderwearDistrictEntry('downtown')) return;
                     }
+
+                    // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
+                    if (handleSheerDistrictEntry('downtown')) return;
+                    if (tickSheerLingeriePolice()) return;
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('downtown')) return;
@@ -108986,6 +109257,10 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (!gameState.isNaked && !isEffectivelyNaked() && (isWearingVisibleUnderwear() || isEffectivelyTopless() || isEffectivelyBottomless())) {
                         if (handleUnderwearDistrictEntry('wendale')) return;
                     }
+
+                    // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
+                    if (handleSheerDistrictEntry('wendale')) return;
+                    if (tickSheerLingeriePolice()) return;
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('wendale')) return;
@@ -178523,6 +178798,10 @@ wet_car_slowdown: {
                     if (!gameState.isNaked && !isEffectivelyNaked() && (isWearingVisibleUnderwear() || isEffectivelyTopless() || isEffectivelyBottomless())) {
                         if (handleUnderwearDistrictEntry('fitness')) return;
                     }
+
+                    // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
+                    if (handleSheerDistrictEntry('fitness')) return;
+                    if (tickSheerLingeriePolice()) return;
                     
                     const isNight = isDark();
                     if (checkDistrictHarassment('fitness', isNight)) {
@@ -199007,7 +199286,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             if (exposure === 'naked') stateDesc = 'completely naked';
             else if (exposure === 'topless') stateDesc = 'topless';
             else if (exposure === 'bottomless') stateDesc = 'bottomless';
-            else if (exposure === 'underwear_only') stateDesc = 'in nothing but your underwear';
+            else if (exposure === 'underwear_only') stateDesc = (getVisibleUnderwearGate() === 8001) ? 'in nothing but see-through underwear' : 'in nothing but your underwear';
             
             let reaction = '';
             if (corruption >= 6001) {
@@ -199072,6 +199351,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
                 // ── EXPOSURE BUILDING CHECK ──
                 const exposureLevel = getExposureLevel();
+                // Mesh Overhaul Step 4C: sheer states read as 'clothed' by slot, so check them separately
+                if (exposureLevel === 'clothed' && exposureRestrictedBuildings[sceneId]) {
+                    const _sheerRestriction = exposureRestrictedBuildings[sceneId];
+                    const _sheerBlockMsg = getSheerVenueBlockMessage(_sheerRestriction);
+                    if (_sheerBlockMsg) {
+                        showMessage(_sheerBlockMsg, () => {
+                            showScene(_sheerRestriction.redirect);
+                        });
+                        return;
+                    }
+                }
                 if (exposureLevel !== 'clothed') {
                     // Check if this scene is a restricted building
                     const restriction = exposureRestrictedBuildings[sceneId];
