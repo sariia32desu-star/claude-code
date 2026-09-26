@@ -23302,7 +23302,7 @@ audioSystem.playSFX('buttonClick');
         // ── Mesh & Sheer Overhaul, Step 18: discovery scenes ──
         // Scenes a Step 9 event can lead into, by event key and stranger gender. Each entry is
         // added as its scene is written; the follow offer only appears for listed pairs.
-        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m', backlight_f: 'sheer_backlight_sex_f', flash_m: 'sheer_flash_sex_m', flash_f: 'sheer_flash_sex_f', snag_m: 'sheer_snag_sex_m' };
+        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m', backlight_f: 'sheer_backlight_sex_f', flash_m: 'sheer_flash_sex_m', flash_f: 'sheer_flash_sex_f', snag_m: 'sheer_snag_sex_m', snag_f: 'sheer_snag_sex_f' };
 
         // The follow offer: 8001+ (the scenes are DC only), bare behind mesh, a written scene,
         // and for the Backlight, after dark (its scene is a lit shop doorway after close).
@@ -48005,6 +48005,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'sheer_flash_sex_m', label: 'Discovery: The Flash (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_flash_sex_2_m' } },
                     { sceneId: 'sheer_flash_sex_f', label: 'Discovery: The Flash (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'sheer_snag_sex_m', label: 'Discovery: The Snag (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_snag_sex_2_m' } },
+                    { sceneId: 'sheer_snag_sex_f', label: 'Discovery: The Snag (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_crowd_press_sex', label: 'The Crowd Press', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_doorway_sex', label: 'The Doorway', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_car_slowdown_sex', label: 'The Car Slowdown', tiers: [{l:'Deeply Corrupted',v:8001}] },
@@ -177354,6 +177355,122 @@ wet_car_slowdown: {
                     return [{ text: 'Keep walking.', action: function() {
                         gameState.flags._sheerDiscovery = null;
                         gameState.flags._sheerDiscoveryCondom = null;
+                        showScene(back);
+                    } }];
+                }
+            },
+
+            // The Snag, female: a café's single restroom. Her safety pins find bare skin and the
+            // tear keeps getting wider (+30 damage). One extended scene.
+            sheer_snag_sex_f: {
+                galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                        top: null, bottom: null, bra: null, panties: null, outerwear: null,
+                        dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
+                    });
+                    gameState.flags._sheerDiscovery = { key: 'snag', gender: 'f', district: 'downtown', zone: 'chest' };
+                },
+                text: function() {
+                    var g = _sheerDiscoveryGarb('f');
+                    var b = g.b, n = g.n, st = g.st;
+                    var zone = (gameState.flags._sheerDiscovery || {}).zone === 'hips' ? 'hips' : 'chest';
+                    var chest = zone === 'chest';
+                    var torn = chest ? b.top : b.bottom;
+                    var under = chest ? !!st.chestUnder : !!st.hipsUnder;
+                    var desc = '';
+
+                    var slip = chest
+                        ? (under ? 'They slide along the edge of your ' + b.bra + ', over the bare curve of your tit above it.' : 'They brush the underside of your bare tit, and her thumb slips right onto your nipple.')
+                        : (under ? 'They slide down the crease beside your pussy onto the soaked edge of your ' + b.panties + '.' : 'They slide down the crease beside your pussy, and her fingertip slips onto your bare folds, already wet.');
+                    var bsOut = b.bs === 'large' ? 'Your heavy tits spill out through the rip, bare and swaying.' : b.bs === 'small' ? 'Your small tits sit bare in the rip, nipples stiff.' : 'Your tits spill out through the rip, nipples stiff.';
+                    var rip = chest
+                        ? 'The tear runs across both tits and down toward your navel.' + (under ? ' You shove the cups of your ' + b.bra + ' down under your tits.' : '') + ' ' + bsOut
+                        : 'The tear runs across the front of your ' + torn + '.' + (under ? ' You hook your ' + b.panties + ' aside, and your bare pussy is right there in the ragged gap, flushed and slick.' : ' Your bare pussy spills out of the ragged gap, flushed and slick.');
+                    var frame = chest ? 'spilling out of the torn ' + n : g.frame;
+                    var bounce = chest ? 'out of the torn ' + n : g.bounce;
+                    var tornFix = chest
+                        ? (under ? 'You tug your ' + b.bra + ' back up and hold the torn ' + n + ' together over it. It gapes the second you let go.' : 'You pull the torn ' + n + ' together over your tits. It gapes the second you let go.')
+                        : (under ? 'You tug your ' + b.panties + ' back into place and hold the torn ' + n + ' together over them. It gapes the second you let go.' : 'You pull the torn ' + n + ' together over your pussy. It gapes the second you let go.');
+
+                    // ── THE RESTROOM ──
+                    desc += '<p>She walks you into the café, past the counter and the hiss of the espresso machine, and down a short hall to a single restroom. She locks the door behind you.</p>';
+                    desc += '<p>Black and white tile, a small mirror over the sink, a dish of mints on the counter. Music comes muffled through the door. It smells like coffee and hand soap.</p>';
+                    desc += '<p>She digs in her bag and comes up with a card of safety pins. Mid-twenties, red hair piled in a messy bun, round glasses, a soft cardigan over a pleated skirt. "Hold still," she says.</p>';
+
+                    // ── THE TEAR KEEPS GETTING WIDER ──
+                    desc += '<p>She pinches the torn edges of the ' + n + ' together and lines up a pin. Her knuckles land on bare skin. ' + slip + '</p>';
+                    desc += '<p>She freezes. So do you. The pin slips out of her fingers and pings off the tile.</p>';
+                    desc += '<p>"Sorry," she says, and tries again higher up. The ' + n + ' splits under her fingers, and the hole doubles.</p>';
+                    desc += '<p>She stares at it. Then she looks up at you, and she doesn\'t look sorry anymore.</p>';
+                    desc += '<p>"Rip it," you tell her.</p>';
+                    desc += '<p>She hooks her fingers in the hole and pulls. ' + rip + '</p>';
+                    desc += '<p>The rest you open yourself. ' + (chest ? g.hipsPeel : g.chestPeel) + '</p>';
+                    desc += '<p>You hop up onto the edge of the counter, the mirror cold at your back, and pull her in between your knees.</p>';
+
+                    // ── ACT 1: HER FINGERS ON THE COUNTER — ENTRY & BUILD ──
+                    desc += '<p>She kisses you hard, her glasses bumping your cheek. Her hand slides up the inside of your thigh.</p>';
+                    desc += '<p>Two fingers find your pussy and part your folds, already slick. She drags them up over your clit, slow. "Hhh—"</p>';
+                    desc += '<p>Her mouth moves to your tit, ' + frame + ', and she sucks your nipple in while her fingers circle your clit.</p>';
+                    desc += '<p>She pushes two fingers into your cunt and curls them. You lean back against the mirror and spread your knees wider, and her thumb settles on your clit. "Mmh—ah—"</p>';
+                    desc += '<p>The handle rattles. Someone knocks. "Occupied," she calls, and her fingers keep moving.</p>';
+                    desc += '<p>You bite your lip. The wet sounds of her fingers are loud in the little tiled room, louder than the music, loud enough for whoever\'s standing in the hall. ' + _bt5(b,
+                        'Your small body squirms on the counter, heels kicking the cabinet.',
+                        'The muscle in your stomach jumps with every curl of her fingers.',
+                        'Your soft hips roll into her hand.',
+                        'Your thick thighs spread wide around her hips.',
+                        'Your hips roll into her hand.') + '</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>Your cunt clenches around her fingers in quickening squeezes. Your thighs shake against her hips. She clamps her free hand over your mouth.</p>';
+
+                    // ── KELSIE\'S FIRST ORGASM ──
+                    desc += '<p>You cum into her palm. Your cunt seizes around her fingers in hard spasms, and your heels drum the cabinet under the sink. "Mmnnh—mmh—"</p>';
+                    desc += '<p>She keeps working you slow through the aftershocks, her hand still over your mouth, until your hips stop jerking and she lets you breathe. In the hall, footsteps move off. Someone laughs.</p>';
+
+                    // ── ACT 2: CLIT TO CLIT ──
+                    desc += '<p>She steps back and reaches under her skirt. Pale pink panties come down her legs, the crotch soaked dark, and she leaves them on the tile.</p>';
+                    desc += '<p>She shrugs the cardigan open. A thin camisole with nothing under it, small breasts, pink nipples stiff against the cotton. She hitches the skirt up around her waist and steps back between your knees. Her pussy\'s bare and flushed, slick on her thighs.</p>';
+                    desc += '<p>She hooks your knee over her hip and presses her pussy flush against yours. Wet on wet. Her clit slides over yours and you both gasp. "Oh—fuck—"</p>';
+                    desc += '<p>She grinds against you in slow circles, hands braced on the counter on either side of your hips. Your folds spread against hers, slick smearing between you.</p>';
+                    desc += '<p>You wrap your arms around her neck and grind back. ' + (b.bs === 'large' ? 'Your heavy tits bounce ' + bounce + ' and press against her camisole.' : b.bs === 'small' ? 'Your small tits jiggle ' + bounce + ', nipples brushing her camisole.' : 'Your tits bounce ' + bounce + ', nipples brushing her camisole.') + ' Your clit throbs every time hers drags across it.</p>';
+                    desc += '<p>The counter knocks the wall with every roll of her hips. The mints rattle in their dish. "Mmh—ah—ah—"</p>';
+                    desc += '<p>Another knock, harder. "Hello? Is someone in there?" Neither of you answers. She grinds harder.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>Her breath goes short against your mouth. Your clit swells against hers, and both your hips speed up, grinding in frantic little circles. "Don\'t stop—don\'t stop—"</p>';
+
+                    // ── ORGASMS ──
+                    desc += '<p>She cums first. Her pussy clenches against yours and her whole body shakes in your arms. "Ah—AH—" She muffles it in your shoulder.</p>';
+                    desc += '<p>Her shudders grind her clit right into yours, and you cum a second later, your cunt spasming against her wet folds, your nails digging into her back through the cardigan. "Mmh—fuck—fuck—"</p>';
+                    desc += '<p>You hold each other there on the counter, pussies still pressed together, twitching through the last of it.</p>';
+
+                    // ── AFTERMATH ──
+                    desc += '<p>She steps back, laughing and pink-cheeked, and straightens her glasses, then smooths her skirt down over her bare ass.</p>';
+                    desc += '<p>' + tornFix + ' ' + (chest ? g.hipsFix : g.chestFix) + '</p>';
+                    desc += '<p>She presses the card of safety pins into your hand. "For the next one," she says.</p>';
+                    desc += '<p>You unlock the door. A man with a laptop bag is waiting in the hall. He looks at the two of you, then at the rip in your ' + torn + '.</p>';
+                    desc += '<p>You walk out through the café, past the espresso machine and every face that turns, with the torn ' + n + ' gaping and your thighs slick behind it.</p>';
+                    return desc;
+                },
+                onEnter: function() {
+                    trackGalleryScene('sheer_snag_sex_f');
+                    // The tear keeps getting wider: +30 on the snagged garment, capped short of destroyed
+                    var _st = getSheerState();
+                    var _z = (gameState.flags._sheerDiscovery || {}).zone === 'hips' ? 'hips' : 'chest';
+                    var _g = _z === 'hips' ? _st.hipsGarment : _st.chestGarment;
+                    if (_g) {
+                        initializeItemDamage(_g);
+                        _g.damage = Math.min(99, (_g.damage || 0) + 30);
+                    }
+                    completeSexConsensualFemale({ time: 30, hygiene: -15, thrill: 20 });
+                },
+                choices: function() {
+                    var d = gameState.flags._sheerDiscovery || {};
+                    var back = d.district ? d.district + '_district_street' : 'city_exploration';
+                    return [{ text: 'Keep walking.', action: function() {
+                        gameState.flags._sheerDiscovery = null;
                         showScene(back);
                     } }];
                 }
