@@ -173571,6 +173571,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     desc += '<p>His stride breaks. One step off-rhythm. He doesn\'t stop running but his pace halves and his head turns.</p>';
                     desc += '<p>You meet his eyes.</p>';
                     desc += '<p>You keep going.</p>';
+                    if (_sheer && corruption >= 8001) {
+                        desc += '<p>You spread your knees wider and tip your hips toward the path so the sun lands full on the ' + b.noun + '. ' + (_mClit ? 'Now he can see every fold through it.' : 'Now he can see every inch of your tits through it.') + ' Then you give him a better show.</p>';
+                    }
 
                     // ── APPROACH ──
                     if (_sheer) {
@@ -173592,7 +173595,14 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     desc += '<p>The last spasm fades and you sag against the backrest. Your fingers are still inside, your cunt gripping them in small, spent twitches. Too sensitive to move.' + (_sheer ? '</p><p>' : ' ') + 'You ease them free slowly' + (_mClit ? ', out from under the ' + b.noun + ',' : '') + ' and a wet string catches the sunlight between your fingers and your folds before it breaks.</p>';
 
                     // ── CORRUPTION-TIERED AFTERMATH ──
-                    if (corruption >= 8001) {
+                    if (corruption >= 8001 && _sheer) {
+                        desc += '<p>You lean back on the bench and spread your arms across the backrest. Let the sun settle on the ' + b.noun + '. Your slick-wet hand rests on your thigh, glistening, and you make no move to wipe it off.</p>';
+                        desc += '<p>The jogger has stopped on the path twenty yards out. Still watching. You lift your wet fingers to your mouth, lick the taste of yourself off the tips, and watch him swallow from across the grass.</p>';
+                        desc += '<p>' + (_mClit
+                            ? 'You stand up when you\'re ready. The ' + b.noun + ' peels off the wet slat and clings to your folds, soaked through. He gets that too.'
+                            : 'You stand up when you\'re ready and tug your ' + (hasBottom ? cv.bottomName : b.panties) + ' straight. Your nipples stay on display, swollen and dark behind the ' + b.noun + '. He gets that too.') + '</p>';
+                        desc += '<p>The bench slat is wet where you were sitting. You leave it like that.</p>';
+                    } else if (corruption >= 8001) {
                         desc += '<p>You lean back on the bench and spread your arms across the backrest. Let the sun settle on your skin. Your slick-wet hand rests on your thigh, glistening, and you make no move to wipe it off.</p>';
                         desc += '<p>The jogger has stopped on the path twenty yards out. Still watching. You lift your wet fingers to your mouth, lick the taste of yourself off the tips, and watch him swallow from across the grass.</p>';
                         desc += '<p>You stand up when you\'re ready. The bench slat is wet where you were sitting. You leave it like that.</p>';
