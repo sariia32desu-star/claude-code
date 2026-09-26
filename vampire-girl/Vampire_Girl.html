@@ -22855,16 +22855,308 @@ audioSystem.playSFX('buttonClick');
         // Fires during district transitions when Kelsie is clothed but wearing
         // vulnerable clothing (commando or braless). 15% chance per transition,
         // 60 game-minute cooldown between events.
+        // ── Mesh & Sheer Overhaul, Step 9: sheer accidental events ──
+        // Built for the four dressed sheer states (framed, braless, commando, bare). The three
+        // lingerie states are visible underwear, and checkAccidentalExposure() leaves those to
+        // the underwear system. Each event rolls its stranger's gender (60% male) and returns
+        // it as `gender` with its `key`, so Step 18 can branch the discovery scenes on it.
+        var SHEER_ACCIDENT_STATE_MULT = { sheer_framed: 0.5, sheer_braless: 1.0, sheer_commando: 1.0, sheer_bare: 1.4 };
+
+        function _sheerAccidentNpc() {
+            return Math.random() < 0.6
+                ? { g: 'm', he: 'he', He: 'He', him: 'him', his: 'his', His: 'His', man: 'man' }
+                : { g: 'f', he: 'she', He: 'She', him: 'her', his: 'her', His: 'Her', man: 'woman' };
+        }
+
+        function _buildSheerAccidentPool(districtId, corruption) {
+            var pool = [];
+            var b = _sheerBodyCtx();
+            var st = b.st;
+            if (!SHEER_ACCIDENT_STATE_MULT[st.state]) return pool;
+            var tier = corruption >= 6001 ? 'high' : corruption >= 2001 ? 'mid' : 'low';
+            var bare = b.seeChest || b.seeHips;
+            var n = b.noun;
+            var dark = (typeof isDark === 'function') ? isDark() : false;
+            var _wornId = function(id) {
+                return !!((st.chestGarment && st.chestGarment.id === id) || (st.hipsGarment && st.hipsGarment.id === id));
+            };
+            // Sheer underwear under the mesh (stacked) vs opaque underwear (framed)
+            var chestUnderSheer = !!(st.chestUnder && getMeshProfile(st.chestUnder));
+            var hipsUnderSheer = !!(st.hipsUnder && getMeshProfile(st.hipsUnder));
+
+            // What a clear look through the mesh gets, zone by zone
+            var chestSeen = b.seeChest
+                ? (b.bs === 'large' ? 'your heavy tits and the dark, stiff points of your nipples' : b.bs === 'small' ? 'your small tits and your stiff little nipples' : 'your tits and your dark, stiff nipples')
+                : b.braF ? 'every seam of your ' + b.bra : '';
+            var hipsSeen = b.seeHips ? 'the bare slit of your pussy' : b.panF ? 'your ' + b.panties + ' and the skin around them' : '';
+            var seen = chestSeen && hipsSeen ? chestSeen + ' and ' + hipsSeen : (chestSeen || hipsSeen);
+
+            // 1. The Backlight (any dressed sheer state)
+            pool.push(function() {
+                var p = _sheerAccidentNpc();
+                var light = dark
+                    ? 'You pass a boutique with every light still burning in the window. The glare spills across the sidewalk and you walk straight into it.'
+                    : 'You step out of a building\'s shadow and the sun lands square on your back. It pours past you down the sidewalk.';
+                var outline = _bt5(b,
+                    'Your silhouette shows first, all of your slight little frame, from your narrow shoulders down to the gap between your thighs.',
+                    'Your silhouette shows first: the hard line of your stomach, the gap between your lean thighs, every muscle lit from behind.',
+                    'Your silhouette shows first, every curve of it, the pinch of your waist and the flare of your hips cut out in light.',
+                    'Your silhouette shows first: soft belly, thick thighs, the heavy swell of your hips cut out in light.',
+                    'Your silhouette shows first, the whole shape of you cut out in light from your shoulders to the gap between your thighs.');
+                var rear = b.seeHips
+                    ? (b.butt === 'large' ? 'Your full ass rolls behind the ' + n + ' with every step, bare and lit at every edge.' : b.butt === 'small' ? 'Your tight little ass sits bare and bright behind the ' + n + '.' : 'Your bare ass sways behind the ' + n + ', lit at every edge.')
+                    : b.panF ? 'Your ' + b.panties + ' sit dark against ' + b.ass + ', lit from behind.' : '';
+                var kr;
+                if (bare) {
+                    kr = tier === 'high' ? 'You slow down inside the light instead of out of it. Let ' + p.him + ' look. Your clit throbs hard enough to catch your step, and ' + (b.seeHips ? 'the light catches the wet shine on your slit too.' : 'your nipples ache stiff behind the ' + n + '.')
+                        : tier === 'mid' ? 'You step out of the light fast. It\'s too late. ' + p.He + ' already has the picture, and your pussy clenches around nothing at the thought of ' + p.him + ' keeping it.'
+                        : 'You walk faster and fold your arms, and the light follows you another three steps anyway. Your face burns. Your nipples are stiff and your pussy\'s wet, and a stranger just watched it all through your ' + b.outfit + '.';
+                } else {
+                    kr = tier === 'high' ? 'You slow down in the light and give ' + p.him + ' the whole picture. Your ' + b.under + ' on display inside the ' + n + ', your body glowing around ' + (b.braF && b.panF ? 'them' : 'it') + '. Your clit throbs. You picked this outfit for this.'
+                        : tier === 'mid' ? 'Your face heats. It\'s underwear lit up like a display case, and your pussy goes damp while ' + p.he + ' looks.'
+                        : 'You step out of the light fast, face hot. Everything that counts is covered. ' + p.He + ' still got your ' + b.under + ' and every inch of skin around ' + (b.braF && b.panF ? 'them' : 'it') + ', and your pussy throbs like ' + p.he + ' got more.';
+                }
+                return {
+                    key: 'backlight', gender: p.g,
+                    text: light + '\n\nThe light goes right through your ' + b.outfit + '. For three steps the ' + n + ' turns to haze, a thin dark outline around a body lit up inside it.\n\n' + outline + '\n\nA ' + p.man + ' half a block behind you gets it all. The outline first. Then ' + p.he + ' closes the distance and gets the details: ' + seen + '.' + (rear ? '\n\n' + rear : '') + '\n\n' + p.He + ' doesn\'t pass you. ' + p.He + ' slows to your pace and stays there.\n\n' + kr,
+                    thrill: 10, arousal: 7
+                };
+            });
+
+            // 2. The Flash (dark, or the tourist districts)
+            if (dark || districtId === 'downtown' || districtId === 'commercial') {
+                pool.push(function() {
+                    var p = _sheerAccidentNpc();
+                    var keeps = tier === 'high' || Math.random() < 0.6;
+                    var open = dark
+                        ? 'A flash goes off across the street. Some tourist shooting the lit-up storefronts.'
+                        : 'A flash goes off across the street. Some tourist shooting the storefronts with the flash on in broad daylight.';
+                    var shot;
+                    if (b.seeChest && b.seeHips) {
+                        shot = 'The flash went straight through your ' + b.outfit + '. On ' + p.his + ' phone you\'re naked: ' + (b.bs === 'large' ? 'heavy tits' : b.bs === 'small' ? 'small tits' : 'tits') + ', nipples, navel, the bare slit of your pussy, sharper than the street ever showed.';
+                    } else if (b.seeChest) {
+                        shot = 'The flash went straight through your ' + b.top + '. On ' + p.his + ' phone you\'re topless: ' + chestSeen + ', sharper than the street ever showed.';
+                    } else if (b.seeHips) {
+                        shot = 'The flash went straight through your ' + b.bottom + '. On ' + p.his + ' phone your bare pussy\'s right there, slit and folds and all, sharper than the street ever showed.';
+                    } else {
+                        shot = 'The flash went straight through your ' + b.outfit + '. On ' + p.his + ' phone the ' + n + ' is gone. It\'s you in your ' + b.under + ' on a public street, every seam sharp, bright skin all around it.';
+                    }
+                    var zoom = _bt5(b,
+                        'There isn\'t much of you to zoom in on, and ' + p.he + ' finds all of it.',
+                        'The flash caught every line of your stomach, and ' + p.he + ' drags the picture bigger with two fingers.',
+                        'The flash caught every curve of you, and ' + p.he + ' drags the picture bigger with two fingers.',
+                        'The flash caught your thick thighs and your soft belly, and ' + p.he + ' spreads two fingers right over the middle of them.',
+                        p.He + ' spreads two fingers across the screen and the picture gets bigger.');
+                    var what = (b.seeChest && b.seeHips) ? 'naked through the ' + n
+                        : b.seeChest ? 'topless through the ' + n
+                        : b.seeHips ? 'with your pussy bare through the ' + n : 'in your ' + b.under;
+                    var kr;
+                    if (tier === 'high') {
+                        kr = 'You don\'t ask ' + p.him + ' to delete it. You hold still and let ' + p.him + ' take another one. Your clit throbs at the thought of yourself saved on a stranger\'s phone, ' + what + '.';
+                    } else if (tier === 'mid') {
+                        kr = keeps
+                            ? 'You should ask ' + p.him + ' to delete it. You don\'t move. Your pussy clenches, wet, while ' + p.he + ' decides for you and slides the phone into ' + p.his + ' pocket.'
+                            : '"Delete that," you manage. ' + p.He + ' shrugs and taps the screen. You can\'t tell if ' + p.he + ' did it, and your pussy\'s wet either way.';
+                    } else {
+                        kr = keeps
+                            ? '"Delete that," you say. Your voice cracks. ' + p.He + ' grins and pockets the phone. Your face burns, your nipples are stiff, and your pussy throbs at the thought of it, you ' + what + ' on a stranger\'s phone.'
+                            : '"Delete that," you say. Your voice cracks. ' + p.He + ' holds the screen up so you can watch ' + p.him + ' do it, one last slow look first. Your face burns and your pussy throbs anyway.';
+                    }
+                    return {
+                        key: 'flash', gender: p.g, heat: keeps ? 10 : 0,
+                        text: open + '\n\nYou\'re in the frame. ' + p.He + ' checks ' + p.his + ' screen and ' + p.his + ' face changes.\n\n' + shot + '\n\n' + zoom + ' ' + p.He + ' looks from the phone to you and back.\n\n' + kr,
+                        thrill: 12, arousal: 8
+                    };
+                });
+            }
+
+            // 3. The Snag (an outer sheer garment on either zone)
+            var snagZones = [];
+            if (st.chestGarment && (st.chest === 'veiled' || st.chest === 'framed')) snagZones.push('chest');
+            if (st.hipsGarment && (st.hips === 'veiled' || st.hips === 'framed')) snagZones.push('hips');
+            if (snagZones.length) {
+                pool.push(function() {
+                    var p = _sheerAccidentNpc();
+                    var zone = snagZones[Math.floor(Math.random() * snagZones.length)];
+                    var chest = zone === 'chest';
+                    var garment = chest ? st.chestGarment : st.hipsGarment;
+                    var where = chest ? 'chest' : 'hip';
+                    var cause = Math.floor(Math.random() * 3);
+                    var open = cause === 0
+                        ? 'The crosswalk\'s packed. A ' + p.man + ' shoulders past you and ' + p.his + ' watch catches the ' + n + ' at your ' + where + '.'
+                        : cause === 1
+                        ? 'A ' + p.man + ' in a hurry brushes past you on the sidewalk, and the zipper on ' + p.his + ' jacket bites into the ' + n + ' at your ' + where + '.'
+                        : 'You cut close to a chain-link fence to let a stroller by. A cut wire end hooks the ' + n + ' at your ' + where + '. A ' + p.man + ' coming the other way sees it happen.';
+                    var hole;
+                    if (chest) {
+                        if (b.seeChest && !chestUnderSheer) {
+                            hole = b.bs === 'large' ? 'A ragged hole opens over your left tit. Your nipple pushes right through it, dark and stiff, and the weight of your breast drags the torn edges wider.'
+                                : b.bs === 'small' ? 'A ragged hole opens over your left tit. Your small breast barely fills it, and your nipple sits right in the middle, stiff and bare with nothing over it at all.'
+                                : 'A ragged hole opens over your left tit, and your nipple pushes through, dark and stiff and bare to the air.';
+                        } else if (chestUnderSheer) {
+                            hole = 'A ragged hole opens over your left tit. There\'s one layer less between the street and your nipple now, just your ' + b.bra + ', with your nipple dark and stiff behind it.';
+                        } else {
+                            hole = 'A ragged hole opens beside the cup of your ' + b.bra + ', and ' + (b.bs === 'large' ? 'the heavy curve of your bare tit swells into it.' : b.bs === 'small' ? 'the small bare curve of your tit shows in it.' : 'the bare curve of your tit swells into it.');
+                        }
+                    } else {
+                        var slide = b.butt === 'large' ? 'Your full hip swells through it and drags the tear lower' : b.butt === 'small' ? 'The tear runs straight down past the sharp little jut of bone there' : 'The tear slides lower as you move';
+                        if (b.seeHips && !hipsUnderSheer) {
+                            hole = 'A ragged hole opens at your hip. ' + slide + ', right down to the crease beside your pussy. The edge of your bare folds sits in the gap with no ' + n + ' over it at all.';
+                        } else if (hipsUnderSheer) {
+                            hole = 'A ragged hole opens at your hip. ' + slide + ', down to the crease beside your pussy, and now it\'s only your ' + b.panties + ' over your bare folds.';
+                        } else {
+                            hole = 'A ragged hole opens at your hip. ' + slide + ', until the side of your ' + b.panties + ' shows in the gap with bare skin all around it.';
+                        }
+                    }
+                    var kr = tier === 'high' ? 'You don\'t cover it. You look down at the hole, then at ' + p.him + ', and let ' + p.him + ' watch you decide to leave it. Your clit throbs.'
+                        : tier === 'mid' ? 'You cover it with your hand. Your palm lands on bare skin through the tear, hot, and your pussy clenches like it was someone else\'s hand.'
+                        : 'You clap a hand over the hole. Your hand doesn\'t cover all of the tear. Your face burns, ' + (chest ? 'your nipple\'s stiff under your palm' : 'your pussy\'s wet under your fingers') + ', and ' + p.he + ' watches you try.';
+                    return {
+                        key: 'snag', gender: p.g, snagItem: garment,
+                        text: open + '\n\nIt tears. You hear it before you feel it, a thin ripping sound, and then the air.\n\n' + hole + '\n\nThe ' + p.man + ' stops. ' + p.His + ' eyes go to the hole and stay there. "Shit. Sorry," ' + p.he + ' says. ' + p.He + ' doesn\'t look sorry.\n\n' + kr,
+                        thrill: 12, arousal: 9
+                    };
+                });
+            }
+
+            // 4. Diamond (fishnet over a bare chest)
+            if (st.chest === 'veiled' && st.zoneWeave.chest === 'fishnet' && !st.chestUnder) {
+                pool.push(function() {
+                    var p = _sheerAccidentNpc();
+                    var nip = b.bs === 'large' ? 'Your heavy tit presses forward into the net and your nipple pushes straight through the hole. Stiff and bare in the open air, with the cord pressed into your areola all around it.'
+                        : b.bs === 'small' ? 'Your small tit sits flat under the net, and your nipple pokes straight through the hole. Stiff and bare in the open air, ringed by cord.'
+                        : 'Your nipple pushes through the hole. Stiff, dark, bare in the open air, with the cord digging into your areola all around it.';
+                    var kr = tier === 'high' ? 'You leave it. Every step drags the cord against the underside of your nipple, and your clit throbs in time with it. Let ' + p.him + ' stare.'
+                        : tier === 'mid' ? 'You try to tug the net over it. The diamond just stretches and your nipple stays out, stiffer from being handled. Your pussy clenches wet.'
+                        : 'You pinch the fishnet and pull. Your nipple pops back behind the cord and throbs there, sore and stiff. Your face is on fire, your pussy\'s wet, and ' + p.he + ' saw all of it.';
+                    return {
+                        key: 'diamond', gender: p.g,
+                        text: 'You walk and the ' + b.top + ' shifts on your chest. One diamond settles right over your nipple.\n\n' + nip + '\n\nIt stays there. The net holds it out for everyone.\n\nA ' + p.man + ' at the bus shelter sees it before you do. ' + p.His + ' eyes lock on your one bare nipple, sticking out of the diamond like a price tag.\n\n' + kr,
+                        thrill: 12, arousal: 10
+                    };
+                });
+            }
+
+            // 5. The Ribbon (Mesh Party Dress slit tie)
+            if (_wornId('mesh_party_dress')) {
+                pool.push(function() {
+                    var p = _sheerAccidentNpc();
+                    var gap = b.butt === 'large' ? 'Your full hip swells out of the gap, bare, with nothing but air between it and the street.'
+                        : b.butt === 'small' ? 'The gap runs straight up your narrow hip, bare skin nearly to your waist.'
+                        : 'Bare hip shows through the gap, and every step pulls it wider.';
+                    var low = (b.seeHips && !hipsUnderSheer) ? 'Lower, where the slit ends, there\'s the edge of your bare pussy with no mesh over it at all. Your outer lip, flushed and slick, right there in the gap.'
+                        : hipsUnderSheer ? 'Lower, where the slit ends, there\'s the edge of your ' + b.panties + ', and your bare slit dark behind them.'
+                        : 'Lower, where the slit ends, the whole side of your ' + b.panties + ' is out of the mesh.';
+                    var kr = tier === 'high' ? 'You take your time with the ribbon. Bend a little, fumble it on purpose, keep the slit open another few seconds. Your clit throbs every time the air moves.'
+                        : tier === 'mid' ? 'You grab the ribbon ends and tie them with shaking fingers. It takes three tries. Your pussy\'s wet, and ' + p.he + ' watches every one of them.'
+                        : 'You clamp the slit shut with your fist and walk, bent a little, the loose ribbon dragging on your thigh. Your face is burning and your clit throbs against nothing.';
+                    return {
+                        key: 'ribbon', gender: p.g,
+                        text: 'One of the ribbon ties at your hem gives. You feel it slither loose against your thigh.\n\nThe slit it was holding shut falls open up your hip. ' + gap + '\n\n' + low + '\n\nA ' + p.man + ' coming out of a bodega stops in the doorway. ' + p.His + ' eyes go straight to the gap.\n\n' + kr,
+                        thrill: 14, arousal: 10
+                    };
+                });
+            }
+
+            // 6. The String (One-Shoulder Mesh Club Dress halter)
+            if (_wornId('one_shoulder_club_dress')) {
+                pool.push(function() {
+                    var p = _sheerAccidentNpc();
+                    var drop;
+                    if (b.seeChest && !chestUnderSheer) {
+                        drop = b.bs === 'large' ? 'Your heavy tit spills over the edge. The neckline catches under it and holds it up, nipple dark and stiff, fully out.'
+                            : b.bs === 'small' ? 'The neckline slides right off your small tit and catches under it. Your nipple\'s out, stiff and bare, with no bronze haze over it at all.'
+                            : 'The neckline drops under your nipple and catches there. Your tit sits on top of it, bare, nipple stiff.';
+                    } else if (chestUnderSheer) {
+                        drop = 'The neckline drops under the cup of your ' + b.bra + '. Now there\'s only the bra over your tit, and your nipple shows dark and stiff through it.';
+                    } else {
+                        drop = 'The neckline drops under the cup of your ' + b.bra + '. The whole cup\'s out in the open, ' + (b.bs === 'large' ? 'your heavy tit swelling over the top of it.' : b.bs === 'small' ? 'loose on your small tit.' : 'and the swell of your tit over it.');
+                    }
+                    var kr = tier === 'high' ? 'You tie the string slow, one-handed, and you don\'t cover yourself first. Your clit throbs the whole time ' + p.he + ' watches.'
+                        : tier === 'mid' ? 'You clutch the neckline up with one hand and tie the string with the other. Your nipple drags against the mesh going back in, and your pussy clenches.'
+                        : 'You clap a bell sleeve over your chest and fumble the string with shaking fingers. Your face burns. Your nipple\'s stiff under your hand, your pussy\'s wet, and you want the sidewalk to open up.';
+                    return {
+                        key: 'string', gender: p.g,
+                        text: 'The halter string on your bare shoulder slips its knot.\n\nThat side of your dress sags. The neckline drops, and your bell sleeve drags it lower when you grab for the string.\n\n' + drop + '\n\nA ' + p.man + ' at a café table goes still, fork halfway up.\n\n' + kr,
+                        thrill: 12, arousal: 9
+                    };
+                });
+            }
+
+            // 7. The Reach (Mesh Crop Top)
+            if (st.chestGarment && st.chestGarment.id === 'mesh_crop') {
+                pool.push(function() {
+                    var p = _sheerAccidentNpc();
+                    var under;
+                    if (b.seeChest && !chestUnderSheer) {
+                        under = b.bs === 'large' ? 'The hem clears the heavy underside of your tits. They hang bare below it with the mesh bunched on top, your nipples dark behind it.'
+                            : b.bs === 'small' ? 'The hem slides right up past the underside of your small tits. Bare underboob below, stiff nipples behind the mesh above.'
+                            : 'The hem clears the underside of your tits. Bare underboob below the mesh, stiff nipples behind it above.';
+                    } else if (chestUnderSheer) {
+                        under = 'The hem clears the band of your ' + b.bra + ', and the underside of your tits shows through it, dark nipples and all.';
+                    } else {
+                        under = 'The hem clears the band of your ' + b.bra + ', and the bare curve of your tits under it.';
+                    }
+                    var belly = _bt5(b, 'your narrow little waist', 'the hard line of your abs', 'the pinch of your waist', 'your soft belly', 'your stomach');
+                    var kr = tier === 'high' ? 'You take your time choosing. Keep your arms up. Your nipples ache stiff, and your clit throbs every time ' + p.his + ' eyes flick up to check your face.'
+                        : tier === 'mid' ? 'You drop your arms. The crop settles back down over your tits and drags across your nipples the whole way. Your pussy clenches.'
+                        : 'You yank your arms down and tug the hem. Your face burns, your nipples throb, and you walk off without the sunglasses.';
+                    return {
+                        key: 'reach', gender: p.g,
+                        text: 'A ' + p.man + ' selling sunglasses has them hung on a rack above ' + p.his + ' head. You reach up for a pair.\n\nYour crop top rides up with your arms. ' + under + ' Under that, ' + belly + ' stretches long and bare.\n\n' + p.He + ' forgets to tell you the price. ' + p.His + ' eyes are under your top.\n\n' + kr,
+                        thrill: 10, arousal: 7
+                    };
+                });
+            }
+
+            // 8. The Double Take (bare pussy behind the mesh). The speaker is a woman by design.
+            if (st.state === 'sheer_bare' || st.state === 'sheer_commando') {
+                pool.push(function() {
+                    var crowd = (b.seeChest && b.seeHips)
+                        ? 'Heads turn up and down the sidewalk. They find ' + b.shows + ' behind the ' + n + ', and nobody looks away once they do.'
+                        : 'Heads turn. They find the bare slit of your pussy behind your ' + b.bottom + ', and nobody looks away once they do.';
+                    var voice = _bt5(b,
+                        'Somebody by the curb laughs. "She\'s so little. There\'s nowhere on her to hide it."',
+                        '"Damn," a guy says. "Abs and everything."',
+                        'A guy lets out a low whistle that follows your hips down the block.',
+                        '"Thick," a guy says, like it\'s a verdict, and his eyes drop between your thighs.',
+                        'A guy by the curb says, "Holy shit," and pulls out his phone.');
+                    var rear = b.butt === 'large' ? 'Behind you, your full ass shows through the ' + n + ' to everybody you\'ve already passed.'
+                        : b.butt === 'small' ? 'Behind you, your tight little ass shows through the ' + n + ' to everybody you\'ve already passed.'
+                        : 'Behind you, your bare ass shows through the ' + n + ' to everybody you\'ve already passed.';
+                    var kr = tier === 'high' ? 'You smile at her. "I know." You keep walking, slow, and your pussy drips with every step past them.'
+                        : tier === 'mid' ? 'Your face goes hot. You keep walking because stopping would be worse, and your pussy clenches with every pair of eyes you pass.'
+                        : 'Your eyes sting. You fold your arms and walk faster, and every head turns to follow. Your clit throbs like the whole street\'s touching it.';
+                    return {
+                        key: 'double_take', gender: 'f',
+                        text: 'A woman passing you does a slow second look. Her eyes go from your face to your ' + b.outfit + ' to what\'s under it.\n\nThen she says it out loud. "Oh my god, you\'re naked under that."\n\nEveryone nearby looks. ' + crowd + '\n\n' + voice + ' ' + rear + '\n\n' + kr,
+                        thrill: 14, arousal: 10
+                    };
+                });
+            }
+
+            // Tag every sheer event with its scaling: weave x state (framed 0.5, braless or
+            // commando 1.0, bare 1.4) x draw. Applied in checkAccidentalExposure().
+            var _scale = st.weaveMult * SHEER_ACCIDENT_STATE_MULT[st.state] * getExhibitionDrawMultiplier();
+            return pool.map(function(fn) {
+                return function() { var ev = fn(); ev.sheerScale = _scale; return ev; };
+            });
+        }
+
         function checkAccidentalExposure(districtId) {
             // Only fires when clothed (not in any exhibition state)
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless()) return false;
             var _uwType = getUnderwearExposureType();
             if (_uwType) return false; // visible underwear state handled elsewhere
 
-            var o = gameState.currentOutfit;
-            var isCommando = !o.panties && !!(o.bottom || o.dress);
-            var isBraless = !o.bra && !!(o.top || o.dress);
-            if (!isCommando && !isBraless) return false;
+            // Mesh Step 9: a dressed sheer state opens the gate on its own. A zone that's bare
+            // behind mesh belongs to the sheer pool, so the opaque-fabric braless and commando
+            // events stand down for it (same zone ownership as the Step 7 ambient lines).
+            var cv = getSceneClothingVars();
+            var _sheerOn = !!SHEER_ACCIDENT_STATE_MULT[getSheerState().state];
+            var isCommando = cv.commando && !_sheerOwnsZone('hips');
+            var isBraless = cv.braless && !_sheerOwnsZone('chest');
+            if (!isCommando && !isBraless && !_sheerOn) return false;
 
             // 15% chance per district transition
             if (Math.random() > 0.15) return false;
@@ -22875,8 +23167,7 @@ audioSystem.playSFX('buttonClick');
             gameState.flags._lastAccidentalExposure = _nowMin;
 
             var corruption = gameState.corruption || 0;
-            var cv = getSceneClothingVars();
-            var pool = [];
+            var pool = _sheerOn ? _buildSheerAccidentPool(districtId, corruption) : [];
 
             // ── Commando events (no panties, bottom garment present) ──
             if (isCommando) {
@@ -23237,6 +23528,29 @@ audioSystem.playSFX('buttonClick');
             // Pick and fire a random event
             var event = pool[Math.floor(Math.random() * pool.length)]();
 
+            // Mesh Step 9: sheer events scale by weave, state and draw, and carry their extras
+            var _extraStat = '';
+            if (event.sheerScale) {
+                event.thrill = Math.max(1, Math.round(event.thrill * event.sheerScale));
+                event.arousal = Math.max(1, Math.round(event.arousal * event.sheerScale));
+            }
+            if (event.heat) {
+                gameState.socialMediaHeat = Math.min(100, (gameState.socialMediaHeat || 0) + event.heat);
+                _extraStat += '  · <span style="color: #ff8844;">Social Media Heat +' + event.heat + '</span>';
+            }
+            if (event.snagItem) {
+                // +8 base, scaled by the fabric (mesh is 1.5x). Capped under 100 so a snag
+                // tears the garment but never destroys it off her mid-event.
+                var _sn = event.snagItem;
+                initializeItemDamage(_sn);
+                var _snMat = materialProperties[getMaterialFromTags(_sn.tags)] || materialProperties.cotton;
+                var _snOld = _sn.damage;
+                _sn.damage = Math.min(99, _sn.damage + Math.round(8 * _snMat.damageRate));
+                if (_snOld < 50 && _sn.damage >= 50) {
+                    event.text += '\n\n<strong style="color: #ff8844;">Your ' + _sn.name + ' has been torn!</strong>\n\n<em>Torn clothing (50+ damage) must be repaired at a tailor before washing.</em>';
+                }
+            }
+
             // Apply stats
             applyExhibitionThrillGain(event.thrill);
             gameState.arousal = Math.min(100, (gameState.arousal || 0) + event.arousal);
@@ -23247,7 +23561,7 @@ audioSystem.playSFX('buttonClick');
             var _ct = gameState.exhibitionismThrill || 0;
             if (_ct > (gameState.exhibitionStats.peakThrill || 0)) gameState.exhibitionStats.peakThrill = _ct;
 
-            var statText = '\n\n<span style="color: #ff69b4;">Arousal +' + event.arousal + '</span>  \u00b7 <span style="color: #ffaacc;">Exhibition Thrill +' + event.thrill + '</span>';
+            var statText = '\n\n<span style="color: #ff69b4;">Arousal +' + event.arousal + '</span>  \u00b7 <span style="color: #ffaacc;">Exhibition Thrill +' + event.thrill + '</span>' + _extraStat;
 
             showMessage(event.text + statText, function() { updateStatus(); });
             return true;
