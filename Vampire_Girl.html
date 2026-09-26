@@ -17702,7 +17702,9 @@
         }
 
         function showNotification(message, duration) {
-            var dur = duration || 6000;
+            // Duration scales with visible text length unless a numeric duration is passed:
+            // short toasts clear quickly, long ones keep the full 6 seconds.
+            var dur = (typeof duration === 'number' && duration > 0) ? duration : getNotificationDuration(message);
             var container = document.getElementById('game-notif-container');
             if (!container) {
                 container = document.createElement('div');
@@ -17723,6 +17725,24 @@
                     }
                 }, 450);
             }, dur);
+        }
+        
+        function getNotificationDuration(message) {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = String(message || '');
+            var len = (tmp.textContent || '').replace(/\s+/g, ' ').trim().length;
+            return Math.max(2500, Math.min(6000, 2500 + len * 45));
+        }
+
+        // Holds a notification until combat ends so it doesn't pop mid-fight.
+        function showNotificationAfterCombat(message, duration) {
+            var _inCombat = function() { return typeof combatState !== 'undefined' && combatState && combatState.active; };
+            if (!_inCombat()) { showNotification(message, duration); return; }
+            var _wait = setInterval(function() {
+                if (_inCombat()) return;
+                clearInterval(_wait);
+                showNotification(message, duration);
+            }, 500);
         }
         
         function showCorruptionNotification(corruptionAmount, npcName) {
@@ -37426,9 +37446,11 @@ audioSystem.playSFX('buttonClick');
             // Skip on game start (no cached tier yet)
             if (!_oldTier) return;
 
-            // Suppress arousal tier notifications during sex encounters
+            // Suppress arousal tier notifications during sex encounters and combat
             var _inSex = !!(gameState.flags.currentSexEncounter && gameState.flags.currentSexEncounter.active);
             if (_inSex) return;
+            var _inCombat = (typeof combatState !== 'undefined' && combatState && combatState.active);
+            if (_inCombat) return;
 
             // Determine direction
             var _tierOrder = ['cold', 'cool', 'warm', 'heated', 'burning', 'desperate'];
@@ -37578,7 +37600,7 @@ audioSystem.playSFX('buttonClick');
             var _voice = _c >= 6001 ? 'corrupted' : _c >= 2001 ? 'experienced' : 'innocent';
             var _line = _milestone[_voice];
 
-            showNotification('<span style="color:#ff69b4;">\u2764 Orgasm #' + _total + '</span> <span style="color:#c8b8d8;font-style:italic;">' + _line + '</span>');
+            showNotificationAfterCombat('<span style="color:#ff69b4;">\u2764 Orgasm #' + _total + '</span> <span style="color:#c8b8d8;font-style:italic;">' + _line + '</span>');
         }
 
         // Check and display an arousal ambient line (called from showScene)
