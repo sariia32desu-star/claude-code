@@ -20600,6 +20600,8 @@ audioSystem.playSFX('buttonClick');
             if (tier >= 3) chance += 0.10;
             if (tier >= 4) chance += 0.15;
             if ((gameState.suspicionData?.hotDistricts || []).includes(district)) chance += 0.25;
+            // Mesh Step 11: what the mesh shows draws them in
+            chance += getSheerRiskBonus('harass');
             
             return Math.random() < chance;
         }
@@ -23253,6 +23255,169 @@ audioSystem.playSFX('buttonClick');
             if (corruption < 2001) return line + ' The bumps just give him a clearer look.';
             if (corruption < 6001) return line + ' Your pussy clenches on every jolt.';
             return line + ' You know it. You let him look between bumps too.';
+        }
+
+        // ── Mesh & Sheer Overhaul, Step 11: harassment, slums, night assault ──
+        // Sheer sub-state for the harassment scenes' exhibState. Framed keeps the regular
+        // clothed sub-state and only gains a line, so this returns '' for it.
+        function getSheerHarassState() {
+            var st = getSheerState().state;
+            if (st === 'sheer_lingerie' || st === 'sheer_lingerie_top' || st === 'sheer_lingerie_bottom') return 'sheer_lingerie';
+            if (st === 'sheer_bare' || st === 'sheer_braless' || st === 'sheer_commando') return st;
+            return '';
+        }
+
+        // Grope-stage stats: lingerie 25/25, bare 22/25, braless or commando 18/20. Null if not sheer.
+        function getSheerGropeGains() {
+            var s = getSheerHarassState();
+            if (s === 'sheer_lingerie') return { arousal: 25, corruption: 25 };
+            if (s === 'sheer_bare') return { arousal: 22, corruption: 25 };
+            if (s === 'sheer_braless' || s === 'sheer_commando') return { arousal: 18, corruption: 20 };
+            return null;
+        }
+
+        // Harassment and night risk: bare +0.20 / +0.10, braless or commando +0.10 / +0.07,
+        // framed +0.03 / +0.03. Lingerie is visible underwear and already guaranteed.
+        function getSheerRiskBonus(kind) {
+            var st = getSheerState().state;
+            if (st === 'sheer_bare') return kind === 'night' ? 0.10 : 0.20;
+            if (st === 'sheer_braless' || st === 'sheer_commando') return kind === 'night' ? 0.07 : 0.10;
+            if (st === 'sheer_framed') return 0.03;
+            return 0;
+        }
+
+        function _sheerChestSight(b, garment) {
+            return b.bs === 'large' ? 'Your heavy tits hang bare behind your ' + garment + ', nipples dark and stiff, the ' + b.noun + ' doing nothing but framing them.'
+                : b.bs === 'small' ? 'Your small tits show straight through your ' + garment + ', nipples stiff little points.'
+                : 'Your bare tits show straight through your ' + garment + ', nipples dark and stiff.';
+        }
+
+        // Opener: what they see. cast 'street' (two men, <p> paragraphs) or 'slums' (three men).
+        function getSheerHarassmentOpener(cast) {
+            var s = getSheerHarassState();
+            var b = _sheerBodyCtx();
+            var st = b.st;
+            var P = cast === 'street' ? function(t) { return '<p>' + t + '</p>'; } : function(t) { return t; };
+            var J = cast === 'street' ? '' : '\n\n';
+            var out = [];
+            if (!s) {
+                if (st.state !== 'sheer_framed') return '';
+                // Framed: the regular opener stands, plus one line
+                if (cast === 'street') return P('The stocky one\'s eyes catch on your ' + b.sheer + '. Your ' + b.under + (b.braF && b.panF ? ' show' : ' shows') + ' straight through it, every line. "Look at that," he says. "She wants us looking at her underwear."');
+                return '\n\nThe wiry one clocks your ' + b.under + ' through your ' + b.sheer + ' and nudges the leader. "Dressed it up for us. You can see her underwear right through it."';
+            }
+            var body = _bt5(b, 'The rest of your slight little body is on show too.', 'Every line of your stomach is on show too.', 'Every curve in between is on show too.', 'Your soft belly and thick thighs are on show too.', 'Everything in between is on show too.');
+            if (s === 'sheer_braless') {
+                if (cast === 'street') {
+                    out.push('The tall one\'s eyes drop to your chest, and he doesn\'t have to guess. ' + _sheerChestSight(b, b.top));
+                    out.push('"Look at that," the stocky one says. "She put on a shirt you can see through and nothing under it."');
+                    out.push('"Wanted us to look." The tall one steps close. "So we\'re looking."');
+                } else {
+                    out.push('The leader\'s eyes land on your chest and stay. ' + _sheerChestSight(b, b.top) + ' The streetlight turns the ' + b.noun + ' orange and hides nothing behind it.');
+                    out.push('"She wore a see-through shirt down here," the wiry one says. "With nothing under it."');
+                    out.push('The leader grins. "Then she wants it looked at."');
+                }
+            } else if (s === 'sheer_commando') {
+                if (cast === 'street') {
+                    out.push('The stocky one\'s eyes go to your ' + b.bottom + ' and stop. The ' + b.noun + ' shows him ' + b.hips + ', and between them the bare slit of your pussy, dark behind the grid.');
+                    out.push('"No panties," he says. "She\'s wearing a see-through ' + b.hipsWord + ' with no panties."');
+                    out.push('The tall one looks where he\'s looking. "Fuck. You can see her pussy."');
+                } else {
+                    out.push('The wiry one\'s cigarette stops halfway up. He\'s looking at your ' + b.bottom + ', at ' + b.hips + ' and the bare slit of your pussy dark behind the ' + b.noun + '.');
+                    out.push('"She\'s got no panties on," he says. "You can see right through that thing."');
+                    out.push('The big one unfolds his arms. The leader just looks, taking his time with it.');
+                }
+            } else if (s === 'sheer_bare') {
+                if (cast === 'street') {
+                    out.push('Neither of them has to guess. The ' + b.noun + ' shows them your stiff nipples and the bare slit of your pussy under the streetlight. ' + body);
+                    out.push('"She\'s naked under that," the stocky one says. "Dressed up to be naked."');
+                    out.push('The tall one\'s eyes go from ' + b.tits + ' to your pussy and back. "Then she won\'t mind."');
+                } else {
+                    out.push('All three of them go quiet. The ' + b.noun + ' hides none of it: ' + b.shows + '. ' + body);
+                    out.push('"She\'s naked," the big one says. It\'s the first thing he\'s said.');
+                    out.push('"She\'s wearing a ' + (b.same ? 'dress' : 'outfit') + '," the leader says, grinning. "Technically."');
+                }
+            } else {
+                // Lingerie: set, sheer bra alone, or sheer panties alone
+                var seen = (st.chest === 'lingerie' && st.hips === 'lingerie')
+                    ? 'your ' + b.bra + ' and ' + b.panties + ' and nothing else, and both of them are see-through. Your nipples show dark through the cups. Your bare slit shows through the crotch.'
+                    : st.chest === 'lingerie'
+                    ? 'nothing over your ' + b.bra + (st.hips === 'underwear' ? ' but your ' + b.panties : '') + '. Your nipples show dark and stiff straight through the cups.'
+                    : 'nothing over your ' + b.panties + (st.chest === 'underwear' ? ' but your ' + b.bra : '') + '. Your bare slit shows straight through the crotch.';
+                if (cast === 'street') {
+                    out.push('They stop dead. You\'re on the sidewalk in ' + seen);
+                    out.push('"Is that underwear?" the stocky one asks. "Is she in her fucking underwear?"');
+                    out.push('"See-through underwear," the tall one says. "Might as well be naked. Look at her." He already is.');
+                } else {
+                    out.push('All three of them stop. You\'re on a slums sidewalk in ' + seen);
+                    out.push('"That\'s not even underwear," the wiry one says. "That\'s a fuckin\' window."');
+                    out.push('The leader takes his time looking. "Technically dressed," he says. "Down here, that\'s the same as naked."');
+                }
+            }
+            return out.map(P).join(J);
+        }
+
+        // Grope: what their hands find. Nobody lifts or moves the mesh; it already showed them.
+        function getSheerHarassmentGrope(cast) {
+            var s = getSheerHarassState();
+            if (!s) return '';
+            var b = _sheerBodyCtx();
+            var st = b.st;
+            var cv = getSceneClothingVars();
+            var n = b.noun;
+            var street = cast === 'street';
+            var P = street ? function(t) { return '<p>' + t + '</p>'; } : function(t) { return t; };
+            var J = street ? '' : '\n\n';
+            var A = street ? 'The tall one' : 'The leader';
+            var B = street ? 'The stocky one' : 'The wiry one';
+            var squeeze = b.bs === 'large' ? 'Your heavy tit spills around his fingers, the ' + n + ' stretched tight over it.'
+                : b.bs === 'small' ? 'His palm covers your small tit completely, ' + n + ' and all.'
+                : 'He squeezes, the ' + n + ' stretched tight over the handful.';
+            var under = function(name) { return (cv.pulldown ? 'shoves down the front of your ' : 'shoves up under your ') + name; };
+            var ass = b.butt === 'large' ? 'a fistful of your full ass' : b.butt === 'small' ? 'your tight little ass in one hand' : 'your ass';
+            var out = [];
+            if (s === 'sheer_braless') {
+                out.push(A + '\'s hand closes on your tit through the ' + n + '. ' + squeeze + ' His thumb finds your nipple and grinds. The grid bites into it.');
+                out.push('He leaves your ' + b.top + ' in place. He can see exactly what he\'s doing.');
+                out.push(B + '\'s hand ' + under(cv.bottomName) + (cv.hasPanties ? ' and rubs your pussy through your ' + cv.pantiesFabricAdj + 'panties, hard, until the crotch is soaked.' : ' and finds bare pussy. "Nothing down here either." His fingers split your folds and drag through the slick.'));
+            } else if (s === 'sheer_commando') {
+                out.push(B + ' leaves your ' + b.bottom + ' in place. He can see where he\'s going. His hand cups your pussy through the ' + n + ', two fingers pressing the grid into your slit, grinding it against your clit until it\'s soaked and clinging.');
+                out.push(A + ' grabs ' + ass + ' through the ' + n + '. ' + (st.chest === 'veiled' ? '' : cv.hasBra ? 'His other hand gropes your tit through your ' + cv.topName + ' and bra.' : 'His other hand slides under your ' + cv.topName + ' and finds your bare nipple.'));
+            } else if (s === 'sheer_bare') {
+                out.push('Their hands go straight to what the ' + n + ' was already showing them. ' + A + ' takes your tit through it. ' + squeeze + ' His thumb grinds your nipple through the grid.');
+                out.push(B + '\'s hand cups your pussy through the ' + n + '. Two fingers press the grid into your slit and rub, and the ' + n + ' goes dark and clinging where you\'re wet.');
+                out.push('"Might as well be naked," ' + (street ? 'the stocky one' : 'the wiry one') + ' says against your ear. His fingers work the ' + n + ' deeper into your folds.');
+            } else {
+                var pn = st.hipsGarment ? getFabricNoun(st.hipsGarment) : n;
+                if (st.chest === 'lingerie') {
+                    out.push(A + ' hooks a finger in the center of your ' + b.bra + ' and drags the cups down under your tits instead of taking it off. ' + (b.bs === 'large' ? 'Your heavy tits spill over the top, pushed up and bare.' : b.bs === 'small' ? 'The wire props your small tits up, nipples bare and stiff.' : 'Your tits sit up on the wire, bare, nipples stiff.'));
+                } else {
+                    out.push(A + '\'s hand finds your tit ' + (st.chest === 'underwear' ? 'through your ' + b.bra : 'through your ' + cv.topName) + ' and squeezes hard.');
+                }
+                if (st.hips === 'lingerie') {
+                    out.push(B + ' leaves your ' + b.panties + ' in place and rubs your clit right through the ' + pn + ' until it\'s soaked and clinging. "Why bother taking them off," he says. "Look. I can see everything I\'m doing."');
+                } else {
+                    out.push(B + '\'s hand ' + (st.hips === 'underwear' ? 'shoves inside your ' + b.panties : under(cv.bottomName)) + ' and finds your pussy wet.');
+                }
+            }
+            if (!street) out.push('The big one presses against your back, cock hard through his jeans, his hands clamped on your hips to hold you there for them.');
+            return out.map(P).join(J);
+        }
+
+        // Passout assault insert: the mesh stays on and gets torn instead of taken off.
+        function getSheerPassoutInsert() {
+            var s = getSheerHarassState();
+            if (!s) return '';
+            var b = _sheerBodyCtx();
+            var st = b.st;
+            if (s === 'sheer_lingerie') {
+                if (st.chest === 'lingerie' && st.hips === 'lingerie') return 'The mesh is still on you. It didn\'t slow them down. Someone tore the crotch of your ' + b.panties + ' open instead of pulling them off, and your ' + b.bra + ' is shoved under your tits, nipples bare against the cold.';
+                if (st.chest === 'lingerie') return 'Your ' + b.bra + ' is still on, shoved down under your tits. They could see your nipples through it before anyone touched you.';
+                return 'Your ' + b.panties + ' are still on you, torn open at the crotch. They could see your slit through them before anyone touched you.';
+            }
+            if (s === 'sheer_bare') return 'Your ' + b.outfit + ' is still on you, torn at the crotch and dragged down off your tits. They could see everything through it before they touched you. Tearing it was faster.';
+            if (s === 'sheer_braless') return 'Your nipples were already on show through your ' + b.top + ' when you went down. Someone tore the ' + b.noun + ' open over your tits instead of lifting it.';
+            return 'Your bare slit was already on show through your ' + b.bottom + ' when you went down. Someone tore a hole in the ' + b.noun + ' over your pussy and used that.';
         }
 
         // Insert a paragraph after the first paragraph matching `re` (or after the opening
@@ -28583,11 +28748,14 @@ audioSystem.playSFX('buttonClick');
             rapeChance += (_mhAssaultMods[getMHTierId()] || 0);
 
             // Wet clothes: see-through fabric makes you a target
+            // Mesh Step 11: sheer adds its own risk, and wet and sheer don't stack (the higher applies)
+            var _wetRiskNR = 0;
             if (gameState.weather && gameState.weather.wetClothes) {
                 const _wetnessNR = gameState.weather.clothesWetness || 0;
-                if (_wetnessNR >= 60) rapeChance += 0.10; // Soaked — near-transparent
-                else if (_wetnessNR >= 20) rapeChance += 0.05; // Damp — outline visible
+                if (_wetnessNR >= 60) _wetRiskNR = 0.10; // Soaked — near-transparent
+                else if (_wetnessNR >= 20) _wetRiskNR = 0.05; // Damp — outline visible
             }
+            rapeChance += Math.max(_wetRiskNR, getSheerRiskBonus('night'));
             
             // Vampiric strength doesn't help - caught by surprise
             
@@ -39976,12 +40144,20 @@ audioSystem.playSFX('buttonClick');
             const braVisible = isBraVisible();
             const pantiesVisible = arePantiesVisible();
             
+            // Mesh Step 11: sheer pieces get named for what they are
+            var _cvU = getSceneClothingVars();
+            var _braS = !!_cvU.braSheer, _panS = !!_cvU.pantiesSheer;
             if (braVisible && pantiesVisible) {
+                if (_braS && _panS) return "in nothing but sheer " + getFabricNoun(gameState.currentOutfit.bra) + " lingerie";
+                if (_braS) return "wearing only your see-through bra and your panties";
+                if (_panS) return "wearing only your bra and your see-through panties";
                 return "wearing only your bra and panties";
             } else if (braVisible && !pantiesVisible) {
-                return "with your bra exposed and no panties";
+                // Panties hidden under a bottom are still on; only say "no panties" when there are none
+                var _noPan = !(gameState.currentOutfit && gameState.currentOutfit.panties);
+                return (_braS ? "with your see-through bra exposed" : "with your bra exposed") + (_noPan ? " and no panties" : "");
             } else if (!braVisible && pantiesVisible) {
-                return "wearing only your panties";
+                return _panS ? "wearing only your see-through panties" : "wearing only your panties";
             } else {
                 return ""; // Not in visible underwear state
             }
@@ -108149,6 +108325,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         else if (!hasBra) exhibState = 'braless';
                         else if (!hasPanties) exhibState = 'commando';
                     }
+                    // Mesh Step 11: bare behind mesh, or sheer lingerie, gets its own sub-state
+                    var _sheerHS = getSheerHarassState();
+                    if (_sheerHS) exhibState = _sheerHS;
 
                     // District-specific setting
                     var setting = '';
@@ -108174,7 +108353,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
 
                     // ── EXHIBITION-STATE: What they see ──
-                    if (exhibState === 'naked') {
+                    if (exhibState.indexOf('sheer_') === 0) {
+                        desc += getSheerHarassmentOpener('street');
+                    } else if (exhibState === 'naked') {
                         desc += '<p>They stop dead. Both of them. The tall one\'s jaw unhinges. The stocky one\'s hand drops from his pocket.</p>';
                         desc += '<p>You\'re naked. Tits bare, pussy exposed, bare feet on concrete. Every inch of your skin on display under the streetlight. Your nipples are stiff and your folds are flushed and they\'re looking at your body with the raw, blank stare of men who can\'t believe what they\'re seeing.</p>';
                         desc += '<p>"She\'s fuckin\' naked," the stocky one says. His voice is flat. Disbelief.</p>';
@@ -108207,8 +108388,11 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         desc += '<p>They step closer. The stocky one moves to your left, cutting off the side street. The tall one reaches toward your shoulder.</p>';
                     }
 
+                    // Mesh Step 11: framed keeps the regular opener and gains one sheer line
+                    if (!_sheerHS) desc += getSheerHarassmentOpener('street');
+
                     // ── WET CLOTHING AWARENESS (Wet Clothing Overhaul, District 5A) ──
-                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only') {
+                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
                         var _topName = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomName = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
                         var _bs = ba.breastSize || 'average';
@@ -108266,12 +108450,17 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         else if (!hasBra) exhibState = 'braless';
                         else if (!hasPanties) exhibState = 'commando';
                     }
+                    // Mesh Step 11: bare behind mesh, or sheer lingerie, gets its own sub-state
+                    var _sheerHS = getSheerHarassState();
+                    if (_sheerHS) exhibState = _sheerHS;
 
                     var _bg = getDinerButtGrab();
                     var _tbg = getBreastGrab();
                     var desc = '';
 
-                    if (exhibState === 'naked') {
+                    if (exhibState.indexOf('sheer_') === 0) {
+                        desc += getSheerHarassmentGrope('street');
+                    } else if (exhibState === 'naked') {
                         desc += '<p>Their hands are on you before you\'ve finished flinching. Two pairs on bare skin with nothing between.</p>';
                         desc += '<p>The tall one grabs your breast. His rough palm ' + _tbg.cup + '. ' + _tbg.nippleDrag + ' The stocky one\'s hand goes between your thighs, two fingers splitting your wet folds and pressing flat against your slit. Direct contact. Skin on bare, swollen skin.</p>';
                         desc += '<p>"She\'s soaking," the stocky one says. His fingers drag through your pussy and slick coats his knuckles. "Walking around naked and dripping."</p>';
@@ -108304,7 +108493,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
 
                     // ── WET CLOTHING GROPE MODIFICATIONS (Wet Clothing Overhaul, District 5B) ──
                     var _wetnessG = (gameState.weather && gameState.weather.clothesWetness) || 0;
-                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only') {
+                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
                         var _topNameG = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomNameG = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
 
@@ -108326,9 +108515,12 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 onEnter: function() {
                     var exposure = (typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed';
                     var arousalGain = (exposure === 'naked') ? 30 : (exposure === 'bottomless' || exposure === 'topless') ? 25 : (exposure === 'underwear_only') ? 25 : 15;
+                    var corruptionGain = (exposure === 'naked' || exposure === 'bottomless' || exposure === 'topless' || exposure === 'underwear_only') ? 25 : 20;
+                    // Mesh Step 11: sheer grope gains
+                    var _sheerG = getSheerGropeGains();
+                    if (_sheerG) { arousalGain = _sheerG.arousal; corruptionGain = _sheerG.corruption; }
                     applyArousal(arousalGain);
 
-                    var corruptionGain = (exposure === 'naked' || exposure === 'bottomless' || exposure === 'topless' || exposure === 'underwear_only') ? 25 : 20;
                     gameState.corruption = (gameState.corruption || 0) + corruptionGain;
 
                     updateStatus();
@@ -109763,6 +109955,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         else if (!hasBra) exhibState = 'braless';
                         else if (!hasPanties) exhibState = 'commando';
                     }
+                    // Mesh Step 11: bare behind mesh, or sheer lingerie, gets its own sub-state
+                    var _sheerHS = getSheerHarassState();
+                    if (_sheerHS) exhibState = _sheerHS;
 
                     var desc = '';
                     var isFirst = timesHarassed === 0;
@@ -109775,7 +109970,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
 
                     // ── EXHIBITION-STATE-SPECIFIC: What they see ──
-                    if (exhibState === 'naked') {
+                    if (exhibState.indexOf('sheer_') === 0) {
+                        desc += getSheerHarassmentOpener('slums');
+                    } else if (exhibState === 'naked') {
                         desc += 'They stop talking. All three of them. The leader\'s mouth opens and stays open. The wiry one\'s cigarette hand freezes halfway to his lips.\n\nYou\'re naked. Bare tits, bare pussy, bare everything, walking down a slums sidewalk without a stitch of clothing on your body. Your nipples are stiff in the night air. Your pussy is flushed and wet between your thighs, slick catching the orange glow from the streetlight.\n\nThe leader recovers first. His eyes travel from your face to your tits to your cunt to your bare feet and back up. A slow, disbelieving scan that ends with a grin.\n\n"Well," he says. "Guess we don\'t need to ask."';
                     } else if (exhibState === 'bottomless') {
                         desc += 'The leader\'s eyes drop below your waist and his step falters. The wiry one follows his gaze and the cigarette stops moving.\n\nYou\'re wearing a top and nothing else. Your pussy is bare and visible between your thighs. The flushed lips, the dark slit, the slick shine of arousal catching the streetlight. Your bare ass is on full display to anyone behind you.\n\n"She\'s got no fuckin\' pants on," the wiry one says. Not to you. To the others.\n\nThe leader grins. His eyes stay locked between your legs. "Walk in here showing us that pretty little cunt. You know what happens next, right?"';
@@ -109803,8 +110000,11 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         }
                     }
 
+                    // Mesh Step 11: framed keeps the regular opener and gains one sheer line
+                    if (!_sheerHS) desc += getSheerHarassmentOpener('slums');
+
                     // ── WET CLOTHING AWARENESS (Wet Clothing Overhaul, Step 5A) ──
-                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only') {
+                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
                         var _topName = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomName = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
                         var _bs = ba.breastSize || 'average';
@@ -109882,12 +110082,17 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                         else if (!hasBra) exhibState = 'braless';
                         else if (!hasPanties) exhibState = 'commando';
                     }
+                    // Mesh Step 11: bare behind mesh, or sheer lingerie, gets its own sub-state
+                    var _sheerHS = getSheerHarassState();
+                    if (_sheerHS) exhibState = _sheerHS;
 
                     var _bg = getDinerButtGrab();
                     var _tbg = getBreastGrab();
                     var desc = '';
 
-                    if (exhibState === 'naked') {
+                    if (exhibState.indexOf('sheer_') === 0) {
+                        desc += getSheerHarassmentGrope('slums');
+                    } else if (exhibState === 'naked') {
                         desc += 'The leader\'s hand closes on your bare hip. Rough fingers on bare skin. No fabric to push aside, no barrier to test. His palm slides around to your ass and ' + _bg.land + '\n\n';
                         desc += 'The wiry one steps in from your left. His hand ' + _tbg.cup + '. ' + _tbg.reaction + ' He pinches your nipple. The sting shoots straight to your clit.\n\n';
                         desc += 'The big one presses against you from behind. You feel the hard ridge of his cock through his jeans against your bare ass. His hands close on your waist, thumbs at the small of your back, pulling your body against his.\n\n';
@@ -109932,7 +110137,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
 
                     // ── WET CLOTHING GROPE MODIFICATIONS (Wet Clothing Overhaul, Step 5B) ──
                     var _wetnessG = (gameState.weather && gameState.weather.clothesWetness) || 0;
-                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only') {
+                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
                         var _topNameG = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomNameG = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
 
@@ -109958,11 +110163,12 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     return desc;
                 },
                 onEnter: () => {
-                    // Initial arousal and corruption from being groped
-                    applyArousal(15);
+                    // Initial arousal and corruption from being groped (Mesh Step 11: sheer states hit harder)
+                    var _sheerG = getSheerGropeGains();
+                    applyArousal(_sheerG ? _sheerG.arousal : 15);
                     
                     // Initial corruption gain just from being harassed (before response choice)
-                    gameState.corruption = (gameState.corruption || 0) + 20;
+                    gameState.corruption = (gameState.corruption || 0) + (_sheerG ? _sheerG.corruption : 20);
                     
                     updateStatus();
                 },
@@ -177238,6 +177444,9 @@ wet_car_slowdown: {
                         _exposureInsert = '\n\nYour pussy was bare when you hit the ground. Still bare now. They didn\'t have to pull anything down.';
                     } else if (exposure === 'topless') {
                         _exposureInsert = '\n\nYour tits are bare. You passed out topless and they\'re still out, nipples pressed against the cold concrete.';
+                    } else if (getSheerPassoutInsert()) {
+                        // Mesh Step 11: the mesh stays on and gets torn
+                        _exposureInsert = '\n\n' + getSheerPassoutInsert();
                     } else if (exposure === 'underwear_only') {
                         _exposureInsert = '\n\nYou\'re in your bra. Your panties are bunched around one ankle. They barely had to undress you.';
                     } else if (!hasBra && !hasPanties) {
