@@ -26632,7 +26632,41 @@ audioSystem.playSFX('buttonClick');
             return true;
         }
 
+        // Gallery playback: blood farm scenes need a captive of the scene's gender. Use the
+        // selected one when it fits; otherwise a stand-in that lives outside the save and
+        // stays the same object for one scene and tier, so text and choices agree.
+        var _galleryStandInCaptives = {};
+        function _galleryCaptiveGender(sceneId) {
+            if (!sceneId) return null;
+            if (/_m_|ride_cock/.test(sceneId)) return 'male';
+            if (/_f_|tribbing|oral_receive|face_sit/.test(sceneId)) return 'female';
+            return null;
+        }
+        function _galleryStandInCaptive(sceneId, gender) {
+            var key = sceneId + '|' + (typeof _galleryActiveTierIndex !== 'undefined' ? _galleryActiveTierIndex : 0) + '|' + gender;
+            if (!_galleryStandInCaptives[key]) {
+                var nm = generateCaptiveName(gender);
+                _galleryStandInCaptives = {};
+                _galleryStandInCaptives[key] = {
+                    name: nm, actualName: nm, gender: gender, age: 24,
+                    health: 80, hunger: 60, thirst: 60, mentalState: 30, hygiene: 80,
+                    attitude: 'terrified', broken: false, daysHeld: 5, daysSinceBath: 1,
+                    canFeedToday: true, lastFed: 0, lastTalkTime: 0, hasBed: false, chained: true,
+                    relationshipKey: null, _galleryStandIn: true
+                };
+            }
+            return _galleryStandInCaptives[key];
+        }
+
         function getSelectedCaptive() {
+            if (gameState.flags._galleryMode) {
+                var _gSid = typeof _galleryActiveSceneId !== 'undefined' ? _galleryActiveSceneId : null;
+                var _need = _galleryCaptiveGender(_gSid);
+                var _list = gameState.bloodFarmCaptives || [];
+                var _sel = _list[Math.min(gameState.flags.selectedCaptiveIndex || 0, _list.length - 1)];
+                if (_sel && (!_need || _sel.gender === _need)) return _sel;
+                return _galleryStandInCaptive(_gSid, _need || 'female');
+            }
             const idx = gameState.flags.selectedCaptiveIndex || 0;
             // Guard: clamp index in case a captive was removed
             const safe = Math.min(idx, (gameState.bloodFarmCaptives || []).length - 1);
