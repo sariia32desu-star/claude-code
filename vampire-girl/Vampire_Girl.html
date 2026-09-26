@@ -4840,7 +4840,7 @@
             position: fixed;
             z-index: 100000;
             display: none;
-            max-width: 240px;
+            max-width: 260px;
             padding: 8px 10px;
             background: #1a1428;
             border: 1px solid #8f73b8;
@@ -40739,18 +40739,40 @@ audioSystem.playSFX('buttonClick');
             var p = MESH_GARMENTS[id];
             if (!p) return '';
             var chest = p.zones.indexOf('chest') !== -1, hips = p.zones.indexOf('hips') !== -1;
-            var where = chest && hips ? 'the chest and hips' : chest ? 'the chest' : 'the hips';
-            var underwear = /_(bra|panties)$/.test(id);
-            var head = p.weave === 'fishnet' ? 'Fishnet' : MESH_WEAVE_LABEL[p.weave] + ' Mesh';
-            var effect = underwear
-                ? 'Under opaque clothes it has no effect. Under mesh, or with nothing over it, strangers see straight through. That builds Exhibition Thrill and Corruption while you\'re out.'
-                : 'Whatever\'s underneath shows through. Go ' + (chest && hips ? 'braless or commando' : chest ? 'braless' : 'commando') + ' under it and strangers see bare skin. That builds Exhibition Thrill and Corruption while you\'re out.';
-            var weave = p.weave === 'semi' ? 'Semi-sheer weave: effects at 70%.'
-                : p.weave === 'fishnet' ? 'Fishnet weave: effects at 110%. Bare skin shows in every hole.'
-                : 'Sheer weave: full effect.';
+            var isBra = /_bra$/.test(id), isPanties = /_panties$/.test(id);
+            var n = p.noun, soft = n === 'sheer fabric';
+            var head = p.weave === 'fishnet' ? 'Fishnet' : soft ? 'Sheer Fabric' : MESH_WEAVE_LABEL[p.weave] + ' Mesh';
+            var grid = soft ? 'it' : 'the grid', rub = soft ? 'rubs' : 'scratches';
+            var shows, under, bare;
+            if (isBra) {
+                shows = 'Your nipples show straight through the cups, stiff and dark.';
+                under = 'Under an opaque top it\'s your little secret.';
+                bare = 'Under mesh, or with nothing over it, every stranger gets your tits. The ' + n + ' ' + rub + ' your nipples with every breath.';
+            } else if (isPanties) {
+                shows = 'Your bare slit shows straight through the crotch.';
+                under = 'Under an opaque bottom it\'s your little secret.';
+                bare = 'Under mesh, or with nothing over it, every stranger gets your pussy. The ' + n + ' rubs your clit with every step.';
+            } else if (chest && hips) {
+                shows = 'It\'s see-through from your nipples down to your slit.';
+                under = 'Wear a bra and panties under it and everyone gets a look at your underwear.';
+                bare = 'Go braless and commando and they get your stiff nipples and your bare slit through ' + grid + ', and the ' + n + ' ' + rub + ' both raw with every step.';
+            } else if (chest) {
+                shows = 'It\'s see-through right over your tits.';
+                under = 'Wear a bra under it and everyone gets a look at the bra.';
+                bare = 'Go braless and they get your stiff nipples through ' + grid + ', and the ' + n + ' ' + rub + ' them raw with every step.';
+            } else {
+                shows = 'It\'s see-through right over your pussy.';
+                under = 'Wear panties under it and everyone gets a look at the panties.';
+                bare = 'Go commando and they get your bare slit through ' + grid + ', and the ' + n + ' drags across your folds with every step.';
+            }
+            var payoff = 'Every stare feeds your Exhibition Thrill and Corruption while you\'re out.';
+            var weave = p.weave === 'semi' ? 'Semi-sheer weave: they get the shape of you more than the detail. Effects at 70%.'
+                : p.weave === 'fishnet' ? 'Fishnet weave: bare skin pokes through every hole. Effects at 110%.'
+                : 'Sheer weave: nothing\'s hidden. Full effect.';
             return '<div class="mesh-tip-head">' + head + '</div>'
-                + '<div class="mesh-tip-line">See-through over ' + where + '.</div>'
-                + '<div class="mesh-tip-line">' + effect + '</div>'
+                + '<div class="mesh-tip-line">' + shows + '</div>'
+                + '<div class="mesh-tip-line">' + under + ' ' + bare + '</div>'
+                + '<div class="mesh-tip-line">' + payoff + '</div>'
                 + '<div class="mesh-tip-weave">' + weave + '</div>';
         }
 
