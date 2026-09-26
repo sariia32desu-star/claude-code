@@ -1,12 +1,22 @@
-# Mesh & Sheer Clothing Overhaul — Session Handoff
+# Mesh & Sheer Clothing Overhaul — Session Handoff #2
 
-**Status at handoff:** Steps 1–8 of 21 are complete, plus a set of approved fixes between steps. Steps 9–21 remain.
+**Status at handoff:** Steps 1–16 are complete. Step 17A (`district_sheer_exhibition`, all three tiers, plus the street routing) is complete. **Next up: Step 17B (`slums_sheer_exhibition`), then Steps 18–21.** Every item listed as done was approved by the user.
 
-**This document stands alone.** You don't need the original `Mesh_Sheer_Clothing_Overhaul.md`:
-- Part F reproduces every remaining step verbatim.
-- Part G reproduces the original "Existing Systems" reference verbatim.
-- Part E carries the handoff notes that correct or extend the original spec, based on what's in the file now. **Where Part E and Part F disagree, Part E wins.**
-- The only change from the original steps' text is heading levels, so each step fits under its Part.
+**This document stands alone.** You don't need the original `Mesh_Sheer_Clothing_Overhaul.md` or the first handoff. The only companion docs you need are:
+- `VampireGirl_Style_Guide_SS.md` (all prose)
+- `VampireGirl_Sex_Standards.md` (Steps 17B and 18)
+- `VampireGirl_Masturbation_Standards.md` (Step 19)
+
+How this doc is laid out:
+- **Part A:** orientation, the user's working rules, validation recipes, and the vision.
+- **Part B:** the sheer system as built, as a reference for every remaining step.
+- **Part C:** what's done, step by step, with every approved deviation and judgment call.
+- **Part D:** findings, open items and traps.
+- **Part E:** handoff notes for each remaining step. **Where Part E and Part F disagree, Part E wins.**
+- **Part F:** the remaining steps (17–21), verbatim from the original doc, plus the original summary tables and implementation notes.
+- **Part G:** the original "Existing Systems" reference and bug table, verbatim.
+- **Part H:** the original spec text for the completed Steps 1–16, verbatim, for audits.
+- The only changes to verbatim text are heading levels (so each step fits under its Part) and a few clarifying notes in blockquotes at the top of Parts F, G and H.
 
 ---
 
@@ -15,10 +25,11 @@
 ### A1. Where the work lives
 
 - **Repo:** `sariia32desu-star/claude-code`
-- **Branch:** `claude/vampire-girl-mesh-clothing-jk9h5c`. All work is committed and pushed.
-- **Working file:** `vampire-girl/Vampire_Girl.html`. About 219,680 lines at handoff; the original upload was 217,995.
-- **Script blocks:** 5830–5896 and 12690–219678. These numbers shift with every edit, so always re-grep `<script>` / `</script>`.
-- **Line numbers in this doc are approximate.** Always `grep -n "function name("` before editing.
+- **Branch used this session:** `claude/vampire-girl-mesh-clothing-ksgc13`. All work is committed and pushed. The next session will likely be given a new branch name. If its branch doesn't contain these commits, fast-forward or merge from `claude/vampire-girl-mesh-clothing-ksgc13` first so you're working on the latest `Vampire_Girl.html`. (Session 2 did the same thing: its branch started without the game, and it was fast-forwarded to the last commit of session 1.)
+- **Working file:** `vampire-girl/Vampire_Girl.html`. About 221,970 lines at this handoff; 219,680 at the first handoff; the original upload was 217,995.
+- **Script blocks:** 5830–5896 and 12690–221967. These numbers shift with every edit, so always re-grep `<script>` / `</script>`.
+- **Line numbers in this doc are approximate** (as of this handoff). Always `grep -n "function name("` or `grep -n "scene_id: {"` before editing.
+- **This doc lives at** `vampire-girl/Mesh_Overhaul_Handoff.md` and replaces the first handoff.
 
 Commits, oldest first:
 
@@ -33,69 +44,60 @@ Commits, oldest first:
 | `00ee697` | Step 6: banners, lingerie box, stats panel |
 | `5e73b37` | Step 7: ambient interiority, mesh friction |
 | `a6860c2` | Step 8: district vignettes, Ruby, district awareness |
-| (handoff commit) | This doc, plus a style sweep of every line the overhaul touched (see D10) |
+| `6fe69b1` | First handoff doc, plus a style sweep of every line the overhaul touched |
+| `697ee5c` | Step 9: sheer accidental events |
+| `985676a` | Step 10: the 20 exhibition events meet mesh |
+| `310e23b` | Step 11: harassment, slums, night assault |
+| `17423f0` | Step 12: evidence and Cruz |
+| `45d67ef` | Step 13: wet mesh, style comments, venues |
+| `0571d97` | Step 14: deliberate sheer actions |
+| `03bf0c8` | Step 14 style fixes on the touched flash lines |
+| `69c73ea` | Step 15: Exhibition Seduction through the mesh |
+| `a5c3eec` | Step 16 A–C, plus the Experienced tier of `jaewon_mesh_top_sex` |
+| `67fe9f0` | Step 16D: the DC tier of `jaewon_mesh_top_sex` |
+| `14cf384` | Jaewon Taofa Tips & Guide: "Her Mesh Top" and "Diner Break Room" added, gallery count 46 → 48 |
+| `7ec4449` | Step 17A: `district_sheer_exhibition` Innocent tier |
+| `86d31c0` | Step 17A: Experienced tier |
+| `f4f277c` | Step 17A: Experienced tier style fix |
+| `5de4ff9` | Step 17A: DC tier and street routing |
+| `c126160` | Fix: both mesh `galleryOnEnter` hooks now return early outside the gallery (see D15) |
+| (handoff commit) | This doc |
 
 ### A2. Working rules from the user (non-negotiable)
 
-- **Always work from the latest file**: the one on the branch above, or a newer file the user uploads.
+- **Always work from the latest file**: the one on the branch, or a newer file the user uploads.
   - Never copy an earlier version over it.
   - If the user uploads a newer `Vampire_Girl.html`, that file becomes the working file.
 - **One step per output.** Wait for confirmation before starting the next step. Don't bundle steps. Fixes the user asks for between steps are fine.
-- After each step:
+- **Gallery scenes go one tier at a time**, "for focused quality and depth," starting with the Innocent (or lowest) tier. The user asks for them to "sing." That held for Steps 16D and 17A and should be expected for 17B, 18 and 19.
+- After each step (or each tier):
   - Commit with a clear message and push to the branch.
-  - Send the user the updated file.
+  - Send the user the updated file (SendUserFile).
   - Summarize what was done, every deviation, and every judgment call, so the user can approve them.
+- **When a step needs a decision the spec leaves open, ask before starting**, and offer a recommendation. The user has answered every such question quickly.
 - The user reviews each step and expects the style guide to be applied with no exceptions.
+- **Commit trailer** (from the session's system reminder; the next session will get its own): `Co-Authored-By: ...` and `Claude-Session: ...` lines. Never put a model name in a commit message.
 
-### A3. Writing rules (style guide + user preferences + body branching standards)
+**The user's standing preferences (they apply to every line of prose in the game file):**
+- No em dashes, except a paired parenthetical aside or a dialogue cut-off.
+- No "Not a question."
+- No AI tells: no "Not because X. Because Y.", no paired "Not…/Not…" speech (for example "Not the hardest hitter. Not the tallest blocker."), no "A beat."
+- No formal uncontracted language like "She is" or "You are." Use "She's" and "You're." When a sentence can't contract (sentence-final "how wet you are"), rewrite it.
+- No stanza formulas such as "You're not the star. / You're the girl coaches trust / to be in the right place."
+- Stick strictly to the game's writing style. Any deviation counts as an error.
 
-**POV and tense:** strictly 2nd person present. Any other POV or tense is the top-priority error.
-
-**Banned:**
-- **Em dashes**, except in two cases:
-  - Paired parenthetical asides: `His voice—low and careful—cut through.`
-  - Dialogue or vocal cut-offs: `"I can't just—"`, `*ah—*`, and stammers like `"Deeper—please—"`.
-  - Every lone connector dash is banned, spaced or unspaced. Use a comma, period, colon or semicolon instead.
-- **Formal language.** Always contract: she's, you're, it's, doesn't, can't, won't, I'm, I've, we're, there's, hasn't, wasn't, and so on.
-  - This applies to all prose and all dialogue, dramatic moments included.
-  - When English can't contract (sentence-final "how wet you are," "small as you are," "You are, technically"), rewrite the sentence.
-  - Exempt: code comments, code logic, HTML attributes, UI and guide labels, and the `<video>` fallback text.
-- **"The kind of … that" / "the kind that."**
-- **"A beat." / "A pause."** in any form, including "a beat longer." Use an action, body language, or "a moment longer."
-- **Paired or tripled negative inventories:** "Not X. Not Y." / "No X. No Y." / "Nothing X. Nothing Y."
-  - A single "Not" is fine.
-  - Natural dialogue ("Not bad for your first day") and panic italics (`<em>Not now. Not in front of her.</em>`) are fine.
-- **Negation before reveal**, in any variant: "Not because X. Because Y." / "It wasn't anger. It was exhaustion." / "He lets you, not because…, but because…". Just state it.
-- **The stanza formula**: "You're not the star. / You're the girl coaches trust…". No verse and no line-by-line reveals.
-- **"Not a question."**
-- **"genuinely"** modifying an emotion or state. It's allowed sparingly in natural dialogue, as is "Honestly?". "Straightforward" is fine when it describes a thing.
-- **"The way" and "In a way," with no exceptions.** Even idioms get rewritten: "all the way down" became "straight down," "on the way" became "on the walk there," "the rest of the way in" became "the rest of himself in," and "all the way to the bar" became "every step to the bar."
-- **Paired "Something X. Something Y."**
-- **Passages built entirely from two-adjective rhythm pairs.** One pair per passage is fine.
-- **AI vocabulary** (delve, tapestry, testament, multifaceted, nuanced) and purple prose.
-
-**Required:**
-- **Short, terse paragraphs.** No paragraph over about 300 visible characters; split them with `\n\n` or `</p><p>`, matching the scene's existing encoding.
-- **Crude, anatomical, explicit language in every erotic moment and at every corruption tier.** Use nipples, tits, pussy, clit, cunt, slit, folds, slick. No euphemisms.
-  - Low corruption is shame with a body that won't stop reacting, and it's still crude.
-- **"Cum" for orgasm, never "come."** "Come up the block" isn't about orgasm and is fine.
-- **Dialogue sounds spoken.** People clip words, trail off and interrupt. Nobody gives speeches.
-- **Keep children out of this content entirely.** The doc's sample of a woman covering her son's eyes was changed to "turns her whole body away."
-
-**Technical rules for the HTML/JS:**
-- **Every apostrophe inside a single-quoted JS string must be escaped as `\'`**, whatever follows it: contractions, possessives, and apostrophes before em dashes.
-  - Never produce `\\'`.
-  - Never insert apostrophes with sed `\x27`. Use Python or Edit.
-- **Ternaries inside single-quoted strings** break out with *unescaped* quotes: `' + (_bs === 'large' ? 'a' : 'b') + '`.
-  - After `: '')` or `: 'text')` you must reopen the string with `+ '`.
-  - After every ternary, the next character must be `)`, `+` or `;`. Anything else is stranded text.
-- **`${}` works only inside backtick template literals.**
-- **Static `text:` properties that reference `cv`** must be converted to `text: function()`.
-- **Run `node --check` on both script blocks after every step.** The recipe is in A4.
+**Technical rules for the HTML/JS (lessons from all prior steps):**
+- Every apostrophe inside a single-quoted JS string must be escaped as `\'`. Never produce `\\'`. Never insert apostrophes with sed `\x27`; use Python or Edit.
+- Ternaries inside single-quoted strings break out with *unescaped* quotes: `' + (_bs === 'large' ? 'a' : 'b') + '`. After `: '')` or `: 'text')` you must reopen the string with `+ '`. After every ternary the next character must be `)`, `+` or `;`.
+- A `return` or `desc +=` that ends in a ternary must wrap the whole expression in parentheses before appending anything (a Step 14 bug).
+- `${}` works only inside backtick template literals.
+- Static `text:` properties that reference `cv` must become `text: function()`.
+- **`galleryOnEnter` runs in live play too.** `showScene()` calls it on part 0 whether or not the gallery is open. Any `galleryOnEnter` that changes the outfit or state must start with `if (!gameState.flags._galleryMode) return;` (see D15).
+- Run `node --check` on both script blocks after every change.
 
 **Body branching standards (the user requires them in all prose steps):**
 - Read body attributes from `gameState.bodyAppearance`. `bodyAttributes` doesn't exist.
-- **`bodyType`:** petite, athletic, curvy, thick, or ordinary (the default). **Every bodyType ternary fills all five values.**
+- **`bodyType`:** petite, athletic, curvy, thick, or ordinary (the default). **Every bodyType ternary fills all five values.** `_bt5(b, petite, athletic, curvy, thick, ordinary)` does this for you.
 - **`breastSize` and `buttSize`:** large, small, or average (the default). It's always `'large'`, never `'big'`.
 - **The ordinary and average branches must read as real prose,** not placeholders. `'hips rock up off the mattress'` is right; `'normal-sized hips'` is wrong.
 - **Extract variables at the top of the text function:**
@@ -107,6 +109,7 @@ Commits, oldest first:
   var cv = getSceneClothingVars();
   var _braless = cv.braless;
   var _commando = cv.commando;
+  var b = _sheerBodyCtx();   // sheer scenes: garment names, what shows, framed/lingerie words
   ```
 - **Branching points (BPs) per scene:**
 
@@ -121,9 +124,10 @@ Commits, oldest first:
   - Put `buttSize` BPs where her hips or ass are gripped, lifted or positioned.
 - **Clothing awareness:**
   - Use `cv.braless` and `cv.commando`, never raw outfit checks. If you find `!gameState.currentOutfit.bra`, replace it.
-  - Name garments with `cv.topName`, `cv.bottomName`, or `proseItemName(item)` for sheer garments.
+  - Name garments with `cv.topName`, `cv.bottomName`, `b.top` / `b.bottom` / `b.outfit`, or `proseItemName(item)` for sheer garments.
   - Undressing and redressing branch on `cv.liftable` (hike up, smooth down) versus `cv.pulldown` (yank down, pull back up).
   - A dress is one garment and comes off in one action (`cv.isDress`). Braless and commando discoveries merge into that single removal moment.
+  - Verb agreement for plural garments: "your skinny jeans **are**," "your panties… **them**."
   - Exhibition hem events are gated to a skirt or dress.
 - **Register by scene type:**
 
@@ -139,12 +143,21 @@ Commits, oldest first:
 **Standing lessons carried from earlier overhauls:**
 - **Scene Gallery sets `gameState.corruption` directly.** Never invent `_galleryCorruption`-style flags.
   - Use `flagOverrides` in the gallery registry for any state that isn't corruption; the alley masturbation entries show the pattern.
-  - Gallery mode is `_galleryMode`.
+  - Gallery mode is `gameState.flags._galleryMode`.
 - **Deeply Corrupted is always 8001.**
-- **Braless and commando checks go through `cv.braless` / `cv.commando`.** Sheer checks go through `getSheerState()` or the sheer `cv` fields.
+- **Braless and commando checks go through `cv.braless` / `cv.commando`.** Sheer checks go through `getSheerState()`, `_sheerBodyCtx()` or the sheer `cv` fields.
   - Never read `item.sheer`, `outfit.dress.name`, or a hardcoded ID list.
 
-### A4. Validation and testing recipes
+**Style lessons learned in Steps 9–17A** (each one was a real hit that had to be fixed):
+- "The way" is banned in every idiom: "all the way down," "all the way up," "nothing in the way," "on the way." Rewrites used: "down to the base of his cock," "Up to your hips," "straight down."
+- "Pulse," "pulses," "wave" and "core" are banned in intimate prose. "Your pulse is hammering" (a heartbeat) was allowed to stay in one pre-existing line.
+- "It is," "every inch of it is," "whose top it is," "how wet you are," "You are." all had to be rewritten.
+- Doubled words from composed fragments ("Your tits bounce bouncing…", "sit bare and heavy… heavy") come from joining a fragment to a sentence that already has the verb or adjective. Read composed paragraphs in full.
+- A fragment written for a see-through top ("Tits out over the mesh") must branch when the chest is opaque ("Tits out under your shoved-up white tee").
+- "Came" is the house past tense for orgasm (41 uses in the file, and the Sex Standards use "She came."). "Cum" is the present and the noun. "Come out," "come here" aren't about orgasm and are fine.
+- NPC thoughts (`<em>He thought:</em>`) are only for romance characters. None were added for strangers.
+
+### A3. Validation and testing recipes
 
 Syntax check of both script blocks (run it after every change):
 
@@ -160,25 +173,31 @@ for i,b in enumerate(re.findall(r'<script>(.*?)</script>',s,re.S)):
 
 - Open `file:///home/user/claude-code/vampire-girl/Vampire_Girl.html` and wait about 3 seconds.
 - Stub `window.showMessage = (t) => msgs.push(t)` to capture popups. Stub `window.showScene` too if needed.
-- Fake items look like `{ id, name, category, appeal, tags: ['material:mesh'] }`.
+- Fake items look like `{ id, name, category, appeal, tags: ['material:mesh'], damage: 0, cleanliness: 100 }`. Use real registry IDs for mesh pieces (`bo_off_shoulder_mesh_mini_dress`, `mesh_crop`, `bo_mesh_mini_skirt`, `mesh_tease_bra`, `mesh_tease_panties`, `bo_rainbow_halter_mini_dress`, `mesh_party_dress`…).
 - Set `gameState.currentOutfit` with all slots: top, bottom, dress, bra, panties, outerwear.
 - Set `gameState.bodyAppearance` and `gameState.corruption`.
-- Scenes live in the global `story[sceneId]`: `.text()`, `.onEnter()`, `.choices()`.
+- Scenes live in the global `story[sceneId]`: `.text()`, `.onEnter()`, `.choices()`, `.galleryOnEnter()`.
 - `advanceTime(min)` needs `gameState.timeStarted = true`. The private-scene guard reads the global `currentScene`.
 - Ambient handlers only fire for scene IDs in `_arousalAmbientStreets`.
+- The harassment scenes read `gameState.flags.harassmentDistrict` ('downtown', 'park', 'commercial'…). The district sheer scene switches its setting on `'park'`.
+- **Test routing** by calling `story.street_harassment_grope.choices()` / `story.slums_harassment_grope.choices()` and reading the chosen `nextScene`. Set `gameState.weather.clothesWetness` to 0 or 70 to test the wet route.
+- **Test the gallery** with `enterGalleryMode(catIndex, sceneIndex, tierIndex)`. It shows the scene inside `requestAnimationFrame` + `setTimeout`, so wait about 2.5 seconds before reading state. Find the indexes by scanning `SCENE_GALLERY_REGISTRY[i].scenes[j].sceneId`.
+- **Test `galleryOnEnter` through the real `showScene()`** with `_galleryMode` false as well as true. Calling `story[id].text()` directly skips the hook, which is how the D15 bug slipped past.
+- Standard matrix used for Step 17A (reuse for 17B): 12 outfits (off-shoulder bare; rainbow fishnet bare; party dress over mesh panties (stacked); mesh crop + mesh skirt bare; mesh crop + jeans + panties; mesh crop + denim mini commando; mesh crop + mesh skirt over opaque panties (framed hips); white tee + bra + mesh skirt commando; off-shoulder over an opaque bra, commando; mesh bra + mesh panties only; mesh bra + jeans + panties; tee + bra + mesh panties only) × 2 settings × all 45 bodies × each tier.
 
-**Prose QA method** (it caught real errors in Steps 7 and 8):
+**Prose QA method** (it caught real errors in every step):
 - Render every new prose function for all 45 body combinations × every outfit the state allows × each corruption tier.
-- Scan the output for:
+- Split the renders into unique paragraphs (on `</p>` and `\n\n`, strip tags) and scan them for:
   - `undefined` and leftover `{tokens}`
   - paragraphs over 300 visible characters
-  - the regex `the way|in a way|kind of|kind that|genuinely|a beat|a pause|—|not because|she is|you are|it is|do not|does not|cannot`
-- Review every hit by hand.
-- **Also scan the diff against the original upload** so pre-existing lines you touched get checked too.
+  - the regex `the way|in a way|kind of|kind that|genuinely|a beat|a pause|—|not because|she is|you are|it is|do not|does not|cannot|all the way|\bpulse|\bwave|\bcore\b|\bcome\b|\bcame\b` plus doubled words
+  - em dashes outside quotes (inside quotes they must be cut-offs)
+- Review every hit by hand, then read samples of every branch in full.
+- **Also scan the git diff** so pre-existing lines you touched get checked too: `git diff -U0 | grep '^+'` for the current change, and `git diff e1bb7b0 -- vampire-girl/Vampire_Girl.html` (the commit before Step 1) for a whole-overhaul sweep.
 
 ---
 
-### A5. The vision, verbatim from the original doc
+### A4. The vision, verbatim from the original doc
 
 **Target implementer:** Claude Opus
 **File:** `Vampire_Girl.html`
@@ -381,6 +400,8 @@ How the layers are counted:
 
 ### B6. Flags and state added so far (for the Step 21 migration)
 
+**Added in Steps 1–8:**
+
 | Flag / state | Purpose |
 |---|---|
 | `gameState.flags._passiveAccum` (object, created lazily) | Accrual remainders |
@@ -392,6 +413,91 @@ How the layers are counted:
 | `flags._wetAwarenessJustFired` | `'district@minute'` |
 | `flags._luciusSheerDoorDay` | Lucius doorman, once per day |
 | `flags._rubySheerLineShift` | Ruby, once per shift |
+
+**Added in Steps 9–17A:**
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `flags._hardySheerLineDay` | 0 | Hardy Bar line, once per day (13C). The chosen line itself is held in a JS variable (`_hardySheerLineNow`), not in the save. |
+| `flags._sheerStopCoveringDay` | 0 | "Stop covering up," once per day (14A) |
+| `flags._lastSheerLightMinute` | 0 | "Step into the light," 60-minute cooldown (14B) |
+| `flags._lastSheerPeelMinute` | 0 | "Peel the mesh down," 45-minute cooldown (14C) |
+| `flags._seductionSheer` | null | The sheer state that routed Exhibition Seduction (15A). Cleared at every exit and failure scene, and reset on each `hunt_seduction` visit. |
+| `flags._jaewonMeshTopReactionDay` | 0 | 16C friend-tier reaction, once per day |
+| `flags._jaewonMeshTopReactionMin` | 0 | Minute of the last braless "That's my top" reaction; the "Come take it back." choice is open for 15 minutes after it (16D) |
+| `flags._jaewonMeshTopFromRoom` | null | 'living_room' or 'bedroom', which room the choice was taken from (16D) |
+| `flags._jaewonMeshTopSexDay` | 0 | `jaewon_mesh_top_sex`, once per day |
+| `flags._districtSheerExhibPregnancy` | false | Transient: set in `district_sheer_exhibition` onEnter, read and cleared in its choices (17A) |
+
+**Owed by upcoming steps:** `_slumsSheerExhibPregnancy` (17B, same pattern), `_sheerDiscoveryCondom` (18, transient set → read → pass → null).
+
+**Already in the defaults before this overhaul (don't re-add):** `_lastJaewonBralessReactionMin`, `_jaewonBralessReactionCounter` (both at ~13802).
+
+### B7. Systems added in Steps 9–17A (quick reference)
+
+All of these are global functions or constants. Line numbers are approximate.
+
+| Name | ~Line | What it does |
+|---|---|---|
+| `LUCIUS_SHEER_DOOR_LINES` | 22312 | 3 doorman lines per sheer state (13C) |
+| `HARDY_SHEER_LINES`, `_hardySheerLineNow`, `rollHardySheerLine()` | 22346 | Hardy Bar walk-in reaction (13C) |
+| `_sheerBodyCtx()` | 22403 | The body-and-garment context object (see Part C, Step 8). **Use it in every sheer prose function.** |
+| `_bt5(b, petite, athletic, curvy, thick, ordinary)` | 22484 | Five-way bodyType pick |
+| `SHEER_ACCIDENT_STATE_MULT` | 22906 | framed 0.5, braless 1.0, commando 1.0, bare 1.4 |
+| `_sheerAccidentNpc()` | 22908 | Rolls the stranger: 60% `{g:'m', he, He, him, his, His, man}`, 40% the female set |
+| `_buildSheerAccidentPool(districtId, corruption)` | 22914 | The 8 Step 9 events. Each is a function returning `{ text, thrill, arousal, key, gender, heat?, snagItem? }`. Keys: `backlight`, `flash`, `snag`, `diamond`, `ribbon`, `string`, `reach`, `double_take`. |
+| `SHEER_HEM_EVENTS`, `SHEER_TOP_EVENTS`, `SHEER_EXHIB_REWARDS` | 23191 | Step 10 event lists and the per-event reward table |
+| `getSheerExhibitionChanceMult(eventId)` | 23221 | 0.5 when the lifted garment is sheer, 0 for the wet and spill top events on a sheer top |
+| `getSheerUnderwearOverlay(stage, zone)` | 23233 | 10A paragraph for sheer underwear at the trigger and hold stages; crowd event has tactile variants |
+| `getSheerOuterExhibitionLine(kind)` | 23269 | 10B haze line |
+| `getSheerBusOverlay()` | 23288 | 10C bus line, appended at the end |
+| `getSheerHarassState()` | 23302 | '' or `sheer_braless` / `sheer_commando` / `sheer_bare` / `sheer_lingerie` (all three lingerie states collapse to `sheer_lingerie`). Framed returns ''. **This is the routing test for 17A/17B.** |
+| `getSheerGropeGains()` | 23310 | Grope stats: lingerie 25/25, bare 22/25, braless or commando 18/20 (arousal/corruption) |
+| `getSheerRiskBonus(kind)` | 23320 | `'harass'` or `'night'` bonus (11C, 11D) |
+| `getSheerHarassmentOpener(cast)` | 23335 | `'street'` (the tall one, the stocky one) or `'slums'` (the leader, the wiry one, the big one) |
+| `getSheerHarassmentGrope(cast)` | 23400 | Grope block per state and cast |
+| `getSheerPassoutInsert()` | 23447 | 11D inserts for `slums_passout_rape_main` |
+| `_insertSheerParagraph(text, para, re)` | 23464 | Inserts after the paragraph matching `re`, or appends if `re` is null |
+| `SHEER_SEDUCTION_BRANCH`, `getSheerSeductionBranch()`, `_activeSeductionSheer()` | 23479 | 15A routing table and the gallery-safe flag read |
+| `getSheerSeductionOverlay(stage, gender)` | 23504 | 15B approach / proposition / undress overlays |
+| `SHEER_SEDUCTION_FIXES` | 23551 | 29 line swaps in the seduction chain scenes; each fix gets the captured group `g1` so it keeps her real garment name |
+| `installSheerSeductionOverlays()`, `installSheerExhibitionOverlays()` | 23581, 23624 | Wrap story scenes' `text` and `onEnter` once. Called right after the `story` object closes (~202308). |
+| `checkAccidentalExposure(districtId)` | 23676 | Now opens for sheer states and applies zone ownership (Step 9) |
+| `doSheerStopCovering()`, `doSheerStepIntoLight()`, `doSheerPeelDown()` | 24225–24278 | Step 14 actions |
+| `getSheerExhibitionChoices()` | 24325 | Step 14 choices, pushed in the commercial (~105770), residential (~105950) and downtown (~111976) choice lists |
+| `getSheerPoseState()`, `getSheerPoseText()` | 24345 | 14D pose variants |
+| `getSheerFlashOpening()` | 24379 | 14D flash variant; the flash scenes use a local `_sheerIns` wrapper (~172839) |
+| `JAEWON_SHEER_REACTIONS`, `JAEWON_MESH_TOP_REACTIONS`, `JAEWON_MESH_TOP_FRIEND` | 27604–27684 | Step 16 pools |
+| `getJaewonSheerReaction()` | 27697 | Called from `getJaewonBralessCommandoReaction()` (~27756) |
+| `getJaewonMeshTopSexChoice(room)` | 27740 | The "Come take it back." choice for the living room and bedroom |
+| `createLedgerEntry()` | 30842 | Now keeps `exposureSeverity`, `exposureState`, `sheerLook`, `description` |
+| `_sheerOwnsZone(zone)` | 36802 | Zone ownership test (Step 7; reused in 9 and 13) |
+| `getWetMeshZones()`, `getWetMeshLine(zone, tier)`, `_resolveWetGarmentTokens()`, `getWetMeshHarassLine(cast)`, `WET_MESH_DISTRICT_SWAPS` | 37616–37701 | Step 13A wet mesh |
+| `getCruzSheerExposureLine(context)` | 38332 | 12B Cruz lines |
+| `checkExhibitionEvidence()` | 38354 | 12A sheer severity |
+| `SHEER_STYLE_COMMENTS` | 39485 | 13B, 4 per state (framed, braless, commando, bare) |
+| `getSheerState()` | 40623 | The zone model (B2) |
+| `getUnderwearVisibilityDesc()` | 40946 | Sheer wording for the night ambush |
+
+**Scenes added:**
+
+| Scene | ~Line | Notes |
+|---|---|---|
+| `district_sheer_exhibition` | 110777 | Step 17A, three tiers, live via street routing (~109367). Placed after `district_wet_exhibition`, before `// ===== SLUMS-SPECIFIC HARASSMENT (GUARANTEED DAILY) =====`. |
+| `jaewon_mesh_top_sex` | 123005 | Step 16D, two tiers by Jaewon's corruption. Placed after `jaewon_lazy_couch_sex`. |
+
+**Gallery entries added:**
+
+| Category | Entry | Tiers |
+|---|---|---|
+| Jaewon (~47501) | `{ sceneId: 'jaewon_mesh_top_sex', label: 'Her Mesh Top', tiers: [{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] }` | Tier value is read as **Jaewon's** corruption |
+| Exhibitionism (~47897) | `{ sceneId: 'district_sheer_exhibition', label: 'District: Sheer Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] }` | Placed right after the `district_wet_exhibition` entry |
+
+**Gallery mechanics you'll need (verified):**
+- `enterGalleryMode(cat, scene, tier)` (~48330) sets `_galleryMode`, sets `gameState.corruption` from the tier, and for the `jaewon` category also sets `relationships.jaewon.corruption` to the tier value and `officialGirlfriends = true`. Then, after a transition, it applies `flagOverrides` and calls `showScene`.
+- `switchGalleryTier(tier)` (~48443) sets corruption and reapplies `flagOverrides`, **but doesn't set Jaewon's corruption.** That's why `jaewon_mesh_top_sex` reads its tier straight from `SCENE_GALLERY_REGISTRY[_galleryActiveCatIndex].scenes[_galleryActiveSceneIndex].tiers[_galleryActiveTierIndex].v` in gallery mode.
+- `showScene()` calls `scene.galleryOnEnter()` on part 0 **in live play and in the gallery** (~202776), then `onEnter` only outside gallery mode. So `galleryOnEnter` must guard itself (see D15).
+- Each gallery scene's `onEnter` starts with `trackGalleryScene('<sceneId>')`.
 
 ---
 
@@ -655,15 +761,288 @@ About 110 generic "cotton" references to Kelsie's own garments were converted to
 
 **QA:** 15,400 renders with zero errors and zero `undefined`; the longest paragraph was 240 characters.
 
+### Step 9 — New sheer accidental events ✅ (`697ee5c`)
+
+**User decision before the step:** option (a). The "Let him/her follow." / "Keep walking." choice was left out and gets wired in Step 18, alongside the scenes it leads to.
+
+- **All eight events** live in `_buildSheerAccidentPool()`, called from `checkAccidentalExposure()`:
+
+  | Event | When it can fire |
+  |---|---|
+  | Backlight | Any dressed sheer state |
+  | Flash | After dark, or in downtown or commercial |
+  | Snag | Any outer sheer garment |
+  | Diamond | Fishnet chest, no bra |
+  | Ribbon | Mesh Party Dress |
+  | String | One-Shoulder Mesh Club Dress |
+  | Reach | Mesh Crop Top |
+  | Double Take | Sheer & bare, or sheer & commando |
+
+- **Tiers and body branching:** three corruption tiers (under 2001, under 6001, 6001+), branching on bodyType, breastSize and buttSize where her body shows.
+- **Zone ownership (was D3):** the opaque braless and commando events stand down for any zone that's bare behind mesh. When the other zone is braless or commando under opaque clothes, both pools mix. Tested: a mesh crop with no bra over jeans drew only sheer events in 400 fires; a mesh crop over an opaque skirt with no panties drew both kinds, about half each.
+- **Scaling:** thrill and arousal × weave × state (framed ×0.5, braless or commando ×1.0, bare ×1.4) × the draw multiplier. Same 15% chance and 60-minute cooldown. The event counter and peak thrill are tracked as before.
+- **Stranger gender:** every event rolls 60% male / 40% female and returns `key` and `gender` so Step 18 can use them. No save flag needed.
+- **Snag:** 8 base damage scaled by the fabric (12 on mesh). Past 50 damage the game's usual "torn" notice shows.
+- **Flash:** +10 social media heat when the photographer keeps the shot, shown in the stat line.
+- The raw `!o.bra` / `!o.panties` checks in this function now use `cv.braless` / `cv.commando`.
+
+**Approved judgment calls:**
+1. The sheer lingerie states get none of these events. The function already exits early for visible underwear, those states already have vignettes and police, and there's no garment on top for a Backlight, Flash or Snag to work through.
+2. The Snag never destroys the garment. Damage stops at 99.
+3. The Flash photographer always keeps the photo at 6001+. Below that it's a 60% chance, and the prose shows whether they kept or deleted it.
+4. Double Take always uses a woman, as the spec wrote it. Its gender isn't rolled.
+5. Framed states show the underwear through the mesh; a sheer bra or sheer panties under a mesh garment has its own lines; Diamond needs no bra at all.
+
+**QA:** about 122,000 renders (45 bodies × 19 outfits × 3 tiers × day/night × 2 districts). Zero errors, zero banned hits, longest paragraph 240.
+
+### Step 10 — The 20 existing exhibition events meet mesh ✅ (`985676a`)
+
+**How it's built:** none of the 20 events' scene text was edited. `installSheerExhibitionOverlays()` runs once after the story object loads and wraps each event's trigger scene and underwear hold scene, adding the new paragraph and, where earned, the reward bump. The only other edits are two one-line chance hooks: the district event pool and the bus roll.
+
+- **10A sheer underwear:** `getSheerUnderwearOverlay(stage, zone)` adds one paragraph when the panties (hem events) or bra (top events) are sheer.
+  - It goes right after the paragraph where the underwear shows; if none names it, after the opening paragraph.
+  - The trigger stage has three corruption tiers; the hold stage has two, matching the hold scenes' own split at 6001.
+  - Body-branched, names the real garment and fabric.
+  - **Rewards:** sheer underwear earns 75% of each event's bare values on both the trigger and the hold (`SHEER_EXHIB_REWARDS` holds every event's real numbers). Where the underwear value is already higher (fitting, photo, wet, spill and turnstile holds, and the crowd fingering), nothing changes, so a sheer piece never pays less than an opaque one.
+- **10B sheer outer garments:** hem events fire at half chance when the skirt or dress is sheer; top events at half chance when the top or dress is sheer. The trigger gets a three-tier haze line ("The mesh was already showing everyone the shape of you…" / "Now it shows what the mesh was already showing, with nothing between"). The wet top event never fires on a sheer top.
+- **10C bus:** in a braless, commando or bare mesh state, the bus trigger ends with a three-tier line: "The man beside you never needed the hem to lift…"
+
+**Approved judgment calls:**
+1. Wrapping instead of editing keeps all 40 scenes untouched; the overlay logic lives in one installer.
+2. The bus overlay goes at the end and speaks of "the man beside you." The bus scene has him seated on her right, not pressed behind her.
+3. The crowd event gets its own tactile lines (it's a grope in a crush, nobody's looking) and no haze line. Its hold line fits the moment he drags the mesh aside.
+4. "Sheer" for the lifted garment uses `cv.bottomSheer` / `cv.topSheer` (what she's wearing, not what's visible). Coats still cut these events' chances through the existing concealment rule.
+5. The reward bump goes through the draw multiplier on every event, though a few original hold scenes skip it.
+
+**QA:** every trigger and hold for all 20 events × 8 outfits × 45 bodies × 5 corruption levels. 65 new paragraphs, zero real hits, longest 241.
+
+### Step 11 — Harassment, slums, night assault ✅ (`310e23b`)
+
+**User decision before the step:** routing to the sheer scenes waits until Step 17 (no stubs, no fallback).
+
+- **11A sub-states:** the street event and grope and the slums event and grope all check `getSheerHarassState()` first. New `exhibState` values: `sheer_braless`, `sheer_commando`, `sheer_bare`, `sheer_lingerie`.
+  - **Openers** (what they see): one block per state, separate versions for the two street men (the tall one, the stocky one) and the three slums men (the leader, the wiry one, the big one). The spec's "Dressed up to be naked" is in the street bare opener. The lingerie opener covers the full set, a sheer bra alone, and sheer panties alone. Body-branched.
+  - **Gropes:** nobody lifts or moves the mesh. "The grid bites into it" is there; they rub her through sheer panties instead of pulling them aside; for sheer lingerie the cups get dragged under her tits. A non-sheer zone uses her real garments. Pants get "down the front of" instead of "up under."
+  - **Framed** keeps the regular opener plus one line: they can see the underwear through the mesh.
+  - **Grope stats:** lingerie 25/25, bare 22/25, braless or commando 18/20, street and slums.
+- **11B routing:** deferred (now done for the street in 17A; slums in 17B).
+- **11C/11D risk:**
+
+  | State | Harassment chance | Night assault chance |
+  |---|---|---|
+  | Framed | +0.03 | +0.03 |
+  | Braless or commando | +0.10 | +0.07 |
+  | Bare | +0.20 | +0.10 |
+
+  At night, wet and sheer don't stack; the higher applies. The night ambush line names sheer pieces ("in nothing but sheer mesh lingerie"). `slums_passout_rape_main` gets sheer inserts ahead of the underwear one; the spec's sample line is used for the full set.
+
+**Approved judgment calls:**
+1. A sheer bra alone and sheer panties alone both count as `sheer_lingerie` here; the prose branches on which pieces show.
+2. The rain layer skipped sheer sub-states until Step 13A replaced it.
+3. Two spec samples were reworded to avoid "doesn't X. Y.": "He leaves your top in place," and the same for the panties line.
+4. **Pre-existing bug fixed:** with a bra showing and jeans on, the ambush line said "no panties." It now says that only when she has none.
+
+**QA:** about 38,000 renders (14 outfits × 45 bodies × 3 tiers × wet/dry × first/repeat). Longest new paragraph 273.
+
+### Step 12 — Evidence, police, Cruz, social media ✅ (`17423f0`)
+
+- **12A evidence:** `checkExhibitionEvidence()` reads the sheer state when she's clothed or in underwear (coats still hide her).
+
+  | State | Severity | Chance |
+  |---|---|---|
+  | Framed | No entry | n/a |
+  | Braless or commando | Minor | × weave |
+  | Bare | Moderate | × weave |
+  | Any sheer lingerie | Moderate | × 1.0 |
+
+  - A night camera (after 8 PM, camera districts) bumps a sheer entry one level.
+  - Weave changes the odds: commercial's 30% becomes 33% for fishnet, 21% for semi-sheer.
+  - Each sheer entry stores `exposureState: 'sheer_*'`, a description ("Street cam footage, subject in see-through clothing. Exposure visible in frame.", plus a witness version), and `sheerLook` (dress, top, skirt or lingerie) for Cruz.
+- **Pre-existing bug fixed:** `createLedgerEntry()` dropped `exposureSeverity` and `exposureState`, so indecent exposure always scored as minor, even naked. It now keeps both. Naked entries score higher from here on, as the original code intended.
+- **12B Cruz:** sheer entries already count toward her "3+" indecent exposure pattern. Her lines fire only when more than half of Kelsie's indecent exposure entries are sheer:
+  - Case-folder confrontation (`cruz_confrontation_2`): with 3+ sheer camera entries, "Three stills. Same see-through dress. You know exactly what the cameras see." (count and look come from the file, e.g. "Four stills. Same see-through underwear."). With fewer: "Your indecent exposure file is interesting. Most of it's technically clothed."
+  - Street chat (`rand_event_cruz_direct_question`): indirect, "Funny thing, though," she adds. "Most of them, she's technically clothed."
+- **12C social media:** already covered by Step 8 vignettes and the Step 9 Flash. Nothing new.
+
+**Approved judgment calls:** sheer lingerie on a night camera becomes major (the one-level bump rule); the street chat line is indirect.
+
+### Step 13 — Weather, style comments, venue flavor ✅ (`45d67ef`)
+
+- **13A wet mesh (resolved all of old D4):** `getWetMeshLine(zone, tier)`, 4 tiers × chest/hips = 8 lines. Rain lands on skin through the grid, water beads on her nipples and slit, the mesh plasters flat; fishnet adds "Every diamond… is full of wet skin." Body-branched. A zone with opaque underwear under the mesh gets a line about the underwear soaking under the grid. A zone only counts as mesh when its outer garment is sheer and showing (coats hide it).
+  - Base wet interiority: head to toe in mesh, the chest and hips lines replace the whole line; with one mesh zone, that zone's line replaces its braless or commando layer.
+  - NPC reactions: mesh zones get the line in place of the braless/commando/both layer.
+  - District awareness: `WET_MESH_DISTRICT_SWAPS` turns "you're the one whose clothes went transparent" into "you're the one in wet mesh," and the zone line follows.
+  - Harassment opener: `getWetMeshHarassLine(cast)`. Street: the stocky one says "She's soaked… And she was see-through before it started." Slums: the wiry one says "Rain didn't even have to try." These replace the "translucent" rain layer, including for framed.
+  - Wet banner: "The mesh was see-through before the rain; now it's plastered flat to wet skin…"
+  - The dedicated wet braless/commando/both lines stand down for a mesh zone (zone ownership, as in Step 7). The shared body-branch lines ("transparent wet top," "clinging and translucent") skip any mesh zone.
+- **13B style comments:** `SHEER_STYLE_COMMENTS`, 4 per state for framed, braless, commando, bare. Framed reads as fashion with one sniffy older woman; the others bring scandal, phones and "That's a choice." They beat leather, silk, velvet and every appeal-tier comment. Dirty and torn clothes still win first; the slums still return null. **Sheer lingerie returns no comment.**
+- **13C venues:** Lucius has 3 door variants per state (was D5), still once a day. Hardy Bar fires once a day when she walks in bare or braless behind mesh: the bartender comps a drink or a table goes quiet, and her reaction is corruption-tiered.
+- **Pre-existing bugs fixed:** the wet NPC reactions and all three dedicated wet lines printed raw `{top}` / `{bottom}` for any outfit (about 1,300 test renders hit it; now zero, via `_resolveWetGarmentTokens`). The bar-spill top event said a mesh top "goes transparent"; it now skips sheer tops.
+
+**Approved judgment calls:** the dedicated wet lines stand down for mesh zones instead of getting mesh versions; one original Lucius line reworded ("The bouncer skips your face and your shoes and goes straight to your tits…"); Hardy is once a day via `_hardySheerLineDay`.
+
+### Step 14 — Deliberate sheer actions ✅ (`0571d97`, `03bf0c8`)
+
+All three need a bare-behind-mesh state (braless, commando or bare) and show in the commercial, residential and downtown choice lists next to flash, pose and the wet actions.
+
+| Action | Gate | Limit | Thrill / arousal / corruption |
+|---|---|---|---|
+| Stop covering up. | 4001+, thrill 30+ | Once a day | +10 / +8 / +25 |
+| Step into the light. | 6001+, thrill 50+ | 60-minute cooldown | +18 / +12 / +20, × weave × draw |
+| Peel the mesh down. | 8001+, thrill 70+, bare chest behind mesh | 45-minute cooldown | +25 / +15 / +15, suspicion +2 |
+
+- Stop covering up: Experienced (arms down, face burning, walking on) and Corrupted+ ("you picked it because it does").
+- Step into the light: streetlight after dark, lit shop window by day. DC turns a slow full circle. Fishnet came out at +26 thrill, semi-sheer at +17.
+- Peel the mesh down: momentarily topless without changing slots. Per garment: off-shoulder slides down, one-shoulder string untied, the O-ring drags the cups under her tits, fishnet stretched under them, Jaewon's top pulled up ("It smells like her"), crops lift, other dresses peel down. The label names the fabric ("Peel the fishnet down."). Gate is 8001, so she always walks a block like that before fixing it.
+- **14D:** Pose accepts sheer & bare and the full sheer lingerie set, with a sheer version of each of the three poses ("naked behind a layer of mesh" / "in nothing but see-through underwear"). Flash top and flash skirt get a second paragraph when the lifted garment is sheer: he's had the shape, now he gets the color.
+- **Pre-existing bug fixed:** `exhibition_flash_choose` threw `cv is not defined` for any outfit with a top or dress, so Flash was broken for almost every outfit.
+- **Style fixes on touched lines:** "wet pulses," "rhythmic pulses," "feel your pulse in it," "All the way up" became "squeezes," "spasms," "heartbeat," "Up to your hips." "Your pulse is hammering" stays (a heartbeat).
+
+**Approved judgment calls:** sheer lingerie gets none of the three actions (no outer mesh); Pose accepts only the full sheer set, using the existing bottomless rewards; arousal is added directly at the spec's numbers rather than through `applyArousal()`, which multiplies up to ×3 when braless and commando.
+
+### Step 15 — Exhibition Seduction through the mesh ✅ (`69c73ea`)
+
+- **15A routing:** clothed or underwear, 6001+ and appeal 80+, `hunt_seduction` checks the sheer state and sets `_seductionSheer`:
+
+  | Sheer state | Branch |
+  |---|---|
+  | Braless, or sheer bra alone | top |
+  | Commando, or sheer panties alone | btm |
+  | Bare | nkd |
+  | Full sheer set | bra, with naked-level rewards |
+  | Framed | regular seduction |
+
+  - Naked-level rewards: the bra exits add the difference (+15 / +10 / +10 on success, +7 / +2 / +2 on soft), shown as "See-through underwear bonus." A successful sheer lingerie run lands at 50 arousal and 40 corruption, the same as the naked branch.
+  - Every exit and failure scene clears the flag; each `hunt_seduction` visit resets it.
+- **15B overlays** (`getSheerSeductionOverlay`):
+  - Approach: "The mesh does nothing to stop him," then what shows, by state and body.
+  - Proposition: "You know I can see your nipples / your pussy / everything through that, right?" "I know," you say.
+  - Undress: opens every first sex scene before the first touch (peeled off her tits, crop shoved up, skirt hiked, a dress bunched at her waist "a band of mesh and nothing else," sheer panties dragged down). In the bra branch the scene already undresses her, so the overlay is a look-first beat: "…looks at both like she's deciding which to have first."
+  - Contradictions: all 101 chain scenes rendered; 29 lines that put her bare in open air before the peel were swapped (`SHEER_SEDUCTION_FIXES`), e.g. "Your bare skin in the open air" → "Your bare tits behind the mesh."
+- **15C gallery:** overlays show only when the active gallery entry's own `flagOverrides` sets `_seductionSheer`. A leftover flag in a save can't leak into the gallery. No gallery entries were added.
+
+**Approved judgment calls:** single sheer pieces route to top/btm; the bra branch gets a look-first beat; the stranger `<em>He thought:</em>` lines are left alone (see D16).
+
+### Step 16 — Jaewon ✅ (`a5c3eec`, `67fe9f0`)
+
+**User direction:** because the scene uses Jaewon's corruption, Kelsie is always DC in it (only a DC Kelsie can corrupt Jaewon). Both tiers are written with a DC Kelsie. The user had it done one tier at a time.
+
+- **16A:** 18 lines (Innocent / Experienced / DC by Jaewon's corruption × braless / commando / both through mesh × 2). Same gates as the opaque reactions (girlfriends, not angry, not asleep, mood allows touch, 120-minute cooldown, 30%). A zone bare behind mesh gets these; anything else falls through to the original lines.
+  - Innocent: she clutches a cushion over her own chest, "Kelsie. I can see everything."
+  - Experienced: "It's like touching you naked… Except worse."
+  - DC: "You look naked and you're dressed and I can't decide which one makes me wetter."
+- **16B "That's my top.":** 12 lines, 6 for braless under her top and 6 for a bra framed behind it (the spec's "doubled"). Both spec samples used as written. At DC with a bra under it, she unhooks it and pulls it out through the sleeve: "That's how you wear my top."
+- **16C friend tier:** 3 flustered lines, once a day (first visit that day), Jaewon PG ("She walks into the doorframe on her way past"). If Kelsie's aroused, a crude line about the top smelling like Jaewon.
+- **16D `jaewon_mesh_top_sex` ("Her Mesh Top"):**
+  - **Trigger:** "Come take it back." shows in the living room or bedroom for 15 minutes after a braless "That's my top" reaction. Girlfriends, Jaewon 4001+, Kelsie in Jaewon's top with `cv.seeThroughChest`, not blocked by mood, once a day. Jaewon's tier picks the scene.
+  - **Experienced tier (Jaewon 4001–8000), 62 paragraphs:** Act 1 on the couch: Kelsie straddles her lap, Jaewon sucks her nipples through the mesh ("two dark wet circles on her top"), strips everything but the top, fingers her while she rides her hand ("Say it. Whose top?", "Cum in my top."), wipes her soaked fingers down the mesh: "Now it's really mine." Act 2 on the rug: Kelsie pulls the wet top onto Jaewon, puts her on her back with a cushion under her hips and legs over Kelsie's shoulders, sucks her nipples through her own mesh, eats her out and fingers her to orgasm. From the bedroom, Jaewon leads her to the couch first. **Afterward the top goes back to Jaewon's wardrobe, un-borrowed.**
+  - **DC tier (Jaewon 8001+), 54 paragraphs:** Jaewon walks her backward by a fistful of the top to the living-room window (down the hall first from the bedroom, "she never lets go"). "Take it back? No. I'm going to show everyone what it looks like on you." Act 1: face-first into the glass, backlit by the lamp at night (lit windows opposite, the man on the third floor) or sunlit by day (the sidewalk); strips everything but the top from behind, "Hands on the glass," "Eyes open. You watch," "Let him see you cum in my top." Act 2: "On your knees." Jaewon's shoulders to the window, fist twisted in the mesh at Kelsie's shoulder: "Mine. On you. While you eat me." Ending: "Don't give it back yet. I want to watch you wear it out." **Kelsie keeps the top** (it stays borrowed).
+  - `onEnter`: `trackGalleryScene`, relationship +3 / +5, `corruptJaewonSlightly()`, `completeSexConsensualFemale()`.
+  - Body branching: bodyType at the straddle, ride, thrusting, orgasm and kneel; breastSize at the reveal and the glass; buttSize at the grips and grinding. Skirts shoved up, pants dragged off, panties handled either way.
+  - Gallery: Jaewon category, "Her Mesh Top," Experienced (4001) and Deeply Corrupted (8001). `galleryOnEnter` dresses her in the top, braless (guarded to gallery mode since `c126160`).
+
+**Approved judgment calls:** Act 2 of the Experienced tier is on the rug because "Lazy Day: Couch" already ends with Jaewon on her back on the couch; the friend reaction fires on the first visit each day.
+
+### Jaewon Taofa Tips & Guide update ✅ (`14cf384`, user-requested between steps)
+
+- "Her Mesh Top (Experienced/DC tiers…)" added to "Sex scenes that use Jaewon's corruption" (~6084).
+- "Diner Break Room" (a pre-existing scene the user had forgotten) added to "Sex scenes that use Kelsie's corruption" (~6086).
+- Gallery total bumped 46 → 48 in both places it appears (~6106 and the other count). Verified the Jaewon category holds 48 entries.
+
+### Step 17A — `district_sheer_exhibition` ✅ (`7ec4449`, `86d31c0`, `f4f277c`, `5de4ff9`)
+
+**User direction:** one tier at a time, beginning with Innocent. Use `district_wet_exhibition` as the reference.
+
+**Structure** (~110777): `galleryOnEnter` (Off-Shoulder Mesh Mini Dress, braless and commando), then `text()`:
+- Setting from `gameState.flags.harassmentDistrict`: `park` → "behind the maintenance shed," the shed wall (metal), a park bin lid; otherwise "into the alley," the brick wall, the dumpster lid.
+- **Zone-by-zone garment prep** computed once before the tiers: `cFish` / `hFish` (veiled fishnet), `chestP` + `chestFrame` (lingerie cups shoved under; fishnet diamond stretched until the nipple pops through; veiled or framed mesh ripped down the neckline; opaque top shoved up), `chestOpaque`, `hipsP` + `hole` (lingerie crotch torn; fishnet stretched; veiled or framed mesh torn over her pussy "instead of lifting it," framed panties hooked through and torn aside; opaque bottoms shoved up or yanked down), `opaqueHips`, `through`.
+- Tiers: `if (corruption < 4001) {…} else if (corruption < 8001) {…} else {…}`. Each tier writes its own open-up prose (the DC tier has her own `chestD` / `hipsD` / `frameD`).
+- Cast: **the tall one** and **the stocky one**. Their joke: **"Technically dressed."**
+
+**Innocent (0–4000), 37 paragraphs, assault:** paralysis (she could break them but blocks of strangers staring through the mesh have left her too wet to fight); the tear, never stripped; Act 1 pinned to the wall, mouth on the nipple through the tear, fingers through the hole; Act 2 the stocky one against the wall with her knee hooked over his hip, the tall one pins her wrists ("Fucking her through her clothes… She didn't even have to take them off."), then bends her over the dumpster lid / bin lid and takes her full of the first one's cum; her body betrays her and she cums, crying, before he does. "Technically dressed" comes back four times. Aftermath names each garment and what was done to it; "Every stranger on the street saw straight through it. These two just stopped pretending it was there." / "It hides nothing. It never did."
+
+**Experienced (4001–8000), 35 paragraphs, conflicted and wet:** a palm at the small of her back, "your feet go with them before you've finished deciding they shouldn't." Tits pulled out over the neckline one at a time (fishnet: pushed through the diamonds; cups dragged under; tee shoved up), crotch torn. Her body cooperates first ("You notice that. You don't pull back."). **Standing bend:** the tall one against the wall, a hand on her neck bending her at the waist, her jaw "drops open on its own," the stocky one fucks her from behind through the torn crotch. "Still dressed" hits her clit "like a hand." She cums hard between them; "You swallow. You didn't have to. You swallow again." Close: "Technically dressed. Technically willing." / "Your hips moved first. Your mouth opened first. The rest of you just caught up."
+
+**DC (8001+), 33 paragraphs, she wants it:** she pulls the tall one in by the belt and leads them both. "No. Keep it on me. Fuck me through it." / "Technically dressed." / "That's the point." She opens the mesh herself (fishnet stretched until her nipples pop through; neckline dragged under her tits; opaque top shoved up; cups shoved down; hips torn, stretched, lifted or pushed down). She pushes the tall one onto **the stacked leaf bags (park) / an overturned crate by the dumpster (alley)** and rides him with the stocky one in her mouth, setting the pace. Mid-ride she looks at the street: "Technically dressed," then takes him back. Orgasm with approach, hit ("AH—fuck—fuck—") and linger. The tall one cums inside ("All of it"). She strokes the stocky one off "On the mesh… Where everyone can see it." She tucks her tits back behind the mesh (or pulls an opaque top down over the mess), "Technically dressed," and walks slow so the whole block gets a look.
+
+**`onEnter` (all tiers):** `trackGalleryScene`; garment damage (outer mesh +40, mesh panties +60, capped at 99 so she walks out still wearing it torn); `completeSexAssaultMale({ time: 15, hygiene: -30, rapeType: 'district_sheer_exhibition', corruptionGain: 25, thrill: 15, partner: 'district_group', skipPregnancy: true })` (it handles trauma at the right tiers); scene pregnancy check into `_districtSheerExhibPregnancy`; `streetHarassmentCount` +1; `exhibitionEventsCompleted` +1. Choices: "Keep walking." to `city_exploration`, with the "Three blocks out…" pregnancy message when the flag is set.
+
+**Street routing (live):** in `street_harassment_grope.choices` (~109367), right after the naked line and before the wet block:
+```javascript
+// Mesh Step 11B/17A: bare behind mesh, or sheer lingerie, routes to the sheer scene
+// (ahead of the wet route: mesh was see-through before the rain). Framed stays as is.
+if (getSheerHarassState()) _exhibScene = 'district_sheer_exhibition';
+```
+Verified: every sheer outfit (wet or dry) → `district_sheer_exhibition`; framed + wet and plain + wet → `district_wet_exhibition`. The street grope offers exhibition scenes only at corruption 6000+ ("Let them have you"), so **the Innocent tier is gallery-only in play**, like the other district exhibition Innocent tiers.
+
+**Gallery:** Exhibitionism, "District: Sheer Exhibition," Innocent 0 / Experienced 4001 / Deeply Corrupted 8001.
+
+**Approved judgment calls:**
+1. Routing landed with the last tier so 6000+ players never hit an unwritten tier.
+2. Damage caps at 99 (at 100 the game unequips it).
+3. Every sheer state that routes here is handled, including the framed mixes (mesh dress over a bra, mesh skirt over opaque panties) and stacked sheer.
+4. Positions chosen to differ from each other and from `district_wet_exhibition` (wall then lid; standing bend; riding with a mouth).
+5. The wet tier's beats ("you tell yourself it was the hand") are echoed but reworded, so the two scenes don't read word for word.
+
+**QA:** 12 outfits × 2 settings × 45 bodies per tier. Innocent 213 unique paragraphs (longest 293), Experienced 159 (longest 281), DC 182 (longest 257). Zero banned hits after fixes.
+
 ---
 
 ## Part D — Findings, open items, and traps for the next steps
 
+**Still open:**
 - **D1. Unfixed floor bug (out of scope).** Jaewon proximity arousal, companion proximity arousal and the desperation MH drain in `advanceTime()` still use `Math.floor(hoursPassedPartial * rate)`, which is 0 on short ticks. Each is a one-line fix with `accruePassive`. **Offer it; don't do it unasked.**
 - **D2. Save migration still owed (Step 21B):**
   - bodysuit items in old saves
   - `jaewon_mesh_top` still tagged `material:synthetic` in saves
-  - every flag in B6
+  - every flag in B6 (both tables), plus the two owed by 17B and 18
+- **D6. Errata in the original doc** (still relevant to Part F):
+  - Step 9 says its events lead into "Step 17 discovery scenes." They're **Step 18**.
+  - Step 1F says to fix saves "in Step 20." Migration is **Step 21**.
+  - Step 8A gives framed thrill as both 3/5/7 and 5. **3/5/7 was used.**
+- **D9. Braless/commando thrill at home stays unguarded** by design. Leave it unless the user asks.
+- **D11. Match fabric words to the registry noun.** The mesh friction lines say "mesh" and "grid," so `_meshFrictionZone` only fires for 'mesh'. Any new prose that names the fabric should use `b.noun` / `cv.meshNoun` and the registry's own details (fishnet diamonds, leopard spots). Registry nouns: 'mesh', 'fishnet', 'sheer fabric' (leopard).
+- **D13. Exhibition vs exposure check order in `showScene()`:**
+  1. Ruby intercept (8B)
+  2. sheer venue block (4C)
+  3. slot exposure block
+  4. …ambient chain: arousal → exhibition ambient (7C routing) → evidence → wet chain → **sheer exposure (7A)** → both → braless → commando → framed (7B) → friction ×3
+
+  New hooks should respect this order.
+- **D14. District street `onEnter` order:**
+  1. `checkAndSetExposureState()`
+  2. underwear/topless/bottomless block
+  3. `handleSheerDistrictEntry` (gate + vignette)
+  4. `tickSheerLingeriePolice`
+  5. `checkAccidentalExposure` (commercial ~105629, residential ~105800, medical ~111753, downtown ~111850, wendale ~111998). It shows its event with `showMessage(text + statText, cb)` and returns true, which ends that `onEnter`.
+  6. hit squad
+  7. `checkDistrictHarassment` → trigger (sets `flags.harassmentDistrict`, ~20610)
+  8. Cruz
+  9. random district event
+  10. hero event
+  11. `tryStyleComment`
+  12. temperature
+  13. degradation
+  14. then the naked police check
+
+  Slums runs its own daily harassment in `onEnter`.
+
+**New in this session:**
+- **D15. `galleryOnEnter` runs in live play (fixed in `c126160`).** `showScene()` calls it on part 0 whether or not the gallery is open (~202776; the comment says "run even in gallery mode"). The existing uses only set harmless `*LastPenType` flags. Both mesh scenes used it to dress Kelsie, so once the street routing went live, `district_sheer_exhibition` would have swapped any outfit for the off-shoulder dress, and `jaewon_mesh_top_sex` would have replaced Jaewon's top with a copy and dropped the bra. Both now start with `if (!gameState.flags._galleryMode) return;`. Verified through the real `showScene` in both modes. **Every new gallery scene (17B, 18, 19) needs the same guard.**
+- **D16. Stranger NPC thoughts in the seduction scenes (out of scope, pre-existing).** The Exhibition Seduction scenes contain `<em>He thought:</em>` lines for anonymous strangers, which the Sex Standards reserve for romance characters. Step 15 edited only the sheer versions of lines that had to change. Offer a cleanup pass; don't do it unasked.
+- **D17. Street vs slums reachability.**
+  - Street (`street_harassment_grope`): the exhibition route is offered only at 6000+ ("Let them have you"). So the **Innocent tier of every district exhibition scene is gallery-only.**
+  - Slums (`slums_harassment_grope`, ~111375): when `_exhibScene` is set, the "Don't do anything" choice routes into it **at any corruption** (below 6000 it's labeled "Don't do anything"; at 6000+ "Let them take what they want"). So **all three tiers of `slums_sheer_exhibition` will be reachable in live play**, the Innocent tier included. That makes the Innocent slums tier's live-play correctness (outfits, damage, trauma) matter more than the district one.
+- **D18. Harassment `exhibState` routing test.** `getSheerHarassState()` returns '' for framed and for no sheer, and collapses all three lingerie states into `sheer_lingerie`. That's the right single test for 17B routing.
+- **D19. The wet exhibition scenes' `onEnter`s don't damage clothing.** The sheer scenes do (+40 outer, +60 mesh panties, capped 99). Keep the cap so she walks out still dressed.
+- **D20. Accidental events and Step 18.** The Step 9 events return `{ text, thrill, arousal, key, gender, heat?, snagItem? }` and `checkAccidentalExposure()` shows them with `showMessage()`, which has a single close callback and no choices. Step 18's "Let him/her follow." / "Keep walking." needs a mechanism (see Part E, Step 18).
+- **D21. The Flash already adds heat.** At 6001+ the Step 9 Flash photographer always keeps the photo, so the event has already added +10 social media heat by the time a Step 18 follow choice appears. Don't add a second +10 for the same photo in `sheer_flash_sex_*` unless the user wants the extra shots to count separately (ask).
+- **D22. Gallery label style.** The older entries use an em dash ("District — Wet Exhibition"). The overhaul's new entries use a colon, per the spec ("District: Sheer Exhibition," "Her Mesh Top"). Keep the colon for 17B–19.
+
+**Resolved since the first handoff:** D3 (zone ownership in accidental events, Step 9), D4 (wet systems on mesh, Step 13A), D5 (Lucius 3 variants, Step 13C), D7 (the Sex and Masturbation Standards are now provided), D8 (every listed system now reads the sheer state), D10 (the style sweep) and D12 (gallery mode; see D15 for the hook trap). Their original text, verbatim, for the record:
+
+> The D7 facts still apply to Steps 17B–19: gallery-eligible male sex scenes run two-part at about 45 paragraphs, female scenes are one extended scene at about 40, and every gallery scene's `onEnter` calls `trackGalleryScene`.
+
 - **D3. Step 9 must respect zone ownership.** `checkAccidentalExposure()` builds its braless and commando pools from raw `!o.bra` / `!o.panties`.
   - So today a mesh dress with no bra can draw opaque-fabric braless events ("nipples outlined through the {fabric}").
   - When you add the sheer pool, exclude veiled zones from the old pools using `_sheerOwnsZone(zone)`, the same approach as Step 7.
@@ -675,10 +1054,6 @@ About 110 generic "cotton" references to Kelsie's own garments were converted to
   - `getWetDistrictAwareness`
   - the harassment wet layer
 - **D5. The Lucius doorman has 1 line per state.** Step 13C wants 3 variants per state. Extend `getLuciusSheerDoorLine()`.
-- **D6. Inconsistencies in the original doc:**
-  - Step 9 says its events lead into "Step 17 discovery scenes." They're **Step 18**.
-  - Step 1F says to fix saves "in Step 20." Migration is **Step 21**.
-  - Step 8A gives framed thrill as both 3/5/7 and 5. **3/5/7 was used.**
 - **D7. Companion docs needed.** Steps 16D, 17, 18 and 19 require `VampireGirl_Sex_Standards.md` and `VampireGirl_Masturbation_Standards.md`, and **neither was provided this session.** Ask the user to upload them before starting Step 16D. What the spec says about them:
   - Gallery-eligible male sex scenes run two-part at about 45 paragraphs; female scenes are one extended scene at about 40.
   - Every gallery scene's `onEnter` calls `trackGalleryScene`.
@@ -690,7 +1065,6 @@ About 110 generic "cotton" references to Kelsie's own garments were converted to
   - pose and flash (14)
   - seduction routing (15)
   - Jaewon (16)
-- **D9. Braless/commando thrill at home stays unguarded** by design. Leave it unless the user asks.
 - **D10. Style sweep done at handoff** (in the handoff commit). The whole diff against the original upload was scanned, and these were fixed:
   - "It's underwear the way a window's a wall" (Step 4) → "…the same as a window's a wall"
   - "all the way down your neck" (1H) → "down your neck and keeps going"
@@ -699,117 +1073,92 @@ About 110 generic "cotton" references to Kelsie's own garments were converted to
   - "on the way" (slums, post-Step 3) → "on the walk there"
 
   Now every added or touched line has **zero** hits for the banned phrases, and every em dash in them is paired or a cut-off.
-- **D11. Match fabric words to the registry noun.** The mesh friction lines say "mesh" and "grid," so `_meshFrictionZone` only fires for 'mesh'. Any new prose that names the fabric should use the registry noun (fishnet diamonds, leopard spots) or `b.noun`.
 - **D12. Gallery mode.** Nothing in Steps 1–8 reads `_galleryMode`; Steps 15C and 17–19 must. Use `flagOverrides` in the gallery registry, and never invent corruption flags.
-- **D13. Exhibition vs exposure check order in `showScene()`:**
-  1. Ruby intercept (8B)
-  2. sheer venue block (4C)
-  3. slot exposure block
-  4. …ambient chain: arousal → exhibition ambient (7C routing) → evidence → wet chain → **sheer exposure (7A)** → both → braless → commando → framed (7B) → friction ×3
-
-  New hooks should respect this order.
-- **D14. District street `onEnter` order today:**
-  1. `checkAndSetExposureState()`
-  2. underwear/topless/bottomless block
-  3. `handleSheerDistrictEntry` (gate + vignette)
-  4. `tickSheerLingeriePolice`
-  5. `checkAccidentalExposure` (only in commercial, residential, medical, downtown and wendale)
-  6. hit squad
-  7. `checkDistrictHarassment` → trigger
-  8. Cruz
-  9. random district event
-  10. hero event
-  11. `tryStyleComment`
-  12. temperature
-  13. degradation
-  14. then the naked police check
-
-  Slums runs its own daily harassment in `onEnter`.
 
 ---
 
 ## Part E — Handoff notes for each remaining step (read before the verbatim spec in Part F)
 
-**Step 9 — New sheer accidental events.**
-- Extend `checkAccidentalExposure()` (~22858). It currently returns early unless raw braless or commando.
-- Add the sheer branch keyed on `getSheerState().state !== 'none'`.
-- Apply zone ownership: drop the old braless events for a veiled chest, and the old commando events for veiled hips (D3).
-- Build `{text, thrill, arousal}` like the existing events, and use `_sheerBodyCtx()` for body branching.
-- Scale by `weaveMult` and state (framed ×0.5, braless/commando ×1.0, bare ×1.4), and by `getExhibitionDrawMultiplier()`.
-- Every event rolls its NPC's gender at the start (60% male / 40% female) so Step 18 can branch.
-- Events 1–3 (Backlight, Flash, Snag) must end with a choice at 6001+, "Let him/her follow." / "Keep walking.", which Step 18 fills in. Until Step 18 exists, either stub the choice or add it in Step 18. **Ask the user.**
-- The Snag applies +8 damage to the garment; check how `item.damage` is stored (see `applyClothingDamage` or similar).
-- The Flash adds +10 social media heat when he keeps the photo (Step 12C).
-- Increment `exhibitionEventsCompleted` and track peak thrill.
+**Step 17B — `slums_sheer_exhibition`. NEXT.**
+- **Cadence:** expect the user to ask for one tier at a time, starting with Innocent, and to ask it to "sing." Load the Sex Standards before writing. The Innocent tier is assault and follows the assault register (visceral, invasive, her body seen from outside, crude, no NPC thoughts).
+- **References to read first:** `slums_wet_exhibition` (~175806, the direct template) and `district_sheer_exhibition` (~110777, the garment handling), plus the slums opener/grope in `getSheerHarassmentOpener('slums')` / `getSheerHarassmentGrope('slums')` so the scene picks up where the grope left off.
+- **Cast and scale** (from `slums_wet_exhibition` and the Step 11 slums blocks): three men, **the leader, the wiry one and the big one**. The wet scene doesn't take her to an alley: "They don't take you to an alley… a slums sidewalk," because nobody on the block cares. Every tier of the wet scene builds to **triple penetration**; Innocent and Experienced open with fingers, DC goes straight to the triple after the strip.
+- **Placement:** directly after `slums_wet_exhibition` closes (~176040), before the `// ORC RAPE SYSTEM` comment block.
+- **Structure to mirror from 17A:**
+  - A `galleryOnEnter` that dresses her in the Off-Shoulder Mesh Mini Dress, braless and commando, **guarded by `if (!gameState.flags._galleryMode) return;`** (D15). Copy the dress object from `district_sheer_exhibition`.
+  - The `text()` preamble: `cv`, body vars, `b = _sheerBodyCtx()`, `st = b.st`, `zw = st.zoneWeave`, `n = b.noun`, `lingerie`, and zone-by-zone garment prep (`cFish`, `hFish`, chest and hips paragraphs, `chestOpaque`, `opaqueHips`, the hole phrase). Rewrite the prose for the slums cast; don't reuse the district lines word for word.
+  - Tiers: `if (corruption < 4001) {…} else if (corruption < 8001) {…} else {…}`.
+  - The spec's garment rules: mesh dress (tear the crotch or hike it, tits through the torn neckline or peeled down), mesh skirt (never lifted; fucked through a torn hole), fishnet (fingers and cock through the widened diamonds), mesh lingerie (torn at the crotch, cups pushed under). Opaque zones are handled normally (shove up, yank down).
+  - Handle every routed state: veiled, framed (a mesh dress over a bra; a mesh skirt over opaque panties), stacked sheer, and lingerie (full set, bra alone over opaque bottoms, panties alone under an opaque top).
+- **The slums scene needs its own voice.** "Technically dressed" is the district men's joke. Give the slums men something of their own (the Step 13 slums wet line was "Rain didn't even have to try"). Pick positions that differ from the district sheer tiers (wall + dumpster lid; standing bend; she rides with a mouth) and don't just repeat the wet scene's triple beat for beat. Suggest options to the user if the choice is significant.
+- **`onEnter`** (mirror `slums_wet_exhibition` with the 17A additions):
+  ```javascript
+  trackGalleryScene('slums_sheer_exhibition');
+  // garment damage: outer mesh +40, mesh panties +60, Math.min(99, …) via initializeItemDamage (copy 17A's _hurt helper)
+  completeSexAssaultMale({ time: 20, hygiene: -35, rapeType: 'slums_sheer_exhibition', corruptionGain: 30, thrill: 20, partner: 'slums_group', skipPregnancy: true });
+  // scene pregnancy check → gameState.flags._slumsSheerExhibPregnancy
+  gameState.flags.slumsHarassmentCount = (gameState.flags.slumsHarassmentCount || 0) + 1;
+  gameState.exhibitionStats.exhibitionEventsCompleted += 1;
+  ```
+  Choices: "Keep walking." to `slums_district_street`, with the slums pregnancy message ("Six blocks out…" in the wet scene) when the flag is set, clearing it first.
+- **Routing:** in `slums_harassment_grope.choices` (~111375), right after `if (exposure === 'naked') _exhibScene = 'slums_exhibition_naked';` and before the wet block, add:
+  ```javascript
+  // Mesh Step 11B/17B: bare behind mesh, or sheer lingerie, routes to the sheer scene
+  // (ahead of the wet route: mesh was see-through before the rain). Framed stays as is.
+  if (getSheerHarassState()) _exhibScene = 'slums_sheer_exhibition';
+  ```
+  **Wire it only once all three tiers exist** (the 17A precedent), since the slums route reaches every tier (D17). Until then, render tiers through the gallery or direct `text()` calls.
+- **Gallery:** Exhibitionism, right after the `slums_wet_exhibition` entry (~47902): `{ sceneId: 'slums_sheer_exhibition', label: 'Slums: Sheer Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] }`. Add tiers as they're written.
+- **Migration:** add `_slumsSheerExhibPregnancy: false` to the Step 21 list.
+- **Test:** the A3 12-outfit matrix × 45 bodies per tier; the routing check with wet 0 and 70 (every sheer outfit → sheer; framed + wet and plain + wet → wet); `onEnter` damage; the gallery outfit via `enterGalleryMode`; and live `showScene` keeps her real outfit.
 
-**Step 10 — The 20 existing exhibition events.**
-- They branch on `cv.hasPanties` / `cv.hasBra`.
-- Add `getSheerUnderwearOverlay(stage)` at the trigger and hold stages when `cv.pantiesSheer` / `cv.braSheer` is true. Sheer underwear gets 75% of the `hold_bare` rewards.
-- Hem events at 50% chance when the lifted garment is sheer (`cv.bottomSheer`), plus an overlay line. The same goes for top events (`cv.topSheer`).
-- Suppress `exhibition_wet_trigger` on a sheer top.
-- Give the bus event trigger a sheer overlay. The bus event is chosen in `travelToLocation` (~27837) at a 20% roll; it requires a skirt or dress.
-- The fabric words in these events already use `cv.*Fabric`.
-- Keep the new prose body-branched.
+**Step 18 — Discovery through the mesh.**
+- **Decisions to put to the user before writing** (the spec leaves them open):
+  1. **How the follow choice is shown.** `checkAccidentalExposure()` uses `showMessage()`, which can't offer choices (D20). Options: (a) for Backlight, Flash or Snag at 6001+ in a bare-behind-mesh state, show the event text in a small new scene (e.g. `sheer_discovery_offer`) whose choices are "Let him follow." / "Let her follow." and "Keep walking." (back to the district street), applying the event's stats in its `onEnter`; or (b) keep the popup and let its close callback `showScene` into that choice scene. Recommend (a).
+  2. **Which states get the choice.** The spec says bare-behind-mesh, so `sheer_braless`, `sheer_commando`, `sheer_bare` (not framed; lingerie never reaches these events). Confirm.
+  3. **The Flash heat** (D21).
+- **Wiring:** the event objects already carry `key` ('backlight', 'flash', 'snag') and `gender` ('m' / 'f'). Route to `sheer_<key>_sex_m` or `_f`. Store what the scene needs (the gender, the district, the snag garment) in transient flags and clear them at the end; add each to the Step 21 list.
+- **Condom:** mirror an existing transient pattern such as `_dinerPropositionCondom` (~87349: set true/false by the choice, read by the scene, then set to null). Use `_sheerDiscoveryCondom`.
+- **Two-part male scenes:** mirror the Exhibition Seduction chain: `exhibition_seduce_*_sex_m` → `exhibition_seduce_*_sex_2_m`, and in the gallery registry `galleryChain: { text: 'Turn around.', nextScene: '…_sex_2_m' }` (~47867). Female scenes are one extended scene.
+- **Snag:** the event already applied 8 × fabric damage. The scene adds +30 through `initializeItemDamage` + `Math.min(99, …)`.
+- **Gallery:** six entries in Exhibitionism, tiers Corrupted (6001) / Deeply Corrupted (8001), each with a guarded `galleryOnEnter` (Off-Shoulder Mesh Mini Dress, braless and commando) and, where the scene reads a transient flag (gender, condom), `flagOverrides`.
+- Consensual register (stranger: raw physical facts). Sex Standards throughout; no NPC thoughts for strangers.
 
-**Step 11 — Harassment, slums, night assault.**
-- Scenes: `street_harassment_event` / `_grope` and `slums_harassment_event` / `_grope`.
-- Grep `exhibState` to find the sub-state logic. Add the sheer states before the wet check.
-- New routing targets `district_sheer_exhibition` / `slums_sheer_exhibition`. Those scenes are **built in Step 17**, so until then route to a safe fallback or build the stubs. **Ask the user.**
-- Chance and risk code: `checkDistrictHarassment()` (~20550), `checkNightRapeEncounter()` (~28064), `getUnderwearVisibilityDesc()` (~39485) and `slums_passout_rape_main`.
-- Night assault doesn't stack with wet: take the higher chance.
-- Assault prose follows the assault register (visceral, invasive, her body seen from outside) and stays crude.
+**Step 19 — Masturbation integration.**
+- Load the Masturbation Standards before writing.
+- **19A:** `masturbate_braless_alley` (~104942), `masturbate_commando_alley` (~104978), `masturbate_both_alley` (~105010) get sheer opening and closing branches when the relevant zone is see-through (`cv.seeThroughChest` / `cv.seeThroughHips`, or `_sheerOwnsZone`). `getBralessCommandoAlleyChoice(districtId)` (~24435) gets the sheer label variant ("Duck into an alley (everyone's been looking)"). No new gallery entries for 19A.
+- **19B:** `exhibition_masturbate_alley` (~173131) and `exhibition_masturbate_park_bench` (~173248) read `exposure = _galleryMode ? (flags._alleyMastGalleryExposure || 'clothed') : getExposureLevel()`. Add a `'sheer'` value: in live play, when exposure is `clothed` or `underwear_only` and `getSheerState().state` isn't `none` or `sheer_framed` (confirm framed with the user), use the sheer branch. Two tiers, Corrupted / DC. The hook: she touches herself through the mesh first, and only at the edge gets her fingers under it.
+- **Gallery:** add after the "Clothed" siblings (~47883 and ~47888):
+  - `{ sceneId: 'exhibition_masturbate_alley', label: 'Alley: Sheer', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _alleyMastGalleryExposure: 'sheer' } }`
+  - `{ sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench: Sheer', tiers: [...same], flagOverrides: { _parkBenchMastGalleryExposure: 'sheer' } }`
+  - These scenes have no `galleryOnEnter` yet; add a guarded one that dresses her in the Off-Shoulder Mesh Mini Dress, braless and commando, only when the active override is `'sheer'`, so the other five gallery variants keep their current behavior.
 
-**Step 12 — Evidence, police, Cruz, social media.**
-- `checkExhibitionEvidence()` (~36961).
-- Grep Cruz's behavioral profile for the indecent-exposure pattern: the "3+" entry count and `exposureState`.
-- Social media heat is `gameState.socialMediaHeat`, capped at 100. Step 8A already adds vignette heat, so don't double-add it for the same moment.
+**Step 20 — Tips & Guide.**
+- Guide text currently in the file:
+  - The Exhibitionism entry has Thrill Sources and Decay lines, which Step 1C edited.
+  - The thrill stat description block has "Thrill Gain — Exposure States" and a Decay list.
+  - The Clothing Systems entry has "Sheer Pieces," which still claims sheer is "always street-legal" and **must be rewritten**, plus "Visible Underwear" and "Upscale Doors."
+  - The Jaewon Taofa section already lists "Her Mesh Top" and the 48-scene count (`14cf384`). Only revisit it if 18 or 19 add Jaewon content (they don't).
+- Grep `Sheer Pieces`, `Thrill Sources`, `Upscale` and `Going Braless`. Document **what's actually built**, deviations included:
+  - the lingerie top/bottom venue and transit refusals
+  - public-only sheer minutes
+  - the wet/sheer non-stacking rule and its one-zone exception
+  - the 8001 sheer-set gate
+  - Ruby, the Lucius doorman, Hardy Bar
+  - the vignette tiers
+  - the accidental events (sheer lingerie gets none; the Snag can't destroy a garment; the Flash photographer)
+  - the 20 existing events with mesh (half chance, 75% of bare rewards for sheer underwear)
+  - harassment and night bonuses, evidence severities with the night camera bump (sheer lingerie can reach major), Cruz
+  - wet mesh, style comments (none for sheer lingerie)
+  - Stop covering up / Step into the light / Peel the mesh down, with gates and cooldowns; pose and flash
+  - Exhibition Seduction routing and the see-through underwear bonus
+  - Jaewon (reactions by her corruption, "That's my top," friend tier, "Come take it back."; Experienced returns the top, DC keeps it)
+  - the gallery scenes and their triggers, including which tiers are live (D17)
+- Guide text is UI text, so contractions and crude register still apply to its prose, but labels are exempt from the contraction rule.
 
-**Step 13 — Weather, style comments, venue flavor.**
-- Wet mesh prose (D4) goes in every wet system listed there. Check `cv.topSheer` / `cv.bottomSheer` per zone.
-- `checkStyleComment()` (~38060) detects leather, silk and velvet. Add mesh detection (a `material:mesh` tag or a registry hit) and pools keyed by sheer state.
-- Expand the Lucius doorman to 3 variants per state (D5).
-- Add the Hardy Bar line once per visit (`_hardySheerLineDay`). Grep `hunt_hardy_bar`.
+**Step 21 — Migration and sweep.** Grep for the Braless/Commando migration block: `bothMinutesTotal === undefined` (~16770).
 
-**Step 14 — Deliberate sheer actions.**
-- These are choices in the district choice lists, next to the flash, pose and wet choices. Grep `getWetExhibitionChoices`, `getPoseExhibitionChoice` (~23316) and `exhibition_flash_top` / `_skirt`.
-- The cooldown flags are listed in the Step 21A notes.
-- "Peel the mesh down" should branch per garment, reading the registry `shape` flags (offShoulder, oneShoulder, oRing, fishnet).
-
-**Step 15 — Exhibition Seduction through the mesh.**
-- Routing is in `hunt_seduction.choices` (~the "Exhibition Seduction — route" block). It's reachable now (1B).
-- The exit scenes that must clear `_seductionSheer` are the `exhibition_seduce_*` chain endpoints; grep them.
-- Overlays must return '' in `_galleryMode` unless a `flagOverrides` entry sets `_seductionSheer`.
-
-**Step 16 — Jaewon.**
-- `getJaewonBralessCommandoReaction()` (~26536) holds the existing gates.
-- Use Jaewon's own corruption, stored at `gameState.relationships.jaewon.corruption`, to pick her tier.
-- `corruptJaewonSlightly()` is the corruption helper.
-- The gallery scene `jaewon_mesh_top_sex` needs the Sex Standards doc (D7).
-- Grep for any existing window and face-sit scenes so it doesn't duplicate a position.
-
-**Steps 17–19 — Gallery scenes.**
-- Mirror the structure of `district_wet_exhibition` / `slums_wet_exhibition` and the `district_exhibition_*` / `slums_exhibition_*` scenes, and the existing Exhibitionism gallery category with its `flagOverrides`.
-- Needs the companion docs (D7).
-- **Gallery-mode default outfit:** the Off-Shoulder Mesh Mini Dress, braless and commando, set through the gallery's outfit handling.
-- Garment damage (+40 outer, +60 panties, +30 for the snag scenes) goes through the item's `damage`.
-- The masturbation variants in Step 19 are `masturbate_*_alley` (already fabric-aware) and `exhibition_masturbate_alley` / `_park_bench`, which gain a `sheer` branch plus `_alleyMastGalleryExposure` / `_parkBenchMastGalleryExposure === 'sheer'` gallery overrides.
-
-**Step 20 — Tips & Guide.** The guide text currently in the file:
-- The Exhibitionism entry has Thrill Sources and Decay lines, which Step 1C edited.
-- The thrill stat description block has "Thrill Gain — Exposure States" and a Decay list.
-- The Clothing Systems entry has "Sheer Pieces," which still claims sheer is "always street-legal" and **must be rewritten**, plus "Visible Underwear" and "Upscale Doors."
-
-Grep `Sheer Pieces`, `Thrill Sources`, `Upscale` and `Going Braless`. Document **what's actually built**, deviations included:
-- the lingerie top/bottom venue and transit refusals
-- public-only sheer minutes
-- the wet/sheer non-stacking rule and its one-zone exception
-- the 8001 sheer-set gate
-- Ruby and the Lucius doorman
-- the vignette tiers
-
-**Step 21 — Migration and sweep.** Grep for the Braless/Commando migration block: `bothMinutesTotal === undefined`, about 16767 before the edits.
-
-Flag defaults to add:
+Flag defaults to add (every one guarded with `=== undefined`):
 - `_passiveAccum: {}`
 - `_lastSheerExposureAmbientTime: 0`
 - `_sheerDistrictAwarenessFired: {}`
@@ -817,24 +1166,28 @@ Flag defaults to add:
 - `sheerLingerieStartTime: null` (top level on gameState, not in flags)
 - `_sheerStopCoveringDay: 0`, `_lastSheerLightMinute: 0`, `_lastSheerPeelMinute: 0`
 - `_rubySheerLineShift: 0`, `_luciusSheerDoorDay: 0`, `_hardySheerLineDay: 0`
-- `_jaewonMeshTopReactionDay: 0`, `_jaewonMeshTopSexDay: 0`
-- `_sheerDiscoveryCondom: null`, `_seductionSheer: null`
+- `_jaewonMeshTopReactionDay: 0`, `_jaewonMeshTopReactionMin: 0`, `_jaewonMeshTopFromRoom: null`, `_jaewonMeshTopSexDay: 0`
+- `_districtSheerExhibPregnancy: false`, `_slumsSheerExhibPregnancy: false`
+- `_sheerDiscoveryCondom: null`, `_seductionSheer: null`, plus any transient flags Step 18 adds
 - `_wetAwarenessJustFired: ''`
-- `exhibitionStats.sheerMinutesTotal`, `sheerBareMinutesTotal`, `sheerLingerieMinutesTotal`
+- `exhibitionStats.sheerMinutesTotal`, `sheerBareMinutesTotal`, `sheerLingerieMinutesTotal`: 0
+
+Also add them to the initial `gameState.flags` defaults (~13800) so new games start with them.
 
 Item migration:
 - Replace `designer_bodysuit` → `mesh_party_dress` and `lace_bodysuit` → `one_shoulder_club_dress` everywhere a saved item can live: `inventory.clothing`, every `gameState.wardrobes[*]`, `currentOutfit.dress` and `outfitPresets`. Keep `cleanliness`, `damage` and `wetness`, and show one notification if anything was swapped.
 - Rewrite saved `jaewon_mesh_top` copies to `material:mesh`.
 - No sheer flag migration is needed; the registry reads IDs.
 
-The Step 21C test sweep is in Part F; use the A4 recipes.
+The Step 21C test sweep is in Part F; use the A3 recipes. Add to it: every gallery scene through the real `showScene` with `_galleryMode` false, to confirm no `galleryOnEnter` changes live state (D15).
 
 ---
 
-## Part F — Remaining Steps 9–21, VERBATIM from the original overhaul doc
+## Part F — Remaining Steps 17–21, VERBATIM from the original overhaul doc
 
 > Reproduced exactly so this handoff stands alone. **Part E's notes override anything here.** Line numbers (`~NNNNN`) are from the original upload and are stale; always `grep -n`.
-> Known errata: in Step 9, "Step 17 discovery scenes" means **Step 18**.
+> Step 17A is **done** (Part C). It stays here because 17B says "Same concept" and depends on it.
+> Known errata: in Step 9 (Part H), "Step 17 discovery scenes" means **Step 18**. Step 21A's flag list is superseded by the fuller list in Part E.
 > Original conventions that still apply:
 > - one step per output, wait for confirmation, no bundling
 > - short paragraphs, contractions, escaped apostrophes in all JS strings, `node --check` after every step
@@ -843,249 +1196,6 @@ The Step 21C test sweep is in Part F; use the A4 recipes.
 > - no em dashes except paired parentheticals or dialogue cut-offs
 > - a paragraph density scan (>300 visible chars) on every new or touched scene
 > - "cum," never "come," for orgasm
-
-## Step 9: New Sheer Accidental Events
-
-#### 9A. Open the gate
-
-`checkAccidentalExposure()` returns early unless braless or commando. Add a sheer branch: if `getSheerState()` isn't `none`, build the sheer pool below. If she's also braless/commando under opaque clothes on the other zone, both pools merge. Same 15% per transition and 60-minute shared cooldown.
-
-#### 9B. Sheer pool (8 events)
-
-Each event returns `{ text, thrill, arousal }` with 3 corruption tiers for Kelsie's response, same structure as the existing pool. Thrill and arousal scale with `weaveMult` and the sheer state (framed ×0.5, braless/commando ×1.0, bare ×1.4).
-
-| # | Event | Requires | Base thrill / arousal |
-|---|---|---|---|
-| 1 | **The Backlight.** She walks past a bright shop window (day: the sun behind her). Light pours through the mesh and outlines everything. A man walking behind her gets her whole silhouette, then the details. | any sheer state | 10 / 7 |
-| 2 | **The Flash.** A tourist's camera flash across the street. Flash photography goes straight through mesh. On his screen she's naked, sharper than the street ever showed. He looks from the phone to her and back. | any sheer state, dark or downtown/commercial | 12 / 8 |
-| 3 | **The Snag.** Someone's watch, zipper, or a chain-link fence catches the mesh. It tears. A ragged hole opens over a nipple or a hip. Applies +8 damage to the garment (mesh is 1.5x damage, "Thin"). | outer sheer garment | 12 / 9 |
-| 4 | **Diamond.** Her stiff nipple pushes through one of the fishnet holes. Bare, in the open air, and it stays there until she does something about it. | fishnet, braless | 12 / 10 |
-| 5 | **The Ribbon.** One of the Mesh Party Dress's slit ties comes undone. The slit opens up her hip. Commando means the edge of her bare pussy shows in the gap, no mesh at all. | `mesh_party_dress` | 14 / 10 |
-| 6 | **The String.** The One-Shoulder dress's halter string slips. The bare-shoulder side sags and the neckline drops under one nipple. | `one_shoulder_club_dress` | 12 / 9 |
-| 7 | **The Reach.** Mesh crop top rides up when she reaches for something. Bare underboob under a see-through chest. | `mesh_crop` | 10 / 7 |
-| 8 | **The Double Take.** A woman passing her does a slow second look, then says it out loud: "Oh my god, you're naked under that." Everyone nearby looks. | `sheer_bare`, `sheer_commando` | 14 / 10 |
-
-Sample, The Flash, body:
-
-> A flash goes off across the street. Some tourist shooting the lit-up storefronts.
->
-> You're in the frame. He checks his screen and his face changes.
->
-> The flash went straight through your {dress}. On his phone you're naked: nipples, navel, the bare slit of your pussy, sharper than the street ever showed.
-
-Events 1, 2, and 3 are the doors into the Step 17 discovery scenes at 6001+.
-
-#### 9C. Stats and tracking
-
-Increment `exhibitionEventsCompleted`, track peak thrill, same as the existing pool.
-
----
-
-### Step 10: The 20 Existing Exhibition Events Meet Mesh
-
-The hem events (wind, staircase, bench, puddle, crowd, fitting, escalator, bus, barstool, photo) and top events (button, wet, reach, lean, fitslip, bra wind, mirror, neckline, spill, turnstile) all branch on `hasPanties` / `hasBra`. None of them know the underwear might be see-through, or that the skirt already was.
-
-#### 10A. Sheer underwear routing
-
-A mesh bra or mesh panties still routes to the `hold_panties` / `hold_bra` branches (they're wearing underwear). Add `getSheerUnderwearOverlay(eventStage)`: one paragraph inserted after the underwear reveal at the trigger and hold stages when `cv.pantiesSheer` / `cv.braSheer`. The overlay tells the truth: the panties hide nothing.
-
-> Your mesh panties don't hide a thing. He can see your slit through the grid, your clit swollen against it, the dark wet patch where the mesh is sticking to your folds.
-
-Bump arousal and thrill for sheer underwear to 75% of the `hold_bare` values (it's nearly bare). Fabric references in these branches already read `cv.pantiesFabric` after Step 3.
-
-#### 10B. Sheer outer garments
-
-When the garment being lifted, gapped, or blown is itself sheer:
-
-- Hem events fire at 50% of their normal chance (there's less to reveal) and get a trigger overlay: "The mesh was already showing him the shape of you. The wind just takes the haze away." Corruption-tiered, one line each.
-- Top events get the same treatment: "The gap shows him what the mesh was already showing, with nothing between."
-- `exhibition_wet_trigger` (wet fabric) on a sheer top: suppressed entirely. Mesh doesn't go transparent when wet; it already is.
-
-#### 10C. The bus event
-
-`exhibition_bus_trigger` (bus-only) gets a sheer overlay at the trigger for any bare-behind-mesh state: the man pressed behind her doesn't need to reach under anything to know.
-
----
-
-### Step 11: Harassment, Slums, Night Assault
-
-#### 11A. `exhibState` gains sheer states
-
-In `street_harassment_event`, `street_harassment_grope`, `slums_harassment_event`, `slums_harassment_grope`: when exposure is `clothed` or `underwear_only`, check `getSheerState()` first. New values: `sheer_framed`, `sheer_braless`, `sheer_commando`, `sheer_bare`, `sheer_lingerie`.
-
-**Openers** (what they see), crude, one block per state. Sample `sheer_bare`:
-
-> He doesn't have to guess. The mesh shows him your stiff nipples and the bare slit of your pussy under the streetlight.
->
-> "She's naked under that," the stocky one says. "Dressed up to be naked."
-
-**Grope** (what their hands find), one block per state. The sheer detail: nobody moves anything aside. Sample `sheer_braless`:
-
-> His thumb finds your nipple through the mesh and grinds. The grid bites into it. He doesn't bother pushing your {top} up. He can see exactly what he's doing.
-
-Sample, mesh panties: "The stocky one doesn't hook your panties aside. He rubs your clit right through the mesh until it's soaked and clinging."
-
-`sheer_framed` gets the existing clothed opener plus one sheer line (they can see the bra through the top).
-
-#### 11B. Routing
-
-In the grope `choices`, before the wet check:
-- `sheer_lingerie` → `district_sheer_exhibition` (street) / `slums_sheer_exhibition` (slums), all corruption tiers that currently route to exhibition scenes.
-- `sheer_bare`, `sheer_braless`, `sheer_commando` → same scenes.
-- `sheer_framed` → no change.
-Arousal on grope: lingerie 25, bare 22, braless/commando 18. Corruption gain: lingerie and bare 25, others 20.
-
-#### 11C. Harassment chance
-
-`checkDistrictHarassment()`: `sheer_lingerie*` is already guaranteed (visible underwear). Add +0.20 for `sheer_bare`, +0.10 for `sheer_braless`/`sheer_commando`, +0.03 for `sheer_framed`.
-
-#### 11D. Night assault and passout
-
-- `checkNightRapeEncounter()`: add +0.10 `sheer_bare`, +0.07 `sheer_braless`/`sheer_commando`, +0.03 `sheer_framed`. Non-stacking with wet (take the higher, per 5B).
-- `night_rape_ambush` opener: `getUnderwearVisibilityDesc()` gets a sheer variant ("in nothing but sheer mesh lingerie").
-- `slums_passout_rape_main`: add sheer inserts alongside the naked/bottomless/topless inserts. Sample: "The mesh is still on you. It didn't slow them down. Someone tore the crotch of your panties open instead of pulling them off."
-
----
-
-### Step 12: Evidence, Police, Cruz, Social Media
-
-#### 12A. Evidence severity
-
-`checkExhibitionEvidence()` reads `getSheerState()` when visible exposure is `clothed` or `underwear_only`:
-
-| State | Severity | Chance multiplier |
-|---|---|---|
-| `sheer_framed` | none (no entry) | n/a |
-| `sheer_braless`, `sheer_commando` | minor | ×`weaveMult` |
-| `sheer_bare` | moderate | ×`weaveMult` |
-| `sheer_lingerie*` | moderate (naked stays major) | ×1.0 |
-
-Camera entries for sheer states get `exposureState: 'sheer_*'` and a ledger description reflecting the footage: "Street cam footage, subject in see-through clothing. Exposure visible in frame." Night + camera: the camera's IR or flash makes it worse: bump severity one level for sheer entries recorded at night on camera.
-
-#### 12B. Cruz
-
-Wherever Cruz's behavioral profile reads indecent exposure entries (the 3+ entry pattern flag), treat `sheer_*` `exposureState` as indecent exposure. Add two Cruz reference lines keyed to sheer entries, used when the majority of her exposure entries are sheer:
-
-- "Your indecent exposure file is interesting. Most of it's technically clothed."
-- "Three stills. Same see-through dress. You know exactly what the cameras see."
-
-#### 12C. Social media
-
-`sheer_bare` and `sheer_lingerie` in daytime busy districts add social media heat on the vignette (8A). The Flash event (9B #2) adds +10 heat on its own when he keeps the photo.
-
----
-
-### Step 13: Weather, Style Comments, Venue Flavor
-
-#### 13A. Wet mesh
-
-When a zone's outer garment is sheer, the wet systems stop describing fabric "going transparent" for that zone:
-- `checkWetClothingInteriority()`, the wet braless/commando/both interiority, `WET_NPC_*` layers, `getWetDistrictAwareness()`, and the harassment wet layer each check `cv.topSheer` / `cv.bottomSheer` and swap to a wet-mesh line for that zone. Rain hits skin directly through the grid. Water beads on her nipples behind the mesh. The mesh plasters flat and the fishnet holes fill with wet skin.
-- 4 tiers × chest/hips = 8 wet-mesh lines, plus 2 for the harassment opener.
-- Non-stacking thrill (5B) already covers the stats.
-
-#### 13B. Style comments
-
-`checkStyleComment()` gets mesh detection (`material:mesh` or registry hit) and a mesh comment pool keyed by sheer state:
-- `sheer_framed`: 4 lines. Mostly admiring, a few judgmental. It reads as fashion.
-- `sheer_braless` / `sheer_commando` / `sheer_bare`: 4 lines each. Scandal, stares, someone taking a photo, a woman telling her friend "that's a choice."
-Mesh comments take priority over leather/silk/velvet comments when a sheer state is active. Slums still returns null.
-
-#### 13C. Club venues
-
-- Lucius' Lounge doorman line (from 4C), 3 variants by sheer state.
-- Hardy Bar: when she walks in `sheer_bare` or `sheer_braless`, one bar-reaction line (the bartender comps a drink; a table goes quiet). Once per visit.
-
----
-
-### Step 14: Deliberate Sheer Actions
-
-Mesh needs its own deliberate verbs. Flash and pose assume there's something to remove. With mesh, the play is controlling the light and the veil.
-
-#### 14A. "Stop covering up." (4001+)
-
-The mid-corruption entry point, modeled on the wet "Stop fighting it." Any bare-behind-mesh state, thrill 30+, once per day. She drops her arms, straightens, walks slow. Thrill +10, arousal +8, corruption +25. Two tiers of prose (Experienced / Corrupted+).
-
-#### 14B. "Step into the light." (6001+, thrill 50+)
-
-Any bare-behind-mesh state. She stops under a streetlight at night, or in front of a lit window by day, and lets the mesh vanish. 60-minute cooldown. Thrill +18, arousal +12, corruption +20, all × `weaveMult` × draw multiplier. Two tiers (Corrupted / DC). The DC version turns slowly so the whole sidewalk gets both sides.
-
-#### 14C. "Peel the mesh down." (8001+, thrill 70+)
-
-Chest-veiled states only. She pulls the mesh off her tits in public: the off-shoulder dress slides down, the one-shoulder string gets untied, the party dress cups get pulled under her tits by the O-ring, the fishnet gets stretched under them. Momentarily topless without changing slots. Thrill +25, arousal +15, corruption +15, suspicion +2. Then she fixes it, or at DC she walks a block like that first. 45-minute cooldown.
-
-#### 14D. Pose and Flash
-
-- `getPoseExhibitionChoice()`: also accept `sheer_bare` and `sheer_lingerie`. The three pose scenes get a sheer paragraph variant (standing in the light, seated with the mesh riding up, walk-by).
-- `exhibition_flash_top` / `_skirt`: when the lifted garment is sheer, a variant opening: he's already seen the shape through it, now he gets the color.
-
-All choices appear in the district choice lists beside the existing flash/pose/wet choices.
-
----
-
-### Step 15: Exhibition Seduction Through the Mesh
-
-Depends on 1B.
-
-#### 15A. Routing
-
-In `hunt_seduction` choices, when slot exposure is `clothed` or `underwear_only`, read `getSheerState()` (same 6001+ / 80 appeal gate):
-
-| Sheer state | Branch |
-|---|---|
-| `sheer_braless`, `sheer_lingerie_top` | top |
-| `sheer_commando`, `sheer_lingerie_bottom` | btm |
-| `sheer_bare` | nkd |
-| `sheer_lingerie` | bra (with nkd-level rewards) |
-| `sheer_framed` | none (regular seduction) |
-
-Set `gameState.flags._seductionSheer = state` on routing; clear it at every exit scene.
-
-#### 15B. Overlays
-
-`getSheerSeductionOverlay(stage)` returns a paragraph when `_seductionSheer` is set:
-- `approach`: what the target sees through the mesh.
-- `proposition`: the target calling it out ("You know I can see everything, right?").
-- `undress`: inserted before the first undressing paragraph of each `_sex_` scene. The branch prose assumes tits or pussy are already out; the overlay gets them out first. "He peels the mesh down off your tits and doesn't bother with the rest."
-
-Eight sex scenes plus their `_sex_2_` chains. Only the first undressing moment needs the overlay. Scan each chain scene for contradictions after insertion.
-
-#### 15C. Gallery mode
-
-Overlays return empty in `_galleryMode` unless the registry entry sets `flagOverrides: { _seductionSheer: '...' }`. No new gallery entries this step.
-
----
-
-### Step 16: Jaewon
-
-#### 16A. Sheer reactions (GF)
-
-Extend `getJaewonBralessCommandoReaction()` (~25782) with a sheer branch that fires when `cv.seeThroughChest` or `cv.seeThroughHips`. Braless under opaque clothes is something Jaewon notices. Braless under mesh is something she can't stop looking at.
-
-Uses Jaewon's corruption (overhaul-added convention), 3 tiers (Innocent 0-4000 / Experienced 4001-8000 / DC 8001+), 3 states (braless / commando / both through mesh) × 2 variants = 18 lines. Same gates: GF, not angry, not asleep, mood allows touch, 120-minute cooldown, 30% rate.
-
-#### 16B. "That's my top."
-
-When Kelsie wears `jaewon_mesh_top`, the sheer branch draws from a dedicated pool instead: 3 tiers × 2 = 6 lines, doubled if braless under it.
-
-- Innocent, braless: "Jaewon looks up from the couch and stops. \"That's my top.\" Her eyes drop to your nipples, dark behind the mesh. Her cheeks go red. \"You're not wearing anything under my top.\""
-- DC, braless: "Jaewon pulls you into her lap by the hem of her own top. \"It never looked like this on me.\" Her thumb circles your nipple through the mesh until you squirm. \"Keep it. I want to watch you wear it out.\""
-
-#### 16C. Friend-tier (not GF)
-
-Borrowing needs friendship 60+, so a non-GF Jaewon can see Kelsie in her mesh top. Once per day, 3 flustered variants. Jaewon's side stays PG (no romance, no touch). Kelsie's interiority is crude if she's aroused.
-
-#### 16D. Gallery scene: `jaewon_mesh_top_sex`
-
-Trigger: an escalation choice under the 16B reaction, "Come take it back." GF, Jaewon corruption 4001+, Kelsie in `jaewon_mesh_top` with `cv.seeThroughChest`, once per day (`_jaewonMeshTopSexDay`). Living room or bedroom.
-
-Two tiers (Jaewon's corruption):
-- **Experienced (4001-8000):** Jaewon's mouth on Kelsie's nipple through the mesh, the grid wet from her tongue. She fingers Kelsie on the couch without taking the top off. It's hers, and she wants Kelsie to cum in it. Act 2: Kelsie returns it, Jaewon on her back, Kelsie's fingers and mouth.
-- **DC (8001+):** Jaewon pins Kelsie against the living room window, backlit, the mesh gone see-through against the glass. She fingers her from behind and makes her watch their reflection. Act 2: "On your knees." Kelsie eats her out still wearing the top, Jaewon's fist in the mesh at her shoulder.
-
-Sex Standards compliant, ~40 paragraphs, body branching, cv garments, crude throughout. onEnter: `trackGalleryScene`, `completeSexConsensualFemale`, relationship +3/+5, `corruptJaewonSlightly()`. Jaewon gallery category, 2 tiers. Must not duplicate existing positions (lazy couch tribbing, bedroom face-sit, window scenes if any exist: grep first).
-
----
 
 ### Step 17: Gallery Scenes: District & Slums Sheer Exhibition
 
@@ -1217,7 +1327,9 @@ Both script blocks pass. Style guide compliance scan on every new string: em das
 
 ---
 
-### (Original) Function & Method Summary — the Steps 1–8 rows are DONE
+---
+
+### (Original) Function & Method Summary — the Steps 1–16 rows and the 17A row are DONE
 
 | Function | Step | Role |
 |---|---|---|
@@ -1262,7 +1374,7 @@ Both script blocks pass. Style guide compliance scan on every new string: em das
 | (rewrite) Tips & Guide | 20 | Mesh & Sheer subsection + corrections |
 | (extend) migration | 21 | Flags + item swaps |
 
-### (Original) New Scene Summary — the Step 4, 7 and 8 rows are DONE
+### (Original) New Scene Summary — every row through `district_sheer_exhibition` (17A) is DONE
 
 | Scene / beat | Step | Type | Trigger |
 |---|---|---|---|
@@ -1317,6 +1429,7 @@ Both script blocks pass. Style guide compliance scan on every new string: em das
 
 > The original doc's system map and bug table, kept for completeness. Line numbers are stale; use `grep -n`.
 > - Bugs B1–B9, B11 and B12 are **fixed** (Part C, Step 1).
+> - The "Existing Systems" list describes the file **before** the overhaul (for example, `getSceneClothingVars()` "No sheer or fabric fields yet" and `checkStyleComment()` "No mesh" are no longer true). Part B describes it now.
 > - B10 is **done** for the priority areas (Step 3). The rest is the "could be converted" pass the user deferred.
 
 ### Existing Systems This Connects To (verified in the current file)
@@ -1393,7 +1506,7 @@ These get fixed in Step 1 before any mesh work lands, because several of them wo
 
 ---
 
-## Part H — Original spec text for completed material, VERBATIM (reference only)
+## Part H — Original spec text for completed material (Steps 1–16), VERBATIM (reference only)
 
 > Everything here is **already implemented.** Part C records exactly what was built and where it deviates, with user approval. It's included so this handoff contains the whole original document, and so a later audit can check the built work against the spec.
 
@@ -1850,3 +1963,352 @@ Wet takes precedence when both would fire in the same district the same day; the
 
 ---
 
+---
+
+### Step 9: New Sheer Accidental Events
+
+#### 9A. Open the gate
+
+`checkAccidentalExposure()` returns early unless braless or commando. Add a sheer branch: if `getSheerState()` isn't `none`, build the sheer pool below. If she's also braless/commando under opaque clothes on the other zone, both pools merge. Same 15% per transition and 60-minute shared cooldown.
+
+#### 9B. Sheer pool (8 events)
+
+Each event returns `{ text, thrill, arousal }` with 3 corruption tiers for Kelsie's response, same structure as the existing pool. Thrill and arousal scale with `weaveMult` and the sheer state (framed ×0.5, braless/commando ×1.0, bare ×1.4). Body branching should apply to all scenes.
+
+| # | Event | Requires | Base thrill / arousal |
+|---|---|---|---|
+| 1 | **The Backlight.** She walks past a bright shop window (day: the sun behind her). Light pours through the mesh and outlines everything. A man walking behind her gets her whole silhouette, then the details. | any sheer state | 10 / 7 |
+| 2 | **The Flash.** A tourist's camera flash across the street. Flash photography goes straight through mesh. On his screen she's naked, sharper than the street ever showed. He looks from the phone to her and back. | any sheer state, dark or downtown/commercial | 12 / 8 |
+| 3 | **The Snag.** Someone's watch, zipper, or a chain-link fence catches the mesh. It tears. A ragged hole opens over a nipple or a hip. Applies +8 damage to the garment (mesh is 1.5x damage, "Thin"). | outer sheer garment | 12 / 9 |
+| 4 | **Diamond.** Her stiff nipple pushes through one of the fishnet holes. Bare, in the open air, and it stays there until she does something about it. | fishnet, braless | 12 / 10 |
+| 5 | **The Ribbon.** One of the Mesh Party Dress's slit ties comes undone. The slit opens up her hip. Commando means the edge of her bare pussy shows in the gap, no mesh at all. | `mesh_party_dress` | 14 / 10 |
+| 6 | **The String.** The One-Shoulder dress's halter string slips. The bare-shoulder side sags and the neckline drops under one nipple. | `one_shoulder_club_dress` | 12 / 9 |
+| 7 | **The Reach.** Mesh crop top rides up when she reaches for something. Bare underboob under a see-through chest. | `mesh_crop` | 10 / 7 |
+| 8 | **The Double Take.** A woman passing her does a slow second look, then says it out loud: "Oh my god, you're naked under that." Everyone nearby looks. | `sheer_bare`, `sheer_commando` | 14 / 10 |
+
+Sample, The Flash, body:
+
+> A flash goes off across the street. Some tourist shooting the lit-up storefronts.
+>
+> You're in the frame. He checks his screen and his face changes.
+>
+> The flash went straight through your {dress}. On his phone you're naked: nipples, navel, the bare slit of your pussy, sharper than the street ever showed.
+
+Events 1, 2, and 3 are the doors into the Step 17 discovery scenes at 6001+.
+
+#### 9C. Stats and tracking
+
+Increment `exhibitionEventsCompleted`, track peak thrill, same as the existing pool.
+
+---
+
+### Step 10: The 20 Existing Exhibition Events Meet Mesh
+
+The hem events (wind, staircase, bench, puddle, crowd, fitting, escalator, bus, barstool, photo) and top events (button, wet, reach, lean, fitslip, bra wind, mirror, neckline, spill, turnstile) all branch on `hasPanties` / `hasBra`. None of them know the underwear might be see-through, or that the skirt already was.
+
+#### 10A. Sheer underwear routing
+
+A mesh bra or mesh panties still routes to the `hold_panties` / `hold_bra` branches (they're wearing underwear). Add `getSheerUnderwearOverlay(eventStage)`: one paragraph inserted after the underwear reveal at the trigger and hold stages when `cv.pantiesSheer` / `cv.braSheer`. The overlay tells the truth: the panties hide nothing.
+
+> Your mesh panties don't hide a thing. He can see your slit through the grid, your clit swollen against it, the dark wet patch where the mesh is sticking to your folds.
+
+Bump arousal and thrill for sheer underwear to 75% of the `hold_bare` values (it's nearly bare). Fabric references in these branches already read `cv.pantiesFabric` after Step 3.
+
+#### 10B. Sheer outer garments
+
+When the garment being lifted, gapped, or blown is itself sheer:
+
+- Hem events fire at 50% of their normal chance (there's less to reveal) and get a trigger overlay: "The mesh was already showing him the shape of you. The wind just takes the haze away." Corruption-tiered, one line each.
+- Top events get the same treatment: "The gap shows him what the mesh was already showing, with nothing between."
+- `exhibition_wet_trigger` (wet fabric) on a sheer top: suppressed entirely. Mesh doesn't go transparent when wet; it already is.
+
+#### 10C. The bus event
+
+`exhibition_bus_trigger` (bus-only) gets a sheer overlay at the trigger for any bare-behind-mesh state: the man pressed behind her doesn't need to reach under anything to know.
+
+---
+
+### Step 11: Harassment, Slums, Night Assault
+
+#### 11A. `exhibState` gains sheer states
+
+In `street_harassment_event`, `street_harassment_grope`, `slums_harassment_event`, `slums_harassment_grope`: when exposure is `clothed` or `underwear_only`, check `getSheerState()` first. New values: `sheer_framed`, `sheer_braless`, `sheer_commando`, `sheer_bare`, `sheer_lingerie`.
+
+**Openers** (what they see), crude, one block per state. Sample `sheer_bare`:
+
+> He doesn't have to guess. The mesh shows him your stiff nipples and the bare slit of your pussy under the streetlight.
+>
+> "She's naked under that," the stocky one says. "Dressed up to be naked."
+
+**Grope** (what their hands find), one block per state. The sheer detail: nobody moves anything aside. Sample `sheer_braless`:
+
+> His thumb finds your nipple through the mesh and grinds. The grid bites into it. He doesn't bother pushing your {top} up. He can see exactly what he's doing.
+
+Sample, mesh panties: "The stocky one doesn't hook your panties aside. He rubs your clit right through the mesh until it's soaked and clinging."
+
+`sheer_framed` gets the existing clothed opener plus one sheer line (they can see the bra through the top).
+
+#### 11B. Routing
+
+In the grope `choices`, before the wet check:
+- `sheer_lingerie` → `district_sheer_exhibition` (street) / `slums_sheer_exhibition` (slums), all corruption tiers that currently route to exhibition scenes.
+- `sheer_bare`, `sheer_braless`, `sheer_commando` → same scenes.
+- `sheer_framed` → no change.
+Arousal on grope: lingerie 25, bare 22, braless/commando 18. Corruption gain: lingerie and bare 25, others 20.
+
+#### 11C. Harassment chance
+
+`checkDistrictHarassment()`: `sheer_lingerie*` is already guaranteed (visible underwear). Add +0.20 for `sheer_bare`, +0.10 for `sheer_braless`/`sheer_commando`, +0.03 for `sheer_framed`.
+
+#### 11D. Night assault and passout
+
+- `checkNightRapeEncounter()`: add +0.10 `sheer_bare`, +0.07 `sheer_braless`/`sheer_commando`, +0.03 `sheer_framed`. Non-stacking with wet (take the higher, per 5B).
+- `night_rape_ambush` opener: `getUnderwearVisibilityDesc()` gets a sheer variant ("in nothing but sheer mesh lingerie").
+- `slums_passout_rape_main`: add sheer inserts alongside the naked/bottomless/topless inserts. Sample: "The mesh is still on you. It didn't slow them down. Someone tore the crotch of your panties open instead of pulling them off."
+
+---
+
+### Step 12: Evidence, Police, Cruz, Social Media
+
+#### 12A. Evidence severity
+
+`checkExhibitionEvidence()` reads `getSheerState()` when visible exposure is `clothed` or `underwear_only`:
+
+| State | Severity | Chance multiplier |
+|---|---|---|
+| `sheer_framed` | none (no entry) | n/a |
+| `sheer_braless`, `sheer_commando` | minor | ×`weaveMult` |
+| `sheer_bare` | moderate | ×`weaveMult` |
+| `sheer_lingerie*` | moderate (naked stays major) | ×1.0 |
+
+Camera entries for sheer states get `exposureState: 'sheer_*'` and a ledger description reflecting the footage: "Street cam footage, subject in see-through clothing. Exposure visible in frame." Night + camera: the camera's IR or flash makes it worse: bump severity one level for sheer entries recorded at night on camera.
+
+#### 12B. Cruz
+
+Wherever Cruz's behavioral profile reads indecent exposure entries (the 3+ entry pattern flag), treat `sheer_*` `exposureState` as indecent exposure. Add two Cruz reference lines keyed to sheer entries, used when the majority of her exposure entries are sheer:
+
+- "Your indecent exposure file is interesting. Most of it's technically clothed."
+- "Three stills. Same see-through dress. You know exactly what the cameras see."
+
+#### 12C. Social media
+
+`sheer_bare` and `sheer_lingerie` in daytime busy districts add social media heat on the vignette (8A). The Flash event (9B #2) adds +10 heat on its own when he keeps the photo.
+
+---
+
+### Step 13: Weather, Style Comments, Venue Flavor
+
+#### 13A. Wet mesh
+
+When a zone's outer garment is sheer, the wet systems stop describing fabric "going transparent" for that zone:
+- `checkWetClothingInteriority()`, the wet braless/commando/both interiority, `WET_NPC_*` layers, `getWetDistrictAwareness()`, and the harassment wet layer each check `cv.topSheer` / `cv.bottomSheer` and swap to a wet-mesh line for that zone. Rain hits skin directly through the grid. Water beads on her nipples behind the mesh. The mesh plasters flat and the fishnet holes fill with wet skin.
+- 4 tiers × chest/hips = 8 wet-mesh lines, plus 2 for the harassment opener.
+- Non-stacking thrill (5B) already covers the stats.
+
+#### 13B. Style comments
+
+`checkStyleComment()` gets mesh detection (`material:mesh` or registry hit) and a mesh comment pool keyed by sheer state:
+- `sheer_framed`: 4 lines. Mostly admiring, a few judgmental. It reads as fashion.
+- `sheer_braless` / `sheer_commando` / `sheer_bare`: 4 lines each. Scandal, stares, someone taking a photo, a woman telling her friend "that's a choice."
+Mesh comments take priority over leather/silk/velvet comments when a sheer state is active. Slums still returns null.
+
+#### 13C. Club venues
+
+- Lucius' Lounge doorman line (from 4C), 3 variants by sheer state.
+- Hardy Bar: when she walks in `sheer_bare` or `sheer_braless`, one bar-reaction line (the bartender comps a drink; a table goes quiet). Once per visit.
+
+---
+
+### Step 14: Deliberate Sheer Actions
+
+Mesh needs its own deliberate verbs. Flash and pose assume there's something to remove. With mesh, the play is controlling the light and the veil.
+
+#### 14A. "Stop covering up." (4001+)
+
+The mid-corruption entry point, modeled on the wet "Stop fighting it." Any bare-behind-mesh state, thrill 30+, once per day. She drops her arms, straightens, walks slow. Thrill +10, arousal +8, corruption +25. Two tiers of prose (Experienced / Corrupted+).
+
+#### 14B. "Step into the light." (6001+, thrill 50+)
+
+Any bare-behind-mesh state. She stops under a streetlight at night, or in front of a lit window by day, and lets the mesh vanish. 60-minute cooldown. Thrill +18, arousal +12, corruption +20, all × `weaveMult` × draw multiplier. Two tiers (Corrupted / DC). The DC version turns slowly so the whole sidewalk gets both sides.
+
+#### 14C. "Peel the mesh down." (8001+, thrill 70+)
+
+Chest-veiled states only. She pulls the mesh off her tits in public: the off-shoulder dress slides down, the one-shoulder string gets untied, the party dress cups get pulled under her tits by the O-ring, the fishnet gets stretched under them. Momentarily topless without changing slots. Thrill +25, arousal +15, corruption +15, suspicion +2. Then she fixes it, or at DC she walks a block like that first. 45-minute cooldown.
+
+#### 14D. Pose and Flash
+
+- `getPoseExhibitionChoice()`: also accept `sheer_bare` and `sheer_lingerie`. The three pose scenes get a sheer paragraph variant (standing in the light, seated with the mesh riding up, walk-by).
+- `exhibition_flash_top` / `_skirt`: when the lifted garment is sheer, a variant opening: he's already seen the shape through it, now he gets the color.
+
+All choices appear in the district choice lists beside the existing flash/pose/wet choices.
+
+---
+
+### Step 15: Exhibition Seduction Through the Mesh
+
+Depends on 1B.
+
+#### 15A. Routing
+
+In `hunt_seduction` choices, when slot exposure is `clothed` or `underwear_only`, read `getSheerState()` (same 6001+ / 80 appeal gate):
+
+| Sheer state | Branch |
+|---|---|
+| `sheer_braless`, `sheer_lingerie_top` | top |
+| `sheer_commando`, `sheer_lingerie_bottom` | btm |
+| `sheer_bare` | nkd |
+| `sheer_lingerie` | bra (with nkd-level rewards) |
+| `sheer_framed` | none (regular seduction) |
+
+Set `gameState.flags._seductionSheer = state` on routing; clear it at every exit scene.
+
+#### 15B. Overlays
+
+`getSheerSeductionOverlay(stage)` returns a paragraph when `_seductionSheer` is set:
+- `approach`: what the target sees through the mesh.
+- `proposition`: the target calling it out ("You know I can see everything, right?").
+- `undress`: inserted before the first undressing paragraph of each `_sex_` scene. The branch prose assumes tits or pussy are already out; the overlay gets them out first. "He peels the mesh down off your tits and doesn't bother with the rest."
+
+Eight sex scenes plus their `_sex_2_` chains. Only the first undressing moment needs the overlay. Scan each chain scene for contradictions after insertion.
+
+#### 15C. Gallery mode
+
+Overlays return empty in `_galleryMode` unless the registry entry sets `flagOverrides: { _seductionSheer: '...' }`. No new gallery entries this step.
+
+---
+
+### Step 16: Jaewon
+
+#### 16A. Sheer reactions (GF)
+
+Extend `getJaewonBralessCommandoReaction()` (~25782) with a sheer branch that fires when `cv.seeThroughChest` or `cv.seeThroughHips`. Braless under opaque clothes is something Jaewon notices. Braless under mesh is something she can't stop looking at.
+
+Uses Jaewon's corruption (overhaul-added convention), 3 tiers (Innocent 0-4000 / Experienced 4001-8000 / DC 8001+), 3 states (braless / commando / both through mesh) × 2 variants = 18 lines. Same gates: GF, not angry, not asleep, mood allows touch, 120-minute cooldown, 30% rate.
+
+#### 16B. "That's my top."
+
+When Kelsie wears `jaewon_mesh_top`, the sheer branch draws from a dedicated pool instead: 3 tiers × 2 = 6 lines, doubled if braless under it.
+
+- Innocent, braless: "Jaewon looks up from the couch and stops. \"That's my top.\" Her eyes drop to your nipples, dark behind the mesh. Her cheeks go red. \"You're not wearing anything under my top.\""
+- DC, braless: "Jaewon pulls you into her lap by the hem of her own top. \"It never looked like this on me.\" Her thumb circles your nipple through the mesh until you squirm. \"Keep it. I want to watch you wear it out.\""
+
+#### 16C. Friend-tier (not GF)
+
+Borrowing needs friendship 60+, so a non-GF Jaewon can see Kelsie in her mesh top. Once per day, 3 flustered variants. Jaewon's side stays PG (no romance, no touch). Kelsie's interiority is crude if she's aroused.
+
+#### 16D. Gallery scene: `jaewon_mesh_top_sex`
+
+Trigger: an escalation choice under the 16B reaction, "Come take it back." GF, Jaewon corruption 4001+, Kelsie in `jaewon_mesh_top` with `cv.seeThroughChest`, once per day (`_jaewonMeshTopSexDay`). Living room or bedroom.
+
+Two tiers (Jaewon's corruption):
+- **Experienced (4001-8000):** Jaewon's mouth on Kelsie's nipple through the mesh, the grid wet from her tongue. She fingers Kelsie on the couch without taking the top off. It's hers, and she wants Kelsie to cum in it. Act 2: Kelsie returns it, Jaewon on her back, Kelsie's fingers and mouth.
+- **DC (8001+):** Jaewon pins Kelsie against the living room window, backlit, the mesh gone see-through against the glass. She fingers her from behind and makes her watch their reflection. Act 2: "On your knees." Kelsie eats her out still wearing the top, Jaewon's fist in the mesh at her shoulder.
+
+Sex Standards compliant, ~40 paragraphs, body branching, cv garments, crude throughout. onEnter: `trackGalleryScene`, `completeSexConsensualFemale`, relationship +3/+5, `corruptJaewonSlightly()`. Jaewon gallery category, 2 tiers. Must not duplicate existing positions (lazy couch tribbing, bedroom face-sit, window scenes if any exist: grep first).
+
+---
+
+---
+
+### First handoff's Part E notes, VERBATIM (superseded)
+
+> These were the per-step notes for Steps 9–21 in the first handoff. Steps 9–17A are done (Part C records what was built), and the notes for 17B–21 are superseded by this doc's Part E. Kept so nothing from the first handoff is lost. Line numbers are stale.
+
+**Step 9 — New sheer accidental events.**
+- Extend `checkAccidentalExposure()` (~22858). It currently returns early unless raw braless or commando.
+- Add the sheer branch keyed on `getSheerState().state !== 'none'`.
+- Apply zone ownership: drop the old braless events for a veiled chest, and the old commando events for veiled hips (D3).
+- Build `{text, thrill, arousal}` like the existing events, and use `_sheerBodyCtx()` for body branching.
+- Scale by `weaveMult` and state (framed ×0.5, braless/commando ×1.0, bare ×1.4), and by `getExhibitionDrawMultiplier()`.
+- Every event rolls its NPC's gender at the start (60% male / 40% female) so Step 18 can branch.
+- Events 1–3 (Backlight, Flash, Snag) must end with a choice at 6001+, "Let him/her follow." / "Keep walking.", which Step 18 fills in. Until Step 18 exists, either stub the choice or add it in Step 18. **Ask the user.**
+- The Snag applies +8 damage to the garment; check how `item.damage` is stored (see `applyClothingDamage` or similar).
+- The Flash adds +10 social media heat when he keeps the photo (Step 12C).
+- Increment `exhibitionEventsCompleted` and track peak thrill.
+
+**Step 10 — The 20 existing exhibition events.**
+- They branch on `cv.hasPanties` / `cv.hasBra`.
+- Add `getSheerUnderwearOverlay(stage)` at the trigger and hold stages when `cv.pantiesSheer` / `cv.braSheer` is true. Sheer underwear gets 75% of the `hold_bare` rewards.
+- Hem events at 50% chance when the lifted garment is sheer (`cv.bottomSheer`), plus an overlay line. The same goes for top events (`cv.topSheer`).
+- Suppress `exhibition_wet_trigger` on a sheer top.
+- Give the bus event trigger a sheer overlay. The bus event is chosen in `travelToLocation` (~27837) at a 20% roll; it requires a skirt or dress.
+- The fabric words in these events already use `cv.*Fabric`.
+- Keep the new prose body-branched.
+
+**Step 11 — Harassment, slums, night assault.**
+- Scenes: `street_harassment_event` / `_grope` and `slums_harassment_event` / `_grope`.
+- Grep `exhibState` to find the sub-state logic. Add the sheer states before the wet check.
+- New routing targets `district_sheer_exhibition` / `slums_sheer_exhibition`. Those scenes are **built in Step 17**, so until then route to a safe fallback or build the stubs. **Ask the user.**
+- Chance and risk code: `checkDistrictHarassment()` (~20550), `checkNightRapeEncounter()` (~28064), `getUnderwearVisibilityDesc()` (~39485) and `slums_passout_rape_main`.
+- Night assault doesn't stack with wet: take the higher chance.
+- Assault prose follows the assault register (visceral, invasive, her body seen from outside) and stays crude.
+
+**Step 12 — Evidence, police, Cruz, social media.**
+- `checkExhibitionEvidence()` (~36961).
+- Grep Cruz's behavioral profile for the indecent-exposure pattern: the "3+" entry count and `exposureState`.
+- Social media heat is `gameState.socialMediaHeat`, capped at 100. Step 8A already adds vignette heat, so don't double-add it for the same moment.
+
+**Step 13 — Weather, style comments, venue flavor.**
+- Wet mesh prose (D4) goes in every wet system listed there. Check `cv.topSheer` / `cv.bottomSheer` per zone.
+- `checkStyleComment()` (~38060) detects leather, silk and velvet. Add mesh detection (a `material:mesh` tag or a registry hit) and pools keyed by sheer state.
+- Expand the Lucius doorman to 3 variants per state (D5).
+- Add the Hardy Bar line once per visit (`_hardySheerLineDay`). Grep `hunt_hardy_bar`.
+
+**Step 14 — Deliberate sheer actions.**
+- These are choices in the district choice lists, next to the flash, pose and wet choices. Grep `getWetExhibitionChoices`, `getPoseExhibitionChoice` (~23316) and `exhibition_flash_top` / `_skirt`.
+- The cooldown flags are listed in the Step 21A notes.
+- "Peel the mesh down" should branch per garment, reading the registry `shape` flags (offShoulder, oneShoulder, oRing, fishnet).
+
+**Step 15 — Exhibition Seduction through the mesh.**
+- Routing is in `hunt_seduction.choices` (~the "Exhibition Seduction — route" block). It's reachable now (1B).
+- The exit scenes that must clear `_seductionSheer` are the `exhibition_seduce_*` chain endpoints; grep them.
+- Overlays must return '' in `_galleryMode` unless a `flagOverrides` entry sets `_seductionSheer`.
+
+**Step 16 — Jaewon.**
+- `getJaewonBralessCommandoReaction()` (~26536) holds the existing gates.
+- Use Jaewon's own corruption, stored at `gameState.relationships.jaewon.corruption`, to pick her tier.
+- `corruptJaewonSlightly()` is the corruption helper.
+- The gallery scene `jaewon_mesh_top_sex` needs the Sex Standards doc (D7).
+- Grep for any existing window and face-sit scenes so it doesn't duplicate a position.
+
+**Steps 17–19 — Gallery scenes.**
+- Mirror the structure of `district_wet_exhibition` / `slums_wet_exhibition` and the `district_exhibition_*` / `slums_exhibition_*` scenes, and the existing Exhibitionism gallery category with its `flagOverrides`.
+- Needs the companion docs (D7).
+- **Gallery-mode default outfit:** the Off-Shoulder Mesh Mini Dress, braless and commando, set through the gallery's outfit handling.
+- Garment damage (+40 outer, +60 panties, +30 for the snag scenes) goes through the item's `damage`.
+- The masturbation variants in Step 19 are `masturbate_*_alley` (already fabric-aware) and `exhibition_masturbate_alley` / `_park_bench`, which gain a `sheer` branch plus `_alleyMastGalleryExposure` / `_parkBenchMastGalleryExposure === 'sheer'` gallery overrides.
+
+**Step 20 — Tips & Guide.** The guide text currently in the file:
+- The Exhibitionism entry has Thrill Sources and Decay lines, which Step 1C edited.
+- The thrill stat description block has "Thrill Gain — Exposure States" and a Decay list.
+- The Clothing Systems entry has "Sheer Pieces," which still claims sheer is "always street-legal" and **must be rewritten**, plus "Visible Underwear" and "Upscale Doors."
+
+Grep `Sheer Pieces`, `Thrill Sources`, `Upscale` and `Going Braless`. Document **what's actually built**, deviations included:
+- the lingerie top/bottom venue and transit refusals
+- public-only sheer minutes
+- the wet/sheer non-stacking rule and its one-zone exception
+- the 8001 sheer-set gate
+- Ruby and the Lucius doorman
+- the vignette tiers
+
+**Step 21 — Migration and sweep.** Grep for the Braless/Commando migration block: `bothMinutesTotal === undefined`, about 16767 before the edits.
+
+Flag defaults to add:
+- `_passiveAccum: {}`
+- `_lastSheerExposureAmbientTime: 0`
+- `_sheerDistrictAwarenessFired: {}`
+- `_sheerNpcVignetteIndex: []`
+- `sheerLingerieStartTime: null` (top level on gameState, not in flags)
+- `_sheerStopCoveringDay: 0`, `_lastSheerLightMinute: 0`, `_lastSheerPeelMinute: 0`
+- `_rubySheerLineShift: 0`, `_luciusSheerDoorDay: 0`, `_hardySheerLineDay: 0`
+- `_jaewonMeshTopReactionDay: 0`, `_jaewonMeshTopSexDay: 0`
+- `_sheerDiscoveryCondom: null`, `_seductionSheer: null`
+- `_wetAwarenessJustFired: ''`
+- `exhibitionStats.sheerMinutesTotal`, `sheerBareMinutesTotal`, `sheerLingerieMinutesTotal`
+
+Item migration:
+- Replace `designer_bodysuit` → `mesh_party_dress` and `lace_bodysuit` → `one_shoulder_club_dress` everywhere a saved item can live: `inventory.clothing`, every `gameState.wardrobes[*]`, `currentOutfit.dress` and `outfitPresets`. Keep `cleanliness`, `damage` and `wetness`, and show one notification if anything was swapped.
+- Rewrite saved `jaewon_mesh_top` copies to `material:mesh`.
+- No sheer flag migration is needed; the registry reads IDs.
+
+The Step 21C test sweep is in Part F; use the A3 recipes.
