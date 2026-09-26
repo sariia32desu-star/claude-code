@@ -6754,7 +6754,7 @@
                             <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Lv 50&#8211;79:</strong> $90&#8211;$200</li>
                             <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong style="color:#ffd700;">Lv 80&#8211;100:</strong> $150&#8211;$350</li>
                             <li style="margin: 3px 0;">Tips also scale with <strong style="color:#e0a0e0;">Appeal</strong>, body type, facial beauty, and allure. The looks multiplier stacks on top of skill-based tips</li>
-                            <li style="margin: 3px 0;">Gain stripping XP from stage sets (+3 base), floor work, VIP dances, and practicing with coworkers. Trish's mentoring adds bonus XP</li>
+                            <li style="margin: 3px 0;">Gain stripping XP from stage sets (+30 base), floor work, VIP dances, and practicing with coworkers. Trish's mentoring adds bonus XP</li>
 
                             <li style="margin: 5px 0; border-bottom: 1px solid #333; padding-bottom: 5px;"><strong style="color: #d4a8e8; font-size: 13px;">REPUTATION</strong></li>
                             <li style="margin: 3px 0;">Reputation (0&#8211;100) tracks Kelsie's standing at the club. It grows from stage sets (+1), floor interactions (+1), VIP dances (+2), VIP propositions (+5), and full shifts of 4+ hours (+1):</li>
@@ -12750,8 +12750,8 @@
                             &#8226; Level 100+: <span style="color: #c71585;">Headliner</span> &mdash; Trish's level<br>
                             <br>
                             <strong>Gaining Stripping XP:</strong><br>
-                            &#8226; <span style="color:#dd88ff;">Stage performance at Lucius' Lounge: +100 XP per shift</span><br>
-                            &#8226; Performing also grants Charisma XP (+8 base per hour)<br>
+                            &#8226; <span style="color:#dd88ff;">Stage performance at Lucius' Lounge: +30 XP per set</span><br>
+                            &#8226; Performing also grants Charisma XP (+5 per set)<br>
                             <br>
                             <strong>Tip Ranges by Tier:</strong><br>
                             &#8226; Clueless: $60&ndash;$120 &nbsp;|&nbsp; Awkward: $120&ndash;$200<br>
@@ -35398,7 +35398,7 @@ audioSystem.playSFX('buttonClick');
                     icon: 'Images/icons/stripping-shoe.png',
                     label: 'Stripping',
                     quickValue: 'Lv. ' + stripLvl,
-                    html: '<div class="stat-section"><h3><img src="Images/icons/stripping-shoe.png" class="icon" alt="stripping"> Stripping: Level ' + stripLvl + '</h3><div class="stat-bar-container"><div class="stat-bar-fill" style="width:' + stripPct + '%;background:linear-gradient(to right,#c71585,#ff69b4);"></div><div class="stat-bar-text">' + stripProg + '/' + stripXp + ' XP</div></div><p class="stat-description">Your skill at performing at Lucius\' Lounge.</p><div class="stat-effects"><strong>Leveling System:</strong><br>• XP required scales: 20 × current level<br>• Each stage performance: +3 XP<br><br><strong>Skill Milestones:</strong><br>• Level 50-59: People call your name<br>• Level 60-69: Neck and neck with Jade<br>• Level 70+: You\'ve passed Jade<br>• Level 100+: Trish\'s level. Headliner.</div></div>'
+                    html: '<div class="stat-section"><h3><img src="Images/icons/stripping-shoe.png" class="icon" alt="stripping"> Stripping: Level ' + stripLvl + '</h3><div class="stat-bar-container"><div class="stat-bar-fill" style="width:' + stripPct + '%;background:linear-gradient(to right,#c71585,#ff69b4);"></div><div class="stat-bar-text">' + stripProg + '/' + stripXp + ' XP</div></div><p class="stat-description">Your skill at performing at Lucius\' Lounge.</p><div class="stat-effects"><strong>Leveling System:</strong><br>• XP required scales: 20 × current level<br>• Each stage performance: +30 XP<br><br><strong>Skill Milestones:</strong><br>• Level 50-59: People call your name<br>• Level 60-69: Neck and neck with Jade<br>• Level 70+: You\'ve passed Jade<br>• Level 100+: Trish\'s level. Headliner.</div></div>'
                 });
             }
 
@@ -157733,7 +157733,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.flags.stripperNeedsBreak = true;
                     
                     // Gain stripping XP (with mentor bonuses)
-                    var _stageXpBase = 3;
+                    var _stageXpBase = 30;
                     var _stageXpBonus = 0;
                     var _stageXpReason = 'stage performance';
                     // Step 6A: Dance tip bonus (+5 XP)
