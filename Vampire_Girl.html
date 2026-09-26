@@ -8855,7 +8855,7 @@
                         </div>
                         <div class="sb-xp-row">
                             <div class="sb-xp-bar"><div id="intelligence-bar" class="sb-xp-bar-fill" style="width:0%;background:linear-gradient(90deg,#4488cc,#88ccff);"></div></div>
-                            <span class="sb-xp-text" id="intelligence-progress-text">0/20 to next level</span>
+                            <span class="sb-xp-text" id="intelligence-progress-text">0/10 to next level</span>
                         </div>
                     </div>
                     <div class="sb-stat-leveling sidebar-stat-clickable" onclick="openStatFromSidebar('Cooking')">
@@ -12660,12 +12660,12 @@
                         <p class="stat-description">
                             Your capacity for learning, retention, and mental acuity. Intelligence is a <strong>progressively scaling stat</strong>, 
                             requiring more XP to level as you grow smarter 
-                            (Level 1→2 needs 20 XP, Level 2→3 needs 40 XP, Level 5→6 needs 100 XP, Level 10→11 needs 200 XP). 
+                            (Level 0→1 needs 10 XP, Level 1→2 needs 12 XP, Level 5→6 needs 20 XP, Level 10→11 needs 30 XP). 
                             Study at the library or with friends to build experience.
                         </p>
                         <div class="stat-effects">
                             <strong>Current Level:</strong> <span id="stat-intelligence-level">0</span><br>
-                            <strong>Progress to Next Level:</strong> <span id="stat-intelligence-progress">0/20</span><br>
+                            <strong>Progress to Next Level:</strong> <span id="stat-intelligence-progress">0/10</span><br>
                             <strong>Total Points Earned:</strong> <span id="stat-intelligence-total">0</span><br>
                             <br>
                             <strong>Gaining Intelligence XP:</strong><br>
@@ -12679,9 +12679,9 @@
                             • Level 60: +15% &nbsp;|&nbsp; Level 80: +20%<br>
                             <br>
                             <strong>Leveling System:</strong><br>
-                            • XP required scales with your current level: <em>20 × current level</em><br>
-                            • Level 1→2: 20 XP &nbsp;|&nbsp; Level 2→3: 40 XP &nbsp;|&nbsp; Level 3→4: 60 XP<br>
-                            • Level 5→6: 100 XP &nbsp;|&nbsp; Level 10→11: 200 XP<br>
+                            • XP required scales with your current level: <em>10 + 2 × current level</em><br>
+                            • Level 0→1: 10 XP &nbsp;|&nbsp; Level 1→2: 12 XP &nbsp;|&nbsp; Level 2→3: 14 XP<br>
+                            • Level 5→6: 20 XP &nbsp;|&nbsp; Level 10→11: 30 XP &nbsp;|&nbsp; Level 40→41: 90 XP<br>
                             • Progress resets to 0 when you level up<br>
                             • There is no level cap; intelligence grows indefinitely<br>
                         </div>
@@ -13081,7 +13081,7 @@
             appealBonus: 0,    // Flat appeal bonus set by cheat tool; bypasses normal stat contributions
             
             intelligence: 0,  // Current intelligence level (0-infinity) - boosts strength/charisma/trait XP gain rates
-            intelligenceProgress: 0,  // Progress toward next level (scales: 20 * current level)
+            intelligenceProgress: 0,  // Progress toward next level (scales: 10 + 2 * current level)
             intelligenceTotal: 0,  // Total intelligence points earned (for tracking)
             
             // Stealth System (Leveling) — mirrors charisma structure
@@ -52223,7 +52223,7 @@ audioSystem.playSFX('buttonClick');
         function updateIntelligenceDisplay() {
             const intelligence = gameState.intelligence || 0;
             const progress = gameState.intelligenceProgress || 0;
-            const xpNeeded = intelligence < 1 ? 20 : 20 * intelligence; // Level 0→1 needs 20, then scales
+            const xpNeeded = 10 + intelligence * 2; // Level 0→1 needs 10, then +2 per level
             const progressPercent = xpNeeded > 0 ? (progress / xpNeeded) * 100 : 0;
             
             const sidebarEl = document.getElementById('sidebar-intelligence');
