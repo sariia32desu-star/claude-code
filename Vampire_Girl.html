@@ -62207,7 +62207,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 choices: function() {
                     if (gameState.flags._trainingThirstBlocked) {
-                        return [{ text: '← Back to the stadium', nextScene: 'track_stadium' }];
+                        return [{ text: '← Back to the stadium', nextScene: 'stadium' }];
                     }
                     return [{ text: 'Continue', nextScene: 'stadium_break_menu' }];
                 }
@@ -68230,7 +68230,6 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: [
-                    { text: "Check GPS for more options", nextScene: "check_phone_gps" },
                     { text: "Look for a place to live", nextScene: "search_apartments" },
                     { text: '<img src="Images/icons/city-scape.png" class="icon" alt="city"> Explore the city', nextScene: "city_exploration" }
                 ]
@@ -83310,7 +83309,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const choices = [];
                     
                     if (gameState.flags.evictedFromRiverside) {
-                        choices.push({ text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Leave', nextScene: "city_street" });
+                        choices.push({ text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Leave', nextScene: "residential_district_street" });
                         return choices;
                     }
                     
@@ -83320,12 +83319,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             choices.push({ text: "Pay rent to Jeffrey", nextScene: "jeffrey_rent_payment" });
                         }
                         choices.push({ text: "Go to your apartment", nextScene: "riverside_first_visit" });
-                        choices.push({ text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Leave', nextScene: "city_street" });
+                        choices.push({ text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Leave', nextScene: "residential_district_street" });
                     } else if (gameState.flags.evicted) {
                         if (gameState.money >= 800) {
                             choices.push({ text: "Pay $800 and move back in", nextScene: "jeffrey_rerent" });
                         } else {
-                            choices.push({ text: "You can\'t afford $800 right now", nextScene: "city_street" });
+                            choices.push({ text: "You can\'t afford $800 right now", nextScene: "residential_district_street" });
                         }
                         // Retrieve clothes left in wardrobe if any
                         if (gameState.wardrobes.apartment && gameState.wardrobes.apartment.length > 0) {
@@ -83359,7 +83358,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                 }
                             });
                         }
-                        choices.push({ text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Leave', nextScene: "city_street" });
+                        choices.push({ text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Leave', nextScene: "residential_district_street" });
                     } else {
                         choices.push({ text: "Ask about availability and pricing", nextScene: "jeffrey_inquiry" });
                         choices.push({ text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Leave', nextScene: "apartment_hunting" });
@@ -83429,7 +83428,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 choices: [
                     { text: "Search for somewhere to stay", nextScene: "apartment_hunting" },
-                    { text: "Wander the streets", nextScene: "city_street" }
+                    { text: "Wander the streets", nextScene: "city_exploration" }
                 ]
             },
 
@@ -117103,7 +117102,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 choices: function() {
                     if (gameState.arousal >= 60) {
                         return [
-                            { text: "Get back up; you need to deal with this first", nextScene: "jaewon_apartment_couch" }
+                            { text: "Get back up; you need to deal with this first", nextScene: "jaewon_apartment_living_room" }
                         ];
                     }
                     return [
@@ -120226,7 +120225,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 choices: [
                     { text: "Stay longer with Jaewon", nextScene: "jaewon_apartment_main" },
-                    { text: "Head out", nextScene: "apartment_building_lobby" }
+                    { text: "Head out", nextScene: "apartment_hallway" }
                 ]
             },
 
@@ -128592,7 +128591,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             showScene("jaewon_park_walk_together");
                         }
                     },
-                    { text: "You have other plans", nextScene: "wendale" }
+                    { text: "You have other plans", nextScene: "wendale_district_street" }
                 ]
             },
 
@@ -128616,7 +128615,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             if (romance >= 35) {
                                 modifyRelationship('jaewon', 1, 1);
                             }
-                            showScene("wendale");
+                            showScene("wendale_district_street");
                         }
                     }
                 ]
@@ -135574,9 +135573,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     advanceTime(3);
                     updateStatus();
                 },
-                choices: [
-                    { text: 'Leave.', nextScene: 'city_street' }
-                ]
+                // Shared by the Parkside Inn and the luxury hotel: leave to whichever
+                // one turned her away (its entrance scene sets _hotelRejectedFrom)
+                choices: function() {
+                    const fromLuxury = gameState.flags._hotelRejectedFrom === 'luxury';
+                    return [{ text: 'Leave.', nextScene: fromLuxury ? 'outside_luxury_hotel' : 'outside_parkside_inn' }];
+                }
             },
 
             // ── Fugitive: Cruz Encounter (Repeatable) ──
@@ -145177,7 +145179,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: [
                     { text: "Enter the motel", nextScene: "cheap_motel_entrance" },
                     { text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Open map', action: () => openMap() },
-                    { text: "Explore the slums", nextScene: "slums_street" }
+                    { text: "Explore the slums", nextScene: "slums_district_street" }
                 ]
             },
 
@@ -145200,6 +145202,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     if (gameState.flags.hotelsBanned && !gameState.flags.hasParkSideRoom) {
+                        gameState.flags._hotelRejectedFrom = 'parkside';
                         showScene('hotel_warrant_rejected');
                         return;
                     }
@@ -145686,6 +145689,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 onEnter: () => {
                     if (gameState.flags.hotelsBanned && !gameState.flags.hasHotelRoom) {
+                        gameState.flags._hotelRejectedFrom = 'luxury';
                         showScene('hotel_warrant_rejected');
                         return;
                     }
@@ -146275,10 +146279,6 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         { 
                             text: '"I\'d love to see your room"', 
                             nextScene: "hotel_guest_room_sex" 
-                        },
-                        { 
-                            text: '"Actually, I have my own room here"', 
-                            nextScene: "bring_guest_to_your_room" 
                         },
                         { 
                             text: "Decline politely and leave", 
@@ -147189,7 +147189,6 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         });
                     }
                     
-                    choices.push({ text: "Hunt desperate gamblers", nextScene: "casino_hunt" });
                     choices.push({ text: "Leave the casino", nextScene: "casino_entrance" });
                     
                     return choices;
@@ -148306,7 +148305,6 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         }
                     });
                     
-                    choices.push({ text: "Look for someone to seduce", nextScene: "casino_bar_seduce" });
                     choices.push({ text: "Leave the bar", nextScene: "casino_inside" });
                     
                     return choices;
@@ -163993,7 +163991,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     updateStatus();
                 },
                 choices: [
-                    { text: "Check GPS again for options", nextScene: "check_phone_gps" },
+                    { text: '<img src="Images/icons/city-scape.png" class="icon" alt="city"> Explore the city', nextScene: "city_exploration" },
                     { text: "Look for someone to seduce and feed from", nextScene: "desperate_hunt" },
                     { text: "Search for apartments to rent", nextScene: "gps_apartments" }
                 ]
@@ -164085,7 +164083,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: 'You need a place to live. Time to look for apartments.\n\nPull up listings on your phone.',
                 choices: [
                     { text: "Search for apartments", nextScene: "apartment_hunting" },
-                    { text: "Go back", nextScene: "study_city_map" }
+                    { text: "Go back", nextScene: "city_exploration" }
                 ]
             },
             
@@ -164093,7 +164091,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: 'You open your phone\'s GPS. Search for "apartments for rent near me."\n\nSeveral options come up.',
                 choices: [
                     { text: "View apartment options", nextScene: "apartment_hunting" },
-                    { text: "Go back", nextScene: "check_phone_gps" }
+                    { text: "Go back", nextScene: "city_exploration" }
                 ]
             },
             
@@ -164699,7 +164697,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     updateStatus();
                 },
                 choices: [
-                    { text: "Check GPS for clothing stores", nextScene: "check_phone_gps" },
+                    { text: '<img src="Images/icons/city-scape.png" class="icon" alt="city"> Explore the city', nextScene: "city_exploration" },
                     { text: "Look for someone to feed from immediately", nextScene: "desperate_hunt" },
                     { text: "Search for cheap apartments to secure housing first", nextScene: "gps_apartments" }
                 ]
@@ -166209,7 +166207,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 choices: [
                     { text: "Go back up to Jaewon\'s for breakfast", nextScene: "jaewon_breakfast_same_building" },
-                    { text: "Text her you\'ll catch her later", nextScene: "apartment_main" }
+                    { text: "Text her you\'ll catch her later", nextScene: "own_apartment_main" }
                 ]
             },
 
@@ -166222,7 +166220,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     updateStatus();
                 },
                 choices: [
-                    { text: "Go back to your apartment", nextScene: "apartment_main" }
+                    { text: "Go back to your apartment", nextScene: "own_apartment_main" }
                 ]
             },
 
@@ -166528,7 +166526,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: [
                     { text: "Look for someone to seduce", nextScene: "hunt_seduction" },
                     { text: "Look for someone to ambush", nextScene: "hunting_options" },
-                    { text: "Not yet; go back", nextScene: "check_phone_gps" }
+                    { text: "Not yet; go back", nextScene: "city_exploration" }
                 ]
             },
             
@@ -182744,10 +182742,10 @@ wet_car_slowdown: {
                     const choices = [];
                     
                     if (hasApartment) {
-                        choices.push({ text: "Stumble home to your apartment", nextScene: "apartment_living_room" });
+                        choices.push({ text: "Stumble home to your apartment", nextScene: "own_apartment_return" });
                     }
                     if (stayingWithJaewon) {
-                        choices.push({ text: "Go to Jaewon\'s place", nextScene: "jaewon_apartment_entrance" });
+                        choices.push({ text: "Go to Jaewon\'s place", nextScene: "jaewon_apartment_return" });
                     }
                     if (hasHotelRoom) {
                         choices.push({ text: "Return to your hotel room", nextScene: "hotel_room" });
@@ -182760,7 +182758,7 @@ wet_car_slowdown: {
                     }
                     
                     // Fallback options
-                    choices.push({ text: "Find a bench to rest on", nextScene: "city_plaza" });
+                    choices.push({ text: "Find a bench to rest on", nextScene: "riverside_park" });
                     
                     return choices;
                 }
@@ -190007,7 +190005,7 @@ wet_car_slowdown: {
                 },
                 choices: function() {
                     if (gameState.flags._trainingThirstBlocked) {
-                        return [{ text: '← Back to Crestline', nextScene: 'volleyball_court' }];
+                        return [{ text: '← Back to the court', nextScene: 'outside_volleyball_court' }];
                     }
                     return [{ text: 'Continue', nextScene: 'volleyball_court_break_menu' }];
                 }
@@ -219087,8 +219085,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 if (roll < cumulative) {
                     // Trella (imp) only appears once per day
                     if (encounter.type === 'imp' && gameState.flags.trellaCombatDay === gameState.time.day) {
-                        // Re-roll with imp excluded; give her share to goblin
-                        showMessage('The forest is quiet in that specific way. Whatever was here earlier is gone.', () => showScene('forest_exploration'));
+                        // Trella's already been through today: nothing here, back to the forest edge
+                        showMessage('The forest is quiet in that specific way. Whatever was here earlier is gone.', () => showScene('forest_edge'));
                         return;
                     }
                     startCombat(encounter.type);
