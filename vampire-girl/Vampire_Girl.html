@@ -47900,6 +47900,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'slums_exhibition_bottomless', label: 'Slums — Bottomless Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_exhibition_naked', label: 'Slums — Naked Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_wet_exhibition', label: 'Slums — Wet Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
+                    { sceneId: 'slums_sheer_exhibition', label: 'Slums: Sheer Exhibition', tiers: [{l:'Innocent',v:0}] },
                     { sceneId: 'wet_crowd_press_sex', label: 'The Crowd Press', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_doorway_sex', label: 'The Doorway', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_car_slowdown_sex', label: 'The Car Slowdown', tiers: [{l:'Deeply Corrupted',v:8001}] },
@@ -176036,6 +176037,244 @@ wet_car_slowdown: {
                         gameState.flags._slumsWetExhibPregnancy = false;
                         return [{ text: 'Keep walking.', action: function() {
                             showMessage('<p>Six blocks out, something shifts. Deep in your belly. Below the ache they left. A settling. A lock turning.</p><p><em>Oh God. Oh God no.</em></p><p>Your hand presses flat against your stomach. The cum is still leaking through your soaked clothes. The rain keeps falling. You keep walking because there\'s nothing else to do.</p>');
+                            showScene('slums_district_street');
+                        } }];
+                    }
+                    return [{ text: 'Keep walking.', nextScene: 'slums_district_street' }];
+                }
+            },
+
+            // ── Mesh & Sheer Overhaul, Step 17B: slums harassment through the mesh ──
+            slums_sheer_exhibition: {
+                galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                        top: null, bottom: null, bra: null, panties: null, outerwear: null,
+                        dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
+                    });
+                },
+                text: function() {
+                    var cv = getSceneClothingVars();
+                    var corruption = gameState.corruption || 0;
+                    var ba = gameState.bodyAppearance || {};
+                    var _bs = ba.breastSize || 'average';
+                    var _butt = ba.buttSize || 'average';
+                    var _bt = ba.bodyType || 'ordinary';
+                    var b = _sheerBodyCtx();
+                    var st = b.st;
+                    var zw = st.zoneWeave || {};
+                    var n = b.noun;
+                    var clothesWord = getExposureLevel() === 'underwear_only' ? 'underwear' : 'clothes';
+                    var desc = '';
+
+                    // ── Garment handling, zone by zone ──
+                    // Chest and hips can each be opaque, opaque underwear, sheer lingerie,
+                    // veiled (bare behind mesh) or framed (underwear behind mesh).
+                    var cFish = st.chest === 'veiled' && zw.chest === 'fishnet';
+                    var hFish = st.hips === 'veiled' && zw.hips === 'fishnet';
+                    var chestOpaque = st.chest === 'opaque' || st.chest === 'underwear';
+                    var ripLine = _bs === 'large' ? 'Your heavy tits spill out through the rip, bare and swaying.' : _bs === 'small' ? 'Your small tits show through the ragged gap, nipples stiff.' : 'Your tits spill out through the rip, nipples stiff.';
+                    var bareLine = _bs === 'large' ? 'Your heavy tits spill out bare, nipples dark and stiff in the night air.' : _bs === 'small' ? 'Your small tits are bare, nipples tight in the night air.' : 'Your tits come out bare, nipples stiffening in the night air.';
+                    var chestP, chestFrame, chestBounce, titsLeft, chestFix;
+                    if (st.chest === 'lingerie') {
+                        chestP = 'The leader hooks his fingers in the cups of your ' + b.bra + ' and yanks them down under your tits. The wire shoves them up for him. ' + (_bs === 'large' ? 'Your heavy tits spill over it, bare, nipples dark and stiff.' : _bs === 'small' ? 'Your small tits sit bare on top of it, nipples tight.' : 'Your tits sit bare on top of it, nipples stiffening.');
+                        chestFrame = 'propped up on your shoved-down cups';
+                        chestBounce = 'on your shoved-down cups';
+                        titsLeft = 'your ' + b.bra + ' is shoved down under your tits';
+                        chestFix = 'You tug the cups of your ' + b.bra + ' back up over your tits with shaking hands.';
+                    } else if (cFish) {
+                        chestP = 'The leader jams two fingers into a diamond of the fishnet over your tit and pulls until the cord gives and your nipple pops through the hole. He does the other one. ' + (_bs === 'large' ? 'Your heavy tits bulge through the stretched net, bare in the holes.' : _bs === 'small' ? 'Your small tits push through the widened holes, nipples sharp.' : 'Your tits push out through the stretched net, nipples bare.');
+                        chestFrame = 'jutting through the stretched diamond';
+                        chestBounce = 'in the stretched holes';
+                        titsLeft = 'your ' + b.top + ' is stretched open over your tits';
+                        chestFix = 'You try to work the stretched fishnet back over your nipples with shaking hands.';
+                    } else if (st.chest === 'veiled') {
+                        chestP = 'The leader grabs the neckline of your ' + b.top + ' in both fists and rips it down the middle.' + (st.chestUnder ? ' Your ' + b.bra + ' tears with it.' : '') + ' ' + ripLine;
+                        chestFrame = 'pushed out through the torn ' + n;
+                        chestBounce = 'out of the torn ' + n;
+                        titsLeft = 'your ' + b.top + ' is torn open over your tits';
+                        chestFix = 'You pull the torn edges of your ' + b.top + ' together with shaking hands.';
+                    } else if (st.chest === 'framed') {
+                        chestP = 'The leader grabs the neckline of your ' + b.top + ' in both fists and rips it down the middle, then shoves the cups of your ' + b.bra + ' up over your tits. ' + ripLine;
+                        chestFrame = 'pushed out through the torn ' + n;
+                        chestBounce = 'out of the torn ' + n;
+                        titsLeft = 'your ' + b.top + ' is torn open over your tits';
+                        chestFix = 'You pull the torn edges of your ' + b.top + ' together with shaking hands.';
+                    } else if (st.chest === 'underwear') {
+                        chestP = 'The leader shoves your ' + b.bra + ' up over your tits. ' + bareLine;
+                        chestFrame = 'bare under your shoved-up ' + b.bra;
+                        chestBounce = 'under your shoved-up ' + b.bra;
+                        titsLeft = 'your ' + b.bra + ' is shoved up over your tits';
+                        chestFix = 'You yank your ' + b.bra + ' back down with shaking hands.';
+                    } else {
+                        chestP = 'The leader shoves your ' + cv.topName + ' up' + (cv.hasBra ? ' and drags your bra up with it.' : '.') + ' ' + bareLine;
+                        chestFrame = 'bare under your shoved-up ' + cv.topName;
+                        chestBounce = 'under your shoved-up ' + cv.topName;
+                        titsLeft = 'your ' + cv.topName + ' is shoved up over your tits';
+                        chestFix = 'You yank your ' + cv.topName + ' back down with shaking hands.';
+                    }
+                    var hipsP, hole = '', opaqueHips = false, hipsLeft, hipsFix;
+                    var gapeFix = 'The hole over your pussy gapes with every breath, and the ' + n + ' around it shows everything else.';
+                    if (st.hips === 'lingerie') {
+                        hipsP = 'The wiry one crouches, grabs the crotch of your ' + b.panties + ' in both hands, and tears. The mesh splits open right over your slit.';
+                        hole = 'the torn crotch of your ' + b.panties;
+                        hipsLeft = 'your ' + b.panties + ' are torn open at the crotch';
+                        hipsFix = gapeFix;
+                    } else if (hFish) {
+                        hipsP = 'The wiry one crouches and hooks his fingers into the diamonds over your pussy. He pulls them wide, one hole tearing into the next, until the fishnet gapes open over your slit.';
+                        hole = 'the stretched fishnet';
+                        hipsLeft = 'your ' + b.bottom + ' is torn open over your pussy';
+                        hipsFix = gapeFix;
+                    } else if (st.hips === 'veiled') {
+                        hipsP = 'The wiry one crouches, grabs the ' + n + ' over your pussy in both fists, and rips a hole in your ' + b.bottom + '.' + (st.hipsUnder ? ' Your ' + b.panties + ' tear with it.' : '') + ' A ragged hole opens over your bare slit.';
+                        hole = 'the torn hole in your ' + b.bottom;
+                        hipsLeft = 'your ' + b.bottom + ' is ripped open over your pussy';
+                        hipsFix = gapeFix;
+                    } else if (st.hips === 'framed') {
+                        hipsP = 'The wiry one crouches, rips a hole in the ' + n + ' over your pussy, and hooks your ' + b.panties + ' through it. He tears them aside. Your bare slit shows in the gap.';
+                        hole = 'the torn hole in your ' + b.bottom;
+                        hipsLeft = 'your ' + b.bottom + ' is ripped open over your pussy';
+                        hipsFix = gapeFix;
+                    } else if (st.hips === 'underwear') {
+                        opaqueHips = true;
+                        hipsP = 'The wiry one crouches, grabs your ' + b.panties + ' at the hip, and tears the side through. They drop off one leg and hang off the other thigh.';
+                        hipsLeft = 'your ' + b.panties + ' are torn and hanging off one thigh';
+                        hipsFix = 'Your torn ' + b.panties + ' won\'t stay up.';
+                    } else if (cv.liftable) {
+                        opaqueHips = true;
+                        hipsP = 'The wiry one crouches and shoves your ' + cv.bottomName + ' up around your waist.' + (cv.hasPanties ? ' He hooks your panties and tears them down the side.' : ' Nothing under it.');
+                        hipsLeft = 'your ' + cv.bottomName + ' is shoved up around your waist';
+                        hipsFix = 'You tug your ' + cv.bottomName + ' back down over the mess.';
+                    } else {
+                        opaqueHips = true;
+                        hipsP = 'The wiry one crouches, yanks your ' + cv.bottomName + ' down' + (cv.hasPanties ? ', your panties with them,' : '') + ' and drags one leg free. They hang off your other ankle.';
+                        hipsLeft = 'your ' + cv.bottomName + ' are hanging off one ankle';
+                        hipsFix = 'You work your leg back into your ' + cv.bottomName + ' and drag them up over the mess.';
+                    }
+                    var through = opaqueHips ? '' : ' through ' + hole;
+
+                    if (corruption < 4001) {
+                    // ══ INNOCENT TIER: Assault on the open sidewalk. They tear the mesh open, and
+                    // the big one holds her up in a full nelson facing the street while the leader
+                    // takes her pussy and he takes her ass. The wiry one finishes on the mesh. ══
+
+                    // ── LOCATION & SENSORY GROUNDING ──
+                    desc += '<p>They don\'t take you anywhere. Nobody on this block cares enough to make it worth the walk.</p>';
+                    desc += '<p>Boarded windows. A stoop with an iron railing, half its spindles kicked out. A TV flickering blue behind a torn curtain two floors up. Across the street, a man on a folding chair looks over, sees what\'s happening, and goes back to his phone.</p>';
+                    desc += '<p>The big one\'s hands are still clamped on your hips from behind. The leader crowds in front. The wiry one flicks his cigarette into the gutter, his eyes on ' + b.shows + ' through the ' + n + '.</p>';
+                    desc += '<p>You\'re a vampire. You could snap the big one\'s wrists and be three blocks away before he hit the ground. But every block of slums sidewalk in see-through ' + clothesWord + ' put eyes on your body, and the ache between your legs has swallowed the predator whole.</p>';
+                    desc += '<p>What\'s left is ' + (_bt === 'petite' ? 'a small girl in see-through ' + clothesWord : _bt === 'athletic' ? 'a toned girl in see-through ' + clothesWord + ', every muscle gone slack' : _bt === 'curvy' ? 'a curvy girl with every curve on show through the ' + n : _bt === 'thick' ? 'a thick girl with every soft inch on show through the ' + n : 'an eighteen-year-old girl in see-through ' + clothesWord) + ', held under a broken streetlight by three men who can already see everything.</p>';
+                    desc += '<p>The leader looks you over, slow. "Look at this. She put herself in the shop window."</p>';
+                    desc += '<p>"Window shopping," the wiry one says.</p>';
+                    desc += '<p>"Fuck shopping." The leader steps in close. "Window\'s for looking. We\'re done looking."</p>';
+
+                    // ── THE TEAR: they open the mesh instead of taking it off ──
+                    desc += '<p>' + chestP + '</p>';
+                    desc += '<p>"No—please—" Your voice goes nowhere. Across the street, the man on the folding chair turns his chair a little.</p>';
+                    desc += '<p>' + hipsP + '</p>';
+                    desc += '<p>"Window\'s open," the leader says, grinning at ' + (opaqueHips ? 'your bare pussy' : 'the ragged hole') + '. The wiry one laughs.</p>';
+                    desc += '<p>Your pussy is flushed and swollen ' + (opaqueHips ? 'in the night air' : 'in the gap') + ', slick shining on your lips. Slick you never agreed to.</p>';
+
+                    // ── ACT 1: HANDS AGAINST THE RAILING — ENTRY & BUILD ──
+                    desc += '<p>The big one walks you back two steps until the stoop railing bites into your lower back. He drags your wrists behind you and pins them to the cold iron. Your chest pushes out. ' + (_bt === 'petite' ? 'One of his hands covers both your wrists.' : _bt === 'athletic' ? 'Your shoulders strain against his grip and get nowhere.' : _bt === 'curvy' ? 'Your curves arch out toward the leader like an offering.' : _bt === 'thick' ? 'Your soft body presses back into the rail, spread out for them.' : 'Your arms burn in his grip.') + '</p>';
+                    desc += '<p>The leader bends his head to your nipple, ' + chestFrame + ', and sucks it into his mouth hard. His teeth scrape the tip. "Ah—no—" Your back arches and shoves your tit deeper into his mouth.</p>';
+                    desc += '<p>The wiry one steps in beside him and pushes two fingers into your cunt' + through + '.' + (opaqueHips ? '' : ' The torn edge rasps over your folds going in.') + '</p>';
+                    desc += '<p>Your walls clamp down around his knuckles. He curls them, hooks the swollen spot on your front wall, and presses. Your hips jerk against the railing. "Hnnh—stop—"</p>';
+                    desc += '<p>His thumb finds your clit and rubs it in hard, fast circles. The wet clicking of his fingers carries up the empty block. Upstairs, the TV laughs at something.</p>';
+                    desc += '<p>The leader switches tits. ' + (_bs === 'large' ? 'He shoves your heavy tit up to his mouth with one hand and bites down on the nipple.' : _bs === 'small' ? 'He sucks your whole small tit into his mouth and flicks the nipple with his tongue.' : 'He sucks the other nipple in and rolls it between his teeth.') + ' The wiry one pushes a third finger in. The stretch burns.</p>';
+                    desc += '<p>Your hips rock into it anyway, small helpless grinds against his palm. Your thighs shake. "Hh—hh—"</p>';
+                    desc += '<p>The heat knots low in your belly, and the shame sits right on top of it. They looked at your body through the ' + n + ' for a whole block. Now they\'re using what they saw.</p>';
+
+                    // ── ACT 2: THE FULL NELSON — ENTRY ──
+                    desc += '<p>The wiry one pulls his fingers out of you and wipes them across your lips. You taste yourself.</p>';
+                    desc += '<p>"Lift her," the leader says. "Let the street see."</p>';
+                    desc += '<p>The big one lets go of your wrists, hooks his arms under your knees, and hauls you up off the sidewalk. His hands lock behind your neck. Your legs fold up and spread wide over his forearms, knees up by your shoulders.</p>';
+                    desc += '<p>' + (_bt === 'petite' ? 'He holds you up like you weigh nothing, your small body folded in half against his chest.' : _bt === 'athletic' ? 'Your thighs strain against his arms. All that muscle does nothing.' : _bt === 'curvy' ? 'Your soft thighs spread wide over his forearms, your hips tipped up and open.' : _bt === 'thick' ? 'Your thick thighs spread wide over his arms. He grunts under the weight and holds you anyway.' : 'Your legs hang spread over his arms, your whole body folded open.') + '</p>';
+                    desc += '<p>You\'re held in the air facing the street, ' + (opaqueHips ? 'your bare pussy' : 'your pussy bare in the torn gap') + ' tipped up toward the broken streetlight. Anyone who looks out a window gets all of it. "No—no, put me—"</p>';
+                    desc += '<p>The leader opens his jeans. His cock is thick and flushed, already leaking at the tip. He steps between your spread thighs and drags the head up and down your slit, smearing your slick over it.</p>';
+                    desc += '<p>' + (opaqueHips ? 'He pushes into you, slow. ' : 'He pushes through ' + hole + ' and into you, slow. ') + (opaqueHips ? 'The night air hits the rest of you as he sinks to the base.' : 'The ragged edges of the ' + n + ' scrape along his shaft as he sinks to the base.') + ' Your cunt stretches around him, tight and helpless. "Hhnnh—ahh—"</p>';
+                    desc += '<p>Behind you, the big one shifts his grip. Something blunt and hot presses against your asshole. "Wait—no, not—"</p>';
+                    desc += '<p>He lowers you an inch. The ring of muscle burns and gives, and the head of his cock pops inside. You scream through your teeth.</p>';
+                    desc += '<p>He lets gravity do the rest, lowering you onto him slow, inch by thick inch, until your ass is packed full of him and the leader\'s cock is still buried in your cunt.</p>';
+                    desc += '<p>Two cocks. You can feel them rub together through the thin wall inside you, each one making the other feel huge. Your legs are spread in the air and the hold won\'t let you close them. Your toes curl on nothing.</p>';
+
+                    // ── ACT 2: BUILD ──
+                    desc += '<p>They start moving. The big one lifts you and lets you drop, working your ass up and down his shaft with his arms alone. The leader drives up into your pussy on every drop.</p>';
+                    desc += '<p>' + (_bt === 'petite' ? 'Your small body bounces between them like a toy, every drop spearing you on both cocks.' : _bt === 'athletic' ? 'Your abs clench on every drop, bracing for impacts that come anyway.' : _bt === 'curvy' ? 'Your soft hips bounce on every drop, flesh slapping between them.' : _bt === 'thick' ? 'Your thick thighs shake over his arms on every drop, your own weight driving you down hard on both cocks.' : 'Your body jolts between them on every drop.') + ' ' + (_bs === 'large' ? 'Your heavy tits bounce ' + chestBounce + ', slapping together.' : _bs === 'small' ? 'Your small tits jiggle ' + chestBounce + ', nipples raw from his mouth.' : 'Your tits bounce ' + chestBounce + ', nipples raw from his mouth.') + '</p>';
+                    desc += '<p>"Window\'s open," the leader pants in your face. "Whole block\'s looking in."</p>';
+                    desc += '<p>The wiry one steps up beside you with his cock out, stroking himself slow. His free hand finds your clit' + (opaqueHips ? '' : ' in the torn gap') + ' and rubs. "Hh—ah—ah—" The sounds jolt out of you on every drop. You can\'t stop them.</p>';
+                    desc += '<p>Your cunt clamps on the leader in quickening squeezes. Slick runs down over the big one\'s cock in your ass and drips off his balls onto the sidewalk. You can hear it land.</p>';
+                    desc += '<p>Across the street, the man on the folding chair has stopped pretending to look at his phone.</p>';
+                    desc += '<p>The shame burns in your throat, and the heat climbs right past it. ' + (_butt === 'large' ? 'Your full ass slaps down on the big one\'s hips' : _butt === 'small' ? 'Your tight little ass smacks down on the big one\'s hips' : 'Your ass slaps down on the big one\'s hips') + ' on every drop, and every drop pushes you closer.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>The leader shifts his angle and drags hard over your front wall just as the wiry one pinches your clit between two fingers. Your whole body locks up in the big one\'s arms. "Nnnh—no—no—"</p>';
+                    desc += '<p>The heat screws tighter behind your clit. Your hips try to grind and the hold won\'t let them, so your cunt does it instead, fluttering around the leader in frantic little clenches. You\'re shaking your head. Your body already decided.</p>';
+
+                    // ── KELSIE\'S ORGASM ──
+                    desc += '<p>You cum folded in half in the air. Your cunt seizes around the leader in hard, wrenching spasms, and your ass clamps down on the big one in time with it. "AHH—nnh—ahh—" It bounces off the boarded windows.</p>';
+                    desc += '<p>Your spread thighs shake over his forearms. Slick gushes around the leader\'s cock and runs down over the big one\'s, spattering the concrete under you. The wiry one keeps rubbing your clit through every shudder.</p>';
+                    desc += '<p>They keep fucking you through it. Every drop onto both cocks drags over nerves rubbed raw, and your pussy keeps twitching around the leader in weaker and weaker tremors while tears run down your face. "Stop—please—too much—"</p>';
+
+                    // ── THEIR ORGASMS ──
+                    desc += '<p>The leader cums first. He shoves in deep and holds, his cock kicking inside you in thick surges, filling you until it leaks out around him' + (opaqueHips ? '' : ' and soaks into the ' + n) + '.</p>';
+                    desc += '<p>The big one grunts and drops you down to the base of his cock. He cums in your ass, the heat flooding deep in your belly while you hang helpless in his arms.</p>';
+                    desc += '<p>The wiry one steps close and jerks himself fast over your chest. He cums in thick ropes across ' + (chestOpaque ? 'your bare tits' : 'your tits and the torn ' + n) + ', streaking your nipples. "Window\'s dirty now," he says. The leader laughs.</p>';
+
+                    // ── LINGER & AFTERMATH ──
+                    desc += '<p>The big one lifts you off his cock and dumps you on the stoop steps. Your legs won\'t hold. You sit on cold concrete with cum leaking out of your pussy and your ass onto the step under you.</p>';
+                    desc += '<p>' + (b.same ? 'Your ' + b.outfit + ' is still on you. ' + (cFish && hFish ? 'Stretched open over your tits and your pussy' : (cFish ? 'Stretched open over your tits' : 'Torn open over your tits') + ' and ' + (hFish ? 'stretched open' : 'ripped open') + ' over your pussy') + ', but on.' : capFirst(titsLeft) + ', ' + hipsLeft + ', and all of it\'s still on you.') + '</p>';
+                    desc += '<p>The leader buckles his belt. "Put yourself back in the window, sweetheart. We\'ll come shopping again." The others laugh. They walk off down the block without looking back. Across the street, the man on the folding chair goes inside.</p>';
+                    desc += '<p><em>You came. They tore your window open and fucked you in the air where the whole block could see, and you came while they did it. The ' + n + ' never hid you. Tonight it just made it easier.</em></p>';
+                    desc += '<p>' + chestFix + ' ' + hipsFix + '</p>';
+                    desc += '<p>You push yourself up off the step on legs that barely work and start walking. The slums go on around you, and their cum runs down your thighs with every step.</p>';
+                    }
+                    return desc;
+                },
+                onEnter: function() {
+                    trackGalleryScene('slums_sheer_exhibition');
+
+                    // Garment damage: the outer mesh +40, mesh panties +60 (capped short of destroyed)
+                    var _st = getSheerState();
+                    var _hurt = function(item, amt) {
+                        if (!item) return;
+                        initializeItemDamage(item);
+                        item.damage = Math.min(99, (item.damage || 0) + amt);
+                    };
+                    var _seen = [];
+                    [_st.chestGarment, _st.hipsGarment].forEach(function(g) {
+                        if (g && _seen.indexOf(g) === -1 && !(g === gameState.currentOutfit.panties || g === gameState.currentOutfit.bra)) { _seen.push(g); _hurt(g, 40); }
+                    });
+                    if (gameState.currentOutfit.panties && getMeshProfile(gameState.currentOutfit.panties)) _hurt(gameState.currentOutfit.panties, 60);
+
+                    completeSexAssaultMale({
+                        time: 20, hygiene: -35,
+                        rapeType: 'slums_sheer_exhibition',
+                        corruptionGain: 30,
+                        thrill: 20,
+                        partner: 'slums_group',
+                        skipPregnancy: true
+                    });
+
+                    // Scene-specific pregnancy tracking
+                    gameState.flags.currentSexEncounter = {
+                        partner: 'slums_group', condomUsed: false,
+                        partnerGender: 'male', finishLocation: 'inside'
+                    };
+                    var _bp = (typeof checkPregnancy === 'function') ? checkPregnancy() : false;
+                    if (_bp) gameState.flags._slumsSheerExhibPregnancy = true;
+                    gameState.flags.currentSexEncounter = null;
+
+                    gameState.flags.slumsHarassmentCount = (gameState.flags.slumsHarassmentCount || 0) + 1;
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionEventsCompleted = (gameState.exhibitionStats.exhibitionEventsCompleted || 0) + 1;
+                },
+                choices: function() {
+                    if (gameState.flags._slumsSheerExhibPregnancy) {
+                        gameState.flags._slumsSheerExhibPregnancy = false;
+                        return [{ text: 'Keep walking.', action: function() {
+                            showMessage('<p>Six blocks out, something shifts. Deep in your belly. Below the ache they left. A settling. A lock turning.</p><p><em>Oh God. Oh God no.</em></p><p>Your hand presses flat against your stomach. Their cum is still running down your thighs. You keep walking because there\'s nothing else to do.</p>');
                             showScene('slums_district_street');
                         } }];
                     }
