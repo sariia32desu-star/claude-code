@@ -23908,12 +23908,12 @@ audioSystem.playSFX('buttonClick');
             [/_btm_success_pivot_f$/, /Both at once, bare skin under her palms\./, function(b) { return 'Both at once, her palms on you through the ' + b.noun + '.'; }],
             [/_btm_success_pivot_m$/, /His hands find your hips—under your ([^,]+?), on bare skin directly—/, function(b) { return 'His hands find your hips—on the ' + b.noun + ', your bare skin right under it—'; }],
             [/_btm_proposition_f$/, /the hem of your ([^,]+?), the bare skin below it/, function(b) { return 'your ' + b.bottom + ', the bare skin behind ' + (b.st.hips === 'lingerie' ? 'them' : 'it'); }],
-            [/_nkd_approach_f$/, /She\'s bare\. All the way bare\. She walked up to me completely bare\./, function(b) { return 'She\'s bare under that. Every inch. She walked up to me in something I can see straight through.'; }],
-            [/_nkd_approach_m$/, /she\'s bare\. Every inch of her, out here in the open\./, function(b) { return 'she\'s bare under that. Every inch of her, out here behind a layer of ' + b.noun + '.'; }],
+            [/_nkd_approach_f$/, /You walked up to her completely bare, and/, function(b) { return 'You walked up to her in ' + b.noun + ' she can see straight through, and'; }],
+            [/_nkd_approach_m$/, /His eyes go over every inch of you, out here in the open,/, function(b) { return 'His eyes go over every inch of you behind the ' + b.noun + ', out here in the open,'; }],
             [/_nkd_success_pivot_m$/, /moving up your bare sides/, function(b) { return 'moving up your sides through the ' + b.noun; }],
-            [/_nkd_success_pivot_m$/, /Bare in my hands\./, function(b) { return 'Bare under the ' + b.noun + ', in my hands.'; }],
+            [/_nkd_success_pivot_m$/, /He has you bare in his hands/, function(b) { return 'He has you bare under the ' + b.noun + ', in his hands,'; }],
             [/_nkd_soft_pivot_f$/, /against your bare sides/, function(b) { return 'against your sides through the ' + b.noun; }],
-            [/_nkd_success_pivot_f$/, /She walked out here bare and she\'s letting me touch her\./, function(b) { return 'She walked out here in see-through ' + b.noun + ' and she\'s letting me touch her.'; }]
+            [/_nkd_success_pivot_f$/, /You walked out here bare and you\'re letting her touch you/, function(b) { return 'You walked out here in see-through ' + b.noun + ' and you\'re letting her touch you'; }]
         ];
 
         function installSheerSeductionOverlays() {
@@ -169204,7 +169204,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         }
                     } else {
                         if (corruption < 2001) {
-                            return 'The wind comes off the river and the world narrows to one horrible second.\n\nYour hem. Up. The air hits your bare cunt before your brain has caught up to what\'s happening.\n\nYou grab at the fabric with both hands. Miss it. Grab again. Get it down.\n\nBut you felt it: the breeze where there should be cloth, cold open air on bare, bare skin.\n\nThe woman with the stroller ten feet up the path has her mouth open.\n\n<em>She thought: she\'s not wearing anything under that. Nothing at all.</em>\n\nYour face is burning. Your whole chest is burning. You veer off the path, hands still white-knuckled in your ' + cv.bottomName + '.';
+                            return 'The wind comes off the river and the world narrows to one horrible second.\n\nYour hem. Up. The air hits your bare cunt before your brain has caught up to what\'s happening.\n\nYou grab at the fabric with both hands. Miss it. Grab again. Get it down.\n\nBut you felt it: the breeze where there should be cloth, cold open air on bare, bare skin.\n\nThe woman with the stroller ten feet up the path has her mouth open.\n\nHer eyes drop to your hem and come back up to your face. She saw. There\'s nothing under there, and she knows it.\n\nYour face is burning. Your whole chest is burning. You veer off the path, hands still white-knuckled in your ' + cv.bottomName + '.';
                         } else if (corruption < 4001) {
                             return 'Your hem lifts and you scramble.\n\nBoth hands down. Fast. Your heart clawing at your ribs.\n\nBut it was two full seconds before you moved. You felt that: the breeze on your bare cunt, on the inside of your thighs, and your hands moving a half-beat later than they should have.\n\nA man on the bench near the lamppost is watching. He saw. His expression is careful, like people\'s faces get when they\'re deciding whether to say anything.\n\nYou grab your hem in your fist and walk faster, trying to work out why your stomach feels like this.';
                         } else if (corruption < 6001) {
@@ -202186,7 +202186,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     }
 
                     desc += 'He doesn\'t say anything. He doesn\'t look away either.\n\n';
-                    desc += '<em>He thought: she stopped walking. She\'s watching me back.</em>\n\n';
+                    desc += 'His eyebrows lift. He\'s noticed you stopped walking, that you\'re watching him right back.\n\n';
                     desc += 'You close the distance.';
                     return desc;
                 },
@@ -202471,7 +202471,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     }
 
                     desc += 'She doesn\'t look away when you catch her at it.\n\n';
-                    desc += '<em>She thought: she saw me looking. She\'s still coming over.</em>\n\n';
+                    desc += 'Her eyes flick to yours and hold. She knows you caught her looking, and you\'re still walking toward her.\n\n';
                     desc += 'You close the distance.';
                     return desc;
                 },
@@ -202757,7 +202757,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         desc += 'The street moves around you both. A food cart, diesel exhaust, two women talking loud outside a shop they\'re not looking at. Nobody\'s stopped walking.\n\n';
                     }
 
-                    desc += '<em>He thought: She walked up this whole block like that. Like it\'s nothing. Christ.</em>\n\n';
+                    desc += 'His eyes flick down the block behind you, then back to your chest. You watch him work out that you walked the whole way like this.\n\n';
                     desc += 'You hold eye contact until he finally drags his gaze up to your face.\n\n';
                     desc += 'It takes him a second.';
                     return desc;
@@ -202800,7 +202800,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_top_success_pivot_m: {
                 text: function() {
-                    return 'The alley runs between a laundromat and a boarded shopfront. Narrow, a utility bulb above a steel door throwing yellow light down the far end. Dryer heat bleeding through the brick. Cold concrete underneath.\n\nHe turns before you\'ve fully cleared the entrance.\n\nHis hands find your waist and he walks you into the wall in one steady motion. Your back meets cold grit.\n\nHis palms slide up your ribcage. Both thumbs pressing up along the underside of your breasts, taking the weight, testing it. He looks down at his own hands on your bare skin.\n\nHis jaw shifts.\n\n\"Christ,\" he says. Barely above a whisper. Just to himself.\n\n<em>He thought: Warm. She\'s warm everywhere.</em>';
+                    return 'The alley runs between a laundromat and a boarded shopfront. Narrow, a utility bulb above a steel door throwing yellow light down the far end. Dryer heat bleeding through the brick. Cold concrete underneath.\n\nHe turns before you\'ve fully cleared the entrance.\n\nHis hands find your waist and he walks you into the wall in one steady motion. Your back meets cold grit.\n\nHis palms slide up your ribcage. Both thumbs pressing up along the underside of your breasts, taking the weight, testing it. He looks down at his own hands on your bare skin.\n\nHis jaw shifts.\n\n\"Christ,\" he says. Barely above a whisper. Just to himself.\n\nHis thumbs move slowly, like he can\'t get over how warm you are.';
                 },
                 onEnter: function() {
                     advanceTime(10);
@@ -202813,7 +202813,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_top_soft_pivot_m: {
                 text: function() {
-                    return 'He doesn\'t lead. He walks beside you.\n\nTwo blocks over, a side street. Quieter. A loading bay, chain-link fence, a gap between buildings that nobody uses for anything useful. The smell of damp asphalt and something metallic.\n\nHe stops. You stop.\n\nHe looks at you in the lower light: your chest bare in the cool air, your nipples tightened from it.\n\n\"I don\'t usually do this,\" he says.\n\n\"I know,\" you say.\n\nSomething loosens in his expression.\n\nYour hand finds the front of his jacket and you pull him in.\n\n<em>He thought: She said I know like it cost her nothing.</em>';
+                    return 'He doesn\'t lead. He walks beside you.\n\nTwo blocks over, a side street. Quieter. A loading bay, chain-link fence, a gap between buildings that nobody uses for anything useful. The smell of damp asphalt and something metallic.\n\nHe stops. You stop.\n\nHe looks at you in the lower light: your chest bare in the cool air, your nipples tightened from it.\n\n\"I don\'t usually do this,\" he says.\n\n\"I know,\" you say.\n\nSomething loosens in his expression.\n\nYour hand finds the front of his jacket and you pull him in.';
                 },
                 onEnter: function() {
                     advanceTime(10);
@@ -203045,7 +203045,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         desc += 'The street moves around you both. A fruit cart two storefronts down, someone arguing on the phone, the smell of diesel and something fried. Nobody\'s paying attention.\n\n';
                     }
 
-                    desc += '<em>She thought: She\'s been walking around like that. She knows exactly what she\'s doing.</em>\n\n';
+                    desc += 'Her gaze moves from your chest to your face and stays there. She\'s worked out that you know exactly what you\'re doing.\n\n';
                     desc += 'When her eyes finally come up to your face, she doesn\'t look caught.\n\n';
                     desc += 'You close the distance.';
                     return desc;
@@ -203304,7 +203304,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         desc += 'Foot traffic moves past on both sides. Nobody else has clocked it yet. He has.\n\n';
                     }
 
-                    desc += '<em>He thought: she\'s not—there\'s nothing under that. There\'s nothing there. Christ.</em>\n\n';
+                    desc += 'His mouth opens and closes. His eyes keep going back to your hem, checking again, like the answer might change.\n\n';
                     desc += 'He doesn\'t look away.\n\n';
                     desc += 'His eyes come up to yours.';
                     return desc;
@@ -203349,7 +203349,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             exhibition_seduce_btm_success_pivot_m: {
                 text: function() {
                     var cv = getSceneClothingVars();
-                    return 'The parking structure off Meridian is three levels of bare concrete. The stairwell smells of exhaust and settled dust, a tube strip halfway up the first flight with half its bulbs dead, everything cast in yellow gaps.\n\nHe checks the landing door at the top. Holds it. You go in.\n\nThe door falls shut and the street noise drops to almost nothing.\n\nHe comes off the wall toward you. His hands find your hips—under your ' + cv.topName + ', on bare skin directly—and he walks you back into the concrete pillar.\n\nHis palms travel up your waist. One hand finds the hem of your ' + cv.topName + ' and moves it higher.\n\nHe looks at what he\'s uncovered. Takes a breath.\n\n\"Christ,\" he says. Almost to himself.\n\n<em>He thought: she was just walking around like this. In broad daylight. Like it was nothing at all.</em>';
+                    return 'The parking structure off Meridian is three levels of bare concrete. The stairwell smells of exhaust and settled dust, a tube strip halfway up the first flight with half its bulbs dead, everything cast in yellow gaps.\n\nHe checks the landing door at the top. Holds it. You go in.\n\nThe door falls shut and the street noise drops to almost nothing.\n\nHe comes off the wall toward you. His hands find your hips—under your ' + cv.topName + ', on bare skin directly—and he walks you back into the concrete pillar.\n\nHis palms travel up your waist. One hand finds the hem of your ' + cv.topName + ' and moves it higher.\n\nHe looks at what he\'s uncovered. Takes a breath.\n\n\"Christ,\" he says. Almost to himself.\n\nHe shakes his head once, slow, taking in that you walked around like this in broad daylight.';
                 },
                 onEnter: function() {
                     advanceTime(10);
@@ -203597,7 +203597,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         desc += 'Afternoon light cutting between buildings. Foot traffic moving around you both without clocking either of you. Her jacket is open over a dark top, hair loose past her shoulders. She\'s been holding her glass without drinking.\n\n';
                     }
 
-                    desc += '<em>She thought: She\'s not wearing anything under that. She\'s standing right in front of me and she\'s not wearing anything under that.</em>\n\n';
+                    desc += 'Her eyes drop to your hem and stay there. She\'s figured out there\'s nothing under it, and you\'re standing right in front of her.\n\n';
                     desc += 'Her chin tilts up.\n\n';
                     desc += 'You close the distance.';
                     return desc;
@@ -203642,7 +203642,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             exhibition_seduce_btm_success_pivot_f: {
                 text: function() {
                     var cv = getSceneClothingVars();
-                    return 'The alley is narrow: brick on both sides, a rusted utility door halfway down propped with a folded cardboard wedge.\n\nShe goes in first. Turns around.\n\nThe low light catches the contrast immediately: your ' + cv.topName + ' at your waist, bare skin from the hem all the way down. Her eyes trace it slowly.\n\nHer hands reach for your hips. Both at once, bare skin under her palms.\n\nShe spreads them outward, feeling the line of your hips, the outer curve of your thighs. Her thumbs trace inward toward the front.\n\n<em>She thought: Top on. Nothing underneath. She walked here like that in full view of everyone.</em>\n\n\"I\'ve thought about this twice since I saw you,\" she says, her thumbs pressing closer.';
+                    return 'The alley is narrow: brick on both sides, a rusted utility door halfway down propped with a folded cardboard wedge.\n\nShe goes in first. Turns around.\n\nThe low light catches the contrast immediately: your ' + cv.topName + ' at your waist, bare skin from the hem all the way down. Her eyes trace it slowly.\n\nHer hands reach for your hips. Both at once, bare skin under her palms.\n\nShe spreads them outward, feeling the line of your hips, the outer curve of your thighs. Her thumbs trace inward toward the front.\n\nHer breath goes shaky. Top on, nothing underneath, and you walked here like that in front of everyone. She\'s feeling the proof of it under her palms.\n\n\"I\'ve thought about this twice since I saw you,\" she says, her thumbs pressing closer.';
                 },
                 onEnter: function() {
                     advanceTime(10);
@@ -203656,7 +203656,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             exhibition_seduce_btm_soft_pivot_f: {
                 text: function() {
                     var cv = getSceneClothingVars();
-                    return 'She pushes off the wall and walks a half-step ahead of you, like she\'s decided and wants to stay decided before she can talk herself out of it.\n\nThe alley runs along the building\'s side. She goes in first.\n\nIn the dimmer light she turns. The contrast hits her again: your ' + cv.topName + ' on, the bare stretch of you from the hem all the way down. She breathes out through her nose.\n\nHer hands come to your hips. She touches before anything else.\n\n<em>She thought: I\'m actually doing this.</em>\n\n\"Okay,\" she says, quietly. Her palms spread across your bare hips.';
+                    return 'She pushes off the wall and walks a half-step ahead of you, like she\'s decided and wants to stay decided before she can talk herself out of it.\n\nThe alley runs along the building\'s side. She goes in first.\n\nIn the dimmer light she turns. The contrast hits her again: your ' + cv.topName + ' on, the bare stretch of you from the hem all the way down. She breathes out through her nose.\n\nHer hands come to your hips. She touches before anything else.\n\nHer hands aren\'t quite steady. You can see her working up the nerve in her face.\n\n\"Okay,\" she says, quietly. Her palms spread across your bare hips.';
                 },
                 onEnter: function() {
                     advanceTime(10);
@@ -203868,7 +203868,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     }
 
                     desc += 'He doesn\'t speak. His jacket drops lower in his grip.\n\n';
-                    desc += '<em>He thought: she\'s bare. Every inch of her, out here in the open. And she\'s just standing there.</em>\n\n';
+                    desc += 'His eyes go over every inch of you, out here in the open, and come back to your face. You\'re just standing there, letting him look.\n\n';
                     desc += 'You walk toward him.';
                     return desc;
                 },
@@ -203910,7 +203910,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_nkd_success_pivot_m: {
                 text: function() {
-                    return 'He\'s moving before you\'ve taken a step. Purposeful.\n\nHalf a block up, the hotel has a service entrance on the side. He holds the door with his shoulder and waits.\n\nYou go in.\n\nThe corridor inside is dim. Drop ceiling, a low hum from overhead, the smell of industrial cleaner and old linen. Quiet enough that the street disappears entirely.\n\nHe lets the door fall shut.\n\nHis hands are on you immediately. Both palms against your ribs, moving up your bare sides. Taking in what he already saw out there, now in the close quiet.\n\nHis breath leaves him slow through his nose.\n\n"Jesus," he says. Low, to himself.\n\n<em>He thought: she\'s actually here. Bare in my hands. Slow down or this ends in thirty seconds.</em>';
+                    return 'He\'s moving before you\'ve taken a step. Purposeful.\n\nHalf a block up, the hotel has a service entrance on the side. He holds the door with his shoulder and waits.\n\nYou go in.\n\nThe corridor inside is dim. Drop ceiling, a low hum from overhead, the smell of industrial cleaner and old linen. Quiet enough that the street disappears entirely.\n\nHe lets the door fall shut.\n\nHis hands are on you immediately. Both palms against your ribs, moving up your bare sides. Taking in what he already saw out there, now in the close quiet.\n\nHis breath leaves him slow through his nose.\n\n"Jesus," he says. Low, to himself.\n\nHis breathing\'s gone ragged. He has you bare in his hands and he has to make himself slow down.';
                 },
                 onEnter: function() {
                     advanceTime(10);
@@ -204150,7 +204150,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         desc += 'Afternoon light flat between buildings. Foot traffic cutting around you both without clocking either of you. She hasn\'t moved since you started toward her.\n\n';
                     }
 
-                    desc += '<em>She thought: She\'s bare. All the way bare. She walked up to me completely bare.</em>\n\n';
+                    desc += 'Her eyes go all the way down you and all the way back up. You walked up to her completely bare, and she can\'t stop checking.\n\n';
                     desc += 'She doesn\'t step back.\n\n';
                     desc += 'You close the distance.';
                     return desc;
@@ -204193,7 +204193,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_nkd_success_pivot_f: {
                 text: function() {
-                    return 'Narrow alley. Brick on both sides, a rusted downpipe, weak light above a loading door.\n\nShe goes in first. Turns around.\n\nHer eyes move over you immediately: face, throat, breasts, stomach, hips, thighs. Less looking and more confirming.\n\nShe reaches for you before she speaks. Both palms to your waist—warm and immediate—and she steps into your space.\n\n\"You\'re actually—\" She stops.\n\nHer hands spread across your hips, then inward, then up your ribcage.\n\n<em>She thought: She walked out here bare and she\'s letting me touch her. She\'s actually letting me touch her.</em>\n\n\"I\'ve thought about this since I saw you,\" she says.';
+                    return 'Narrow alley. Brick on both sides, a rusted downpipe, weak light above a loading door.\n\nShe goes in first. Turns around.\n\nHer eyes move over you immediately: face, throat, breasts, stomach, hips, thighs. Less looking and more confirming.\n\nShe reaches for you before she speaks. Both palms to your waist—warm and immediate—and she steps into your space.\n\n\"You\'re actually—\" She stops.\n\nHer hands spread across your hips, then inward, then up your ribcage.\n\nHer fingers aren\'t steady against your skin. You walked out here bare and you\'re letting her touch you, and she can\'t get over it.\n\n\"I\'ve thought about this since I saw you,\" she says.';
                 },
                 onEnter: function() {
                     advanceTime(10);
@@ -204206,7 +204206,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_nkd_soft_pivot_f: {
                 text: function() {
-                    return 'She moves first, like holding still one more second is the thing she can\'t manage.\n\nThe alley opens between the buildings. She goes ahead of you and turns in the low light.\n\nHer eyes sweep you once. All of you. She lets her breath out.\n\nHer hands come to your arms first—checking you\'re real—then spread to your waist. Her palms flat and warm against your bare sides.\n\n<em>She thought: I\'m doing this. I\'m actually doing this.</em>\n\n\"Okay,\" she says, softly. Her hands spread across your ribs.';
+                    return 'She moves first, like holding still one more second is the thing she can\'t manage.\n\nThe alley opens between the buildings. She goes ahead of you and turns in the low light.\n\nHer eyes sweep you once. All of you. She lets her breath out.\n\nHer hands come to your arms first—checking you\'re real—then spread to your waist. Her palms flat and warm against your bare sides.\n\nShe lets out a shaky breath, half a laugh, like she can\'t believe she\'s doing this.\n\n\"Okay,\" she says, softly. Her hands spread across your ribs.';
                 },
                 onEnter: function() {
                     advanceTime(10);
