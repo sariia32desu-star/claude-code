@@ -60,8 +60,18 @@ A warrant severity of 60+ bumps the class up one step. When a warrant is cleared
 - **The permanent blood-theft block is gone.** Assaulting or killing police used to set `bloodBagTheftBlocked` forever; the wanted tier decides now.
 - **Held heat and warrant floor.** Heat above the ceiling is held back and released when a warrant raises the ceiling. An active warrant sets a floor (20 minor, 40 serious, 60 violent).
 
+## Follow-up: blood theft by method
+
+| Method | Result |
+|---|---|
+| Compulsion | Clean getaway: no suspicion, no ledger entry. |
+| Vampire speed | Ledger entry with a blurred camera frame (can never identify her), supernatural evidence, heat. |
+| Stealth, every check passed | Cameras evaded. +2 suspicion when the stock comes up short, no ledger entry. |
+| Stealth, early slips, storage passed | Out with the bags; staff sighting or a blurred camera frame goes on the books. |
+| Stealth failed at storage, or two slips in a row | **Caught on camera**: new scene per site (hospital: Trigrave PD Officer Reyes; clinic and blood bank: security guards). |
+
+Caught choices: run at vampire speed, empty-handed (face on camera: FR +15, theft entry, plus fleeing at the hospital); compel them to wipe the recording and take the bags (clean, +15 thirst); knock them out and take the bags (theft plus assault on camera, assault on law enforcement at the hospital); surrender (theft tied to her on the spot, booking).
+
 ## Still open (design calls, not bugs)
 
-- **Blood bank, clinic and hospital thefts** still create no ledger entries (one hospital scene aside). They add heat but can't build a case.
-- **The cop-killer aftermath text** promises a permanent manhunt and blocked feeding. That's only true once the killing is tied to Kelsie.
 - **Hero-only players never meet Cruz.** Her vigilante awareness requires her to be assigned to Kelsie's criminal case.

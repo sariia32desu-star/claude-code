@@ -7883,10 +7883,12 @@
 
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #ffb3d9; font-size: 13px;">BLOOD THEFT</strong></li>
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
-                            <li style="margin: 3px 0;">Three medical facilities in Trigrave, each with three approach modes. <strong style="color: #5aaa8a;">Stealth</strong> (requires stealth 10+): multi-check facility run, most bags, most stealth XP, no thirst cost. <strong style="color: #aa88cc;">Compulsion</strong>: compel a staff member, moderate bags, thirst cost. <strong style="color: #ff6688;">Vampire speed</strong>: smash-and-grab, fewest bags, high thirst/suspicion/supernatural evidence.</li>
-                            <li style="margin: 3px 0;"><strong style="color: #88ccff;">Clinic</strong> (Training Ground) - Strip mall clinic, old cameras, low staff. Stealth: 2 checks, up to 2 bags, +5 stealth XP. Compulsion: 1 bag. Speed: 1 bag. Easiest stealth XP source in the medical tier.</li>
-                            <li style="margin: 3px 0;"><strong style="color: #88ccff;">Hospital</strong> (Intermediate) - Trigrave General, high staff density, basement blood reserve. Stealth: 3 checks, up to 5 bags, +6 stealth XP. At stealth 25+ with scrubs, all checks get -15% detection (you look like you belong). Compulsion: 3 bags. Speed: 2 bags.</li>
-                            <li style="margin: 3px 0;"><strong style="color: #88ccff;">Blood Bank</strong> (Advanced) - Modern facility, badge-access doors, heavy camera coverage. Stealth: 4 checks, up to 10 bags, +8 stealth XP. Two consecutive failed checks trigger a full alert. Compulsion: 6 bags. Speed: 4 bags.</li>
+                            <li style="margin: 3px 0;">Three medical facilities in Trigrave, each with three approach modes. <strong style="color: #5aaa8a;">Stealth</strong> (requires stealth 10+): multi-check facility run, most bags, most stealth XP, no thirst cost. <strong style="color: #aa88cc;">Compulsion</strong>: compel a staff member, moderate bags, thirst cost, and a clean getaway (nobody remembers, nothing on camera). <strong style="color: #ff6688;">Vampire speed</strong>: smash-and-grab, fewest bags, high thirst/suspicion/supernatural evidence. The cameras only catch a blur, so nothing can identify you.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #5aaa8a;">Stealth outcomes</strong> - Pass every check and you evade every camera: the stock just comes up short (+2 suspicion). Slip up on the way in and a staff member or a camera frame catches a glimpse, but you still get out. Fail at the storage room, or slip twice in a row, and you're <strong>caught on camera</strong> by whoever's watching the monitors: a Trigrave PD officer at the hospital, a night security guard at the clinic or the blood bank.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #ff6666;">Caught</strong> - Four options. <strong>Run</strong> at vampire speed, empty-handed (your face is already on the recording). <strong>Compel</strong> them to wipe the recording and forget, and take the bags (+15 thirst, clean). <strong>Knock them out</strong> and take the bags (assault on camera; at the hospital it's assault on a police officer). <strong>Surrender</strong>: the theft is tied to you on the spot and you go to Central Booking.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #88ccff;">Clinic</strong> (Training Ground) - Strip mall clinic, old cameras, one night guard on the monitors. Stealth: 2 checks, up to 2 bags, +5 stealth XP. Compulsion: 1 bag. Speed: 1 bag. Easiest stealth XP source in the medical tier.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #88ccff;">Hospital</strong> (Intermediate) - Trigrave General, high staff density, basement blood reserve, Trigrave PD officers patrolling and watching the cameras. Stealth: 3 checks, up to 5 bags, +6 stealth XP. At stealth 25+ with scrubs, all checks get -15% detection (you look like you belong). Compulsion: 3 bags. Speed: 2 bags.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #88ccff;">Blood Bank</strong> (Advanced) - Modern facility, badge-access doors, heavy camera coverage. Stealth: 4 checks, up to 10 bags, +8 stealth XP. Two consecutive failed checks, or a failed storage check, and security catches you. Compulsion: 6 bags. Speed: 4 bags.</li>
                             <li style="margin: 3px 0;"><strong style="color: #e8b86d;">Cooldown</strong> - All medical facility thefts share a daily cooldown. Hit one facility today and the others are locked until tomorrow.</li>
                         </ul>
 
@@ -31258,6 +31260,182 @@ audioSystem.playSFX('buttonClick');
             if (fr >= 70 && (sd.evidenceLevel || 0) >= 30 && sd.investigationActive) {
                 issueArrestWarrant();
             }
+        }
+
+        // ── Blood theft: shared mechanics (hospital, clinic, blood bank) ──
+        // Compulsion and a clean stealth run leave nothing on her. Vampire speed leaves
+        // a blur on camera. A failed stealth run gets her caught on camera at the storage
+        // room by whoever's watching the monitors (police at Trigrave General, security
+        // guards at the clinic and the blood bank).
+        var BLOOD_THEFT_SITES = {
+            hospital:  { district: 'medical',    source: 'hospital',   maxBags: 5,  police: true,  lastFlag: 'lastHospitalTheft',  exitScene: 'city_exploration',   karma: -5 },
+            clinic:    { district: 'commercial', source: 'clinic',     maxBags: 2,  police: false, lastFlag: 'lastHospitalTheft',  exitScene: 'city_exploration',   karma: -5 },
+            bloodbank: { district: 'downtown',   source: 'blood_bank', maxBags: 10, police: false, lastFlag: 'lastBloodBankTheft', exitScene: 'outside_blood_bank', karma: -12 }
+        };
+
+        function takeBloodBags(max, source) {
+            var bpCap = gameState.backpackCapacity || { current: 0, max: 30 };
+            var maxCap = bpCap.max || 30;
+            var currentUsage = typeof calculateBackpackUsage === 'function' ? calculateBackpackUsage() : (bpCap.current || 0);
+            var n = Math.min(max, Math.max(0, maxCap - currentUsage));
+            if (!Array.isArray(gameState.inventory.bloodBags)) gameState.inventory.bloodBags = [];
+            for (var i = 0; i < n; i++) gameState.inventory.bloodBags.push({ source: source, quality: 25 });
+            if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
+            return n;
+        }
+
+        // opts: camera ('clear' | 'partial' | 'blur' | ''), witness ('staff' | 'guard' | 'cop' | ''),
+        //       faceSeen (bool), supernatural (bool)
+        function logBloodTheft(siteKey, opts) {
+            var site = BLOOD_THEFT_SITES[siteKey];
+            opts = opts || {};
+            return createLedgerEntry({
+                type: 'blood_theft',
+                district: site.district,
+                masked: false,
+                maskSignature: false,
+                witnessEvidence: !!opts.witness,
+                cameraEvidence: !!opts.camera,
+                supernaturalEvidence: !!opts.supernatural,
+                witnesses: opts.witness ? [{ type: opts.witness, faceSeen: !!opts.faceSeen, description: 'Saw her inside the building' }] : [],
+                cameraType: opts.camera ? 'interior_cam' : '',
+                cameraQuality: opts.camera || 'none'
+            });
+        }
+
+        // Applies the mechanics for a caught-at-storage choice and returns bags taken.
+        function resolveBloodTheftCaught(siteKey, choice) {
+            var site = BLOOD_THEFT_SITES[siteKey];
+            var sd = gameState.suspicionData || (gameState.suspicionData = {});
+            var bags = 0;
+            gameState.flags[site.lastFlag] = gameState.time.day;
+
+            if (choice === 'compel') {
+                // They wipe the recording and forget. Clean, but pushing an alert mind costs.
+                bags = takeBloodBags(site.maxBags, site.source + '_caught_compel');
+                gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 15);
+                modifyKarma(site.karma);
+                gainStealth(2, 'caught, compelled');
+                advanceTime(10);
+                return bags;
+            }
+
+            // Every other choice: the storage camera already has her face, clear
+            sd.facialRecognition = Math.min(100, (sd.facialRecognition || 0) + 15);
+            if (sd.facialRecognition >= 50) sd.hasCompositeSketch = true;
+            sd.cameraFootage = Math.min(100, (sd.cameraFootage || 0) + 10);
+            var watcher = site.police ? 'cop' : 'guard';
+
+            if (choice === 'run') {
+                var theftId = logBloodTheft(siteKey, { camera: 'clear', witness: watcher, faceSeen: true, supernatural: true });
+                if (site.police) createLedgerEntry({ type: 'fleeing', district: site.district, witnessEvidence: true, cameraEvidence: true, supernaturalEvidence: true,
+                    witnesses: [{ type: 'cop', faceSeen: true, description: 'Hospital patrol officer' }], cameraType: 'interior_cam', cameraQuality: 'clear' });
+                sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 12);
+                gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 8);
+                modifyCitySuspicion(15, 'theft', site.district, watcher === 'cop' ? 'cop' : 'professional');
+                gainStealth(1, 'caught, ran');
+                advanceTime(3);
+            } else if (choice === 'knockout') {
+                bags = takeBloodBags(site.maxBags, site.source + '_caught_knockout');
+                logBloodTheft(siteKey, { camera: 'clear', witness: watcher, faceSeen: true });
+                createLedgerEntry({ type: site.police ? 'police_assault' : 'assault', district: site.district, witnessEvidence: true, cameraEvidence: true,
+                    witnesses: [{ type: watcher, faceSeen: true, description: site.police ? 'Hospital patrol officer, knocked unconscious' : 'Security guard, knocked unconscious' }],
+                    cameraType: 'interior_cam', cameraQuality: 'clear' });
+                sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 6);
+                modifyKarma(site.karma - 10);
+                modifyCitySuspicion(site.police ? 25 : 18, 'assault', site.district, watcher === 'cop' ? 'cop' : 'professional');
+                if ((gameState.karma || 0) > -1000) modifyMentalHealth(-6);
+                gainStealth(1, 'caught, fought');
+                advanceTime(8);
+            } else if (choice === 'surrender') {
+                var caughtId = logBloodTheft(siteKey, { camera: 'clear', witness: watcher, faceSeen: true });
+                linkCrimeToSuspect(caughtId, 'caught_in_act');
+                modifyCitySuspicion(8, 'theft', site.district, watcher === 'cop' ? 'cop' : 'professional');
+                gameState.flags.policeEncounterToday = true;
+                gameState.flags.lastPoliceEncounterDay = gameState.time.day;
+                gameState.flags.policeEncountersTotal = (gameState.flags.policeEncountersTotal || 0) + 1;
+                gameState.flags.currentlyInCustody = true;
+                gameState.flags.custodyDay = gameState.time.day;
+                gameState.flags.custodyProcessed = false;
+                gameState.flags.custodyInterrogated = false;
+                gameState.flags.arrestCount = (gameState.flags.arrestCount || 0) + 1;
+                modifyMentalHealth(-10);
+                advanceTime(30);
+            }
+            updateStatus();
+            return bags;
+        }
+
+        function bloodTheftCaughtBox(title, lines, color) {
+            return '<div style="background: linear-gradient(135deg, rgba(120,40,60,0.3), rgba(100,20,40,0.3)); border: 2px solid ' + color + '; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: ' + color + ';">' + title + '</strong><br>' + lines.join('<br>') + '</div>';
+        }
+
+        // Per-site people and places for the caught scenes
+        var BLOOD_THEFT_WATCHERS = {
+            hospital:  { who: 'Officer Reyes', Who: 'Officer Reyes', she: 'she', She: 'She', her: 'her', hers: 'her', exit: 'up the stairwell, across the ER bay and out into the parking lot', light: 'flashlight', watching: 'reaching for her sidearm' },
+            clinic:    { who: 'the guard', Who: 'The guard', she: 'he', She: 'He', her: 'him', hers: 'his', exit: 'out the back door and across the strip mall parking lot', light: 'flashlight', watching: 'holding a flashlight on you' },
+            bloodbank: { who: 'the guard', Who: 'The guard', she: 'he', She: 'He', her: 'him', hers: 'his', exit: 'down the corridor, through the loading dock and three blocks down the street', light: 'taser', watching: 'pointing a taser at your chest' }
+        };
+
+        function getBloodTheftCaughtOutcomeText(siteKey, choice, bags) {
+            var site = BLOOD_THEFT_SITES[siteKey];
+            var w = BLOOD_THEFT_WATCHERS[siteKey];
+            var desc = '';
+            if (choice === 'run') {
+                desc += 'You move.\n\n';
+
+                desc += 'One second you\'re in the doorway with ' + w.who + ' ' + w.watching + '. The next, you\'re ' + w.exit + '.\n\n';
+
+                desc += '' + w.Who + ' is still turning toward the empty doorway when you hit the street.\n\n';
+
+                desc += 'The camera caught all of it: your face, sharp and clear, right up until you turned into a blur.\n\n';
+
+                desc += '<em>You got out. You got out with nothing, and they\'ve got your face.</em>\n\n';
+                desc += bloodTheftCaughtBox('Caught, and Gone', ['Blood Bags: 0', 'Face on camera (facial recognition +15)', 'Supernatural Evidence: +12', 'Suspicion: +15'], '#ff6688');
+            } else if (choice === 'compel') {
+                desc += 'You meet ' + w.hers + ' eyes and push.\n\n';
+
+                desc += '"You didn\'t see anyone tonight. Go back to your monitors and delete the last hour. Then forget you did it."\n\n';
+
+                desc += '' + w.Who + '\'s grip loosens. ' + w.She + ' blinks, slow and heavy, and turns around without a word.\n\n';
+                if (site.police) {
+                    desc += 'Reyes reaches up and switches off her bodycam before she goes. You didn\'t even have to ask.\n\n';
+                }
+                desc += 'You load ' + bags + ' bag' + (bags === 1 ? '' : 's') + ' into your backpack and slip back out the door you came in. By the time you\'re outside, the footage is gone, and so is the memory of it.\n\n';
+
+                desc += 'Your throat burns. Pushing someone who\'s already on alert takes more out of you than you like to give.\n\n';
+                desc += bloodTheftCaughtBox('Caught, and Erased', ['Blood Bags: ' + bags, 'Thirst: +15', 'Clean getaway'], '#aa88cc');
+            } else if (choice === 'knockout') {
+                desc += '' + w.Who + ' is still reaching for the radio when you close the distance. One open-palm strike, held way back, and ' + w.hers + ' knees fold.\n\n';
+
+                desc += 'You catch ' + w.her + ' before ' + w.hers + ' head hits the tile and lay ' + w.her + ' down on the floor. ' + w.She + '\'s breathing. ' + w.She + '\'ll wake up with a headache and a story nobody\'s going to believe.\n\n';
+
+                desc += 'You load ' + bags + ' bag' + (bags === 1 ? '' : 's') + ' into your backpack and go.\n\n';
+
+                desc += 'The camera in the corner saw everything: your face, and how fast a girl your size put a grown adult on the floor.\n\n';
+                if (site.police) {
+                    desc += '<em>You just knocked out a police officer. That\'s a different kind of charge.</em>\n\n';
+                }
+                desc += bloodTheftCaughtBox('Caught, and Fought', ['Blood Bags: ' + bags, 'Face on camera (facial recognition +15)', (site.police ? 'Assault on Law Enforcement' : 'Aggravated Assault'), 'Suspicion: +' + (site.police ? 25 : 18)], '#ff6688');
+            } else {
+                if (site.police) {
+                    desc += 'You raise your hands.\n\n';
+
+                    desc += 'Reyes keys her radio without taking her eyes off you. "Suspect in custody, B-level blood storage. I need a unit at the ER bay."\n\n';
+
+                    desc += 'The cuffs close on your wrists, cold and tight. She pats you down with quick, careful hands and walks you up the stairwell with a grip on your elbow that says she\'s still not sure what she\'s holding.\n\n';
+                } else {
+                    desc += 'You raise your hands and put them flat on the wall.\n\n';
+
+                    desc += '' + w.Who + ' keeps the ' + w.light + ' on you and doesn\'t come any closer. Neither of you says anything. You listen to ' + w.hers + ' heart hammer until the sirens pull into the lot.\n\n';
+
+                    desc += 'Two officers come in fast. The cuffs close on your wrists, cold and tight, and ' + w.who + ' lets out a breath ' + w.she + '\'s been holding since the camera found you.\n\n';
+                }
+                desc += 'The cruiser\'s back seat smells like vinyl and disinfectant. You could snap the cuffs with a twitch.\n\n';
+
+                desc += 'You stay put. You chose this.';
+            }
+            return desc;
         }
 
         // Hunt-interrupt police encounters (flee / assault / kill) go into the evidence
@@ -75334,6 +75512,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += '<strong>Basement.</strong>\n\nThe stairwell door opens and a janitor\'s right there, mop in hand, bucket at his feet.\n\n"Wrong floor?" he asks.\n\n"Looking for radiology," you say.\n\n"Two floors up."\n\nYou nod and keep going past him. He watches you the whole way down.';
                     }
 
+                    // ── Caught on camera at storage ──
+                    if (gameState.flags.hospitalCaught) {
+                        desc += '\n\n<strong>Storage.</strong>\n\nThe blood reserve room\'s at the end of the corridor, keypad lock glowing green in the dark. You reach for it.';
+                        return desc;
+                    }
+
                     // ── Phase 3: Storage + Exit ──
                     desc += '\n\n';
                     if (outcome3 === 'clean') {
@@ -75350,16 +75534,17 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             desc += '\n\nYou lean against a car in the lot and catch your breath. Your bag\'s heavy with cold blood.\n\nThey won\'t know until the inventory check. By then, you\'ll be long gone.';
                         }
                     } else {
-                        desc += '\n\nA block away, you slow down. The janitor saw you. The nurse in the stairwell saw you. Maybe neither of them cares enough to say anything.\n\nMaybe.';
+                        desc += '\n\nA block away, you slow down. The cameras never got a clean look at you, but somebody on staff did. Maybe they won\'t care enough to say anything.\n\nMaybe.';
                     }
 
-                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(42,106,90,0.3), rgba(90,170,138,0.3)); border: 2px solid #5aaa8a; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #5aaa8a;">Hospital Stealth Run</strong><br>Blood Bags: ' + bagsStolen + '<br>Suspicion: +' + (5 + alertLvl * 3) + '</div>';
+                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(42,106,90,0.3), rgba(90,170,138,0.3)); border: 2px solid #5aaa8a; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #5aaa8a;">Hospital Stealth Run</strong><br>Blood Bags: ' + bagsStolen + '<br>Suspicion: +' + (alertLvl ? 5 + alertLvl * 3 : 2) + (alertLvl ? '' : '<br>Cameras evaded') + '</div>';
 
                     return desc;
                 },
                 onEnter: function() {
                     var alertLvl = 0;
                     var consec = 0;
+                    gameState.flags.hospitalCaught = false;
                     var hasScrubs = (gameState.stealth || 1) >= 25 && gameState.flags.ownsScrubs;
                     var scrubsReduction = hasScrubs ? 0.15 : 0;
 
@@ -75405,11 +75590,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         consec = 0;
                     }
 
-                    // Catastrophic check
+                    // Two slips in a row: the monitor room has her on camera
                     if (consec >= 2) {
                         gameState.flags.hospitalAlertLevel = alertLvl;
                         gameState.flags.hospitalConsecutiveFails = consec;
-                        return; // Text/choices handle the redirect
+                        gameState.flags.hospitalCaught = true;
+                        return; // hospital_caught handles the rest
                     }
 
                     // Check 3: Storage + exit
@@ -75426,11 +75612,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     });
                     if (scrubsReduction > 0) prob3 = Math.max(0.03, prob3 - scrubsReduction);
                     if (Math.random() < prob3) {
+                        // Failed at the storage room: the storage camera has her
                         gameState.flags.hospitalCheck3 = 'fail';
-                        alertLvl++;
-                    } else {
-                        gameState.flags.hospitalCheck3 = 'clean';
+                        gameState.flags.hospitalAlertLevel = alertLvl + 1;
+                        gameState.flags.hospitalCaught = true;
+                        return; // hospital_caught handles the rest
                     }
+                    gameState.flags.hospitalCheck3 = 'clean';
 
                     gameState.flags.hospitalAlertLevel = alertLvl;
 
@@ -75449,14 +75637,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         gameState.inventory.bloodBags.push({ source: 'hospital_stealth', quality: 25 });
                     }
 
-                    var suspicion = 5 + alertLvl * 3;
+                    // Clean: the cameras never saw her; the stock just comes up short.
+                    // Slips on the way in: staff saw her face (no camera).
+                    var suspicion = alertLvl ? 5 + alertLvl * 3 : 2;
                     modifyKarma(-5);
                     modifyCitySuspicion(suspicion, 'theft', 'medical');
-
-                    if (alertLvl > 0 && gameState.suspicionData) {
-                        gameState.suspicionData.cameraFootage =
-                            Math.min(100, (gameState.suspicionData.cameraFootage || 0) + alertLvl * 2);
-                    }
+                    if (alertLvl > 0) logBloodTheft('hospital', { witness: 'staff', faceSeen: true });
 
                     if ((gameState.karma || 0) > -1000) {
                         gameState.mentalHealth = Math.max(0, (gameState.mentalHealth || 50) - 4);
@@ -75470,11 +75656,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    var consec = gameState.flags.hospitalConsecutiveFails || 0;
-                    if (consec >= 2) {
+                    if (gameState.flags.hospitalCaught) {
                         return [{
-                            text: '<span style="color:#ff8888;">Security\'s moving. Get out.</span>',
-                            nextScene: 'hospital_stealth_alert'
+                            text: '<span style="color:#ff8888;">The keypad.</span>',
+                            nextScene: 'hospital_caught'
                         }];
                     }
                     return [
@@ -75556,7 +75741,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += '\n\nYour throat burns. The compulsion took more effort than usual. She\'s trained to question people, and you had to push past that.\n\nShe\'ll be confused for hours. Maybe longer.';
                     }
 
-                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(100,60,120,0.3), rgba(80,40,100,0.3)); border: 2px solid #8866aa; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #aa88cc;">Hospital Compulsion</strong><br>Blood Bags: ' + bagsStolen + '<br>Thirst: +12<br>Suspicion: +10</div>';
+                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(100,60,120,0.3), rgba(80,40,100,0.3)); border: 2px solid #8866aa; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #aa88cc;">Hospital Compulsion</strong><br>Blood Bags: ' + bagsStolen + '<br>Thirst: +12<br>Clean getaway</div>';
 
                     return desc;
                 },
@@ -75579,12 +75764,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 12);
                     modifyKarma(-5);
-                    modifyCitySuspicion(10, 'theft', 'medical');
-
-                    if (gameState.suspicionData) {
-                        gameState.suspicionData.cameraFootage =
-                            Math.min(100, (gameState.suspicionData.cameraFootage || 0) + 3);
-                    }
+                    // Clean getaway: she walked in beside staff who'll never remember why
 
                     if (karma > -1000) {
                         gameState.mentalHealth = Math.max(0, (gameState.mentalHealth || 50) - 3);
@@ -75638,6 +75818,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 10);
                     modifyKarma(-8);
                     modifyCitySuspicion(16, 'theft', 'medical');
+                    logBloodTheft('hospital', { camera: 'blur', supernatural: true });
 
                     if (gameState.suspicionData) {
                         gameState.suspicionData.supernaturalEvidence =
@@ -75660,6 +75841,52 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 choices: [
                     { text: '<img src="Images/icons/person-running.png" class="icon" alt="run"> Keep running.', nextScene: 'city_exploration' }
                 ]
+            },
+
+            // ── Blood theft: caught at storage (hospital) ──
+            hospital_caught: {
+                image: 'Images/locations/hospital.jpg',
+                text: function() {
+                    var desc = '';
+
+                    desc += 'The keypad takes two tries. Your fingers are cold, the buttons stick, and when the lock finally gives, you ease the door open onto rows of humming refrigerated units.\n\n';
+
+                    desc += 'You\'re one step inside when the overhead lights snap on.\n\n';
+
+                    desc += '"Trigrave PD. Hands where I can see them."\n\n';
+
+                    desc += 'The voice comes from the stairwell door behind you. You turn slowly. A uniformed officer stands in the doorway with one hand on her holstered sidearm and her radio in the other. Her name tag says REYES.\n\n';
+
+                    desc += '"You\'ve been on my monitors since the stairwell," she says, and nods up at the black camera dome above the fridges. The red light under it is steady. "That thing\'s got a real nice picture of your face."\n\n';
+
+                    desc += 'Her heartbeat\'s quick but even. She\'s done this before, just never with anything like you.\n\n';
+
+                    desc += '"Step away from the fridge. Slowly."\n\n';
+
+                    desc += '<em>She\'s got your face on camera. Whatever you do next, that recording exists.</em>';
+
+                    return desc;
+                },
+                onEnter: function() {
+                    advanceTime(1);
+                    updateStatus();
+                },
+                choices: function() {
+                    var mk = function(choice) {
+                        return function() {
+                            var bags = resolveBloodTheftCaught('hospital', choice);
+                            var msg = getBloodTheftCaughtOutcomeText('hospital', choice, bags);
+                            var next = choice === 'surrender' ? 'arrest_booking' : BLOOD_THEFT_SITES['hospital'].exitScene;
+                            showMessage(msg, function() { showScene(next); });
+                        };
+                    };
+                    return [
+                        { text: '<img src="Images/icons/lightning-bolt.png" class="icon" alt="speed"> Run. Vampire speed, empty-handed.', action: mk('run') },
+                        { text: '<img src="Images/icons/allure.png" class="icon" alt="compel"> Compel her. Make her wipe the recording.', action: mk('compel') },
+                        { text: '<img src="Images/icons/fist.png" class="icon" alt="knockout"> Knock her out and take the blood.', action: mk('knockout') },
+                        { text: 'Put your hands up. Surrender.', action: mk('surrender') }
+                    ];
+                }
             },
 
             // Legacy redirect for old saves
@@ -132746,7 +132973,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Different narrative based on karma
                     if (gameState.karma <= -200) {
                         // Low/evil karma: Relishes the kill, feels powerful
-                        return 'You move.\n\nFaster than thought. Faster than they can react.\n\nA predator. An apex predator.\n\nThe first officer, you\'re on him in a heartbeat. Your hand closes around his throat.\n\nOne. Sharp. Twist.\n\n<em>CRACK.</em>\n\nThe sound is... <em>satisfying</em>.\n\nHe crumples. A puppet with cut strings.\n\n"NO! JESUS CHRIST—" The second officer fires. BANG. BANG. BANG.\n\nBullets tear through you. You barely feel them. Already healing. Already moving.\n\nYou grab her gun hand. Her eyes meet yours; wide with primal terror.\n\nShe knows. In this moment, she knows exactly what you are.\n\n"Please... please I have kids—"\n\nYou smile. Fangs gleaming.\n\n"Not my problem."\n\n<em>CRACK.</em>\n\nSilence.\n\nTwo dead cops. Two threats eliminated.\n\nYou stand over their bodies, breathing hard. Blood on your hands. Bullet holes already closed.\n\nPower floods through you. Pure. Intoxicating.\n\n<em>This is what you are. This is what you were meant to be.</em>\n\nNot some guilt-ridden monster playing at humanity.\n\nA <strong>vampire</strong>. Superior in every way. Stronger. Faster. Immortal.\n\nThey thought they could stop you? <em>Humans?</em>\n\nYou almost laugh.\n\nSirens in the distance. Their radios were broadcasting before you struck.\n\nLet them come. Let them all come.\n\nThey\'ll never catch you.';
+                        return 'You move.\n\nFaster than thought. Faster than they can react.\n\nA predator. An apex predator.\n\nThe first officer, you\'re on him in a heartbeat. Your hand closes around his throat.\n\nOne. Sharp. Twist.\n\n<em>CRACK.</em>\n\nThe sound is... <em>satisfying</em>.\n\nHe crumples. A puppet with cut strings.\n\n"NO! JESUS CHRIST—" The second officer fires. BANG. BANG. BANG.\n\nBullets tear through you. You barely feel them. Already healing. Already moving.\n\nYou grab her gun hand. Her eyes meet yours; wide with primal terror.\n\nShe knows. In this moment, she knows exactly what you are.\n\n"Please... please I have kids—"\n\nYou smile. Fangs gleaming.\n\n"Not my problem."\n\n<em>CRACK.</em>\n\nSilence.\n\nTwo dead cops. Two threats eliminated.\n\nYou stand over their bodies, breathing hard. Blood on your hands. Bullet holes already closed.\n\nPower floods through you. Pure. Intoxicating.\n\n<em>This is what you are. This is what you were meant to be.</em>\n\nThe guilt, the hand-wringing, the pretending to be human: all of it was a costume, and it just came off.\n\nYou\'re a <strong>vampire</strong>, stronger and faster than anything in this city, and you\'re never going to die.\n\nThey thought they could stop you? <em>Humans?</em>\n\nYou almost laugh.\n\nSirens in the distance. Their radios were broadcasting before you struck.\n\nLet them come. Let them all come.\n\nThey\'ll never catch you.';
                     } else {
                         // Neutral karma: Pragmatic, conflicted
                         return 'You move.\n\nFaster than thought. Faster than they can pull their triggers.\n\nThe first officer, you\'re on him before he can blink. Your hand around his throat. One twist.\n\n<em>CRACK.</em>\n\nHe drops.\n\nAlready moving. No time for doubt.\n\n"NO! JESUS—" The second officer fires. BANG. BANG. BANG.\n\nBullets tear through you. Pain. But you\'re already moving.\n\nYou grab her gun. Wrench it away. Her eyes; wide with terror.\n\n"Please... please don\'t—"\n\nYou don\'t give her time to finish.\n\nAnother neck. Another snap.\n\nSilence.\n\nTwo bodies. Two dead police officers.\n\nYou stand there, breathing hard. Blood on your hands. Bullet wounds already closing.\n\n<em>It had to be done.</em>\n\nThey saw you. They would have hunted you forever. Testified against you. Made your existence impossible.\n\nThis was... necessary. Survival.\n\nThat\'s what you tell yourself.\n\nBut a small voice in the back of your mind whispers: <em>Was it? Was it really?</em>\n\nYou silence the voice.\n\nSirens in the distance. Getting closer. Their radios were broadcasting before you struck.\n\nYou run. Leaving the bodies behind.\n\nWhat\'s done is done.';
@@ -140196,6 +140423,12 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         desc += '<strong>Entry.</strong>\n\nThe back door\'s tougher than it looks. You fumble with it, and something inside rattles.\n\nThe camera in the hallway swivels on a slow pan. You duck behind a filing cabinet and wait for it to pass.\n\nYou\'re in. But the camera caught a frame of your shoulder.';
                     }
 
+                    // ── Caught on camera at storage ──
+                    if (gameState.flags.clinicCaught) {
+                        desc += '\n\n<strong>Storage.</strong>\n\nThe blood supply\'s in a mini-fridge behind the exam room. You head down the hallway toward it.';
+                        return desc;
+                    }
+
                     // ── Phase 2: Storage ──
                     desc += '\n\n';
                     if (outcome2 === 'clean') {
@@ -140212,15 +140445,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             desc += '\n\nYou\'re a block away before your hands stop shaking.\n\nSmall job. Clean job. They might not even notice for days.';
                         }
                     } else {
-                        desc += '\n\nThe camera might have something. The noise might bring someone in early to check.\n\nSmall clinic, small risk. But risk.';
+                        desc += '\n\nThe camera caught a frame of your shoulder on the way in. Nobody\'s putting a name to a shoulder.\n\nSmall clinic, small risk. But risk.';
                     }
 
-                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(42,106,90,0.3), rgba(90,170,138,0.3)); border: 2px solid #5aaa8a; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #5aaa8a;">Clinic Stealth Run</strong><br>Blood Bags: ' + bagsStolen + '<br>Suspicion: +' + (3 + alertLvl * 2) + '</div>';
+                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(42,106,90,0.3), rgba(90,170,138,0.3)); border: 2px solid #5aaa8a; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #5aaa8a;">Clinic Stealth Run</strong><br>Blood Bags: ' + bagsStolen + '<br>Suspicion: +' + (alertLvl ? 3 + alertLvl * 2 : 2) + (alertLvl ? '' : '<br>Cameras evaded') + '</div>';
 
                     return desc;
                 },
                 onEnter: function() {
                     var alertLvl = 0;
+                    gameState.flags.clinicCaught = false;
 
                     // Check 1: Entry (-10 detection for old cameras)
                     var prob1 = calculateStealthCheck({
@@ -140248,17 +140482,19 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         baseDetection: 15 + (alertLvl * 5),
                         isIndoor: true,
                         timeOfDay: getTimeOfDay(),
-                        hasCameras: false,
+                        hasCameras: true, // the night guard's monitors cover the exam hallway
                         occupantCount: 0,
                         isOccupantAwake: false,
                         staffDensity: 'low'
                     });
                     if (Math.random() < prob2) {
+                        // Failed at storage: the night guard has her on the monitor
                         gameState.flags.clinicCheck2 = 'fail';
-                        alertLvl++;
-                    } else {
-                        gameState.flags.clinicCheck2 = 'clean';
+                        gameState.flags.clinicAlertLevel = alertLvl + 1;
+                        gameState.flags.clinicCaught = true;
+                        return; // clinic_caught handles the rest
                     }
+                    gameState.flags.clinicCheck2 = 'clean';
 
                     gameState.flags.clinicAlertLevel = alertLvl;
 
@@ -140277,13 +140513,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         gameState.inventory.bloodBags.push({ source: 'clinic_stealth', quality: 25 });
                     }
 
-                    var suspicion = 3 + alertLvl * 2;
+                    // Clean: cameras evaded. Slip at the door: a blurry frame of her shoulder.
+                    var suspicion = alertLvl ? 3 + alertLvl * 2 : 2;
                     modifyKarma(-5);
                     modifyCitySuspicion(suspicion, 'theft', 'commercial');
-
-                    if (alertLvl > 0 && gameState.suspicionData) {
-                        gameState.suspicionData.cameraFootage =
-                            Math.min(100, (gameState.suspicionData.cameraFootage || 0) + alertLvl * 2);
+                    if (alertLvl > 0) {
+                        logBloodTheft('clinic', { camera: 'blur' });
+                        if (gameState.suspicionData) {
+                            gameState.suspicionData.cameraFootage =
+                                Math.min(100, (gameState.suspicionData.cameraFootage || 0) + 2);
+                        }
                     }
 
                     if ((gameState.karma || 0) > -1000) {
@@ -140297,9 +140536,12 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
                     updateStatus();
                 },
-                choices: [
-                    { text: '<img src="Images/icons/check-mark.png" class="icon" alt="done"> Walk away.', nextScene: 'city_exploration' }
-                ]
+                choices: function() {
+                    if (gameState.flags.clinicCaught) {
+                        return [{ text: '<span style="color:#ff8888;">The exam room.</span>', nextScene: 'clinic_caught' }];
+                    }
+                    return [{ text: '<img src="Images/icons/check-mark.png" class="icon" alt="done"> Walk away.', nextScene: 'city_exploration' }];
+                }
             },
 
             clinic_compel_approach: {
@@ -140315,7 +140557,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         desc += '\n\nYou take it. Your throat burns.\n\nShe\'ll come back to herself in a few minutes, confused, missing time. She\'ll spend the rest of her shift trying to remember what happened.\n\n<em>She looked barely twenty.</em>';
                     }
 
-                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(100,60,120,0.3), rgba(80,40,100,0.3)); border: 2px solid #8866aa; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #aa88cc;">Clinic Compulsion</strong><br>Blood Bags: 1<br>Thirst: +10<br>Suspicion: +5</div>';
+                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(100,60,120,0.3), rgba(80,40,100,0.3)); border: 2px solid #8866aa; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #aa88cc;">Clinic Compulsion</strong><br>Blood Bags: 1<br>Thirst: +10<br>Clean getaway</div>';
 
                     return desc;
                 },
@@ -140329,7 +140571,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 10);
                     modifyKarma(-5);
-                    modifyCitySuspicion(5, 'theft', 'commercial');
+                    // Clean getaway: the receptionist hands it over and forgets
 
                     if (karma > -1000) {
                         gameState.mentalHealth = Math.max(0, (gameState.mentalHealth || 50) - 3);
@@ -140373,6 +140615,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 6);
                     modifyKarma(-8);
                     modifyCitySuspicion(11, 'theft', 'commercial');
+                    logBloodTheft('clinic', { camera: 'blur', supernatural: true });
 
                     if (gameState.suspicionData) {
                         gameState.suspicionData.supernaturalEvidence =
@@ -140395,6 +140638,50 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: [
                     { text: '<img src="Images/icons/person-running.png" class="icon" alt="run"> Keep running.', nextScene: 'city_exploration' }
                 ]
+            },
+
+            // ── Blood theft: caught at storage (clinic) ──
+            clinic_caught: {
+                image: 'Images/locations/clinic.jpg',
+                text: function() {
+                    var desc = '';
+
+                    desc += 'The exam room door\'s locked tonight. You\'re working the handle when a flashlight beam lands on your back.\n\n';
+
+                    desc += '"Don\'t move."\n\n';
+
+                    desc += 'An older man in a gray security uniform stands at the end of the hallway with a flashlight in one hand and a phone in the other. The clinic hired a night guard, and nobody told you.\n\n';
+
+                    desc += '"Watched you come in on the monitor," he says. His voice wobbles, but the flashlight holds steady. "Camera over the back door\'s brand new. Got you real good."\n\n';
+
+                    desc += 'He turns the phone so you can see the screen. 911, already dialed, his thumb hovering over the call button.\n\n';
+
+                    desc += '"Just step away from that door and put your hands on the wall. Nobody has to get hurt."\n\n';
+
+                    desc += 'His heart\'s going like a rabbit\'s. He\'s sixty if he\'s a day, and he\'s standing between you and the blood anyway.';
+
+                    return desc;
+                },
+                onEnter: function() {
+                    advanceTime(1);
+                    updateStatus();
+                },
+                choices: function() {
+                    var mk = function(choice) {
+                        return function() {
+                            var bags = resolveBloodTheftCaught('clinic', choice);
+                            var msg = getBloodTheftCaughtOutcomeText('clinic', choice, bags);
+                            var next = choice === 'surrender' ? 'arrest_booking' : BLOOD_THEFT_SITES['clinic'].exitScene;
+                            showMessage(msg, function() { showScene(next); });
+                        };
+                    };
+                    return [
+                        { text: '<img src="Images/icons/lightning-bolt.png" class="icon" alt="speed"> Run. Vampire speed, empty-handed.', action: mk('run') },
+                        { text: '<img src="Images/icons/allure.png" class="icon" alt="compel"> Compel him. Make him wipe the recording.', action: mk('compel') },
+                        { text: '<img src="Images/icons/fist.png" class="icon" alt="knockout"> Knock him out and take the blood.', action: mk('knockout') },
+                        { text: 'Put your hands up. Surrender.', action: mk('surrender') }
+                    ];
+                }
             },
 
             // Legacy redirects for old saves
@@ -142694,6 +142981,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     gameState.flags.bloodBankAlertLevel = alertLvl;
                     gameState.flags.bloodBankConsecutiveFails = consec;
+                    gameState.flags.bloodBankCaught = consec >= 2; // two slips in a row: the monitor station has her
 
                     advanceTime(10);
                     updateStatus();
@@ -142705,8 +142993,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (consec >= 2) {
                         // Catastrophic: two consecutive fails
                         choices.push({
-                            text: '<span style="color:#ff8888;">Full alert. Security\'s coming.</span>',
-                            nextScene: 'blood_bank_stealth_alert'
+                            text: '<span style="color:#ff8888;">Push on to storage. Fast.</span>',
+                            nextScene: 'blood_bank_caught'
                         });
                     } else {
                         choices.push({
@@ -142734,6 +143022,12 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var karma = gameState.karma || 0;
                     var desc = '';
 
+                    // ── Caught on camera at storage ──
+                    if (gameState.flags.bloodBankCaught) {
+                        desc += '<strong>Storage.</strong>\n\nThe badge reader won\'t give. You wait, pressed against the wall, until a lab tech swipes through, then catch the door with your foot and slip into the cold room behind her.';
+                        return desc;
+                    }
+
                     // ── Phase 3: Storage access ──
                     if (outcome3 === 'clean') {
                         desc += '<strong>Storage.</strong>\n\nBadge-reader on the door, green light blinking. You work the mechanism with a lockpick. Thirty seconds of careful pressure.\n\nClick.\n\nRefrigerated units line the walls. Hundreds of bags, labeled and sorted. O-negative, A-positive, B-negative. Cold air spills out when you open the nearest unit.\n\nYou start loading your bag.';
@@ -142759,10 +143053,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             desc += '\n\nYou lean against a wall two blocks away and let the shaking stop.\n\nThey don\'t know. Nobody saw you. The bags are yours and the facility has no idea who took them.';
                         }
                     } else {
-                        desc += '\n\nYou put three blocks between yourself and the blood bank before you slow down.\n\nIt wasn\'t clean. Cameras caught something. A janitor saw your face. But you got what you came for.';
+                        desc += '\n\nYou put three blocks between yourself and the blood bank before you slow down.\n\nIt wasn\'t clean. The cameras never got a good look at you, but people did. You got what you came for.';
                     }
 
-                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(42,106,90,0.3), rgba(90,170,138,0.3)); border: 2px solid #5aaa8a; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #5aaa8a;">Stealth Run Complete</strong><br>Blood Bags: ' + bagsStolen + '<br>Suspicion: +' + (5 + alertLvl * 4) + '</div>';
+                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(42,106,90,0.3), rgba(90,170,138,0.3)); border: 2px solid #5aaa8a; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #5aaa8a;">Stealth Run Complete</strong><br>Blood Bags: ' + bagsStolen + '<br>Suspicion: +' + (alertLvl ? 5 + alertLvl * 4 : 2) + (alertLvl ? '' : '<br>Cameras evaded') + '</div>';
 
                     return desc;
                 },
@@ -142783,14 +143077,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         isOccupantAwake: false,
                         staffDensity: 'medium'
                     });
+                    gameState.flags.bloodBankCaught = false;
                     if (Math.random() < prob3) {
+                        // Failed at the storage door: the monitor station has her
                         gameState.flags.bloodBankCheck3 = 'fail';
-                        alertLvl++;
-                        consec++;
-                    } else {
-                        gameState.flags.bloodBankCheck3 = 'clean';
-                        consec = 0;
+                        gameState.flags.bloodBankAlertLevel = alertLvl + 1;
+                        gameState.flags.bloodBankCaught = true;
+                        return; // blood_bank_caught handles the rest
                     }
+                    gameState.flags.bloodBankCheck3 = 'clean';
+                    consec = 0;
 
                     // Catastrophic check (two consecutive) before exit
                     if (consec >= 2) {
@@ -142835,15 +143131,17 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     gameState.flags.bloodBankAlertLevel = alertLvl;
 
-                    // Consequences scale with alert level
-                    var suspicion = 5 + alertLvl * 4;
+                    // Clean: cameras evaded, the stock just comes up short.
+                    // Slips: a camera frame at the dock (blur) and staff who saw her face.
+                    var suspicion = alertLvl ? 5 + alertLvl * 4 : 2;
                     modifyKarma(-12);
                     modifyCitySuspicion(suspicion, 'theft', 'downtown');
-
-                    // Camera footage if any checks failed
-                    if (alertLvl > 0 && gameState.suspicionData) {
-                        gameState.suspicionData.cameraFootage =
-                            Math.min(100, (gameState.suspicionData.cameraFootage || 0) + alertLvl * 3);
+                    if (alertLvl > 0) {
+                        logBloodTheft('bloodbank', {
+                            camera: gameState.flags.bloodBankCheck1 === 'fail' ? 'blur' : '',
+                            witness: (gameState.flags.bloodBankCheck2 === 'fail' || gameState.flags.bloodBankCheck4 === 'fail') ? 'staff' : '',
+                            faceSeen: true
+                        });
                     }
 
                     // Mental health
@@ -142860,9 +143158,12 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
                     updateStatus();
                 },
-                choices: [
-                    { text: '<img src="Images/icons/check-mark.png" class="icon" alt="done"> Disappear.', nextScene: 'outside_blood_bank' }
-                ]
+                choices: function() {
+                    if (gameState.flags.bloodBankCaught) {
+                        return [{ text: '<span style="color:#ff8888;">The fridges.</span>', nextScene: 'blood_bank_caught' }];
+                    }
+                    return [{ text: '<img src="Images/icons/check-mark.png" class="icon" alt="done"> Disappear.', nextScene: 'outside_blood_bank' }];
+                }
             },
 
             blood_bank_stealth_alert: {
@@ -142943,7 +143244,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         desc += '\n\nYour throat burns from the effort. He\'ll spend the rest of his shift wondering why the count is off.';
                     }
 
-                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(100,60,120,0.3), rgba(80,40,100,0.3)); border: 2px solid #8866aa; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #aa88cc;">Compulsion Theft</strong><br>Blood Bags: ' + bagsStolen + '<br>Thirst: +15<br>Suspicion: +8</div>';
+                    desc += '\n\n<div style="background: linear-gradient(135deg, rgba(100,60,120,0.3), rgba(80,40,100,0.3)); border: 2px solid #8866aa; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center;"><strong style="color: #aa88cc;">Compulsion Theft</strong><br>Blood Bags: ' + bagsStolen + '<br>Thirst: +15<br>Clean getaway</div>';
 
                     return desc;
                 },
@@ -142967,13 +143268,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 15);
                     modifyKarma(-12);
-                    modifyCitySuspicion(8, 'theft', 'downtown');
-
-                    // Compelled staff looks odd on camera
-                    if (gameState.suspicionData) {
-                        gameState.suspicionData.cameraFootage =
-                            Math.min(100, (gameState.suspicionData.cameraFootage || 0) + 4);
-                    }
+                    // Clean getaway: the tech lets her in and forgets she was ever there
 
                     if (karma > -1000) {
                         gameState.mentalHealth = Math.max(0, (gameState.mentalHealth || 50) - 5);
@@ -143028,6 +143323,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 12);
                     modifyKarma(-15);
                     modifyCitySuspicion(22, 'theft', 'downtown');
+                    logBloodTheft('bloodbank', { camera: 'blur', supernatural: true });
 
                     if (gameState.suspicionData) {
                         gameState.suspicionData.supernaturalEvidence =
@@ -143052,6 +143348,48 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 choices: [
                     { text: '<img src="Images/icons/person-running.png" class="icon" alt="run"> Keep running.', nextScene: 'outside_blood_bank' }
                 ]
+            },
+
+            // ── Blood theft: caught at storage (bloodbank) ──
+            blood_bank_caught: {
+                image: 'Images/locations/blood-bank.jpg',
+                text: function() {
+                    var desc = '';
+
+                    desc += 'You\'re inside the storage room with the first bag in your hand when the door behind you bangs open.\n\n';
+
+                    desc += '"Security! Put it down!"\n\n';
+
+                    desc += 'A young guard in a navy blazer, radio clipped to his shoulder, a taser held out in front of him like he\'s only ever fired it at a training dummy. Down the corridor behind him, you can see the blue glow of the monitor station he just ran from.\n\n';
+
+                    desc += '"I watched you the whole way from the loading dock," he says. "Every camera in this building\'s recording."\n\n';
+
+                    desc += '"Put the bag down. Hands on your head. The cops are already on their way."\n\n';
+
+                    desc += 'The taser\'s pointed at your chest, and his hand is shaking. It wouldn\'t do much to you. He doesn\'t know that.';
+
+                    return desc;
+                },
+                onEnter: function() {
+                    advanceTime(1);
+                    updateStatus();
+                },
+                choices: function() {
+                    var mk = function(choice) {
+                        return function() {
+                            var bags = resolveBloodTheftCaught('bloodbank', choice);
+                            var msg = getBloodTheftCaughtOutcomeText('bloodbank', choice, bags);
+                            var next = choice === 'surrender' ? 'arrest_booking' : BLOOD_THEFT_SITES['bloodbank'].exitScene;
+                            showMessage(msg, function() { showScene(next); });
+                        };
+                    };
+                    return [
+                        { text: '<img src="Images/icons/lightning-bolt.png" class="icon" alt="speed"> Run. Vampire speed, empty-handed.', action: mk('run') },
+                        { text: '<img src="Images/icons/allure.png" class="icon" alt="compel"> Compel him. Make him wipe the recording.', action: mk('compel') },
+                        { text: '<img src="Images/icons/fist.png" class="icon" alt="knockout"> Knock him out and take the blood.', action: mk('knockout') },
+                        { text: 'Put your hands up. Surrender.', action: mk('surrender') }
+                    ];
+                }
             },
 
             // Legacy redirect for old saves
