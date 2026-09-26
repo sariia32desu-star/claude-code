@@ -13042,6 +13042,9 @@
                 bralessMinutesTotal: 0,      // Braless/Commando Overhaul Step 9A
                 commandoMinutesTotal: 0,     // Braless/Commando Overhaul Step 9A
                 bothMinutesTotal: 0,         // Braless/Commando Overhaul Step 9A
+                sheerMinutesTotal: 0,        // Mesh Overhaul Step 5C (public only)
+                sheerBareMinutesTotal: 0,
+                sheerLingerieMinutesTotal: 0,
                 npcReactionsTriggered: 0,
                 peakThrill: 0,
                 orgasmsOnStage: 0,
@@ -21651,6 +21654,21 @@ audioSystem.playSFX('buttonClick');
             return bonus;
         }
         
+        // Mesh Overhaul Step 5D: the sheer showcase. Good bodies look good through mesh.
+        // 25% of the naked body bonus per zone strangers can see bare skin in (veiled or
+        // lingerie), capped at 50%. sheer_lingerie gets half the naked bonus on top of the
+        // underwear's own appeal.
+        function getSheerShowcaseBonus() {
+            if (typeof getSheerState !== 'function') return 0;
+            var st = getSheerState();
+            var zones = 0;
+            if (st.chest === 'veiled' || st.chest === 'lingerie') zones++;
+            if (st.hips === 'veiled' || st.hips === 'lingerie') zones++;
+            if (zones === 0) return 0;
+            var pct = Math.min(0.5, 0.25 * zones);
+            return Math.round(getNakedAppealBonus() * pct);
+        }
+
         function getNakedAppealBreakdown() {
             // Returns an array of {label, value} for the appearance display
             const ba = gameState.bodyAppearance || {};
@@ -33185,28 +33203,69 @@ audioSystem.playSFX('buttonClick');
             } else {
                 clearPassiveAccum('bothThrill');
             }
-            // Beauty Obsessed overhaul (Step 2E): sheer pieces in public, +1 thrill per hour.
-            // A further +1/hr when she's braless or commando behind the sheer fabric.
-            // Stacks with the braless/commando gains above.
-            var _sheerActive = false;
-            if (!isNakedPassive && typeof getVisibleSheerPieces === 'function' && !_privateExposure) {
-                var _sheer = getVisibleSheerPieces();
-                if (_sheer.chest || _sheer.hips) {
-                    _sheerActive = true;
-                    var _sheerRate = 1;
-                    if ((_sheer.chest && cv.braless) || (_sheer.hips && cv.commando)) _sheerRate += 1;
-                    var sheerThrill = accruePassive('sheerThrill', _sheerRate, minutes);
-                    if (sheerThrill > 0) {
-                        applyExhibitionThrillGain(sheerThrill);
-                    }
+            // Mesh & Sheer Overhaul, Step 5A: sheer passive block (replaces the BO Step 2E block).
+            // Rates per hour by sheer state: [thrill, corruption, mesh scratch arousal].
+            // Thrill scales with the weave (semi 0.7, sheer 1.0, fishnet 1.1). Stacks with the
+            // braless/commando/both gains above; lingerie states replace underwear-only thrill.
+            // Nothing here accrues where nobody can see her (isPrivateExposureScene).
+            var SHEER_PASSIVE_RATES = {
+                sheer_framed:          [1,  1, 0],
+                sheer_braless:         [3,  2, 1],
+                sheer_commando:        [4,  3, 0],
+                sheer_bare:            [6,  4, 1],
+                sheer_lingerie_top:    [9,  3, 0],
+                sheer_lingerie_bottom: [9,  3, 0],
+                sheer_lingerie:        [12, 4, 0]
+            };
+            var _sheerSt = (!isNakedPassive && !_privateExposure && typeof getSheerState === 'function') ? getSheerState() : null;
+            var _sheerRates = _sheerSt ? SHEER_PASSIVE_RATES[_sheerSt.state] : null;
+            var _sheerActive = !!_sheerRates;
+            var _sheerThrillRate = 0;
+            var _sheerStacksWithWet = false;
+            if (_sheerActive) {
+                _sheerThrillRate = _sheerRates[0] * (_sheerSt.weaveMult || 1);
+                var sheerCorruption = accruePassive('sheerCorruption', _sheerRates[1], minutes);
+                if (sheerCorruption > 0) {
+                    gameState.flags.corruptionChangedPassively = true;
+                    gameState.corruption = gameState.corruption + sheerCorruption;
                 }
+                // Mesh scratch: the grid is rougher than cotton on bare nipples. Hours of it leave them swollen.
+                if (_sheerRates[2] > 0 && !_clarityActive) {
+                    var sheerScratch = accruePassive('sheerScratch', _sheerRates[2], minutes);
+                    if (sheerScratch > 0) {
+                        gameState.flags.arousalChangedPassively = true;
+                        gameState.arousalGainThisTick = true;
+                        gameState.arousal = Math.min(100, gameState.arousal + sheerScratch);
+                    }
+                } else {
+                    clearPassiveAccum('sheerScratch');
+                }
+                // Step 5B: wet see-through and mesh see-through only stack when the mesh covers one
+                // zone and the other zone is under an opaque garment the rain can soak.
+                var _sheerZoneCount = 0;
+                if (_sheerSt.chest === 'framed' || _sheerSt.chest === 'veiled' || _sheerSt.chest === 'lingerie') _sheerZoneCount++;
+                if (_sheerSt.hips === 'framed' || _sheerSt.hips === 'veiled' || _sheerSt.hips === 'lingerie') _sheerZoneCount++;
+                _sheerStacksWithWet = _sheerZoneCount === 1 &&
+                    (_sheerSt.chest === 'opaque' || _sheerSt.hips === 'opaque');
+            } else {
+                clearPassiveAccum('sheerCorruption');
+                clearPassiveAccum('sheerScratch');
             }
-            if (!_sheerActive) clearPassiveAccum('sheerThrill');
+            // Step 5C: lifetime minutes, public only (same guard as the gains)
+            if (_sheerActive) {
+                if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                var _esS = gameState.exhibitionStats;
+                _esS.sheerMinutesTotal = (_esS.sheerMinutesTotal || 0) + minutes;
+                if (_sheerSt.state === 'sheer_bare') _esS.sheerBareMinutesTotal = (_esS.sheerBareMinutesTotal || 0) + minutes;
+                if (_sheerSt.state.indexOf('sheer_lingerie') === 0) _esS.sheerLingerieMinutesTotal = (_esS.sheerLingerieMinutesTotal || 0) + minutes;
+            }
             // Mesh Overhaul Step 1C: bra and panties in public, +3 thrill per hour.
             // Uses the visible level, so a full coat over underwear earns nothing.
+            // Step 5A: sheer lingerie replaces it rather than stacking.
             var _underwearOnlyPassive = !_privateExposure &&
                 (typeof getVisibleExposureLevel === 'function') && getVisibleExposureLevel() === 'underwear_only';
-            if (_underwearOnlyPassive) {
+            var _sheerLingerieNow = _sheerActive && _sheerSt.state.indexOf('sheer_lingerie') === 0;
+            if (_underwearOnlyPassive && !_sheerLingerieNow) {
                 var underwearThrill = accruePassive('underwearThrill', 3, minutes);
                 if (underwearThrill > 0) {
                     applyExhibitionThrillGain(underwearThrill);
@@ -33243,15 +33302,33 @@ audioSystem.playSFX('buttonClick');
             }
 
             // Wet clothes (see-through): passive thrill scales with wetness, only while clothed
-            if (gameState.weather && gameState.weather.wetClothes && !isNakedPassive && !isToplessPassive && !isBottomlessPassive) {
+            // Mesh Overhaul Step 5B: when wet and mesh show the same skin, only the higher rate applies.
+            var _wetThrillActive = !!(gameState.weather && gameState.weather.wetClothes && !isNakedPassive && !isToplessPassive && !isBottomlessPassive);
+            var _wetThrillRate = 0;
+            if (_wetThrillActive) {
                 const _wetnessTick = gameState.weather.clothesWetness || 0;
-                const _wetThrillRate = _wetnessTick >= 80 ? 4 : _wetnessTick >= 60 ? 3 : _wetnessTick >= 40 ? 2 : 1;
+                _wetThrillRate = _wetnessTick >= 80 ? 4 : _wetnessTick >= 60 ? 3 : _wetnessTick >= 40 ? 2 : 1;
+            }
+            var _applySheerThrill = _sheerActive;
+            if (_sheerActive && _wetThrillActive && !_sheerStacksWithWet) {
+                if (_wetThrillRate >= _sheerThrillRate) _applySheerThrill = false;
+                else _wetThrillActive = false;
+            }
+            if (_wetThrillActive) {
                 const _wetThrill = accruePassive('wetThrill', _wetThrillRate, minutes);
                 if (_wetThrill > 0) {
                     applyWetClothingThrillGain(_wetThrill);
                 }
             } else {
                 clearPassiveAccum('wetThrill');
+            }
+            if (_applySheerThrill) {
+                var sheerThrill = accruePassive('sheerThrill', _sheerThrillRate, minutes);
+                if (sheerThrill > 0) {
+                    applyExhibitionThrillGain(sheerThrill);
+                }
+            } else {
+                clearPassiveAccum('sheerThrill');
             }
 
             // Exhibition Overhaul, Step 3C: Thrill decay when fully clothed.
@@ -55137,6 +55214,9 @@ audioSystem.playSFX('buttonClick');
             // MATCHING SET BONUSES: Flat bonus for wearing matching underwear or outfit ensembles
             total += getSetBonuses().bonus;
 
+            // SHEER SHOWCASE (Mesh Overhaul Step 5D): part of the naked body bonus shows through mesh
+            total += getSheerShowcaseBonus();
+
             // SPECIAL OUTFIT BONUSES (worn-outfit appeal bonuses on top of base item appeal)
             const _wornDress = gameState.currentOutfit.dress;
             if (_wornDress && (_wornDress.id === 'diner_uniform' || _wornDress.id === 'rubys_diner_uniform')) total += 50;
@@ -55518,6 +55598,12 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
                 });
                 outfitHTML += renderNotInUse(unusedSlotLabels);
+            }
+            // Mesh Overhaul Step 5D: Sheer Showcase appeal line
+            var _sheerShowcase = (!effectivelyNaked && typeof getSheerShowcaseBonus === 'function') ? getSheerShowcaseBonus() : 0;
+            if (_sheerShowcase > 0) {
+                outfitHTML += '<div class="outfit-item" style="padding:6px 8px;border-top:1px solid rgba(150,120,190,0.25);"><span class="outfit-slot" style="color:#b9a3d9;">Sheer Showcase:</span><span class="outfit-value" style="color:#b9a3d9;">+' + _sheerShowcase + '</span></div>';
+                outfitHTML += '<div style="color:#9c8ab8;font-style:italic;font-size:0.85em;padding:0 12px 4px 12px;line-height:1.4;">Your body shows through the ' + getSheerNoun() + ', and it counts.</div>';
             }
             if (gameState.outfitPresets && gameState.outfitPresets.length > 0 && canChangeFromBackpack()) {
                 outfitHTML += '<div style="text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(100,80,120,0.3);">';
