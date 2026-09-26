@@ -114318,108 +114318,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             homeless_sleep_search: {
                 text: 'You need to sleep. But you have nowhere to go.\n\nWithout an apartment or a friend\'s couch.\n\nYou\'re homeless. A vampire on the streets.\n\nYou spot a few options:\n\nA park bench under a broken streetlight. Exposed but free.\n\nAn alley behind a restaurant. Sheltered but filthy.\n\nA 24-hour diner. Warm inside but you\'d have to stay awake in a booth.',
                 choices: [
-                    { text: "Sleep on the park bench", nextScene: "sleep_park_bench" },
+                    { text: "Sleep on the park bench", nextScene: "park_bench_sleep_choice" },
                     { text: "Sleep in the alley", nextScene: "sleep_alley" },
                     { text: "Stay in the diner until morning", nextScene: "sleep_diner" }
                 ]
-            },
-
-            sleep_park_bench: {
-                parts: function() {
-                    // Determine if robbery happens (40% chance)
-                    const wasRobbed = Math.random() < 0.4;
-                    gameState.flags.parkBenchRobbed = wasRobbed;
-                    
-                    if (wasRobbed) {
-                        return [
-                            'You lie down on the cold bench. Your backpack as a pillow.\n\nThe city never sleeps. Cars pass. Voices echo.\n\nYou close your eyes. Try to rest.',
-
-                            'Something wakes you.\n\nHands rifling through your backpack.\n\nYou grab the thief\'s wrist.\n\n"Wrong person," you snarl.\n\nThey run.\n\nBut they got your money. All of it.',
-
-                            'Dawn breaks. You\'re exhausted. Robbed. Penniless.\n\nThis can\'t continue. You need a real place to stay.'
-                        ];
-                    } else {
-                        return [
-                            'You lie down on the cold bench. Your backpack as a pillow.\n\nThe city never sleeps. Cars pass. Voices echo.\n\nYou close your eyes. Try to rest.',
-
-                            'You wake several times during the night.\n\nEvery sound makes you tense. Every footstep nearby.\n\nBut no one bothers you. You\'re lucky.',
-
-                            'Dawn breaks. You\'re exhausted but at least you weren\'t robbed.\n\nStill, this can\'t continue. You need a real place to stay.'
-                        ];
-                    }
-                },
-                text: function() {
-                    // Check if we woke up with max thirst
-                    if (gameState.thirst >= getThirstCap()) {
-                        return 'You finally get up. Stiff. Cold. And the thirst... unbearable.';
-                    }
-                    
-                    if (gameState.flags.parkBenchRobbed) {
-                        return 'You finally get up. Stiff. Cold. Penniless.\n\nThe day starts again. But you\'re worse off than before.';
-                    }
-                    
-                    return 'You finally get up. Stiff. Cold. Exhausted.\n\nThe day starts again. At least you still have your money.';
-                },
-                onEnter: () => {
-                    // Check if robbery happened
-                    if (gameState.flags.parkBenchRobbed) {
-                        gameState.money = 0; // Lose all money
-                    }
-                    
-                    gameState.mentalHealth = Math.max(0, gameState.mentalHealth - 30); // Worse than motel
-                    gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 15);
-                    
-                    // Track park sleeping for fugitive system
-                    if (gameState.flags.wantedFugitive) {
-                        gameState.flags.sleptInParkWhileFugitive = true;
-                    }
-                    
-                    // Advance to morning
-                    const hoursToMorning = (24 - gameState.time.hour + 7) % 24;
-                    advanceTime(hoursToMorning * 60);
-                    
-                    // Clean up the flag
-                    delete gameState.flags.parkBenchRobbed;
-                    
-                    // Don't call updateStatus here - let the choices handle overflow
-                    updateStatsUI();
-                },
-                choices: function() {
-                    // Check for birth day FIRST (Day 5 of pregnancy)
-                    if (isBirthDay()) {
-                        return [
-                            { 
-                                text: "...", 
-                                action: () => {
-                                    updateStatus();
-                                    showScene("birth_day_awakening");
-                                }
-                            }
-                        ];
-                    }
-                    
-                    // If thirst hit 100, trigger overflow (we're in public)
-                    if (gameState.thirst >= getThirstCap()) {
-                        return [
-                            { 
-                                text: "...", 
-                                action: () => {
-                                    triggerThirstOverflow();
-                                }
-                            }
-                        ];
-                    }
-                    
-                    return [
-                        { 
-                            text: "Start the new day", 
-                            action: () => {
-                                updateStatus();
-                                showScene("city_exploration");
-                            }
-                        }
-                    ];
-                }
             },
 
             sleep_alley: {
@@ -142559,6 +142461,11 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 15);
                     gameState.fatigue = 0;
                     modifyHygiene(-20);
+
+                    // Track park sleeping for fugitive system
+                    if (gameState.flags.wantedFugitive) {
+                        gameState.flags.sleptInParkWhileFugitive = true;
+                    }
                     
                     // Advance to morning
                     const hoursToMorning = (24 - gameState.time.hour + 7) % 24;
