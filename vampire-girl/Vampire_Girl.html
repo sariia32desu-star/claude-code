@@ -23055,7 +23055,7 @@ audioSystem.playSFX('buttonClick');
                         : tier === 'mid' ? 'You cover it with your hand. Your palm lands on bare skin through the tear, hot, and your pussy clenches like it was someone else\'s hand.'
                         : 'You clap a hand over the hole. Your hand doesn\'t cover all of the tear. Your face burns, ' + (chest ? 'your nipple\'s stiff under your palm' : 'your pussy\'s wet under your fingers') + ', and ' + p.he + ' watches you try.';
                     return {
-                        key: 'snag', gender: p.g, snagItem: garment,
+                        key: 'snag', gender: p.g, snagItem: garment, snagZone: zone,
                         text: open + '\n\nIt tears. You hear it before you feel it, a thin ripping sound, and then the air.\n\n' + hole + '\n\nThe ' + p.man + ' stops. ' + p.His + ' eyes go to the hole and stay there. "Shit. Sorry," ' + p.he + ' says. ' + p.He + ' doesn\'t look sorry.\n\n' + kr,
                         thrill: 12, arousal: 9
                     };
@@ -23302,7 +23302,7 @@ audioSystem.playSFX('buttonClick');
         // ── Mesh & Sheer Overhaul, Step 18: discovery scenes ──
         // Scenes a Step 9 event can lead into, by event key and stranger gender. Each entry is
         // added as its scene is written; the follow offer only appears for listed pairs.
-        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m', backlight_f: 'sheer_backlight_sex_f', flash_m: 'sheer_flash_sex_m', flash_f: 'sheer_flash_sex_f' };
+        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m', backlight_f: 'sheer_backlight_sex_f', flash_m: 'sheer_flash_sex_m', flash_f: 'sheer_flash_sex_f', snag_m: 'sheer_snag_sex_m' };
 
         // The follow offer: 8001+ (the scenes are DC only), bare behind mesh, a written scene,
         // and for the Backlight, after dark (its scene is a lit shop doorway after close).
@@ -24187,7 +24187,7 @@ audioSystem.playSFX('buttonClick');
 
             // Mesh Step 18: at 8001+ a Backlight, Flash or Snag stranger can follow her
             if (getSheerDiscoveryScene(event)) {
-                gameState.flags._sheerDiscovery = { key: event.key, gender: event.gender, district: districtId };
+                gameState.flags._sheerDiscovery = { key: event.key, gender: event.gender, district: districtId, zone: event.snagZone || null };
                 showMessage(event.text + statText, function() { updateStatus(); showScene('sheer_discovery_offer'); });
                 return true;
             }
@@ -48004,6 +48004,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'sheer_backlight_sex_f', label: 'Discovery: The Backlight (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'sheer_flash_sex_m', label: 'Discovery: The Flash (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_flash_sex_2_m' } },
                     { sceneId: 'sheer_flash_sex_f', label: 'Discovery: The Flash (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
+                    { sceneId: 'sheer_snag_sex_m', label: 'Discovery: The Snag (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_snag_sex_2_m' } },
                     { sceneId: 'wet_crowd_press_sex', label: 'The Crowd Press', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_doorway_sex', label: 'The Doorway', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_car_slowdown_sex', label: 'The Car Slowdown', tiers: [{l:'Deeply Corrupted',v:8001}] },
@@ -176629,6 +176630,14 @@ wet_car_slowdown: {
                         desc += '<p>"Look," ' + he + ' says, and turns it around. You\'re in the frame, ' + what + ', sharper than any mirror has ever shown you. ' + His + ' thumb swipes, and there you are again.</p>';
                         desc += '<p>"One more," ' + he + ' says.</p>';
                         desc += '<p>On the corner, the stairwell door of a parking structure hangs open, fluorescent light spilling out onto the sidewalk. Your clit throbs.</p>';
+                    } else if (d.key === 'snag') {
+                        var bs = _sheerBodyCtx();
+                        var torn = d.zone === 'hips' ? bs.bottom : bs.top;
+                        desc += '<p>' + He + ' doesn\'t walk on. ' + He + ' falls into step beside you, still apologizing, eyes still on the hole in your ' + torn + '.</p>';
+                        desc += (d.gender === 'f'
+                            ? '<p>"Let me fix it," she says. She nods at a caf\u00e9 two doors down. "They\'ve got a restroom. I\'ve got safety pins in my bag."</p>'
+                            : '<p>"Let me fix it," he says. He nods at the office tower on the corner. "I work up there. There\'s a sewing kit in my desk. Tape, pins, something."</p>');
+                        desc += '<p>The torn edge flutters against your bare skin with every step. Your clit throbs.</p>';
                     }
                     return desc;
                 },
@@ -177168,6 +177177,183 @@ wet_car_slowdown: {
                     var back = d.district ? d.district + '_district_street' : 'city_exploration';
                     return [{ text: 'Keep walking.', action: function() {
                         gameState.flags._sheerDiscovery = null;
+                        showScene(back);
+                    } }];
+                }
+            },
+
+            // The Snag, male: an office tower elevator she stops between floors. The hand that
+            // tore the mesh tries to hold the tear shut, and it keeps getting wider (+30 damage).
+            sheer_snag_sex_m: {
+                galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                        top: null, bottom: null, bra: null, panties: null, outerwear: null,
+                        dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
+                    });
+                    gameState.flags._sheerDiscovery = { key: 'snag', gender: 'm', district: 'downtown', zone: 'chest' };
+                },
+                text: function() {
+                    var g = _sheerDiscoveryGarb();
+                    var b = g.b, n = g.n, st = g.st;
+                    var zone = (gameState.flags._sheerDiscovery || {}).zone === 'hips' ? 'hips' : 'chest';
+                    var chest = zone === 'chest';
+                    var torn = chest ? b.top : b.bottom;
+                    var under = chest ? !!st.chestUnder : !!st.hipsUnder;
+                    var desc = '';
+
+                    var slip = chest
+                        ? (under ? 'They slide along the edge of your ' + b.bra + ', over the bare curve of your tit above it.' : 'They brush the underside of your bare tit, and his thumb slips right onto your nipple.')
+                        : (under ? 'They slide down the crease beside your pussy onto the soaked edge of your ' + b.panties + '.' : 'They slide down the crease beside your pussy, and his fingertip slips onto your bare folds, already wet.');
+                    var bsOut = b.bs === 'large' ? 'Your heavy tits spill out through the rip, bare and swaying.' : b.bs === 'small' ? 'Your small tits sit bare in the rip, nipples stiff.' : 'Your tits spill out through the rip, nipples stiff.';
+                    var rip = chest
+                        ? 'The tear runs across both tits and down toward your navel.' + (under ? ' You shove the cups of your ' + b.bra + ' down under your tits.' : '') + ' ' + bsOut
+                        : 'The tear runs across the front of your ' + torn + '.' + (under ? ' You hook your ' + b.panties + ' aside, and your bare pussy is right there in the ragged gap, flushed and slick.' : ' Your bare pussy spills out of the ragged gap, flushed and slick.');
+                    var frame = chest ? 'spilling out of the torn ' + n : g.frame;
+
+                    // ── THE ELEVATOR ──
+                    desc += '<p>He walks you into the lobby of the office tower, badges you through the turnstile, and holds the elevator. His eyes haven\'t left the tear.</p>';
+                    desc += '<p>The doors slide shut. Brushed steel walls, a mirror across the back, a camera dome in the corner with its little red light. He presses fourteen, and the car hums upward.</p>';
+                    desc += '<p>Between the fifth and sixth floors, you reach past him and hit the red stop button. The car jolts and hangs there. An alarm chirps once and goes quiet.</p>';
+                    desc += '<p>He looks at the button, then at you.</p>';
+                    desc += '<p>"You were going to fix it," you tell him.</p>';
+
+                    // ── THE TEAR KEEPS GETTING WIDER ──
+                    desc += '<p>He reaches for the tear like he means it. His fingers pinch the torn edges of the ' + n + ' together to hold them shut, and his knuckles land on bare skin. ' + slip + '</p>';
+                    desc += '<p>He freezes. So do you. Then you lean into his hand, and the ' + n + ' gives another inch.</p>';
+                    desc += '<p>"Sorry," he says again. He tries to pinch it shut higher up. It splits under his fingers, one long thin rip, and the hole doubles.</p>';
+                    desc += '<p>"Stop fixing it," you tell him. You close your hand over his and pull, and the ' + n + ' rips wide open.</p>';
+                    desc += '<p>' + rip + '</p>';
+                    desc += '<p>The rest you open yourself. ' + (chest ? g.hipsPeel : g.chestPeel) + '</p>';
+                    desc += '<p>In the mirror you\'re a mess of torn ' + n + ' and bare skin. The camera\'s red light is on you.</p>';
+
+                    // ── ACT 1: FINGERS AT THE MIRROR — ENTRY & BUILD ──
+                    desc += '<p>He turns you to face the mirror and presses in behind you. His hand slides down between your legs, and two fingers part your folds and glide up over your clit. "Hhh—"</p>';
+                    desc += '<p>His other hand finds your tit, ' + frame + ', and squeezes. In the mirror you watch his fingers disappear into your cunt.</p>';
+                    desc += '<p>He finger-fucks you slow, then faster, curling against your front wall. The wet sounds bounce off the steel. You brace a palm on the mirror and your breath fogs it. "Mmh—ah—"</p>';
+                    desc += '<p>' + _bt5(b,
+                        'Your slight body looks tiny in the glass, pinned between his chest and the mirror, his hand covering most of your pussy.',
+                        'In the glass, the muscle in your stomach jumps every time his fingers curl.',
+                        'In the glass, your hips roll back against him, soft and heavy, every curve caught in the steel light.',
+                        'In the glass, your thick thighs shake and spread wider for his hand.',
+                        'In the glass, your hips roll back against him on every stroke.') + '</p>';
+                    desc += '<p>The camera\'s red light holds steady in the corner. Somewhere in this building, somebody\'s watching a monitor. You grind back onto his fingers and look straight into the lens.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>Your cunt clenches around his fingers in quickening squeezes. Your knees shake. "Right there—don\'t stop—"</p>';
+
+                    // ── HER FIRST ORGASM ──
+                    desc += '<p>You cum watching yourself in the mirror. Your cunt spasms around his fingers in hard, clenching jolts, and your palm squeaks down the glass. "Ahh—fuck—ahh—"</p>';
+                    desc += '<p>He keeps his fingers inside you through every aftershock, slow now, until you catch your breath and your pussy stops fluttering around them.</p>';
+
+                    // ── AGAINST THE WALL ──
+                    desc += '<p>You turn around and open his jeans. His cock springs out thick and hard, flushed dark. He hooks his hands under your thighs and lifts you against the steel wall. ' + _bt5(b,
+                        'You weigh nothing to him.',
+                        'Your lean thighs clamp around his waist.',
+                        'Your soft thighs wrap his waist, his fingers sinking into them.',
+                        'He grunts under your weight and pins you harder to the wall.',
+                        'Your legs wrap his waist.') + '</p>';
+                    desc += '<p>The head of his cock slides through your slick and settles right at your entrance.</p>';
+                    return desc;
+                },
+                onEnter: function() {
+                    trackGalleryScene('sheer_snag_sex_m');
+                    // The tear keeps getting wider: +30 on the snagged garment, capped short of destroyed
+                    var _st = getSheerState();
+                    var _z = (gameState.flags._sheerDiscovery || {}).zone === 'hips' ? 'hips' : 'chest';
+                    var _g = _z === 'hips' ? _st.hipsGarment : _st.chestGarment;
+                    if (_g) {
+                        initializeItemDamage(_g);
+                        _g.damage = Math.min(99, (_g.damage || 0) + 30);
+                    }
+                },
+                choices: function() {
+                    var out = [];
+                    if ((gameState.inventory.condoms || 0) >= 1) {
+                        out.push({ text: 'Hand him a condom', action: function() {
+                            gameState.inventory.condoms -= 1;
+                            gameState.flags._sheerDiscoveryCondom = true;
+                            updateStatus();
+                            showScene('sheer_snag_sex_2_m');
+                        } });
+                    } else {
+                        out.push({ text: 'Hand him a condom <span style="opacity:0.4;font-size:0.85em">(No condoms)</span>', action: function() {} });
+                    }
+                    out.push({ text: 'Go without', action: function() {
+                        gameState.flags._sheerDiscoveryCondom = false;
+                        showScene('sheer_snag_sex_2_m');
+                    } });
+                    return out;
+                }
+            },
+
+            sheer_snag_sex_2_m: {
+                galleryOnEnter: function() {
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.flags._sheerDiscoveryCondom = false;
+                },
+                text: function() {
+                    var g = _sheerDiscoveryGarb();
+                    var b = g.b, n = g.n, st = g.st;
+                    var zone = (gameState.flags._sheerDiscovery || {}).zone === 'hips' ? 'hips' : 'chest';
+                    var chest = zone === 'chest';
+                    var torn = chest ? b.top : b.bottom;
+                    var condom = !!gameState.flags._sheerDiscoveryCondom;
+                    var bounce = chest ? 'out of the torn ' + n : g.bounce;
+                    var tornFix = chest
+                        ? (st.chestUnder ? 'You tug your ' + b.bra + ' back up and hold the torn ' + n + ' together over it. It gapes the second you let go.' : 'You pull the torn ' + n + ' together over your tits. It gapes the second you let go.')
+                        : (st.hipsUnder ? 'You tug your ' + b.panties + ' back into place and hold the torn ' + n + ' together over them. It gapes the second you let go.' : 'You pull the torn ' + n + ' together over your pussy. It gapes the second you let go.');
+                    var desc = '';
+
+                    // ── ENTRY ──
+                    desc += '<p>' + (condom
+                        ? 'You press a condom into his hand. He rolls it on one-handed, holding you up against the wall with the other arm.'
+                        : 'You reach down between you, take his bare cock, and guide him in.') + '</p>';
+                    desc += '<p>He lowers you onto him inch by inch. The stretch burns sweet, and your legs lock around his waist as he sinks to the base. "Hhnn—fuck—"</p>';
+                    desc += '<p>The ' + n + ' hangs off you in torn strips. Your bare shoulders press against the cold steel.</p>';
+
+                    // ── BUILD ──
+                    desc += '<p>He starts fucking you against the wall, short deep strokes, his hands locked under ' + b.ass + '. The whole car sways on its cables with every thrust.</p>';
+                    desc += '<p>' + (b.bs === 'large' ? 'Your heavy tits bounce ' + bounce + ' and slap against his chest.' : b.bs === 'small' ? 'Your small tits jiggle ' + bounce + ', nipples dragging against his shirt.' : 'Your tits bounce ' + bounce + ', nipples dragging against his shirt.') + ' "Mmh—ah—ah—"</p>';
+                    desc += '<p>The intercom crackles. "Car two, this is security. You folks okay in there?"</p>';
+                    desc += '<p>He stops moving. You keep going. You roll your hips on his cock and press the call button with your free hand. "We\'re fine," you say, and your voice only breaks a little. "Just stuck."</p>';
+                    desc += '<p>"Maintenance is coming. Hang tight." The speaker clicks off. The camera\'s red light stays on.</p>';
+                    desc += '<p>He laughs into your neck and starts fucking you again, harder, driving up into you until your back bangs the steel. You reach down between you and rub your clit while every stroke drags over your front wall.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>Your cunt starts clenching around him in quickening squeezes. Your heels dig into his back. "Don\'t stop—harder—right there—"</p>';
+
+                    // ── HER ORGASM ──
+                    desc += '<p>You cum pinned to the elevator wall. Your cunt seizes around his cock in hard, rolling spasms, your legs lock tight around him, and your cry rings off the steel. "AH—fuck—FUCK—"</p>';
+                    desc += '<p>He fucks you through it, slow and deep, while aftershocks twitch through your pussy and your fingers go still on your clit.</p>';
+
+                    // ── HIS ORGASM ──
+                    desc += '<p>' + (condom
+                        ? 'He shoves in deep and holds you there against the wall. His cock kicks inside you in thick surges, filling the condom while you clench around every one.'
+                        : 'He shoves in deep and cums, his cock kicking inside you in thick surges, flooding you until it runs out around him.') + '</p>';
+
+                    // ── LINGER & AFTERMATH ──
+                    desc += '<p>He holds you there a moment, both of you breathing hard, then lets your feet down onto the floor. ' + (condom ? 'He ties off the condom and stuffs it in his pocket.' : 'His cum runs down the inside of your thigh.') + '</p>';
+                    desc += '<p>' + tornFix + ' ' + (chest ? g.hipsFix : g.chestFix) + '</p>';
+                    desc += '<p>You release the stop button. The car hums and climbs. The doors open on fourteen onto an empty hallway and a security guard stepping off the stairs, radio in hand. His eyes go straight to the rip in your ' + torn + '.</p>';
+                    desc += '<p>You smile at him on your way past and take the stairs down all fourteen floors, the torn ' + n + ' flapping open and ' + (condom ? 'your pussy still throbbing.' : 'his cum sliding down your thigh.') + '</p>';
+                    return desc;
+                },
+                onEnter: function() {
+                    completeSexConsensualMale({
+                        time: 30, hygiene: -20,
+                        partner: 'stranger',
+                        skipPregnancy: !!gameState.flags._sheerDiscoveryCondom,
+                        thrill: 20
+                    });
+                },
+                choices: function() {
+                    var d = gameState.flags._sheerDiscovery || {};
+                    var back = d.district ? d.district + '_district_street' : 'city_exploration';
+                    return [{ text: 'Keep walking.', action: function() {
+                        gameState.flags._sheerDiscovery = null;
+                        gameState.flags._sheerDiscoveryCondom = null;
                         showScene(back);
                     } }];
                 }
