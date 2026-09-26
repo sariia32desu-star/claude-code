@@ -145902,14 +145902,6 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         });
                     }
                     
-                    // If you have a captive/victim with you, option to bring them here
-                    if (gameState.flags.hasActiveCaptive) {
-                        choices.push({
-                            text: "Use the room for... private activities",
-                            nextScene: "hotel_room_captive"
-                        });
-                    }
-                    
                     choices.push({ text: "Leave the room", nextScene: "luxury_hotel_lobby" });
                     
                     return choices;
@@ -166441,20 +166433,6 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 },
                 choices: [
                     { text: "Head into the city", nextScene: "city_arrival" }
-                ]
-            },
-            
-            rest_at_jaewon: {
-                text: '"Actually... could I rest? Just an hour?"\n\n"Of course! Make yourself comfortable."\n\nYou sink onto her couch.\n\nThe exhaustion crashes over you.\n\nYou lie down on Jaewon\'s couch. Just for a moment.\n\nYour eyes close...',
-                onEnter: () => {
-                    gameState.thirst = 74;
-                    advanceTime(30); // Rest for 30 minutes
-                    modifyMentalHealth(5);
-                    updateStatus();
-                },
-                choices: [
-                    { text: "Quietly leave while Jaewon\'s on the phone", nextScene: "leave_jaewon_apartment_alone" },
-                    { text: "Wait for her to finish and ask to go to the city together", nextScene: "jaewon_accompanies" }
                 ]
             },
             
