@@ -110776,6 +110776,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             // ══════════════════════════════════════════════════════════════
             district_sheer_exhibition: {
                 galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
                     gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
                         top: null, bottom: null, bra: null, panties: null, outerwear: null,
                         dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
@@ -123005,6 +123007,8 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             jaewon_mesh_top_sex: {
                 image: 'Images/locations/jaewon_apartment_livingroom.jpg',
                 galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
                     var o = gameState.currentOutfit || {};
                     o.top = { id: 'jaewon_mesh_top', name: 'Jaewon\'s Sheer Mesh Top', category: 'tops', owner: 'jaewon', appeal: 28, tags: ['provocative', 'edgy', 'fit:tight', 'material:mesh', 'occasion:club'] };
                     o.dress = null; o.bra = null; o.outerwear = null;
