@@ -23302,7 +23302,7 @@ audioSystem.playSFX('buttonClick');
         // ── Mesh & Sheer Overhaul, Step 18: discovery scenes ──
         // Scenes a Step 9 event can lead into, by event key and stranger gender. Each entry is
         // added as its scene is written; the follow offer only appears for listed pairs.
-        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m' };
+        var SHEER_DISCOVERY_SCENES = { backlight_m: 'sheer_backlight_sex_m', backlight_f: 'sheer_backlight_sex_f' };
 
         // The follow offer: 8001+ (the scenes are DC only), bare behind mesh, a written scene,
         // and for the Backlight, after dark (its scene is a lit shop doorway after close).
@@ -23315,8 +23315,9 @@ audioSystem.playSFX('buttonClick');
         }
 
         // Consensual garment handling for the discovery scenes: how a stranger's hands find her
-        // through the mesh, how she opens it for him, and how she puts it back. Zone by zone.
-        function _sheerDiscoveryGarb() {
+        // through the mesh, how she opens it for them, and how she puts it back. Zone by zone.
+        // gender 'f' swaps the stranger's pronouns (every stranger reference is He/His/him).
+        function _sheerDiscoveryGarb(gender) {
             var b = _sheerBodyCtx(), st = b.st, cv = getSceneClothingVars(), n = b.noun, zw = st.zoneWeave || {};
             var cFish = st.chest === 'veiled' && zw.chest === 'fishnet';
             var squeeze = b.bs === 'large' ? 'Your heavy tit spills around his fingers' : b.bs === 'small' ? 'His palm swallows your small tit whole' : 'He squeezes a full handful';
@@ -23367,6 +23368,11 @@ audioSystem.playSFX('buttonClick');
                 g.hipsTouch = 'His other hand pushes into the front of your ' + cv.bottomName + (cv.hasPanties ? ' and finds your panties soaked through.' : ' and finds you bare and soaked.');
                 g.hipsPeel = 'You open your ' + cv.bottomName + ' and push them down to your knees' + (cv.hasPanties ? ', panties and all.' : '.');
                 g.hipsFix = 'You pull your ' + cv.bottomName + ' back up.';
+            }
+            if (gender === 'f') {
+                ['chestTouch', 'chestPeel', 'hipsTouch', 'hipsPeel'].forEach(function(k) {
+                    g[k] = g[k].replace(/\bHis\b/g, 'Her').replace(/\bhis\b/g, 'her').replace(/\bHe\b/g, 'She').replace(/\bhim\b/g, 'her');
+                });
             }
             return g;
         }
@@ -47995,6 +48001,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'slums_wet_exhibition', label: 'Slums — Wet Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_sheer_exhibition', label: 'Slums: Sheer Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'sheer_backlight_sex_m', label: 'Discovery: The Backlight (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_backlight_sex_2_m' } },
+                    { sceneId: 'sheer_backlight_sex_f', label: 'Discovery: The Backlight (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_crowd_press_sex', label: 'The Crowd Press', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_doorway_sex', label: 'The Doorway', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_car_slowdown_sex', label: 'The Car Slowdown', tiers: [{l:'Deeply Corrupted',v:8001}] },
@@ -176789,6 +176796,116 @@ wet_car_slowdown: {
                     return [{ text: 'Keep walking.', action: function() {
                         gameState.flags._sheerDiscovery = null;
                         gameState.flags._sheerDiscoveryCondom = null;
+                        showScene(back);
+                    } }];
+                }
+            },
+
+            // The Backlight, female: the same lit boutique doorway. One extended scene.
+            sheer_backlight_sex_f: {
+                galleryOnEnter: function() {
+                    // showScene runs this hook in live play too: dress her only in the gallery
+                    if (!gameState.flags._galleryMode) return;
+                    gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                        top: null, bottom: null, bra: null, panties: null, outerwear: null,
+                        dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
+                    });
+                },
+                text: function() {
+                    var g = _sheerDiscoveryGarb('f');
+                    var b = g.b, n = g.n;
+                    var desc = '';
+
+                    // ── SHE FOLLOWS ──
+                    desc += '<p>You don\'t look back. Her boots scuff the sidewalk behind you to the end of the block, keeping your pace, never falling behind.</p>';
+                    desc += '<p>The boutique\'s dark inside and the door\'s locked, but both window displays are still lit. White light fills the recessed doorway and pours out across the pavement.</p>';
+                    desc += '<p>You step into the light and turn to face her.</p>';
+
+                    // ── SHE LOOKS ──
+                    desc += '<p>The light takes the ' + n + ' away. What\'s left is a thin dark outline around ' + b.shows + ', lit from both sides like the mannequins behind the glass.</p>';
+                    desc += '<p>She stops on the sidewalk and looks. Late twenties, cropped dark hair, a leather jacket open over a thin tank, a short skirt, bare legs. Her eyes move over you slowly, top to bottom and back.</p>';
+                    desc += '<p>"Stay in the light," she says. "Don\'t move."</p>';
+                    desc += '<p>She steps into the doorway and walks a slow circle around you. ' + _bt5(b,
+                        'She has to look down to take you in, all of your slight frame lit up inside the ' + n + '.',
+                        'Her fingertips skim the air an inch from your stomach, following the hard lines the light draws there.',
+                        'Her eyes follow every curve the light cuts out, waist to hip and back again.',
+                        'Her eyes drag over your soft belly and thick thighs, lit up and bare behind the ' + n + '.',
+                        'Her eyes cover every inch the light gives her.') + '</p>';
+                    desc += '<p>She takes longest behind you. ' + (b.seeHips
+                        ? (b.butt === 'large' ? 'Your full ass fills the ' + n + ', bare and lit at every edge.' : b.butt === 'small' ? 'Your tight little ass sits bare and bright behind the ' + n + '.' : 'Your bare ass shows through the ' + n + ', lit at every edge.')
+                        : 'The light outlines your bare back through the ' + n + ', every notch of your spine.') + ' You stand still and let her have it.</p>';
+                    desc += '<p>When she comes back around, she stops close enough that you can smell her perfume. "Two blocks," she says. "I watched ' + (b.seeHips ? 'your ass' : 'your tits') + ' through that the whole time."</p>';
+                    desc += '<p>"I know," you tell her. "I slowed down for you."</p>';
+
+                    // ── HER HANDS THROUGH THE MESH ──
+                    desc += '<p>She reaches for you. ' + g.chestTouch + ' "Mmh—"</p>';
+                    desc += '<p>She kisses you. Soft for one second, then hungry, her tongue in your mouth and her teeth catching your lower lip.</p>';
+                    desc += '<p>' + g.hipsTouch + ' "You\'re soaked," she says against your mouth.</p>';
+                    desc += '<p>You open it for her yourself. ' + g.chestPeel + '</p>';
+                    desc += '<p>' + g.hipsPeel + '</p>';
+
+                    // ── ACT 1: FACING THE STREET — ENTRY & BUILD ──
+                    desc += '<p>She turns you around to face the street and steps in behind you, her chest against your back, her chin on your shoulder. Out past the doorway, the sidewalk\'s lit out to the curb.</p>';
+                    desc += '<p>Her hand slides down your stomach and between your legs. Two fingers part your folds and drag slick up over your clit, slow. "Hhh—"</p>';
+                    desc += '<p>Her other hand stays on your tit, ' + g.frame + ', rolling your nipple between her fingers until it aches.</p>';
+                    desc += '<p>She circles your clit light and slow until your hips start chasing her fingers. Then she pushes two fingers into your cunt and curls them, and the heel of her hand grinds down on your clit. "Ah—"</p>';
+                    desc += '<p>The wet sounds of her fingers carry out onto the sidewalk. Your knees shake. She holds you up against her and keeps you facing out, lit up in the doorway with her hand working between your legs.</p>';
+                    desc += '<p>A man comes out of the bar on the corner and stops dead. He stares. She keeps her rhythm. "Let him look," she says in your ear.</p>';
+                    desc += '<p>You let him. Your cunt clamps down on her fingers. ' + _bt5(b,
+                        'Your small body trembles against her, held up in her arms.',
+                        'Your lean thighs tremble, every muscle drawn tight.',
+                        'Your soft hips roll against her hand.',
+                        'Your thick thighs tremble against her hand.',
+                        'Your thighs tremble against her hand.') + ' "Mmh—fuck—faster—"</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>She speeds up. Her fingers stroke your front wall in quick, hard curls, and her thumb rubs your clit in tight circles. Your whole body tightens against her. "Don\'t stop—right there—"</p>';
+
+                    // ── KELSIE\'S FIRST ORGASM ──
+                    desc += '<p>You cum facing the street. Your cunt seizes around her fingers in hard, clenching spasms, and your hips buck against her hand while she holds you tight to her chest. "Ahh—fuck—ahh—"</p>';
+                    desc += '<p>She works you through every tremor, slower now, until your knees give and she\'s holding most of your weight. On the corner, the man hasn\'t moved.</p>';
+
+                    // ── ACT 2: KELSIE\'S MOUTH ON HER ──
+                    desc += '<p>When you can stand again, you turn in her arms and push her back against the lit display window.</p>';
+                    desc += '<p>You shove her tank up. No bra. Her tits are small and high, nipples dark against the white glare of the glass. You suck one into your mouth and she gasps. "Oh—"</p>';
+                    desc += '<p>You drop to your knees on the tile and push her skirt up around her waist. Black lace panties, the crotch soaked through. You drag them down her legs and she kicks them off.</p>';
+                    desc += '<p>Her pussy\'s bare and swollen, slick shining in the window light. You spread her open with your thumbs and lick her from entrance to clit in one long stroke. "Hhh—fuck, yes—"</p>';
+                    desc += '<p>You find her clit and suck. Her hand fists in your hair. Behind her the mannequins stand lit up in silk, and her bare ass is pressed flat against the glass between them.</p>';
+                    desc += '<p>You slide two fingers into her cunt and curl them while your tongue works her clit in tight flicks. She\'s hot and tight and dripping, grinding against your mouth. "Mm—mmh—don\'t stop—"</p>';
+                    desc += '<p>Her thighs start shaking on either side of your head. Her cunt clenches around your fingers in quickening squeezes, and her breath goes short and high.</p>';
+
+                    // ── HER ORGASM ──
+                    desc += '<p>She cums against the window with her head thrown back. Her cunt spasms around your fingers and slick floods your tongue. "Ah—AH—fuck—" Her palm slaps the glass.</p>';
+                    desc += '<p>You lick her slow through the aftershocks until she tugs your head back by the hair, laughing, shaking.</p>';
+
+                    // ── ACT 3: HER THIGH ──
+                    desc += '<p>She hauls you up and kisses you, tasting herself on your mouth. Then she spins you so your back is to the glass and pushes her thigh between your legs.</p>';
+                    desc += '<p>Your bare pussy grinds down on her thigh. Her fingers push back inside you from the front, and her thumb finds your clit, still swollen and raw. "Hnn—too much—don\'t stop—"</p>';
+                    desc += '<p>You ride her hand and her thigh against the lit window. ' + (b.bs === 'large' ? 'Your heavy tits bounce ' + g.bounce + ', and she catches one in her mouth.' : b.bs === 'small' ? 'Your small tits jiggle ' + g.bounce + ', and she pinches a nipple hard.' : 'Your tits bounce ' + g.bounce + ', and she sucks a nipple into her mouth.') + '</p>';
+                    desc += '<p>The light behind you burns through the ' + n + '. From the street, anyone can see your silhouette in the glass, hips rolling on a stranger\'s thigh.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>The second one builds fast. Your cunt clenches around her fingers, your thighs lock around hers, and your breath comes in short, broken pants against her neck.</p>';
+
+                    // ── KELSIE\'S SECOND ORGASM ──
+                    desc += '<p>You cum again with your back against the glass. Your cunt clamps down on her fingers in hard, rolling spasms, and you bite her shoulder through the leather to keep from screaming. "Mmnnh—"</p>';
+                    desc += '<p>She holds you there until the last tremor fades. Your pussy flutters around her fingers once more, and she slides them out slow and licks them clean.</p>';
+
+                    // ── AFTERMATH ──
+                    desc += '<p>You straighten up. ' + g.chestFix + ' ' + g.hipsFix + ' The window light still goes straight through the ' + n + '.</p>';
+                    desc += '<p>She finds her panties on the tile, looks at them, and presses them into your hand instead of putting them on. "Something to remember me by."</p>';
+                    desc += '<p>You step out of the doorway into the dark and walk on, her panties balled in your fist, your thighs slick behind the ' + n + '.</p>';
+                    return desc;
+                },
+                onEnter: function() {
+                    trackGalleryScene('sheer_backlight_sex_f');
+                    completeSexConsensualFemale({ time: 30, hygiene: -15, thrill: 20 });
+                },
+                choices: function() {
+                    var d = gameState.flags._sheerDiscovery || {};
+                    var back = d.district ? d.district + '_district_street' : 'city_exploration';
+                    return [{ text: 'Keep walking.', action: function() {
+                        gameState.flags._sheerDiscovery = null;
                         showScene(back);
                     } }];
                 }
