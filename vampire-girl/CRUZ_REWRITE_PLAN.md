@@ -32,3 +32,13 @@ Taken from the compulsion-fail scene (`cruz_fugitive_compulsion_fail`) and the T
 2. Run the style scan on the new text: em dashes, contractions, "the kind of", "A beat", Not/Not, negation-before-reveal, "genuinely", "the way", "in a way", stated time spans, paragraph length, staccato chains.
 3. Run `node --check` on both script blocks.
 4. Commit.
+
+## Status
+
+All eight batches are done.
+
+- Batches 1 to 7 rewritten; the final sweep fixed the leftover title, "captain" and pattern slips.
+- New flag `cruzCompulsionScene` (`window`, `table`, `street`, `raid`) records where Kelsie first tried to compel Cruz, so the interrogation's "There was a moment" line refers back to the right place.
+- Interrogation beat 3 choices are now: stay silent, try the compulsion again (+10 thirst, -5 mental health), or deny it was you.
+- The drug raid compel no longer affects Cruz. On a success her team goes under, and she calls the raid off herself.
+- `node --check` passes on both script blocks. A headless-browser smoke test rendered every rewritten scene across 2,880 flag combinations with no errors.

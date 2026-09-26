@@ -104577,24 +104577,38 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 text: function() {
                     var karma = gameState.karma || 0;
-                    
-                    var desc = 'You hear them before you see them. Boots on the stairwell. Radio chatter through the wall. A dog barking, sharp and trained.\n\n';
+                    var desc = '';
+
+                    desc += 'You hear them before you see them. Boots on the stairwell, radio chatter through the wall, a dog barking, sharp and trained.\n\n';
+
                     desc += 'Then the door comes off its hinges.\n\n';
-                    desc += 'Officers pour in. Six, eight, more behind them. Tactical gear, rifles up, flashlights cutting through every corner of your apartment. A K9 handler with a German shepherd straining at the leash. The dog\'s already found the scent.\n\n';
+
+                    desc += 'Officers pour in, six, eight, more behind them. Tactical gear, rifles up, flashlights cutting into every corner of your apartment. A K9 handler with a German shepherd straining at the leash. The dog\'s already found the scent.\n\n';
+
                     desc += '"POLICE! DON\'T MOVE!"\n\n';
-                    desc += 'You freeze. Hands up. The flashlights converge on you.\n\n';
+
+                    desc += 'You freeze with your hands up. The flashlights converge on you.\n\n';
+
                     desc += 'And then she walks in.\n\n';
-                    desc += 'Cruz. Black jacket, badge on a chain around her neck, warrant in her left hand. She doesn\'t rush. She doesn\'t need to. Her team already has every exit covered.\n\n';
+
+                    desc += 'Cruz. Black jacket, badge on a chain around her neck, warrant in her left hand. She strolls in like she\'s arriving for a dinner reservation. Her team already has every exit covered, and she knows it.\n\n';
+
                     desc += '"Kelsie Summers." She holds up the warrant. "Search and seizure. Drug trafficking. Distribution of controlled substances." Her voice is flat and final. "You\'re under arrest."\n\n';
-                    
+
                     if (karma >= 1000) {
-                        desc += 'Your hands are shaking. Cruz\'s eyes find yours and hold. She doesn\'t gloat. She doesn\'t have to.\n\nThis is what she does. And she just did it to you.';
+                        desc += 'Your hands are shaking. Cruz\'s eyes find yours and hold there. There\'s no gloating in them. This is an ordinary Tuesday for her, and she just did it to you.';
+
                     } else if (karma <= -1000) {
-                        desc += 'You count the officers. Eight in the apartment. Two more in the hallway. Cruz at the center of it all, calm, certain.\n\nYou could kill every one of them in four seconds. The thought sits in your skull like a loaded gun.';
+                        desc += 'You count the officers. Eight in the apartment, two more in the hallway, and Cruz at the center of it all, calm and certain.\n\n';
+
+                        desc += 'You could kill every one of them in four seconds. The thought sits in your skull like a loaded gun. Cruz looks at you like she knows exactly what you\'re thinking and finds it a little boring.';
+
                     } else {
-                        desc += 'Cruz folds the warrant and puts it in her jacket. The K9 is tearing through your kitchen cabinets. An officer is already bagging your stash.\n\nIt\'s over. Unless it isn\'t.';
+                        desc += 'Cruz folds the warrant and tucks it into her jacket. The K9 is tearing through your kitchen cabinets. An officer\'s already bagging your stash.\n\n';
+
+                        desc += 'It\'s over. Unless it isn\'t.';
+
                     }
-                    
                     return desc;
                 },
                 choices: function() {
@@ -104617,7 +104631,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             gameState.flags.fugitiveDay = gameState.time.day;
                             modifyDrugReputation(-5);
                             updateStatus();
-                            showMessage('You move. The window shatters outward. Glass and night air and then you\'re falling, three stories, landing on asphalt in a crouch that cracks the pavement.\n\nBehind you, Cruz\'s voice: "She jumped! Third floor! All units—"\n\nYou run. The city swallows you.\n\nYour apartment stash is gone. Everything they found is evidence now. But the product on you is still yours. And you\'re still free.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-raid.png" class="icon" alt="raid"> Apartment stash seized. Drug heat +10. City suspicion +10. Fugitive status active. Thirst +20. Drug rep -5.</span>', function() { showScene('slums_district_street'); });
+                            showMessage('You move. The window shatters outward. Glass and night air and then you\'re falling, three stories, landing on asphalt in a crouch that cracks the pavement.\n\nBehind you, Cruz\'s voice, not even raised: "Let her go. She\'ll need somewhere to sleep eventually."\n\nYou run. The city swallows you.\n\nYour apartment stash is gone. Everything they found is evidence now. But the product on you is still yours. And you\'re still free.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-raid.png" class="icon" alt="raid"> Apartment stash seized. Drug heat +10. City suspicion +10. Fugitive status active. Thirst +20. Drug rep -5.</span>', function() { showScene('slums_district_street'); });
                         }
                     });
                     
@@ -104630,8 +104644,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             if (roll < 0.3) {
                                 // Success (rare): wipe their memory
                                 updateStatus();
-                                showMessage('You reach out. Every officer. Every mind in the room.\n\nThe compulsion floods from you in a wave. Your vision whites at the edges. Your thirst screams. Forty heartbeats, all of them yours to command.\n\n"There\'s nothing here. The apartment is clean. File the report as a false lead. Leave."\n\nOne by one, their eyes glass over. Cruz is the last to go. She fights it. Her jaw tightens. Her hand goes to her badge. But she blinks, slow and heavy, and then she\'s gone too.\n\nThey file out. The K9 whines at the door. The handler tugs the leash.\n\nTen minutes later your apartment is empty. The door hangs off its frame. Your stash is still in the kitchen.\n\nYou sit on the floor and shake until the thirst stops screaming.\n\n<span style="color: #ffcc44;">Thirst +40. Compulsion held. They\'ll file it clean. But Cruz\'s mind is strong. There\'s a chance she\'ll remember fragments.</span>', function() {
-                                    gameState.flags.cruzCompelled = true;
+                                showMessage('You reach out. Every officer, every mind in the room.\n\nThe compulsion floods out of you in a wave. Your vision whites at the edges and your thirst screams. Heartbeat after heartbeat, all of them yours to command.\n\n"There\'s nothing here. The apartment\'s clean. File it as a false lead. Leave."\n\nOne by one, their eyes glaze over. Rifles lower. The K9 handler turns toward the door with the leash slack in his hand.\n\nEveryone except Cruz.\n\nShe\'s standing in the middle of her compelled team with the warrant still in her hand, looking at you with mild interest. She felt it. You can tell she felt it. She just doesn\'t care.\n\n"Interesting," she says. She glances at her officers filing out like sleepwalkers. "My team\'s no use to me like this."\n\nShe folds the warrant and tucks it into her jacket.\n\n"Fine. We\'ll do this properly another time." She follows them out, and stops in the broken doorway just long enough to look back at you. "Get a new door, Kelsie."\n\nTen minutes later your apartment is empty. The door hangs off its frame. Your stash is still in the kitchen.\n\nYou sit on the floor and shake until the thirst stops screaming. It worked on everyone else. It didn\'t even slow her down.\n\n<span style="color: #ffcc44;">Thirst +40. Compulsion held on her team. Cruz walked out untouched, and she won\'t forget a thing.</span>', function() {
+                                    if (!gameState.flags.cruzCompulsionScene) gameState.flags.cruzCompulsionScene = 'raid';
+                                    gameState.flags.gabriellaCompulsionFailed = true;
                                     gameState.flags.raidPending = false;
                                     showScene('slums_district_street');
                                 });
@@ -104642,8 +104657,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                 modifyDrugHeat(15);
                                 gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 15);
                                 updateStatus();
-                                showMessage('You reach out. Try to grab every mind in the room at once.\n\nToo many. The compulsion shatters against Cruz like it hit a wall. She blinks. Shakes her head. Stares at you.\n\n"What was that?" Her hand goes to her weapon. "What did you just do?"\n\nThe other officers close in. You feel the cuffs before you can think of running.\n\n<span style="color: #ff4444;">Compulsion failed. Too many minds. Cruz resisted. You\'re in custody.</span>', function() {
+                                showMessage('You reach out and try to grab every mind in the room at once.\n\nToo many. The compulsion frays across the room and snaps, and somewhere in the middle of it, it hits Cruz and slides right off.\n\nShe tilts her head at you.\n\n"Don\'t do that," she says mildly, like you just put your feet on her furniture. She nods to her officers. "Cuff her."\n\nYou feel the steel close before you can think of running.\n\n<span style="color: #ff4444;">Compulsion failed. Too many minds, and Cruz shrugged it off. You\'re in custody.</span>', function() {
                                     gameState.flags.cruzSawSomethingSupernatural = true;
+                                    if (!gameState.flags.cruzCompulsionScene) gameState.flags.cruzCompulsionScene = 'raid';
+                                    gameState.flags.gabriellaCompulsionFailed = true;
                                     showScene('drug_raid_surrender');
                                 });
                             }
@@ -104678,25 +104695,41 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     var karma = gameState.karma || 0;
                     var arrestNum = gameState.flags.arrestCount || 1;
-                    
-                    var desc = 'You lower your hands.\n\n';
+                    var desc = '';
+
+                    desc += 'You lower your hands.\n\n';
+
                     desc += '"I\'m not resisting."\n\n';
-                    desc += 'Cruz nods at the nearest officer. He moves behind you. The cuffs close. Cold steel, tight enough to bite.\n\n';
-                    desc += 'The K9 circles your legs, sniffing. It finds the product on you in seconds. The handler holds up a baggie. Cruz glances at it, then at you.\n\n';
+
+                    desc += 'Cruz nods at the nearest officer. He steps behind you, and the cuffs close, cold steel, tight enough to bite.\n\n';
+
+                    desc += 'The K9 circles your legs and finds the product on you in seconds. The handler holds up a baggie. Cruz glances at it, then at you, like you\'ve disappointed her by being so easy.\n\n';
+
                     desc += '"That\'s on her person. Bag it. Log everything."\n\n';
-                    desc += 'They go through your apartment systematically. Cabinet by cabinet. Drawer by drawer. The stash comes out in evidence bags, labeled and photographed. Every gram. Every pill.\n\n';
-                    desc += 'You watch your entire operation get filed into cardboard boxes. Three officers carry them out. The K9 does a final sweep.\n\n';
-                    
+
+                    desc += 'They go through your apartment cabinet by cabinet, drawer by drawer. The stash comes out in evidence bags, labeled and photographed, every gram and every pill.\n\n';
+
+                    desc += 'You watch your whole operation get packed into cardboard boxes. Three officers carry them out. The K9 does a last sweep.\n\n';
+
                     if (karma >= 1000) {
-                        desc += 'Your eyes burn. You blink hard. You don\'t cry in front of Cruz. You won\'t give her that.\n\nBut the weight of it settles in your chest like concrete.';
+                        desc += 'Your eyes burn. You blink hard. You won\'t cry in front of Cruz. You won\'t give her that.\n\n';
+
+                        desc += 'She wouldn\'t even notice, and somehow that\'s worse.\n\n';
+
                     } else if (karma <= -1000) {
-                        desc += 'Product\'s gone. Money\'s evidence. Territory\'s compromised.\n\nYou start doing math in your head. Rebuilding costs. Supply chain. How long before you\'re back on your feet.\n\nCruz is watching you. She doesn\'t know what she sees behind your eyes. Good.';
+                        desc += 'Product\'s gone. Money\'s evidence. Territory\'s compromised.\n\n';
+
+                        desc += 'You start doing math in your head. Rebuilding costs, supply chain, how long before you\'re back on your feet.\n\n';
+
+                        desc += 'Cruz is watching you. You can\'t tell if she sees the math behind your eyes. You have a bad feeling she does.\n\n';
+
                     } else {
-                        desc += 'Cruz walks you to the cruiser herself. Opens the back door. Waits.\n\n"Kelsie Summers. Distribution of controlled substances. Possession with intent." She says it like she\'s been rehearsing.\n\nMaybe she has.';
+                        desc += 'Cruz walks you to the cruiser herself, opens the back door, and waits.\n\n';
+
+                        desc += '"Kelsie Summers. Distribution of controlled substances. Possession with intent." She reads it off like a menu she\'s already ordered from.\n\n';
+
                     }
-                    
                     desc += '\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-raid.png" class="icon" alt="raid"> All drugs seized (apartment stash and personal inventory). Drug heat +15. City suspicion +15. Drug rep -15. Taken into custody.</span>';
-                    
                     return desc;
                 },
                 choices: [
@@ -133659,7 +133692,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             desc += '"' + summaryStr + '." She touches each photo as she lists them, a timestamp, a camera angle, a place you recognize. "All connected. All yours."\n\n';
 
                             if (burglaries > 2) {
-                                desc += '"' + burglaries + ' homes broken into." She fans out a row of interior shots. Tossed drawers, open windows. "Same entry every time. Same force on the locks and frames. My lab says whoever did this is a lot stronger than they look." She glances at your arms. "They\'re right."\n\n';
+                                desc += '"' + burglaries + ' homes broken into." She fans out a row of interior shots. Tossed drawers, open windows. "Same entry every time, same force on the locks and frames. My lab says whoever did this is a lot stronger than they look." She glances at your arms. "They\'re right."\n\n';
 
                             }
 
@@ -135949,7 +135982,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     desc += '"Can\'t think of anyone," you say.\n\n';
 
-                    desc += 'Cruz watches your face. She doesn\'t write anything down. She doesn\'t have to.\n\n';
+                    desc += 'Cruz watches your face. She doesn\'t bother writing anything down.\n\n';
 
                     desc += '"If you do think of someone, call me," she says. "Or don\'t. I\'ll find them either way. It just saves me an afternoon."\n\n';
 
@@ -136501,7 +136534,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     text += 'The espresso machine hisses. Outside, a car horn.\n\n';
 
-                    text += '"Same speed. Same strength. Same night hours, same neighborhoods. I ran the intervention sites against the assault locations, Kelsie." She sounds almost bored by how easy it was. "Want to guess the correlation coefficient?"\n\n';
+                    text += '"Same speed and strength, same night hours, same neighborhoods. I ran the intervention sites against the assault locations, Kelsie." She sounds almost bored by how easy it was. "Want to guess the correlation coefficient?"\n\n';
 
                     text += 'She waits just long enough for you to understand you\'re not expected to answer.\n\n';
 
@@ -137065,7 +137098,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                                 d += 'She pulls a tablet from the center console and opens a timeline, color-coded. Every servant crime you\'ve ordered, plotted district by district.\n\n';
 
-                                d += '"See this?" She traces the pattern with one finger. "Eight AM start, every day, every suspect. Nine PM stop. Same days off. Same rotations between districts. It\'s a shift schedule, Kelsie."\n\n';
+                                d += '"See this?" She traces the pattern with one finger. "Eight AM start, every day, every suspect. Nine PM stop. Same days off, same rotations between districts. It\'s a shift schedule, Kelsie."\n\n';
 
                                 d += 'She closes the tablet.\n\n';
 
@@ -146916,7 +146949,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             desc += '"I don\'t. That\'s why I\'m doing this instead of ignoring her."\n\n';
                             desc += '<span style="color: #88ccaa;">Cruz\'s investigation disrupted. City suspicion -5. Drug heat -3.</span>';
                         } else if (choice === 'media') {
-                            desc += 'Camilla pulls her folder out. "I\'ll run a story through my contact at Channel 4. Something about the Boruskis, something loud. Cruz\'s captain will redirect resources."\n\n';
+                            desc += 'Camilla pulls her folder out. "I\'ll run a story through my contact at Channel 4. Something about the Boruskis, something loud. The chief will pull resources off Cruz to chase it."\n\n';
                             desc += '"You\'re manipulating the press," Samira observes.\n\n';
                             desc += '"I\'m providing a tip about actual criminals," Camilla says sweetly. "It just happens to make our lives easier."\n\n';
                             desc += '<span style="color: #88ccaa;">Media redirected. Cruz\'s resources reduced. Social media heat -10.</span>';
