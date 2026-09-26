@@ -21990,6 +21990,157 @@ audioSystem.playSFX('buttonClick');
         // ── Mesh & Sheer Overhaul, Step 4: exposure rules ──
         // ══════════════════════════════════════════════════════════════
 
+        // Mesh Overhaul Step 5A: sheer passive rates per hour [thrill, corruption, mesh scratch arousal].
+        // Read by advanceTime() and the Step 6 banners.
+        var SHEER_PASSIVE_RATES = {
+            sheer_framed:          [1,  1, 0],
+            sheer_braless:         [3,  2, 1],
+            sheer_commando:        [4,  3, 0],
+            sheer_bare:            [6,  4, 1],
+            sheer_lingerie_top:    [9,  3, 0],
+            sheer_lingerie_bottom: [9,  3, 0],
+            sheer_lingerie:        [12, 4, 0]
+        };
+
+        // ══════════════════════════════════════════════════════════════
+        // ── Mesh & Sheer Overhaul, Step 6: sidebar banners ──
+        // ══════════════════════════════════════════════════════════════
+        // Smoky violet-black, to separate sheer from the pink braless and purple commando boxes.
+        var SHEER_BANNER_STYLE = 'border:1px solid rgba(135,110,170,0.6);background:rgba(28,18,40,0.45);padding:10px 14px;border-radius:6px;font-style:italic;font-size:0.92em;color:#cbbde0;line-height:1.6;';
+        var SHEER_BANNER_TITLE_STYLE = 'color:#b9a3d9;font-weight:bold;font-style:normal;';
+
+        // Optional art with a fallback to the existing body images.
+        function _sheerBannerImg(src, fallback, alt) {
+            return '<img src="' + src + '" onerror="this.onerror=null;this.src=\'' + fallback + '\';" alt="' + alt + '" style="max-width:140px;max-height:160px;width:auto;height:auto;border-radius:8px;margin:4px 0 8px 0;display:block;"><br>';
+        }
+
+        function _sheerBreastImg() {
+            var map = { small:'Images/body/small-breasts.png', average:'Images/body/normal-breasts.png', moderate:'Images/body/normal-breasts.png', large:'Images/body/big-breasts.png' };
+            return map[(gameState.bodyAppearance || {}).breastSize] || 'Images/body/normal-breasts.png';
+        }
+
+        // Rates line for the sheer part of her outfit (thrill already scaled by the weave).
+        function _sheerBannerRates(st) {
+            var r = SHEER_PASSIVE_RATES[st.state];
+            if (!r) return '';
+            var thr = Math.round(r[0] * (st.weaveMult || 1) * 10) / 10;
+            return '<br><br><span style="font-style:normal;color:#a594c4;">Exhibition Thrill: <span style="color:#cc99ff;">+' + thr + ' per hour</span> &nbsp;·&nbsp; Corruption: +' + r[1] + ' per hour' + (r[2] ? ' &nbsp;·&nbsp; Mesh scratch: +' + r[2] + ' arousal per hour' : '') + '</span>';
+        }
+
+        // Returns { html, replacesBraless, replacesCommando } for the clothed-state banner block.
+        // html is '' when no sheer banner applies. Wet and the other zone's regular banner
+        // still render beside it; see updateAppearanceDisplay's banner block.
+        function getSheerBannerInfo() {
+            var res = { html: '', replacesBraless: false, replacesCommando: false };
+            if (typeof getSheerState !== 'function') return res;
+            var st = getSheerState();
+            var s = st.state;
+            if (s !== 'sheer_bare' && s !== 'sheer_braless' && s !== 'sheer_commando' && s !== 'sheer_framed') return res;
+            var c = gameState.corruption || 0;
+            var tier = c >= 6001 ? 'high' : c >= 2001 ? 'mid' : 'low';
+            var noun = getSheerNoun(st);
+            var C = st.chestGarment ? proseItemName(st.chestGarment) : 'top';
+            var Hn = st.hipsGarment ? proseItemName(st.hipsGarment) : 'skirt';
+            var chestUnder = (st.chest === 'veiled' && st.chestUnder) ? proseItemName(st.chestUnder) : '';
+            var hipsUnder = (st.hips === 'veiled' && st.hipsUnder) ? proseItemName(st.hipsUnder) : '';
+            var title = '', img = '', text = '';
+
+            if (s === 'sheer_bare') {
+                res.replacesBraless = true; res.replacesCommando = true;
+                var H = (st.chestGarment === st.hipsGarment) ? 'below it' : 'through your ' + Hn;
+                var stacked = !!(chestUnder || hipsUnder);
+                title = '✦ Sheer &amp; Bare';
+                img = _sheerBannerImg('Images/body/sheer-chest.png', _sheerBreastImg(), 'sheer');
+                if (tier === 'high') {
+                    text = (stacked ? 'Two layers of ' + noun + ', and they hide nothing.' : 'Nothing under the ' + noun + '.') + ' Your nipples sit dark and stiff behind your ' + C + ' and your bare cunt\'s a clean shadow ' + H + '. You\'re dressed and everyone can see all of you. Your pussy hasn\'t stopped dripping since you left.';
+                } else if (tier === 'mid') {
+                    text = (stacked ? 'Mesh on mesh, and none of it hides anything.' : 'Nothing under any of it.') + ' Your tits show through your ' + C + ', nipples stiff and dark, and your bare slit shows ' + H + '. Every stare lands somewhere specific. You\'re wet and there\'s no hiding that either.';
+                } else {
+                    text = 'You\'re dressed. You keep telling yourself that. Your nipples show dark through your ' + C + ', your bare pussy shows ' + H + ', and your clit throbs every time someone looks twice.';
+                }
+            } else if (s === 'sheer_braless') {
+                res.replacesBraless = true;
+                var chestOpen = chestUnder ? 'Your ' + chestUnder + ' under your ' + C + ' hides nothing.' : 'Nothing under your ' + C + '.';
+                title = '✦ Sheer (Braless)';
+                img = _sheerBannerImg('Images/body/sheer-chest.png', _sheerBreastImg(), 'sheer');
+                if (tier === 'high') {
+                    text = chestOpen + ' Your nipples are dark and stiff behind the ' + noun + ', right there for anyone who looks, and plenty do. You roll your shoulders back. Your clit throbs every time someone\'s eyes drop.';
+                } else if (tier === 'mid') {
+                    text = chestOpen + ' Your nipples show dark and stiff through the ' + noun + '. You catch people looking, and your pussy clenches every time.';
+                } else {
+                    text = chestOpen + ' You can see your own nipples through the ' + noun + '. So can everyone else. You keep your arms close, and your pussy clenches anyway.';
+                }
+            } else if (s === 'sheer_commando') {
+                res.replacesCommando = true;
+                var hipsOpen = hipsUnder ? 'Your ' + hipsUnder + ' under your ' + Hn + ' hide nothing.' : 'Nothing under your ' + Hn + '.';
+                title = '✦ Sheer (Commando)';
+                img = _sheerBannerImg('Images/body/sheer-hips.png', 'Images/body/commando.png', 'sheer');
+                if (tier === 'high') {
+                    text = hipsOpen + ' Your bare cunt\'s a dark slit behind the ' + noun + ', folds swollen and shining. You walk slow so everyone gets a good look. You\'re dripping.';
+                } else if (tier === 'mid') {
+                    text = hipsOpen + ' Your bare slit shows through the ' + noun + ' with every step. You press your thighs together and it only gives them a better outline. Your clit throbs.';
+                } else {
+                    text = hipsOpen + ' You can see the dark line of your own slit through the ' + noun + '. So can everyone else. Your pussy clenches, wet, and you hate it.';
+                }
+            } else {
+                // sheer_framed: underwear on display behind the mesh. A deliberate look.
+                var braF = st.framedChest && st.chestUnder, panF = st.framedHips && st.hipsUnder;
+                var U = braF && panF ? proseItemName(st.chestUnder) + ' and ' + proseItemName(st.hipsUnder)
+                    : braF ? proseItemName(st.chestUnder) : proseItemName(st.hipsUnder);
+                var S = braF ? C : Hn;
+                var plural = !braF || !!panF;
+                title = '✦ Sheer';
+                if (tier === 'high') {
+                    text = 'Your ' + U + ', framed in your ' + S + ', every line on purpose. Strangers read it from across the street and don\'t bother pretending. Your clit throbs every time one of them does.';
+                } else if (tier === 'mid') {
+                    text = 'Your ' + U + (plural ? ' show' : ' shows') + ' through your ' + S + ', every line framed on purpose. Strangers read it from across the street. ' + (braF ? 'Your nipples tighten in the cups every time one of them does.' : 'Your pussy clenches every time one of them does.');
+                } else {
+                    text = 'You tell yourself it\'s a look. Your ' + U + (plural ? ' show' : ' shows') + ' through your ' + S + ' and people stare like they\'re reading something. ' + (braF ? 'Your nipples stiffen in the cups' : 'Your nipples stiffen') + ' and your pussy\'s damp by the next block.';
+                }
+            }
+            res.html = '<div style="' + SHEER_BANNER_STYLE + '"><span style="' + SHEER_BANNER_TITLE_STYLE + '">' + title + '</span><br><br>' + img + text + _sheerBannerRates(st) + '</div>';
+            return res;
+        }
+
+        // 6B: the lingerie variant of the visible-underwear box. Returns null when the
+        // visible underwear isn't sheer, so the regular pink box renders instead.
+        function getSheerLingerieBoxInfo(braVisible, pantiesVisible) {
+            if (typeof getSheerState !== 'function') return null;
+            var st = getSheerState();
+            var s = st.state;
+            if (s !== 'sheer_lingerie' && s !== 'sheer_lingerie_top' && s !== 'sheer_lingerie_bottom') return null;
+            var o = gameState.currentOutfit || {};
+            var bra = o.bra ? proseItemName(o.bra) : 'bra';
+            var pan = o.panties ? proseItemName(o.panties) : 'panties';
+            var label, sub, img;
+            if (s === 'sheer_lingerie') {
+                label = 'SHEER LINGERIE ONLY';
+                sub = 'Your ' + bra + ' and ' + pan + ', nothing over them. Your nipples show dark through the cups and your bare slit shows through the crotch. Technically dressed.';
+                img = _sheerBannerImg('Images/body/sheer-lingerie.png', 'Images/body/panties-and-bra.png', 'sheer lingerie');
+            } else if (s === 'sheer_lingerie_top') {
+                label = pantiesVisible ? 'SHEER BRA &amp; PANTIES' : 'SHEER BRA EXPOSED';
+                sub = 'Nothing over your ' + bra + '. Your nipples show dark and stiff through the cups for anyone who looks.';
+                img = _sheerBannerImg('Images/body/sheer-lingerie.png', pantiesVisible ? 'Images/body/panties-and-bra.png' : 'Images/body/bra-only.png', 'sheer bra');
+            } else {
+                label = braVisible ? 'BRA &amp; SHEER PANTIES' : 'SHEER PANTIES EXPOSED';
+                sub = 'Nothing over your ' + pan + '. Your bare slit shows through the crotch for anyone who looks down.';
+                img = _sheerBannerImg('Images/body/sheer-lingerie.png', braVisible ? 'Images/body/panties-and-bra.png' : 'Images/body/panties-only.png', 'sheer panties');
+            }
+            var html = '<div class="outfit-item" style="border:2px solid #8f73b8;background:rgba(40,24,60,0.35);padding:12px;text-align:center;"><span style="color:#c7a8f0;font-size:1.1em;font-weight:bold;"><img src="Images/icons/warning.png" class="icon" alt="warning"> ' + label + '</span><br>' + img.replace('display:block;', 'display:inline-block;') + '<span style="color:#d8c4f0;">' + sub + '</span>' + _sheerBannerRates(st).replace('<br><br>', '<br>') + '</div>';
+            return { html: html };
+        }
+
+        // 6C: stats panel exposure label for sheer states (null when none applies).
+        var SHEER_EXPOSURE_LABELS = {
+            sheer_framed: ['Sheer', '#b9a3d9'],
+            sheer_braless: ['Sheer (Braless)', '#c895e0'],
+            sheer_commando: ['Sheer (Commando)', '#b27fe6'],
+            sheer_bare: ['Sheer &amp; Bare', '#e070c8'],
+            sheer_lingerie_top: ['Sheer Lingerie', '#ff5fb4'],
+            sheer_lingerie_bottom: ['Sheer Lingerie', '#ff5fb4'],
+            sheer_lingerie: ['Sheer Lingerie', '#ff4fa8']
+        };
+
         // 4A: corruption each sheer state needs before she'll walk out in it.
         // Lingerie states are also visible underwear, so checkVisibleUnderwearCorruption()
         // gates them first; the table repeats them so this stays the single reference.
@@ -32424,6 +32575,11 @@ audioSystem.playSFX('buttonClick');
             var _exposureColors = { clothed: '#88aa88', underwear_only: '#cc88aa', topless: '#e06090', bottomless: '#ff3377', naked: '#ff1493' };
             var _exposureLabel = _exposureLabels[_currExposure] || 'Clothed';
             var _exposureColor = _exposureColors[_currExposure] || '#88aa88';
+            // Mesh Overhaul Step 6C: sheer states sit on top of clothed / underwear-only
+            if ((_currExposure === 'clothed' || _currExposure === 'underwear_only') && typeof getSheerState === 'function') {
+                var _sheerLbl = SHEER_EXPOSURE_LABELS[getSheerState().state];
+                if (_sheerLbl) { _exposureLabel = _sheerLbl[0]; _exposureColor = _sheerLbl[1]; }
+            }
 
             // Corruption scaling
             var _thrillGainMult = (typeof getExhibitionThrillGainMultiplier === 'function') ? getExhibitionThrillGainMultiplier() : 1.0;
@@ -32474,6 +32630,10 @@ audioSystem.playSFX('buttonClick');
                 '\u2022 Time braless: ' + Math.floor((_es.bralessMinutesTotal || 0) / 60) + 'h ' + ((_es.bralessMinutesTotal || 0) % 60) + 'm<br>' +
                 '\u2022 Time commando: ' + Math.floor((_es.commandoMinutesTotal || 0) / 60) + 'h ' + ((_es.commandoMinutesTotal || 0) % 60) + 'm<br>' +
                 '\u2022 Time braless &amp; commando: ' + Math.floor((_es.bothMinutesTotal || 0) / 60) + 'h ' + ((_es.bothMinutesTotal || 0) % 60) + 'm<br>' +
+                // Mesh Overhaul Step 6C
+                '\u2022 Time in sheer: ' + Math.floor((_es.sheerMinutesTotal || 0) / 60) + 'h ' + ((_es.sheerMinutesTotal || 0) % 60) + 'm<br>' +
+                '\u2022 Time sheer &amp; bare: ' + Math.floor((_es.sheerBareMinutesTotal || 0) / 60) + 'h ' + ((_es.sheerBareMinutesTotal || 0) % 60) + 'm<br>' +
+                '\u2022 Time in sheer lingerie: ' + Math.floor((_es.sheerLingerieMinutesTotal || 0) / 60) + 'h ' + ((_es.sheerLingerieMinutesTotal || 0) % 60) + 'm<br>' +
                 '\u2022 Peak thrill reached: ' + (_es.peakThrill || 0) + '<br>' +
                 '\u2022 Exhibition events: ' + (_es.exhibitionEventsCompleted || 0) + '<br>' +
                 '\u2022 NPC reactions: ' + (_es.npcReactionsTriggered || 0) + '<br>' +
@@ -33208,15 +33368,6 @@ audioSystem.playSFX('buttonClick');
             // Thrill scales with the weave (semi 0.7, sheer 1.0, fishnet 1.1). Stacks with the
             // braless/commando/both gains above; lingerie states replace underwear-only thrill.
             // Nothing here accrues where nobody can see her (isPrivateExposureScene).
-            var SHEER_PASSIVE_RATES = {
-                sheer_framed:          [1,  1, 0],
-                sheer_braless:         [3,  2, 1],
-                sheer_commando:        [4,  3, 0],
-                sheer_bare:            [6,  4, 1],
-                sheer_lingerie_top:    [9,  3, 0],
-                sheer_lingerie_bottom: [9,  3, 0],
-                sheer_lingerie:        [12, 4, 0]
-            };
             var _sheerSt = (!isNakedPassive && !_privateExposure && typeof getSheerState === 'function') ? getSheerState() : null;
             var _sheerRates = _sheerSt ? SHEER_PASSIVE_RATES[_sheerSt.state] : null;
             var _sheerActive = !!_sheerRates;
@@ -55480,6 +55631,9 @@ audioSystem.playSFX('buttonClick');
                     underwearSub = 'No bottom or dress. Your panties are fully visible.';
                 }
                                 const underwearImg = braVisible && pantiesVisible ? 'Images/body/panties-and-bra.png' : braVisible ? 'Images/body/bra-only.png' : 'Images/body/panties-only.png';
+                // Mesh Overhaul Step 6B: sheer lingerie gets its own box
+                const _sheerBox = getSheerLingerieBoxInfo(braVisible, pantiesVisible);
+                if (_sheerBox) outfitHTML = _sheerBox.html; else
 outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;background:rgba(255,105,180,0.1);padding:12px;text-align:center;"><span style="color:#ff69b4;font-size:1.1em;font-weight:bold;"><img src="Images/icons/warning.png" class="icon" alt="warning"> ' + underwearLabel + '</span><br><img src="' + underwearImg + '" alt="exposure" style="max-width:140px;max-height:160px;width:auto;height:auto;border-radius:8px;margin:8px 0;"><br><span style="color:#ffaaaa;">' + underwearSub + '</span></div>';
                 const uwSlots = ['bra','panties','outerwear','footwear','headwear','neckwear','earrings','rings','eyewear','other'];
                 const uwLabels = { bra:'Bra', panties:'Panties', outerwear:'Outerwear', footwear:'Footwear', headwear:'Headwear', neckwear:'Neckwear', earrings:'Earrings', rings:'Rings', eyewear:'Eyewear', other:'Other' };
@@ -55497,11 +55651,15 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
             } else {
                 // Braless / commando / wet clothes descriptive banners (clothed state only)
                 var cv = getSceneClothingVars();
-                const _isCommando = cv.commando;
-                const _isBraless  = cv.braless;
+                // Mesh Overhaul Step 6A: a sheer banner replaces the braless/commando banner for any
+                // zone that's bare behind mesh. Priority: sheer & bare > sheer braless/commando > sheer (framed).
+                var _sheerBanner = getSheerBannerInfo();
+                const _isCommando = cv.commando && !_sheerBanner.replacesCommando;
+                const _isBraless  = cv.braless && !_sheerBanner.replacesBraless;
                 const _isWetClothed = !!(gameState.weather && gameState.weather.wetClothes);
-                if (_isBraless || _isCommando || _isWetClothed) {
+                if (_isBraless || _isCommando || _isWetClothed || _sheerBanner.html) {
                     outfitHTML += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">';
+                    if (_sheerBanner.html) outfitHTML += _sheerBanner.html;
                     if (_isWetClothed) {
                         const _wetnessDisp = gameState.weather.clothesWetness || 0;
                         const _wetLabel = _wetnessDisp >= 80 ? 'Drenched' : _wetnessDisp >= 60 ? 'Soaked' : _wetnessDisp >= 40 ? 'Wet' : _wetnessDisp >= 20 ? 'Damp' : 'Slightly Damp';
