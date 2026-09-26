@@ -15565,7 +15565,7 @@
             if (gameState.flags.raidPending && (gameState.flags.raidDay || 0) < (gameState.time.day || 0)) {
                 clearStash('apartment');
                 modifyDrugHeat(15);
-                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 10);
+                modifyCitySuspicion(10);
                 gameState.flags.raidPending = false;
                 gameState.flags.drugRaidOccurred = true;
                 gameState.flags.cruzDrugAware = true;
@@ -15788,7 +15788,7 @@
                 var cityS = gameState.citySuspicion || 0;
                 if (drugH >= 36 && cityS >= 30) {
                     // Cruz sees the pattern: organized criminal
-                    gameState.citySuspicion = Math.min(100, cityS + 2);
+                    modifyCitySuspicion(2);
                     gameState.flags.cruzSeesPattern = true;
                 }
             }
@@ -20693,7 +20693,7 @@ audioSystem.playSFX('buttonClick');
 
             // Suspicion always increases
             const suspicionIncrease = 3;
-            gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + suspicionIncrease);
+            modifyCitySuspicion(suspicionIncrease);
             
             const corruption = gameState.corruption || 0;
             
@@ -22873,7 +22873,7 @@ audioSystem.playSFX('buttonClick');
             gameState.arousal = Math.min(100, (gameState.arousal || 0) + arousal);
             var mh = stats.mh[tier];
             if (mh) modifyMentalHealth(mh);
-            if (stats.susp) gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + stats.susp);
+            if (stats.susp) modifyCitySuspicion(stats.susp);
             var thrill = Math.round(stats.thrill[tier] * (st.weaveMult || 1) * drawMult);
             if (thrill > 0) applyExhibitionThrillGain(thrill);
             if (stats.heat && !isDark() && districtId !== 'slums' && districtId !== 'residential') {
@@ -23042,7 +23042,7 @@ audioSystem.playSFX('buttonClick');
             if (_isTopless) {
                 // ── Topless routing (Exhibition Overhaul, Step 2D) ──
                 suspicionIncrease = 3;
-                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + suspicionIncrease);
+                modifyCitySuspicion(suspicionIncrease);
                 npcScene = getToplessNPCVignette();
                 kelsieResponse = getToplessKelsieResponse(corruption);
 
@@ -23062,7 +23062,7 @@ audioSystem.playSFX('buttonClick');
             } else if (_isBottomless) {
                 // ── Bottomless routing (Exhibition Overhaul, Step 2D) ──
                 suspicionIncrease = 4;
-                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + suspicionIncrease);
+                modifyCitySuspicion(suspicionIncrease);
                 npcScene = getBottomlessNPCVignette();
                 kelsieResponse = getBottomlessKelsieResponse(corruption);
 
@@ -23082,7 +23082,7 @@ audioSystem.playSFX('buttonClick');
             } else {
                 // ── Original underwear handling ──
                 suspicionIncrease = 2;
-                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + suspicionIncrease);
+                modifyCitySuspicion(suspicionIncrease);
                 npcScene = getUnderwearNPCVignette(type);
                 kelsieResponse = '';
                 statText = '';
@@ -24549,7 +24549,7 @@ audioSystem.playSFX('buttonClick');
             gameState.arousal = Math.min(100, (gameState.arousal || 0) + arousal);
             gameState.corruption = (gameState.corruption || 0) + corruption;
             gameState.flags.corruptionChangedPassively = true;
-            if (susp) gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + susp);
+            if (susp) modifyCitySuspicion(susp);
             if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
             gameState.exhibitionStats.exhibitionEventsCompleted = (gameState.exhibitionStats.exhibitionEventsCompleted || 0) + 1;
             var _ct = gameState.exhibitionismThrill || 0;
@@ -30325,6 +30325,8 @@ audioSystem.playSFX('buttonClick');
                 }
             }
             
+            if (modifiedAmount > 0) gameState.flags.committedCrimeToday = true;
+
             const oldSuspicion = gameState.citySuspicion;
             gameState.citySuspicion += modifiedAmount;
             gameState.citySuspicion = Math.max(0, Math.min(100, gameState.citySuspicion));
@@ -31150,6 +31152,27 @@ audioSystem.playSFX('buttonClick');
             }
         }
 
+        // Hunt-interrupt police encounters (flee / assault / kill) go into the evidence
+        // ledger like every other crime, so the case, the warrant and Cruz can see them.
+        function logHuntPoliceCrime(type, count) {
+            var masked = !!gameState.flags._huntWearingMask;
+            var district = gameState.currentDistrictId || 'commercial';
+            for (var i = 0; i < (count || 1); i++) {
+                createLedgerEntry({
+                    type: type,
+                    district: district,
+                    masked: masked,
+                    maskSignature: masked,
+                    witnessEvidence: type !== 'police_killing',
+                    cameraEvidence: true,
+                    supernaturalEvidence: true,
+                    witnesses: type === 'police_killing' ? [] : [{ type: 'cop', faceSeen: !masked, description: 'Officer on scene' }],
+                    cameraType: 'bodycam',
+                    cameraQuality: masked ? 'none' : 'clear'
+                });
+            }
+        }
+
         // ── Warrant System: Issue Warrant (Ledger-Driven) ──
         // Builds charges from evidence ledger. Falls back to legacy flags
         // during migration (before crime scenes create ledger entries).
@@ -31169,8 +31192,8 @@ audioSystem.playSFX('buttonClick');
                 var crimes = [];
                 var sd = gameState.suspicionData || {};
                 if (gameState.flags.killedClerk) crimes.push('Homicide');
-                if ((gameState.flags.policeOfficersKilled || 0) > 0) crimes.push('Murder of Law Enforcement');
-                if (gameState.flags.assaultedPolice) crimes.push('Assault on Law Enforcement');
+                if ((gameState.flags.policeOfficersKilled || 0) > 0 || gameState.flags.policeKilled) crimes.push('Murder of Law Enforcement');
+                if (gameState.flags.assaultedPolice || gameState.flags.policeAssaulted) crimes.push('Assault on Law Enforcement');
                 if ((sd.bodycamIncidents || 0) > 0) crimes.push('Evading Arrest');
                 if (gameState.flags.policeEscaped) crimes.push('Fleeing Law Enforcement');
                 if (crimes.length === 0) crimes.push('Persons of Interest Warrant');
@@ -59168,7 +59191,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                 });
             } else {
                 // Small social cost: a little suspicion, and at Jack's an emboldened creep.
-                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 2);
+                modifyCitySuspicion(2);
                 if (prof.creepy) {
                     msg = 'You push for a better price.\n\nJack smiles slow, like you just gave him something. "Discounts aren\'t free, sweetheart." His meaning sits there, ugly and plain.\n\n"Offer stands if you change your mind."\n\nYou didn\'t get the price down. You got him bolder.';
                 } else {
@@ -99856,21 +99879,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         // Stealth: high skill requirement, clean if successful
                         if (stealthRoll >= difficulty) {
                             gameState.flags._hitOutcome = 'clean';
-                            gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 1);
+                            modifyCitySuspicion(1);
                         } else {
                             gameState.flags._hitOutcome = 'messy';
-                            gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5);
+                            modifyCitySuspicion(5);
                         }
                         if (typeof addStealthXP === 'function') addStealthXP(10);
                     } else if (approach === 'blitz') {
                         // Vampire speed: always clean, costs thirst
                         gameState.flags._hitOutcome = 'clean';
                         gameState.thirst = Math.min(100, (gameState.thirst || 0) + 20);
-                        gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 2);
+                        modifyCitySuspicion(2);
                     } else {
                         // Direct: always messy, always works
                         gameState.flags._hitOutcome = 'messy';
-                        gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 8);
+                        modifyCitySuspicion(8);
                     }
                     
                     // Karma hit
@@ -103176,7 +103199,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             text: '<img src="Images/icons/drug-heat.png" class="icon" alt="heat"> What have you done...',
                             action: function() {
                                 modifyDrugHeat(5);
-                                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3);
+                                modifyCitySuspicion(3);
                                 updateStatus();
                                 showScene('slums_district_street');
                             }
@@ -103186,7 +103209,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             text: '<img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Let them come.',
                             action: function() {
                                 modifyDrugHeat(5);
-                                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3);
+                                modifyCitySuspicion(3);
                                 updateStatus();
                                 showScene('slums_district_street');
                             }
@@ -103196,7 +103219,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             text: '<img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Get somewhere safe.',
                             action: function() {
                                 modifyDrugHeat(5);
-                                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3);
+                                modifyCitySuspicion(3);
                                 updateStatus();
                                 showScene('slums_district_street');
                             }
@@ -104090,7 +104113,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             gameState.thirst = Math.min(100, (gameState.thirst || 0) + 15);
                             modifyDrugHeat(8);
                             modifyDrugReputation(-3);
-                            gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5);
+                            modifyCitySuspicion(5);
                             updateStatus();
                             showMessage('You blur. The cop\'s hand closes on empty air. You\'re three blocks away before his radio crackles.\n\nYour thirst spikes. Supernatural speed burns blood fast. But you\'re free.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +8. City suspicion +5. Thirst +15. Drug rep -3.</span>', function() { showScene('slums_district_street'); });
                         }
@@ -104243,7 +104266,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             if (Math.random() * 100 < ucChance) {
                                 // Undercover bust on bulk deal
                                 modifyDrugHeat(15);
-                                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 8);
+                                modifyCitySuspicion(8);
                                 updateStatus();
                                 showMessage('He reaches for the bag. You reach for the product.\n\nThen his other hand goes to his belt. Badge. Radio.\n\n"Police! Don\'t—"\n\nYou\'re already running. Vampire speed. The product\'s still in your bag. The cash stays on the ground. You clear the garage in three seconds.\n\nBulk bust. They\'ll have your description. Maybe your face.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +15. City suspicion +8. Thirst +15.</span>', function() {
                                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 15);
@@ -104547,7 +104570,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Clear apartment stash
                     clearStash('apartment');
                     modifyDrugHeat(15);
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 10);
+                    modifyCitySuspicion(10);
                     gameState.flags.raidPending = false;
                     gameState.flags.drugRaidOccurred = true;
                     gameState.flags.cruzDrugAware = true;
@@ -104626,7 +104649,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             clearStash('apartment');
                             gameState.thirst = Math.min(100, (gameState.thirst || 0) + 20);
                             modifyDrugHeat(10);
-                            gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 10);
+                            modifyCitySuspicion(10);
                             gameState.flags.wantedFugitive = true;
                             gameState.flags.fugitiveDay = gameState.time.day;
                             modifyDrugReputation(-5);
@@ -104655,7 +104678,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                 clearStash('apartment');
                                 clearPersonalDrugs();
                                 modifyDrugHeat(15);
-                                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 15);
+                                modifyCitySuspicion(15);
                                 updateStatus();
                                 showMessage('You reach out and try to grab every mind in the room at once.\n\nToo many. The compulsion frays across the room and snaps, and somewhere in the middle of it, it hits Cruz and slides right off.\n\nShe tilts her head at you.\n\n"Don\'t do that," she says mildly, like you just put your feet on her furniture. She nods to her officers. "Cuff her."\n\nYou feel the steel close before you can think of running.\n\n<span style="color: #ff4444;">Compulsion failed. Too many minds, and Cruz shrugged it off. You\'re in custody.</span>', function() {
                                     gameState.flags.cruzSawSomethingSupernatural = true;
@@ -104687,7 +104710,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     modifyDrugHeat(15);
                     modifyDrugReputation(-15);
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 15);
+                    modifyCitySuspicion(15);
                     if (typeof modifyMentalHealth === 'function') modifyMentalHealth(-15);
                     advanceTime(30);
                     updateStatus();
@@ -104786,7 +104809,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                 showMessage('You pocket your hands and walk. Steady pace. Don\'t look back. The patrol moves on. You breathe.\n\nClose call.', function() { showScene('slums_district_street'); });
                             } else {
                                 modifyDrugHeat(5);
-                                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3);
+                                modifyCitySuspicion(3);
                                 updateStatus();
                                 showMessage('You start walking. Too fast. They notice.\n\n"Hey, stop!" An officer gets out. You round the corner and pick up speed. They don\'t chase. But they got a look at you.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +5. City suspicion +3.</span>', function() { showScene('slums_district_street'); });
                             }
@@ -107832,7 +107855,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Reduce suspicion for fighting crime
                     if (gameState.citySuspicion > 0) {
                         const reduction = Math.floor(Math.random() * 5) + 3; // -3 to -7
-                        gameState.citySuspicion = Math.max(0, gameState.citySuspicion - reduction);
+                        modifyCitySuspicion(-(reduction));
                     }
                     // Karma boost
                     modifyKarma(15);
@@ -108996,7 +109019,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Reduce city suspicion for fighting crime
                     if (gameState.citySuspicion > 0) {
                         const reduction = Math.floor(Math.random() * 5) + 3;
-                        gameState.citySuspicion = Math.max(0, gameState.citySuspicion - reduction);
+                        modifyCitySuspicion(-(reduction));
                     }
                     
                     // Aerial spectacle: social media, cameras
@@ -109147,7 +109170,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Reduce city suspicion for fighting crime
                     if (gameState.citySuspicion > 0) {
                         const reduction = Math.floor(Math.random() * 5) + 3;
-                        gameState.citySuspicion = Math.max(0, gameState.citySuspicion - reduction);
+                        modifyCitySuspicion(-(reduction));
                     }
                     
                     modifyKarma(15);
@@ -113868,7 +113891,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags._muggingLoot = loot;
                     
                     // Higher suspicion
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 8);
+                    modifyCitySuspicion(8);
                     // Higher karma hit
                     gameState.karma = (gameState.karma || 0) - 15;
                     
@@ -115583,7 +115606,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             text: '<img src="Images/items/pistol.png" class="icon" alt="pistol"> Pull the gun. Make ' + (count > 1 ? 'them' : him) + ' cooperate.',
                             action: function() {
                                 gameState.karma = (gameState.karma || 0) - 10;
-                                gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5);
+                                modifyCitySuspicion(5);
                                 var gender = gameState.flags.burglaryConfrontGender || 'male';
                                 var he = gender === 'male' ? 'He' : 'She';
                                 var his = gender === 'male' ? 'his' : 'her';
@@ -131785,7 +131808,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 onEnter: function() {
                     // Partial feed: less thirst recovery, some suspicion
                     gameState.thirst = Math.max(0, (gameState.thirst || 0) - 15);
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5);
+                    modifyCitySuspicion(5);
                     if (typeof modifyKarma === 'function') modifyKarma(-8);
                     if (typeof gainAllure === 'function') gainAllure(12, 'dazed feed');
                     advanceTime(3);
@@ -131820,7 +131843,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     return t;
                 },
                 onEnter: function() {
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 2);
+                    modifyCitySuspicion(2);
                     gameState.flags._compulsionResult = undefined;
                     advanceTime(5);
                     updateStatus();
@@ -131841,7 +131864,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags._compulsionWalletCash = cash;
                     if (typeof modifyKarma === 'function') modifyKarma(-20);
                     if (typeof gainAllure === 'function') gainAllure(8, 'compel and rob');
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3);
+                    modifyCitySuspicion(3);
                     updateStatus();
                 },
                 text: function() {
@@ -132265,6 +132288,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.policeWitnessSupernatural = true;
                     gameState.flags.violentHuntsBlocked = true;
                     gameState.flags.policeEscaped = true;
+                    logHuntPoliceCrime('fleeing', 1);
                     modifyCitySuspicion(15);
                     modifyKarma(-10);
                     gainStrength(2, 'adrenaline');
@@ -132380,6 +132404,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.policeAssaulted = true;
                     gameState.flags.violentHuntsBlocked = true;
                     gameState.flags.bloodBagTheftBlocked = true;
+                    logHuntPoliceCrime('police_assault', 1);
                     modifyCitySuspicion(50);
                     modifyKarma(-25);
                     gainStrength(5, 'combat');
@@ -132474,8 +132499,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.violentHuntsBlocked = true;
                     gameState.flags.bloodBagTheftBlocked = true;
                     gameState.flags.cityLockdown = true; // New flag for extreme response
+                    logHuntPoliceCrime('police_killing', 2); // two officers
                     modifyCitySuspicion(100); // Maximum
-                    gameState.citySuspicion = 100; // Lock at max
                     modifyKarma(-50); // Massive karma hit
                     
                     // Mental health impact based on karma
@@ -169235,7 +169260,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     return '"Hey."\n\nJust the one word.\n\nThe mugger turns.\n\nYou\'re standing at the alley entrance, hands loose at your sides. The light catches your eyes wrong.\n\nHe reads it. Men who do this for a living develop a sense for things that are worse than them.\n\nHe takes a step back. Then another.\n\n"Not worth it," he says to no one in particular, and walks.\n\nThe young man stares at you.\n\n"You okay?" you ask.\n\n"Yeah. Yeah, I\u2014thank you."\n\nHe still hasn\'t blinked.';
                 },
-                onEnter: () => { modifyKarma(12); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3); applyGoodDeedMH(4); advanceTime(10); updateStatus(); },
+                onEnter: () => { modifyKarma(12); modifyCitySuspicion(3); applyGoodDeedMH(4); advanceTime(10); updateStatus(); },
                 choices: [{ text: 'Make sure he\'s okay and move on.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -169256,7 +169281,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var cv = getSceneClothingVars();
                     return 'You step into the alley.\n\nBefore the mugger can speak, your hand is on his collar and his back is against the opposite wall.\n\nThe speed of it makes the young man gasp.\n\n"Wallet," you tell the mugger. "Phone."\n\nHe gives them up immediately.\n\nYou hold his gaze two extra seconds: long enough for him to understand what category of wrong thing he\'s dealing with. Then you let him go and he runs.\n\nYou turn to him.\n\nHis face has gone the color of old paper.\n\n"Your phone too," you say. "I\'ll leave your ID."\n\nHe doesn\'t argue.';
                 },
-                onEnter: () => { const t = 280 + Math.floor(Math.random() * 100); gameState.money += t; modifyKarma(-50); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 8); advanceTime(8); updateStatus(); },
+                onEnter: () => { const t = 280 + Math.floor(Math.random() * 100); gameState.money += t; modifyKarma(-50); modifyCitySuspicion(8); advanceTime(8); updateStatus(); },
                 choices: [{ text: 'Walk out of the alley like nothing happened.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -169327,7 +169352,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             rand_event_red_eyes_compel: {
                 text: 'You hold the glass between you like it\'s nothing.\n\nYour gaze finds hers.\n\n"You\'re looking at the neon sign behind me," you say, quiet enough that only she hears. "The red light caught your eye. Happens all the time."\n\nThe compulsion slides into place.\n\nHer expression smooths. She looks up at the sign. Looks back at her coffee.\n\nYou walk on.\n\nBehind you, you hear her explain to her friend what she was just looking at.',
-                onEnter: () => { gameState.thirst = Math.min(100, (gameState.thirst || 0) + 10); gameState.citySuspicion = Math.max(0, (gameState.citySuspicion || 0) - 2); advanceTime(3); updateStatus(); },
+                onEnter: () => { gameState.thirst = Math.min(100, (gameState.thirst || 0) + 10); modifyCitySuspicion(-(2)); advanceTime(3); updateStatus(); },
                 choices: [{ text: 'Keep moving.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -169340,19 +169365,19 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     }
                     return 'You tap the glass.\n\nShe looks up. You point to your eye, mouth: <em>contacts.</em>\n\nHer expression does something complicated. She looks down at her coffee.\n\nYou walk away before she can decide what she believes.';
                 },
-                onEnter: () => { const a = (typeof calculateTotalAppeal === 'function') ? calculateTotalAppeal() : 50; gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + (a < 160 ? 4 : 1)); advanceTime(4); updateStatus(); },
+                onEnter: () => { const a = (typeof calculateTotalAppeal === 'function') ? calculateTotalAppeal() : 50; modifyCitySuspicion((a < 160 ? 4 : 1)); advanceTime(4); updateStatus(); },
                 choices: [{ text: 'Don\'t look back.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
             rand_event_red_eyes_flee: {
                 text: 'You take the next corner.\n\nThen another.\n\nThree blocks before you slow to something that doesn\'t look like a sprint.\n\nYour illusion snaps back into place, tight. The thirst spikes from the effort.\n\n<em>Sloppy.</em>\n\nYou can\'t afford sloppy.',
-                onEnter: () => { gameState.thirst = Math.min(100, (gameState.thirst || 0) + 8); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5); advanceTime(6); updateStatus(); },
+                onEnter: () => { gameState.thirst = Math.min(100, (gameState.thirst || 0) + 8); modifyCitySuspicion(5); advanceTime(6); updateStatus(); },
                 choices: [{ text: 'Slow down. Breathe.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
             rand_event_red_eyes_stare: {
                 text: 'You don\'t look away.\n\nYou let your eyes do what they want: go red, go bright, go wrong.\n\nShe stares. You stare back. The coffee cup makes it all the way to the table without her noticing.\n\nFive seconds. Ten.\n\nThen you smile at her, slow, and walk away.\n\nYou don\'t hear her scream.\n\nYou do hear the clatter of her cup hitting the saucer very hard.',
-                onEnter: () => { gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 12); modifyKarma(-5); applyArousal(10); advanceTime(4); updateStatus(); },
+                onEnter: () => { modifyCitySuspicion(12); modifyKarma(-5); applyArousal(10); advanceTime(4); updateStatus(); },
                 choices: [{ text: 'Leave the block.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -169708,7 +169733,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.flags.firstHumanKill = true;
                     gameState.flags.violentHuntsCount = (gameState.flags.violentHuntsCount || 0) + 1;
                     modifyKarma(-50);
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 10);
+                    modifyCitySuspicion(10);
                     advanceTime(10);
                     updateStatus();
                 },
@@ -169745,7 +169770,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     return '\"I\'m here. Hold on.\"\n\nYou pull out your phone and turn on the flashlight. A prop. You can see everything without it, but she can\'t know that.\n\nYou guide her downstairs. Pick the route without tripping, steering her around the recycling bins someone left in the stairwell.\n\n\"How can you see so well?\" she asks halfway down.\n\n\"Good night vision.\" You keep your voice casual.\n\n\"No kidding. You\'re like a cat.\"\n\nShe laughs. You laugh with her.\n\nThe super has candles and a transistor radio. The building gathers in the lobby like it\'s 1953.\n\nYour neighbor sits next to you. In the candlelight she can\'t see that you haven\'t blinked once.\n\nWhen the power returns, she thanks you.\n\n\"Anytime,\" you say. And mean it more than she\'d guess.';
                 },
-                onEnter: () => { modifyKarma(15); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 2); applyGoodDeedMH(3); advanceTime(25); updateStatus(); },
+                onEnter: () => { modifyKarma(15); modifyCitySuspicion(2); applyGoodDeedMH(3); advanceTime(25); updateStatus(); },
                 choices: [{ text: 'Head back upstairs.', action: () => showScene('own_apartment_main') }]
             },
 
@@ -169784,7 +169809,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             rand_event_preacher_intimidate: {
                 text: 'You step into his space.\n\nClose enough to smell the sweat and the coffee and the old fabric of his jacket.\n\nYou look up at him. Let the illusion thin. Let whatever\'s behind your eyes come forward, just enough.\n\nHis pupils dilate. The sign drops from his hand and hits the sidewalk, cardboard side up.\n\nHis mouth opens. Closes. Opens again.\n\n\"God forgive me,\" he whispers.\n\nYou hold his gaze one more second. Then you walk.\n\nBehind you: silence. He doesn\'t pick up the sign. He doesn\'t start again.\n\nYou ruined his afternoon. Maybe his week.\n\n<em>Good.</em>',
-                onEnter: () => { modifyKarma(-25); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5); advanceTime(4); updateStatus(); },
+                onEnter: () => { modifyKarma(-25); modifyCitySuspicion(5); advanceTime(4); updateStatus(); },
                 choices: [{ text: 'Leave him to his silence.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -169836,7 +169861,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.flags.firstHumanKill = true;
                     gameState.flags.violentHuntsCount = (gameState.flags.violentHuntsCount || 0) + 1;
                     modifyKarma(-50);
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5);
+                    modifyCitySuspicion(5);
                     advanceTime(10);
                     updateStatus();
                 },
@@ -169966,7 +169991,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     return 'You wait.\n\nThe building empties. Residents stumble out in bathrobes and boxers, clutching phones and pets and nothing else. The crowd gathers across the street. Everyone\'s looking at the flames.\n\nNobody\'s looking at the ground-floor units on the east side. The ones the fire hasn\'t reached yet.\n\nYou move. Vampiric speed. Through a side window. Into an apartment that still smells like dinner and laundry detergent.\n\nYou work fast. Jewelry box on the dresser. Cash from a kitchen drawer. A laptop that someone left charging.\n\nYou\'re out in thirty seconds. Back on the street with a bag heavier than it was.\n\nThe sirens arrive. The firefighters do their job. Someone\'s whole life is burning and you\'re sorting through their jewelry in your head, estimating value.\n\nThe laptop alone is worth $400. The jewelry, maybe $200 at a pawn shop. The cash is $160.\n\nYou walk home with smoke in your clothes and other people\'s things in your bag.';
                 },
-                onEnter: () => { gameState.money += 560; modifyKarma(-60); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 8); modifyHygiene(-15); advanceTime(15); updateStatus(); },
+                onEnter: () => { gameState.money += 560; modifyKarma(-60); modifyCitySuspicion(8); modifyHygiene(-15); advanceTime(15); updateStatus(); },
                 choices: [{ text: 'Take your haul home.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -170003,7 +170028,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     return '\"Hey!\"\n\nBoth men freeze. The woman twists in their grip.\n\nYou step into the light. Hands at your sides. Something in your posture that reads wrong to anyone with survival instincts.\n\nThe first man lets go of her arm. His hand goes to his waistband.\n\n\"Walk away,\" he says.\n\nYou don\'t.\n\nYou take one step forward. Something shifts behind your eyes. You let it.\n\nThe second man sees it first. He drops the woman\'s legs and backs into the car.\n\n\"Dude. Dude, let\'s go.\"\n\nThe first man holds your gaze for two more seconds. Then he breaks. They both pile in. Tires scream.\n\nThe woman is on the ground, shaking. You crouch beside her.\n\n\"Are you okay?\"\n\nShe grabs your arm with both hands and doesn\'t let go for a long time.\n\nYou stay until the police arrive. You give a statement with a fake name. Then you leave.';
                 },
-                onEnter: () => { modifyKarma(35); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5); applyGoodDeedMH(6); advanceTime(30); updateStatus(); },
+                onEnter: () => { modifyKarma(35); modifyCitySuspicion(5); applyGoodDeedMH(6); advanceTime(30); updateStatus(); },
                 choices: [{ text: 'Slip away before they ask more questions.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -170022,7 +170047,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.flags.firstHumanKill = true;
                     gameState.flags.violentHuntsCount = (gameState.flags.violentHuntsCount || 0) + 2;
                     modifyKarma(-40);
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 12);
+                    modifyCitySuspicion(12);
                     advanceTime(25);
                     updateStatus();
                 },
@@ -170080,7 +170105,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     gameState.flags.firstHumanKill = true;
                     gameState.flags.violentHuntsCount = (gameState.flags.violentHuntsCount || 0) + 1;
                     modifyKarma(-40);
-                    gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3);
+                    modifyCitySuspicion(3);
                     advanceTime(8);
                     updateStatus();
                 },
@@ -170132,7 +170157,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     return 'You catch him in an alley. One block. Vampiric speed.\n\nYou slam him against the wall by his throat. He drops the bag.\n\n\"Wallet,\" you say.\n\nHis eyes go wide. He fumbles in his pocket. Hands it over.\n\nYou take the cash. Drop the wallet. Pick up the woman\'s bag and open it.\n\n$60 cash in a zippered pocket. Cards. Keys. A phone.\n\nYou take the $60. Zip the bag shut. Walk back to the main street and toss it at the woman\'s feet as you pass.\n\n\"Found this in the alley,\" you say without slowing.\n\nShe scrambles for it. Behind you, she starts crying with relief.\n\nYou pocket $60 of hers and $80 of his and keep walking.\n\n<em>Everybody wins.</em>\n\nExcept them.';
                 },
-                onEnter: () => { gameState.money += 140; modifyKarma(-35); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 3); advanceTime(8); updateStatus(); },
+                onEnter: () => { gameState.money += 140; modifyKarma(-35); modifyCitySuspicion(3); advanceTime(8); updateStatus(); },
                 choices: [{ text: 'Keep walking.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -170190,7 +170215,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     return 'The scaffold hits. The world erupts.\n\nDust. Screaming. Car alarms. Everyone running, stumbling, grabbing each other.\n\nYou move through the chaos like water. Vampiric speed turned down to human-fast, just quick enough to look panicked rather than predatory.\n\nA purse on the sidewalk, dropped in the scramble. A phone, face-down, still warm. A man\'s jacket draped over a bench with a wallet in the inside pocket.\n\nYou collect. Smooth, fast, invisible in the dust cloud. Nobody\'s looking at you. Everyone\'s looking at the wreckage.\n\nBy the time the first responders arrive, you\'re a block away with $340 in cash, two phones, and a watch that looks like it\'s worth something.\n\nBehind you, someone\'s being pulled from under plywood.\n\nYou don\'t look back.';
                 },
-                onEnter: () => { gameState.money += 340; modifyKarma(-50); gameState.citySuspicion = Math.min(100, (gameState.citySuspicion || 0) + 5); advanceTime(10); updateStatus(); },
+                onEnter: () => { gameState.money += 340; modifyKarma(-50); modifyCitySuspicion(5); advanceTime(10); updateStatus(); },
                 choices: [{ text: 'Disappear before the dust settles.', action: () => showScene(gameState.flags.randEventReturn || 'city_exploration') }]
             },
 
@@ -215668,7 +215693,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             sd.wantedTier = tier;
             gameState.flags.violentHuntsBlocked = (tier >= 4);
-            gameState.flags.crimesBlocked = (tier >= 3);
+            // A timed block (post-escape patrol surge) outlasts the tier check until it expires.
+            var timedBlock = (gameState.flags.crimeBlockedUntilDay || 0) > (gameState.time.day || 0);
+            gameState.flags.crimesBlocked = (tier >= 3) || timedBlock;
             gameState.flags.bloodTheftBlocked = (tier >= 3);
             return tier;
         }
@@ -217206,7 +217233,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 district: params.district,
                 woreGloves: params.woreGloves,
                 cleanedScene: params.cleanedScene || false,
-                method: params.method
+                method: params.method,
+                ledgerEntryId: params.ledgerEntryId || null
             });
         }
 
