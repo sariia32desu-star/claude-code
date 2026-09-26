@@ -20733,6 +20733,8 @@ audioSystem.playSFX('buttonClick');
                         }
                     }
                 }
+                // Mesh Step 10: a sheer garment has less left to reveal
+                if (e.id && e.id.startsWith('exhibition_')) effectiveChance *= getSheerExhibitionChanceMult(e.id);
                 return (!e.condition || e.condition()) && Math.random() < effectiveChance;
             });
             if (eligible.length === 0) return null;
@@ -23140,6 +23142,180 @@ audioSystem.playSFX('buttonClick');
             var _scale = st.weaveMult * SHEER_ACCIDENT_STATE_MULT[st.state] * getExhibitionDrawMultiplier();
             return pool.map(function(fn) {
                 return function() { var ev = fn(); ev.sheerScale = _scale; return ev; };
+            });
+        }
+
+        // ── Mesh & Sheer Overhaul, Step 10: the 20 exhibition events meet mesh ──
+        // Hem events lift the bottom (or dress); top events gap the top (or dress).
+        var SHEER_HEM_EVENTS = ['wind', 'staircase', 'bench', 'puddle', 'crowd', 'fitting', 'escalator', 'bus', 'barstool', 'photo'];
+        var SHEER_TOP_EVENTS = ['button', 'wet', 'reach', 'lean', 'fitslip', 'bra_wind', 'mirror', 'neckline', 'spill', 'turnstile'];
+        // Per event: the underwear hold scene, then [underwear arousal, underwear thrill,
+        // bare arousal, bare thrill] for the trigger and the hold stage. Sheer underwear
+        // earns 75% of the bare values wherever that beats the underwear values.
+        var SHEER_EXHIB_REWARDS = {
+            wind:      { hold: 'hold_panties',     trig: [15, 15, 30, 35], hs: [15, 20, 25, 30] },
+            staircase: { hold: 'hold_panties',     trig: [15, 15, 30, 35], hs: [15, 20, 25, 30] },
+            bench:     { hold: 'hold_panties',     trig: [15, 15, 30, 35], hs: [15, 20, 25, 30] },
+            puddle:    { hold: 'hold_panties',     trig: [15, 15, 30, 35], hs: [15, 20, 25, 30] },
+            crowd:     { hold: 'fingered_panties', trig: [15, 15, 30, 35], hs: [0, 40, 0, 50] },
+            fitting:   { hold: 'hold_panties',     trig: [12, 15, 25, 30], hs: [15, 20, 15, 20] },
+            escalator: { hold: 'hold_panties',     trig: [14, 18, 28, 32], hs: [14, 20, 24, 30] },
+            bus:       { hold: 'hold_panties',     trig: [13, 16, 26, 30], hs: [14, 18, 24, 28] },
+            barstool:  { hold: 'hold_panties',     trig: [12, 15, 24, 28], hs: [16, 22, 24, 32] },
+            photo:     { hold: 'hold_panties',     trig: [13, 18, 27, 33], hs: [15, 22, 15, 22] },
+            button:    { hold: 'hold_bra',         trig: [12, 16, 25, 30], hs: [14, 20, 25, 30] },
+            wet:       { hold: 'hold_bra',         trig: [13, 17, 28, 32], hs: [15, 21, 15, 21] },
+            reach:     { hold: 'hold_bra',         trig: [12, 15, 24, 29], hs: [14, 20, 25, 30] },
+            lean:      { hold: 'hold_bra',         trig: [11, 14, 23, 28], hs: [14, 19, 22, 31] },
+            fitslip:   { hold: 'hold_bra',         trig: [13, 16, 26, 31], hs: [14, 21, 22, 31] },
+            bra_wind:  { hold: 'hold_bra',         trig: [12, 16, 25, 30], hs: [15, 22, 25, 22] },
+            mirror:    { hold: 'hold_bra',         trig: [11, 15, 23, 28], hs: [25, 35, 37, 48] },
+            neckline:  { hold: 'hold_bra',         trig: [12, 15, 24, 29], hs: [15, 22, 25, 30] },
+            spill:     { hold: 'walk_bra',         trig: [13, 17, 27, 33], hs: [15, 22, 15, 22] },
+            turnstile: { hold: 'hold_bra',         trig: [13, 17, 26, 31], hs: [15, 22, 15, 22] }
+        };
+
+        // Chance multiplier for an exhibition trigger when the garment it lifts or gaps is
+        // already sheer: there's less left to reveal. 0 suppresses the wet top event.
+        function getSheerExhibitionChanceMult(eventId) {
+            var m = /^exhibition_(.+)_trigger$/.exec(eventId || '');
+            if (!m) return 1;
+            var cv = getSceneClothingVars();
+            if (m[1] === 'wet') return cv.topSheer ? 0 : 1; // mesh is see-through already; rain changes nothing
+            if (SHEER_HEM_EVENTS.indexOf(m[1]) !== -1) return cv.bottomSheer ? 0.5 : 1;
+            if (SHEER_TOP_EVENTS.indexOf(m[1]) !== -1) return cv.topSheer ? 0.5 : 1;
+            return 1;
+        }
+
+        // One paragraph telling the truth about sheer underwear. zone: 'hips' (panties) or
+        // 'chest' (bra). stage: 'trigger' or 'hold'. Returns '' unless that piece is sheer.
+        function getSheerUnderwearOverlay(stage, zone) {
+            var cv = getSceneClothingVars();
+            var o = gameState.currentOutfit || {};
+            var corruption = gameState.corruption || 0;
+            var ba = gameState.bodyAppearance || {};
+            var b = { bt: ba.bodyType || 'ordinary', bs: ba.breastSize || 'average', butt: ba.buttSize || 'average' };
+            if (zone === 'hips') {
+                if (!cv.pantiesSheer || !o.panties) return '';
+                var pan = proseItemName(o.panties), pn = getFabricNoun(o.panties);
+                var seat = b.butt === 'large' ? 'stretched tight over your full ass' : b.butt === 'small' ? 'loose on your tight little ass' : 'snug over your ass';
+                // The crowd event is by touch: nobody sees, the hand finds out
+                if (stage === 'crowd') return 'The hand learns your ' + pan + ' fast. The ' + pn + ' is so thin the fingertips might as well be on bare skin, tracing your slit through the grid, finding your clit swollen against it.';
+                if (stage === 'crowd_hold') return 'Moving them aside barely changes anything. Through ' + pn + ' that thin his fingers already had your slit mapped, your clit swollen against the grid, your wet soaked through onto his knuckles.';
+                if (stage === 'hold') {
+                    if (corruption < 6001) return 'Your ' + pan + ' don\'t hide a thing, and every extra second gives them a longer look. Your slit shows through the ' + pn + ', your clit swollen against it, the wet patch spreading where it sticks to your folds.';
+                    return _bt5(b, 'The ' + pn + ' sits flat against your little mound', 'The ' + pn + ' pulls tight between your lean thighs', 'The ' + pn + ' sinks into the soft swell of your mound', 'The ' + pn + ' stretches over your thick, full mound', 'The ' + pn + ' clings to your mound') + ', and it hides none of it: bare slit, swollen clit, the dark wet patch spreading across your folds. You tilt your hips so the light gets in.';
+                }
+                if (corruption < 2001) return 'Your ' + pan + ' don\'t hide a thing. The ' + pn + ' shows your bare slit as plain as skin, ' + seat + '. Anyone looking gets all of it. Your pussy clenches and you feel the ' + pn + ' cling wetter.';
+                if (corruption < 6001) return 'Your ' + pan + ' hide nothing. Your slit shows dark through the ' + pn + ', your clit swollen against it, and there\'s a wet patch where it sticks to your folds. Anyone looking got all of it.';
+                return 'Your ' + pan + ' are a formality. The ' + pn + ' shows your bare slit, your swollen clit, the dark wet patch where it\'s glued to your folds. You picked them for this.';
+            }
+            if (!cv.braSheer || !o.bra) return '';
+            var bra = proseItemName(o.bra), bn = getFabricNoun(o.bra);
+            var tits = b.bs === 'large' ? 'Your heavy tits fill the ' + bn + ' cups, nipples dark and stiff straight through them.'
+                : b.bs === 'small' ? 'Your small tits sit in the ' + bn + ' cups with your stiff nipples showing right through.'
+                : 'Your nipples show dark and stiff straight through the ' + bn + ' cups.';
+            if (stage === 'hold') {
+                if (corruption < 6001) return 'Your ' + bra + ' doesn\'t hide a thing, and every extra second gives them a longer look. ' + tits;
+                return 'You arch your back a little. ' + _bt5(b, 'On your slight frame the ' + bra + ' is barely there.', 'The ' + bra + ' sits flat over your lean ribs.', 'The ' + bra + ' strains to hold your curves.', 'The ' + bra + ' digs into your soft sides.', 'The ' + bra + ' sits close to your skin.') + ' ' + tits + ' It just frames them for whoever\'s looking.';
+            }
+            if (corruption < 2001) return 'Your ' + bra + ' doesn\'t hide a thing. ' + tits + ' Your face burns hotter than the air on your skin.';
+            if (corruption < 6001) return 'Your ' + bra + ' hides nothing. ' + tits + ' Anyone looking got your nipples anyway.';
+            return 'Your ' + bra + ' is there for the technicality. ' + tits + ' Your clit throbs every time someone works that out.';
+        }
+
+        // Trigger-stage line when the lifted or gapped garment is itself sheer.
+        function getSheerOuterExhibitionLine(zone) {
+            var cv = getSceneClothingVars();
+            var o = gameState.currentOutfit || {};
+            var corruption = gameState.corruption || 0;
+            if (zone === 'hips') {
+                if (!cv.bottomSheer) return '';
+                var n = getFabricNoun(o.bottom || o.dress);
+                if (corruption < 2001) return 'The ' + n + ' was already showing everyone the shape of you. Now the haze is gone too, and your face burns like the haze counted for something.';
+                if (corruption < 6001) return 'The ' + n + ' was already showing everyone the shape of you. This just takes the haze away.';
+                return 'Anyone looking already had the shape of you through the ' + n + '. Now they get it without the haze, and your clit throbs at the difference.';
+            }
+            if (!cv.topSheer) return '';
+            var tn = getFabricNoun(o.top || o.dress);
+            if (corruption < 2001) return 'Now it shows what the ' + tn + ' was already showing, with nothing between. You grab for it anyway.';
+            if (corruption < 6001) return 'Now it shows what the ' + tn + ' was already showing, with nothing between.';
+            return 'Now it shows what the ' + tn + ' was already showing, with nothing between. Your nipples tighten anyway.';
+        }
+
+        // Bus trigger: bare behind mesh, the man beside her already knows.
+        function getSheerBusOverlay() {
+            var st = getSheerState();
+            if (st.state !== 'sheer_braless' && st.state !== 'sheer_commando' && st.state !== 'sheer_bare') return '';
+            var b = _sheerBodyCtx();
+            var corruption = gameState.corruption || 0;
+            var line = 'The man beside you never needed the hem to lift. He\'s been reading ' + b.shows + ' through your ' + b.outfit + ' since you got on.';
+            if (corruption < 2001) return line + ' The bumps just give him a clearer look.';
+            if (corruption < 6001) return line + ' Your pussy clenches on every jolt.';
+            return line + ' You know it. You let him look between bumps too.';
+        }
+
+        // Insert a paragraph after the first paragraph matching `re` (or after the opening
+        // paragraph if none match), so the overlay lands right after the reveal.
+        function _insertSheerParagraph(text, para, re) {
+            if (!para || typeof text !== 'string') return text;
+            var parts = text.split('\n\n');
+            if (!re) { parts.push(para); return parts.join('\n\n'); }
+            var at = 0;
+            for (var i = 0; i < parts.length; i++) { if (re.test(parts[i])) { at = i; break; } }
+            parts.splice(at + 1, 0, para);
+            return parts.join('\n\n');
+        }
+
+        function installSheerExhibitionOverlays() {
+            if (typeof story === 'undefined') return;
+            var _wrap = function(id, textFn, bonusFn) {
+                var sc = story[id];
+                if (!sc) return;
+                var baseText = sc.text;
+                sc.text = function() {
+                    var t = typeof baseText === 'function' ? baseText.apply(this, arguments) : baseText;
+                    return textFn(t);
+                };
+                if (bonusFn) {
+                    var baseEnter = sc.onEnter;
+                    sc.onEnter = function() {
+                        if (baseEnter) baseEnter.apply(this, arguments);
+                        bonusFn();
+                    };
+                }
+            };
+            // Sheer underwear lifts rewards toward the bare branch (75% of bare, never below)
+            var _bonus = function(vals) {
+                var dA = Math.max(0, Math.round(vals[2] * 0.75) - vals[0]);
+                var dT = Math.max(0, Math.round(vals[3] * 0.75) - vals[1]);
+                if (!dA && !dT) return;
+                var draw = (typeof getExhibitionDrawMultiplier === 'function') ? getExhibitionDrawMultiplier() : 1.0;
+                if (dA && gameState.arousal > 0) gameState.arousal = Math.min(100, gameState.arousal + Math.round(dA * draw));
+                if (dT) applyExhibitionThrillGain(Math.round(dT * draw));
+                updateStatus();
+            };
+            Object.keys(SHEER_EXHIB_REWARDS).forEach(function(ev) {
+                var r = SHEER_EXHIB_REWARDS[ev];
+                var hem = SHEER_HEM_EVENTS.indexOf(ev) !== -1;
+                var zone = hem ? 'hips' : 'chest';
+                var reveal = hem ? /panties|underwear|thong/i : /\bbras?\b|\bcups?\b/i;
+                var liftRe = hem ? /\bhem\b|lifts|rides|skirt|dress/i : /\bgap|neckline|button|falls open|slips|strap|sags|shifts/i;
+                var sheerUw = function() { var cv = getSceneClothingVars(); return hem ? cv.pantiesSheer : cv.braSheer; };
+                var crowd = ev === 'crowd';
+                _wrap('exhibition_' + ev + '_trigger', function(t) {
+                    // Underwear first, so a haze line aimed at the same paragraph lands ahead of it
+                    t = _insertSheerParagraph(t, getSheerUnderwearOverlay(crowd ? 'crowd' : 'trigger', zone), reveal);
+                    if (crowd) return t; // groped in a crush, not lifted for anyone to see
+                    if (ev === 'bus') {
+                        var busLine = getSheerBusOverlay();
+                        if (busLine) return _insertSheerParagraph(t, busLine, null);
+                    }
+                    return _insertSheerParagraph(t, getSheerOuterExhibitionLine(zone), liftRe);
+                }, function() { if (sheerUw()) _bonus(r.trig); });
+                _wrap('exhibition_' + ev + '_' + r.hold, function(t) {
+                    return _insertSheerParagraph(t, getSheerUnderwearOverlay(crowd ? 'crowd_hold' : 'hold', zone), reveal);
+                }, function() { if (sheerUw()) _bonus(r.hs); });
             });
         }
 
@@ -28332,7 +28508,7 @@ audioSystem.playSFX('buttonClick');
                     (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom &&
                      (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') ||
                       gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) &&
-                    Math.random() < 0.20) {
+                    Math.random() < 0.20 * getSheerExhibitionChanceMult('exhibition_bus_trigger')) {
                     gameState.flags.randEventReturn = destinationScene || scene || 'city_exploration';
                     showScene('exhibition_bus_trigger');
                     return;
@@ -200331,6 +200507,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             // END EXHIBITION SEDUCTION SYSTEM — BRANCH D
         };
+
+        // Mesh Step 10: sheer overlays and rewards on the 20 exhibition events
+        installSheerExhibitionOverlays();
         
 
 
