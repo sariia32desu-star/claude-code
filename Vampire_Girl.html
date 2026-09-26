@@ -6788,8 +6788,8 @@
 
                             <li style="margin: 5px 0; border-bottom: 1px solid #333; padding-bottom: 5px;"><strong style="color: #d4a8e8; font-size: 13px;">TRISH &amp; JADE</strong></li>
                             <li style="margin: 3px 0;">Two coworkers with friendship tracks accessible during breaks:</li>
-                            <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Trish</strong> (mentor): Dance tips at friendship 20+ (+5 stripping XP next set). Watch her warm up at friendship 60+ (+10 stripping XP). At friendship 25+, she occasionally teaches Kelsie a move before a set (+25% XP that set, every 5 shifts)</li>
-                            <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Jade</strong> (peer): Floor gossip (always available, flavor intel on tippers and creeps). Dance practice at friendship 30+ (+5 stripping XP). Both unlock romance/flirt tracks at friendship 15+</li>
+                            <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Trish</strong> (mentor): Dance tips at friendship 20+ (+5 stripping XP next set). Watch her warm up at friendship 60+ (+20 stripping XP). At friendship 25+, she occasionally teaches Kelsie a move before a set (+25% XP that set, every 5 shifts)</li>
+                            <li style="margin: 3px 0; margin-left: 15px;">&#8226; <strong>Jade</strong> (peer): Floor gossip (always available, flavor intel on tippers and creeps). Dance practice at friendship 30+ (+15 stripping XP). Both unlock romance/flirt tracks at friendship 15+</li>
 
                             <li style="margin: 5px 0; border-bottom: 1px solid #333; padding-bottom: 5px;"><strong style="color: #d4a8e8; font-size: 13px;">STAT GAINS</strong></li>
                             <li style="margin: 3px 0;">Working at the club builds multiple stats per shift:</li>
@@ -158824,7 +158824,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: 'Trish glances at you. "You want to watch me prep?"\n\n"If you\'ll let me."\n\nShe considers. Then she nods.\n\nShe walks to the practice pole backstage. Rolls her shoulders. Cracks her neck. She doesn\'t stretch like a normal person. She stretches like a weapon being assembled.\n\nHer hands find the pole. She pauses for half a breath. Then she moves.\n\nThe first spin is slow. Controlled. She hooks one knee and inverts, her body a clean vertical line, and hangs there like gravity forgot about her. Her abs hold the position without a tremor.\n\nShe drops. Catches herself at the last second. Rolls into a floor transition so fluid it looks like water finding its path downhill.\n\nYou watch her body articulate each movement. Her shoulders lead into her ribs, ribs into hips, hips into legs. Every joint is a hinge she\'s spent years learning to control.\n\nA spin into a butterfly. Both hands release. She catches the pole with her thighs alone, legs scissored, and arches backward until her fingertips brush the floor.\n\n"See how my weight shifts?" she says, upside down. "I\'m never fighting the pole. I\'m negotiating with it."\n\nShe rights herself. Dismounts clean.\n\n"That took me three years to get right." She towels off her hands. "You\'ll get there faster. You\'re built for it."',
                 onEnter: function() {
                     modifyRelationship('trish', 2);
-                    if (typeof gainStripping === 'function') gainStripping(10, 'watching Trish');
+                    if (typeof gainStripping === 'function') gainStripping(20, 'watching Trish');
                     advanceTime(15);
                     updateStatus();
                 },
@@ -159349,7 +159349,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: '"Wanna practice?" Jade hops off her chair. Already heading to the backstage pole.\n\n"Together?"\n\n"Duh. It\'s more fun with someone." She grabs the pole. Spins once, easy. Her lavender hair fans out. "Okay. I\'ll go, then you go. We\'ll workshop each other."\n\nShe runs through a combo. It\'s good. Fluid hips, clean transitions. Her body rolls look effortless. She dismounts and does a little curtsy.\n\n"Your turn."\n\nYou take the pole. Try the same sequence. Your version is rougher. Less polished.\n\n"Okay, okay," Jade says. She\'s already beside you. "Your shoulder roll. It\'s too stiff. Watch." She demonstrates. Chin drops, shoulder dips, body follows in a wave. "It starts at your neck. Let it ripple."\n\nYou try. She shakes her head. Puts her hands on your shoulders.\n\n"Relax. You\'re holding tension here." She presses down. "And here." She touches the spot between your shoulder blades. "Let go."\n\nYou let go. Try the roll again. This time it flows.\n\n"YES!" Jade claps. "See? You\'ve got it! You just overthink. Stop thinking. Start moving."\n\nYou run through the combo twice more. Each time a little smoother. Jade cheers after every attempt like you just won an Olympic medal.\n\n"We should do this more," she says. She\'s grinning. "I\'m a great teacher. Quote me."',
                 onEnter: function() {
                     modifyRelationship('jade_liu', 2);
-                    if (typeof gainStripping === 'function') gainStripping(5, 'practicing with Jade');
+                    if (typeof gainStripping === 'function') gainStripping(15, 'practicing with Jade');
                     advanceTime(15);
                     updateStatus();
                 },
