@@ -1,0 +1,60 @@
+# Crime & Suspicion System: Audit and Rework
+
+## What the playtest found (before)
+
+A headless harness ran 17 crime paths day by day through the real game functions (kills with each disposal method, pickpocketing, mugging masked and unmasked, burglary, blood bank runs, witnessed feeds, hunt-interrupt police encounters, booking, Rufus clearance).
+
+- **Suspicion and the case against Kelsie were disconnected.** One downtown kill put suspicion at 68, assigned Cruz and blocked crime, with no warrant. A cop-killer sat at 100 suspicion with nothing in the evidence ledger and never got a warrant. Blood bank runs pushed suspicion to 88 with an empty ledger.
+- **Cruz was assigned at suspicion 50** (the Tips & Guide was accurate to the code), whether or not anything tied a crime to Kelsie.
+- **Hidden, dumped and speed-moved bodies could never be linked.** `addPendingBodyDiscovery` dropped the ledger id, so those murders never reached forensics.
+- **Hunt-interrupt police encounters (flee, assault, kill) created no ledger entries**, and the warrant fallback checked different flag names than those scenes set.
+- **Pattern linking pinned crimes on Kelsie with no identifying evidence.** Three clean pickpockets nobody saw counted as "linked to Kelsie."
+- **Booking never re-checked old crimes.** Forensics ran once per crime, so a later mugshot or prints never matched earlier footage or prints.
+- **A Rufus clearance was undone the next morning.** The warrant check re-issued it from the charges still on file.
+- **The post-escape 3-day crime block was wiped** by the tier recalculation.
+- **46 scenes wrote suspicion directly**, skipping traits, thresholds and tier updates.
+- **Witnessed feeds, the core vampire crime, never went into the ledger.** Unmasked muggings added no facial recognition, despite the guide saying going maskless builds it.
+- **`rand_event_cruz_spotted` was never triggered**, so the coffee-shop compulsion attempt, `cruz_approach`, `hero_cruz_walk` and `hero_cruz_probing` were unreachable.
+- **The news report and guide event thresholds ran off legacy counters and suspicion numbers** that didn't match the code.
+
+## The model now
+
+**Heat follows the case.**
+
+| State | Suspicion ceiling | Max tier |
+|---|---|---|
+| No warrant | 40 | 2 (never blocks crime or hunting) |
+| Warrant, minor charges (theft, pickpocketing, burglary, exposure, fleeing) | 60 | 3 |
+| Warrant, serious (mugging, aggravated assault, police assault, escape) | 80 | 4 |
+| Warrant, violent (murder, police killing) | 100 | 4 |
+
+A warrant severity of 60+ bumps the class up one step. When a warrant is cleared, suspicion drops back under 40. The numbers are constants at the top of the cap helpers (`SUSPICION_CAP_NO_WARRANT`, `SUSPICION_CAP_BY_WARRANT_CLASS`).
+
+**How a case is built.**
+1. Every crime goes into the evidence ledger.
+2. Three crimes of the same type in one district become a series with an unknown suspect.
+3. A crime is tied to Kelsie only by identifying evidence: prints or mugshot matched after a booking, a witness ID, being caught in the act, a mask match, or facial recognition reaching 70 (someone recognizes her from the sketch).
+4. Once one crime in a series is tied to her, the whole series is.
+5. Two linked charges, or one murder or police killing, and a warrant goes out.
+6. Evidence doesn't expire. On her first booking, old prints and footage match.
+
+**Cruz** is assigned when the case first opens on Kelsie (first linked crime, or any warrant). Her street sightings and questioning happen only while she's building the case, before a warrant exists.
+
+**Pressure before a warrant** comes from hunt interrupts (police chance starts at suspicion 20, about 17% at 40) and facial recognition building toward identification.
+
+## Playtest after the rework (end state of each path)
+
+| Path | Result |
+|---|---|
+| Unmasked witnessed feeds | FR climbs, identified on day 8, warrant (serious), Cruz assigned |
+| Pickpocket, detected and fleeing | FR reaches 70, whole series linked, warrant (minor) |
+| Masked muggings, then booked | anonymous until booking, then all 5 linked through the mask |
+| Slums killer with prints on file | warrant (violent), ceiling 100; Rufus clearance holds and suspicion drops to 40 |
+| Masked feeds, hidden bodies, clean pickpockets | stay anonymous; heat tops out at 40 |
+
+## Still open (design calls, not bugs)
+
+- **Masked, never-booked players can't be identified.** Hunt interrupts offer flee/fight/kill with no arrest route, so outside the drug raid there's no pre-warrant booking.
+- **Blood bank, clinic and hospital thefts** still create no ledger entries (one hospital scene aside). They add heat but can't build a case.
+- **The cop-killer aftermath text** promises a permanent manhunt and blocked feeding. That's only true once the killing is tied to Kelsie.
+- **Hero-only players never meet Cruz.** Her vigilante awareness requires her to be assigned to Kelsie's criminal case.

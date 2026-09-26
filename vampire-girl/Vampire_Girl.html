@@ -7831,6 +7831,8 @@
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">City Suspicion</strong> (0-100%) is the primary stat. It measures how close the city is to identifying Kelsie as the perpetrator. It rises from crimes, police encounters, and witness reports. It decays by 2 per day, but only on days you don't commit a crime.</li>
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">Wanted Tier</strong> escalates as suspicion rises. Tier 1 (20+): Person of Interest. Tier 2 (40+): Under Investigation. Tier 3 (60+): Heavy Patrols; mugging, burglary, and blood theft are blocked. Tier 4 (80+): Active Manhunt; all crimes and violent hunts blocked. Higher tiers mean more police on the streets and higher encounter rates.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #cc6666;">Suspicion Ceiling</strong> - Heat follows the case. Until there's a warrant with your name on it, police don't know who they're looking for, so suspicion stops at <strong>40</strong> (Tier 2) and never blocks crime or hunting. A warrant raises the ceiling by how serious the charges are: <strong>60</strong> for minor charges (theft, pickpocketing, burglary, exposure, fleeing), <strong>80</strong> for serious ones (mugging, aggravated assault, assaulting police, escape), and <strong>100</strong> for murder or killing police. A heavy stack of charges bumps the ceiling up one step. If the warrant is cleared, suspicion drops back under 40.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #cc6666;">How a Case Gets Built</strong> - Every crime goes into the evidence ledger. Three crimes of the same type in the same district become a <strong>series</strong> with an unknown suspect. Nothing lands on you until something identifies you: your fingerprints or face matched after a booking, a witness ID, being caught in the act, your mask being traced, or your facial recognition reaching 70 (someone recognizes you from the sketch). Once one crime in a series is tied to you, the whole series is. Two charges on you, or one murder, and a warrant goes out. Evidence doesn't expire: the day you're first booked, old prints and footage start matching.</li>
                             <li style="margin: 3px 0;"><strong style="color: #88ccff;">Karma Gates</strong> - Angelic karma (1000+) Kelsie cannot commit crimes at all. Neutral karma Kelsie can only commit crimes when her total funds (cash + bank + credit) are $40 or less. Demonic karma Kelsie can always commit crimes.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ffb366;">Robbery Mask</strong> (Optional, $1,500) - Buy from Juzman in the <strong style="color: #88ccff;">Slums back alleys</strong>. One-of-a-kind. If owned, auto-equips during crimes. Blocks facial recognition but its red devil girl emblem creates a trackable mask signature that links all masked crimes together. Without the mask, cameras and witnesses see your face, building facial recognition instead. Both paths carry risk: the emblem links crimes through the mask; your face links them through you. If the mask is found at booking, every masked crime links to you at once.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ffb366;">Leather Gloves</strong> ($500) - Also from Juzman. Prevents fingerprint evidence on surfaces, bodies, and cameras you destroy. Critical after your first booking, which puts your prints in the system permanently.</li>
@@ -7906,6 +7908,7 @@
 
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #ffb3d9; font-size: 13px;">POLICE ENCOUNTERS</strong></li>
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
+                            <li style="margin: 3px 0;">Police can interrupt a violent hunt once suspicion reaches 20, and the chance climbs with heat (about 17% at 40, about 67% at 100). Witnessed feeds go into the ledger as aggravated assault.</li>
                             <li style="margin: 3px 0;">Police can arrive during muggings. The chance scales with city suspicion, Wanted Tier, and district heat. In the Slums, it caps at 15%. In other districts at Tier 4 with high heat, it can reach 95%.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ff6666;">Bodycam Risk</strong> - When you use vampire speed to flee or fight police, there is a chance (30% base, +15% per Wanted Tier) that their bodycams capture it. This feeds Supernatural Evidence and can trigger the bodycam footage leak event.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ff6666;">Fleeing</strong> always uses vampire speed. <strong style="color: #ff6666;">Knocking out</strong> officers costs +30 suspicion (cop-quality witness). <strong style="color: #ff6666;">Killing</strong> officers costs +100 suspicion and massive karma loss. All three paths carry bodycam risk.</li>
@@ -7913,7 +7916,7 @@
 
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #ffb3d9; font-size: 13px;">DETECTIVE CRUZ</strong></li>
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
-                            <li style="margin: 3px 0;">At 50+ suspicion with an active investigation, <strong style="color: #e8b86d;">Detective Gabriella Cruz</strong> (age 28) is assigned to your case. Ex-CIA, Army special ops, runs both the Detective Bureau and SWAT at Trigrave PD. She does her own forensics and handles narcotics operations. Her peers speculate about government enhancement programs because they can't explain her any other way.</li>
+                            <li style="margin: 3px 0;">The moment the evidence ledger ties a crime to you (or a warrant goes out), <strong style="color: #e8b86d;">Detective Gabriella Cruz</strong> (age 28) is assigned to your case. Until then, there's no case on you for her to work. While she's building it and there's no warrant yet, she'll turn up on the street, in coffee shops, and with questions. Ex-CIA, Army special ops, runs both the Detective Bureau and SWAT at Trigrave PD. She does her own forensics and handles narcotics operations. Her peers speculate about government enhancement programs because they can't explain her any other way.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ff6666;">Compulsion Immunity</strong> - Cruz cannot be compelled. She feels the attempt as a push against her head, doesn't know what it is, and doesn't care. It fails every time, wherever you try it. After the first attempt she treats you as a known quantity, and that's permanent.</li>
                             <li style="margin: 3px 0;"><strong style="color: #ff6666;">The TAD</strong> - Cruz built a Targeted Acoustic Disruptor: a device that emits a focused high-frequency pulse designed to overwhelm enhanced auditory processing. Her team wears custom hearing aids that filter the frequency. When it fires, you go down. Guaranteed capture, no escape.</li>
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">Post-Escape Cycle</strong> - After you escape custody, Cruz operates on a fixed timeline. <strong>Day+1:</strong> She confronts you alone on the street (guaranteed, one-time). This is the atmospheric setup where she promises to bring you in. <strong>Day+2+:</strong> The tactical encounter has a 50% chance of firing on each district travel. When it fires, she deploys the TAD and twelve officers in a box formation. Guaranteed capture. The cycle repeats after each escape.</li>
@@ -7941,12 +7944,12 @@
 
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #ffb3d9; font-size: 13px;">SUSPICION EVENTS</strong></li>
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
-                            <li style="margin: 3px 0;">As suspicion rises, scripted events trigger in a priority order (one per day max):</li>
+                            <li style="margin: 3px 0;">As the investigation develops, scripted events trigger in a priority order (one per day max):</li>
                             <li style="margin: 3px 0; margin-left: 10px;">1. <strong style="color: #ff6666;">Bodycam Footage Leaked</strong> (supernatural evidence 50+): The footage goes viral. +30 social media heat, -8 mental health. One-time.</li>
-                            <li style="margin: 3px 0; margin-left: 10px;">2. <strong style="color: #e8b86d;">Cruz Introduction</strong> (suspicion 50+, investigation active): You see her face in the newspaper. One-time.</li>
-                            <li style="margin: 3px 0; margin-left: 10px;">3. <strong style="color: #e8b86d;">Composite Sketch</strong> (suspicion 60+, 2+ witness reports): Your face is on a poster. One-time.</li>
-                            <li style="margin: 3px 0; margin-left: 10px;">4. <strong style="color: #e8b86d;">News Report</strong> (suspicion 50+, 3+ linked attacks): TV coverage of the investigation. One-time.</li>
-                            <li style="margin: 3px 0; margin-left: 10px;">5. <strong style="color: #cc6666;">Random Recognition</strong> (suspicion 60+, sketch seen): A clerk recognizes you. Repeatable.</li>
+                            <li style="margin: 3px 0; margin-left: 10px;">2. <strong style="color: #e8b86d;">Cruz Introduction</strong> (the case opens on you): You see her face in the newspaper. One-time.</li>
+                            <li style="margin: 3px 0; margin-left: 10px;">3. <strong style="color: #e8b86d;">Composite Sketch</strong> (facial recognition 50+): Your face is on a poster. One-time.</li>
+                            <li style="margin: 3px 0; margin-left: 10px;">4. <strong style="color: #e8b86d;">News Report</strong> (3+ attacks or bodies on the books): TV coverage of the investigation. One-time.</li>
+                            <li style="margin: 3px 0; margin-left: 10px;">5. <strong style="color: #cc6666;">Random Recognition</strong> (facial recognition 50+, sketch seen): A clerk recognizes you. Repeatable.</li>
                             <li style="margin: 3px 0;">Separately, <strong style="color: #e8b86d;">Cruz post-escape encounters</strong>, <strong style="color: #e8b86d;">Cruz questioning</strong>, and <strong style="color: #e8b86d;">social media recognition</strong> events operate on their own systems independent of the suspicion event queue.</li>
                         </ul>
 
@@ -12385,8 +12388,9 @@
                             • <strong>Camera Footage</strong> — Accumulates based on district camera density (Downtown 90%, Slums 5%). Reduced by infiltrating the surveillance hub or Rufus's digital scrub service.<br>
                             • <strong>Social Media Heat</strong> — Public attention from daytime crimes, viral footage, and public exposure. At 30+, people start recognizing you on the street. Decays -5/day.<br>
                             • <strong>Supernatural Evidence</strong> — Bodycam footage of vampire speed. +25 per incident. At 50+, footage can leak publicly. At 80+, your Wanted Tier can escalate independently.<br>
-                            • <strong>Facial Recognition</strong> — Pickpocketing is unmasked; every lift feeds your face into camera systems even on a clean getaway. High-camera districts (Downtown, Commercial) build FR faster. At 70%+ combined with Evidence 30%+ and an active investigation, an arrest warrant is issued.<br>
-                            • <strong>Detective Cruz</strong>: Assigned at suspicion 50+. Cannot be compelled. A permanent investigative pressure.<br>
+                            • <strong>Facial Recognition</strong> — Pickpocketing is unmasked; every lift feeds your face into camera systems even on a clean getaway. High-camera districts (Downtown, Commercial) build FR faster. At 70%+, someone recognizes you from the sketch, and every unmasked crime where your face was seen is tied to you.<br>
+                            • <strong>Detective Cruz</strong>: Assigned when the case opens on you (first crime tied to you, or a warrant). Cannot be compelled. A permanent investigative pressure.<br>
+                            • <strong>Suspicion Ceiling</strong>: 40 without a warrant. 60 / 80 / 100 with a warrant for minor / serious / violent charges.<br>
                             <br>
                             <strong>Increases Suspicion:</strong><br>
                             • Murder (slums): +15 | Murder (elsewhere): +40<br>
@@ -20902,7 +20906,8 @@ audioSystem.playSFX('buttonClick');
                 { id: 'rand_event_overdose',         chance: 0.10, districts: ['downtown','commercial'],                                                                      condition: () => isNight },
                 { id: 'rand_event_purse_snatch',     chance: 0.10, districts: ['commercial','downtown'],                                                                      condition: () => !isNight },
                 { id: 'rand_event_scaffold',         chance: 0.09, districts: ['commercial','downtown'],                                                                      condition: () => !isNight }
-                ,{ id: 'rand_event_cruz_direct_question', repeatable: true, chance: 0.10, districts: ['commercial','downtown','residential'], condition: () => !!gameState.flags.gabriellaCompulsionFailed && gameState.citySuspicion >= 60 && !gameState.flags.cruzQuestionToday }
+                ,{ id: 'rand_event_cruz_direct_question', repeatable: true, chance: 0.10, districts: ['commercial','downtown','residential'], condition: () => !!gameState.flags.gabriellaCruzAssigned && !!gameState.flags.gabriellaCompulsionFailed && !gameState.flags.warrantIssued && gameState.citySuspicion >= 30 && !gameState.flags.cruzQuestionToday }
+                ,{ id: 'rand_event_cruz_spotted', repeatable: true, chance: 0.08, districts: ['commercial','downtown','residential','medical'], condition: () => !!gameState.flags.gabriellaCruzAssigned && !!gameState.flags.sawCruzIntro && !gameState.flags.warrantIssued && !gameState.flags.cruzSpottedToday && !gameState.flags.cruzQuestionToday }
                 ,{ id: 'rand_event_social_recognition', repeatable: true, chance: 0.10, districts: ['commercial','downtown','residential'], condition: () => (gameState.socialMediaHeat || 0) >= 30 && !gameState.flags.socialRecognitionToday }
                 ,{ id: 'exhibition_wind_trigger', repeatable: true, chance: 0.20, districts: ['park','commercial','residential'],                                                              condition: () => !isNight && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionWindDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_staircase_trigger', repeatable: true, chance: 0.18, districts: ['commercial','downtown','residential'], condition: () => (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionStaircaseDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
@@ -30299,6 +30304,65 @@ audioSystem.playSFX('buttonClick');
             gainStrength(amount, '');
         }
 
+        // ── Suspicion cap (heat follows the case) ──
+        // Before a warrant, police don't know who they're looking for: heat tops out at
+        // Tier 2 (active investigation) and never blocks crime or hunting. A warrant lifts
+        // the ceiling by how serious the charges are. Tune these numbers here.
+        var SUSPICION_CAP_NO_WARRANT = 40;
+        var SUSPICION_CAP_BY_WARRANT_CLASS = { minor: 60, serious: 80, violent: 100 };
+
+        function getWarrantClass() {
+            if (!gameState.flags.warrantIssued) return 'none';
+            var highest = getHighestSeverityCrime();
+            var cls = 'minor';
+            if (highest === 'murder' || highest === 'police_killing') cls = 'violent';
+            else if (highest === 'mugging' || highest === 'police_assault' || highest === 'escape' || highest === 'assault') cls = 'serious';
+            // Sheer volume of charges pushes the case up one class
+            if ((gameState.flags.warrantSeverity || 0) >= 60) {
+                if (cls === 'minor') cls = 'serious';
+                else if (cls === 'serious') cls = 'violent';
+            }
+            return cls;
+        }
+
+        function getSuspicionCap() {
+            var cls = getWarrantClass();
+            if (cls === 'none') return SUSPICION_CAP_NO_WARRANT;
+            return SUSPICION_CAP_BY_WARRANT_CLASS[cls] || 100;
+        }
+
+        function getSuspicionTierFor(s) {
+            if (s >= 80) return 4;
+            if (s >= 60) return 3;
+            if (s >= 40) return 2;
+            if (s >= 20) return 1;
+            return 0;
+        }
+
+        // Pulls suspicion down to the current cap (e.g. after a warrant is cleared).
+        function enforceSuspicionCap() {
+            var cap = getSuspicionCap();
+            if ((gameState.citySuspicion || 0) > cap) {
+                gameState.citySuspicion = cap;
+                calculateWantedTier();
+                updateSidebarStats();
+            }
+        }
+
+        // ── The case on Kelsie opens the first time the ledger ties a crime to her ──
+        // This is what puts Cruz on it. Before this, crimes are just crimes.
+        function openCaseOnKelsie() {
+            if (!gameState.suspicionData) gameState.suspicionData = { districtHeat: {}, hotDistricts: [], wantedTier: 0 };
+            var sd = gameState.suspicionData;
+            sd.investigationActive = true;
+            if (!sd.detectiveAssigned) {
+                sd.detectiveAssigned = true;
+                gameState.flags.gabriellaCruzAssigned = true;
+                gameState.flags.gabriellaIntroductionPending = true;
+                gameState.flags.caseOpenedDay = gameState.time.day || 0;
+            }
+        }
+
         function modifyCitySuspicion(amount, reason = '', districtId = null, witnessQuality = 'civilian') {
             let modifiedAmount = amount;
             
@@ -30325,7 +30389,17 @@ audioSystem.playSFX('buttonClick');
                 }
             }
             
-            if (modifiedAmount > 0) gameState.flags.committedCrimeToday = true;
+            if (amount > 0) gameState.flags.committedCrimeToday = true;
+            // Zero-amount calls are used to initialize the investigation data
+            if (!gameState.suspicionData && amount <= 0) {
+                gameState.suspicionData = { districtHeat: {}, hotDistricts: [], wantedTier: 0, facialRecognition: 0, evidenceLevel: 0, cameraFootage: 0, supernaturalEvidence: 0 };
+            }
+
+            // Cap: gains stop at the ceiling the case allows (see getSuspicionCap)
+            if (modifiedAmount > 0) {
+                const room = Math.max(0, getSuspicionCap() - (gameState.citySuspicion || 0));
+                modifiedAmount = Math.min(modifiedAmount, room);
+            }
 
             const oldSuspicion = gameState.citySuspicion;
             gameState.citySuspicion += modifiedAmount;
@@ -30406,12 +30480,8 @@ audioSystem.playSFX('buttonClick');
                 gameState.suspicionData.hasCompositeSketch = true;
             }
             
-            // Detective Cruz assignment at 50+
-            if (newSuspicion >= 50 && gameState.suspicionData && !gameState.suspicionData.detectiveAssigned && gameState.suspicionData.investigationActive) {
-                gameState.suspicionData.detectiveAssigned = true;
-                gameState.flags.gabriellaCruzAssigned = true;
-                gameState.flags.gabriellaIntroductionPending = true;
-            }
+            // Detective Cruz is assigned when the case opens on Kelsie (openCaseOnKelsie),
+            // not at a suspicion number.
             
             if (oldSuspicion < 80 && newSuspicion >= 80) {
                 // Critical threshold - city-wide manhunt
@@ -31051,9 +31121,8 @@ audioSystem.playSFX('buttonClick');
                 return 'suspicion_composite_sketch_event';
             }
             
-            // Priority 4: News report (one-time)
-            if (gameState.citySuspicion >= 50 &&
-                gameState.suspicionData.attacksLinked >= 3 &&
+            // Priority 4: News report (one-time): three or more attacks on the books
+            if ((countLedgerEntries('assault') + countLedgerEntries('murder')) >= 3 &&
                 !gameState.flags.sawNewsReport &&
                 Math.random() < 0.25) {
                 gameState.flags.lastSuspicionEventDay = gameState.time.day;
@@ -31125,9 +31194,15 @@ audioSystem.playSFX('buttonClick');
             var sd = gameState.suspicionData || {};
 
             // ── Primary: Ledger-driven warrant ──
-            var linkedCount = countLinkedCrimes();
-            if (linkedCount > 0 && sd.investigationActive) {
-                var highest = getHighestSeverityCrime();
+            // Charges suspended by a Rufus clearance don't count toward a new warrant
+            var linkedCount = 0, highest = 'none';
+            var _order = ['police_killing', 'murder', 'police_assault', 'escape', 'mugging', 'assault', 'burglary', 'fleeing', 'blood_theft', 'pickpocketing', 'indecent_exposure'];
+            (gameState.evidenceLedger || []).forEach(function(e) {
+                if (!e.linkedToKelsie || e.warrantCleared) return;
+                linkedCount++;
+                if (highest === 'none' || _order.indexOf(e.type) < _order.indexOf(highest)) highest = e.type;
+            });
+            if (linkedCount > 0) {
                 // Auto-warrant for serious crimes: one linked murder or cop-killing is enough
                 if (highest === 'murder' || highest === 'police_killing') {
                     issueArrestWarrant();
@@ -31178,6 +31253,7 @@ audioSystem.playSFX('buttonClick');
         // during migration (before crime scenes create ledger entries).
         function issueArrestWarrant() {
             gameState.flags.warrantIssued = true;
+            openCaseOnKelsie(); // a warrant always means the case is on her
             gameState.flags.warrantIssuedDay = gameState.time.day;
 
             // Primary: build charges from ledger
@@ -31368,6 +31444,8 @@ audioSystem.playSFX('buttonClick');
                 }
             }
 
+            if (linked) openCaseOnKelsie();
+
             // If warrant is active and a new charge was linked, fire notification
             if (linked && gameState.flags.warrantIssued) {
                 var entry = getLedgerEntry(crimeId);
@@ -31400,6 +31478,7 @@ audioSystem.playSFX('buttonClick');
             if (count > 0) {
                 gameState.flags.maskSignatureLinkedToKelsie = true;
                 gameState.flags.maskCompromised = true;
+                openCaseOnKelsie();
             }
 
             return count;
@@ -31446,6 +31525,7 @@ audioSystem.playSFX('buttonClick');
                 'escape': 'Escape from Custody',
                 'police_assault': 'Assault on Law Enforcement',
                 'police_killing': 'Murder of Law Enforcement',
+                'assault': 'Aggravated Assault',
                 'indecent_exposure': 'Indecent Exposure'
             };
             return labels[crimeType] || 'Criminal Activity';
@@ -31526,6 +31606,9 @@ audioSystem.playSFX('buttonClick');
                         muggingCount++;
                         severity += 5;
                         break;
+                    case 'assault':
+                        severity += 4;
+                        break;
                     case 'escape':
                         escapeCount++;
                         severity += 8;
@@ -31584,61 +31667,91 @@ audioSystem.playSFX('buttonClick');
                 entry.forensicProcessed = true;
                 entry.forensicProcessDay = currentDay;
 
-                // ── Fingerprint Matching ──
-                // If Kelsie left prints AND her prints are in the system, link the crime
-                if (entry.forensic.fingerprintsLeft && printsInSystem && !entry.linkedToKelsie) {
-                    entry.forensic.fingerprintsMatched = true;
-                    linkCrimeToSuspect(entry.id, 'fingerprint');
-                }
+            }
 
-                // ── Facial Recognition Matching ──
-                // If clear camera footage exists AND mugshot is in system, check for FR match
-                if (entry.evidence.cameraFootage && !entry.masked && !entry.linkedToKelsie) {
-                    if (hasMugshot && entry.camera.cameraQuality === 'clear') {
-                        entry.camera.facialRecognitionHit = true;
-                        linkCrimeToSuspect(entry.id, 'facial_recognition');
-                    }
-                    // Partial quality: 50% chance of match if mugshot exists
-                    else if (hasMugshot && entry.camera.cameraQuality === 'partial' && Math.random() < 0.5) {
-                        entry.camera.facialRecognitionHit = true;
-                        linkCrimeToSuspect(entry.id, 'facial_recognition');
-                    }
-                    // Check additional cameras too
-                    if (!entry.linkedToKelsie && entry.additionalCameras) {
-                        for (var c = 0; c < entry.additionalCameras.length; c++) {
-                            var cam = entry.additionalCameras[c];
-                            if (hasMugshot && cam.cameraQuality === 'clear' && !cam.masked) {
-                                cam.facialRecognitionHit = true;
-                                linkCrimeToSuspect(entry.id, 'facial_recognition');
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // Collect mask-signature entries for pattern linking
-                if (entry.maskSignature && !entry.linkedToKelsie) {
+            // Collect every processed, unlinked mask-signature entry for series linking
+            for (var i = 0; i < gameState.evidenceLedger.length; i++) {
+                var entry = gameState.evidenceLedger[i];
+                if (entry.forensicProcessed && entry.maskSignature && !entry.linkedToKelsie) {
                     maskSigEntries.push(entry);
                 }
             }
 
-            // ── Pattern Linking: Same-type crimes in same district ──
-            // If 3+ unlinked crimes of the same type in the same district exist, link them all
+            // ── Identification Matching (runs over every processed, unlinked entry, every day) ──
+            // Evidence doesn't expire: prints and footage from old crimes match the moment
+            // Kelsie's prints or mugshot land in the system (first booking).
+            for (var i = 0; i < gameState.evidenceLedger.length; i++) {
+                var entry = gameState.evidenceLedger[i];
+                if (!entry.forensicProcessed || entry.linkedToKelsie) continue;
+
+                // Fingerprints
+                if (entry.forensic.fingerprintsLeft && printsInSystem) {
+                    entry.forensic.fingerprintsMatched = true;
+                    linkCrimeToSuspect(entry.id, 'fingerprint');
+                    continue;
+                }
+
+                // Facial recognition against the mugshot
+                if (hasMugshot && entry.evidence.cameraFootage && !entry.masked) {
+                    var frHit = false;
+                    if (entry.camera.cameraQuality === 'clear') frHit = true;
+                    else if (entry.camera.cameraQuality === 'partial' && !entry.frPartialRolled) {
+                        entry.frPartialRolled = true; // one roll per clip, not one per day
+                        frHit = Math.random() < 0.5;
+                    }
+                    if (!frHit && entry.additionalCameras) {
+                        for (var c = 0; c < entry.additionalCameras.length; c++) {
+                            var cam = entry.additionalCameras[c];
+                            if (cam.cameraQuality === 'clear' && !cam.masked) { cam.facialRecognitionHit = true; frHit = true; break; }
+                        }
+                    }
+                    if (frHit) {
+                        entry.camera.facialRecognitionHit = true;
+                        linkCrimeToSuspect(entry.id, 'facial_recognition');
+                    }
+                }
+            }
+
+            // ── Public Identification: composite sketch + tips ──
+            // Once facial recognition hits 70, someone recognizes her. Any unmasked crime
+            // where a face was seen (witness or usable camera) gets tied to her by name.
+            var frNow = (gameState.suspicionData && gameState.suspicionData.facialRecognition) || 0;
+            if (frNow >= 70) {
+                for (var i = 0; i < gameState.evidenceLedger.length; i++) {
+                    var entry = gameState.evidenceLedger[i];
+                    if (entry.linkedToKelsie || entry.masked || !entry.forensicProcessed) continue;
+                    var faceSeen = (entry.witnesses || []).some(function(w) { return w && w.faceSeen; });
+                    var usableCam = entry.evidence.cameraFootage && (entry.camera.cameraQuality === 'clear' || entry.camera.cameraQuality === 'partial');
+                    if (faceSeen || usableCam) {
+                        linkCrimeToSuspect(entry.id, 'witness_id');
+                    }
+                }
+            }
+
+            // ── Series Linking: Same-type crimes in same district ──
+            // 3+ crimes of the same type in the same district become a series with an
+            // unknown suspect. The series lands on Kelsie only once any one crime in it
+            // is tied to her by identifying evidence (prints, face, witness, caught, mask).
             var patternMap = {};
             for (var i = 0; i < gameState.evidenceLedger.length; i++) {
                 var entry = gameState.evidenceLedger[i];
-                if (entry.linkedToKelsie || !entry.forensicProcessed) continue;
+                if (!entry.forensicProcessed) continue;
                 var key = entry.type + '|' + entry.district;
                 if (!patternMap[key]) patternMap[key] = [];
                 patternMap[key].push(entry);
             }
             for (var key in patternMap) {
-                if (patternMap.hasOwnProperty(key) && patternMap[key].length >= 3) {
-                    // Pattern detected: link all entries in this cluster
-                    for (var j = 0; j < patternMap[key].length; j++) {
-                        if (!patternMap[key][j].linkedToKelsie) {
-                            linkCrimeToSuspect(patternMap[key][j].id, 'pattern');
-                        }
+                if (!patternMap.hasOwnProperty(key) || patternMap[key].length < 3) continue;
+                var series = patternMap[key];
+                var identified = false;
+                for (var j = 0; j < series.length; j++) {
+                    series[j].seriesId = key;
+                    if (!series[j].linkedToKelsie && series[j].chargeStatus === 'unknown') series[j].chargeStatus = 'suspected';
+                    if (series[j].linkedToKelsie && series[j].linkedBy !== 'pattern') identified = true;
+                }
+                if (identified) {
+                    for (var j = 0; j < series.length; j++) {
+                        if (!series[j].linkedToKelsie) linkCrimeToSuspect(series[j].id, 'pattern');
                     }
                 }
             }
@@ -31708,7 +31821,7 @@ audioSystem.playSFX('buttonClick');
         function getHighestSeverityCrime() {
             if (!gameState.evidenceLedger) return 'none';
 
-            var severityOrder = ['police_killing', 'murder', 'police_assault', 'escape', 'mugging', 'burglary', 'fleeing', 'blood_theft', 'pickpocketing'];
+            var severityOrder = ['police_killing', 'murder', 'police_assault', 'escape', 'mugging', 'assault', 'burglary', 'fleeing', 'blood_theft', 'pickpocketing'];
 
             for (var s = 0; s < severityOrder.length; s++) {
                 for (var i = 0; i < gameState.evidenceLedger.length; i++) {
@@ -44059,6 +44172,8 @@ audioSystem.playSFX('buttonClick');
             if (gameState.flags.rufusWarrantClearing) {
                 var clearDays = (gameState.time.day || 0) - (gameState.flags.rufusWarrantClearingDay || 0);
                 if (clearDays >= 7) {
+                    // Charges linked so far are suspended; only new links can bring a warrant back
+                    (gameState.evidenceLedger || []).forEach(function(e) { if (e.linkedToKelsie) e.warrantCleared = true; });
                     gameState.flags.warrantIssued = false;
                     gameState.flags.wantedFugitive = false;
                     gameState.flags.rufusWarrantClearing = false;
@@ -44068,6 +44183,9 @@ audioSystem.playSFX('buttonClick');
                 }
             }
             
+            // Heat follows the case: if the warrant is gone, so is the ceiling it allowed
+            enforceSuspicionCap();
+
             // Rufus mask clearing: 5-day propagation (The Mothers)
             if (gameState.flags.rufusMaskClearing) {
                 var maskClearDays = (gameState.time.day || 0) - (gameState.flags.rufusMaskClearingDay || 0);
@@ -114194,6 +114312,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         cameraQuality: hadCamera ? (isMasked ? 'partial' : 'clear') : 'none'
                     });
 
+                    // Unmasked: the victim saw her face, and so did any camera
+                    if (!isMasked && gameState.suspicionData) {
+                        gameState.suspicionData.facialRecognition =
+                            Math.min(100, (gameState.suspicionData.facialRecognition || 0) + (hadCamera ? 12 : 6));
+                        if (gameState.suspicionData.facialRecognition >= 50) gameState.suspicionData.hasCompositeSketch = true;
+                    }
+
                     // Clean up
                     delete gameState.flags.crimeUnmasked;
                     
@@ -135830,7 +135955,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             
             suspicion_news_report_event: {
                 text: function() {
-                    const attackCount = gameState.suspicionData?.attacksLinked || 3;
+                    const attackCount = Math.max(3, countLedgerEntries('assault') + countLedgerEntries('murder'));
                     let report = 'You\'re passing a storefront when you hear it.\n\nA TV in the window. News channel.\n\n"...police are now linking at least ' + (attackCount) + ' separate assaults in the downtown and warehouse districts. Victims describe similar attacks: sudden, violent, and the assailant disappearing without a trace."\n\nThe news anchor continues: "Police warn residents to avoid walking alone at night. A task force has been formed to investigate what authorities are calling a \'pattern of predatory behavior.\'"\n\nA detective appears on screen: "We believe this is one individual. We\'re analyzing evidence, interviewing witnesses. We <em>will</em> find whoever\'s doing this."\n\nThe camera cuts to a victim, bandaged neck, traumatized eyes: "I... I don\'t remember much. Just... something grabbed me. I felt this... <em>bite</em>... and then I woke up in an alley. I thought I was going to die."\n\nYou keep walking. Heart pounding.\n\nThey\'re connecting the dots. Building a case.\n\nThe net is tightening.';
 
                     if (gameState.flags.gabriellaCruzAssigned) {
@@ -137814,10 +137939,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     advanceTime(2);
                     updateStatus();
                     
-                    // Check for police intervention if suspicion is high (60+)
-                    if (gameState.citySuspicion >= 60) {
-                        // Higher suspicion = higher chance of police presence
-                        const policeChance = (gameState.citySuspicion - 60) / 40; // 0% at 60, 100% at 100
+                    // Check for police intervention: patrols thicken as heat rises
+                    if (gameState.citySuspicion >= 20) {
+                        // 0% at 20, ~17% at 40 (pre-warrant ceiling), ~67% at 100
+                        const policeChance = (gameState.citySuspicion - 20) / 120;
                         if (Math.random() < policeChance) {
                             gameState.flags.policeInterrupted = true;
                         }
@@ -137840,7 +137965,24 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Detection-based suspicion (9A): partial/full = someone saw something
                     var _htSus = calculateHuntSuspicion(_htDetection, _htEnv.district || 'commercial');
                     if (_htSus > 0) {
-                        modifyCitySuspicion(_htSus);
+                        modifyCitySuspicion(_htSus, 'assault', _htEnv.district || null);
+                    }
+                    // A feed someone saw is an assault on the books
+                    if (_htDetection.outcome === 'partial' || _htDetection.outcome === 'full') {
+                        var _htMaskedLedger = !!gameState.flags._huntWearingMask;
+                        var _htCamHit = !!_htEnv.hasCameras && Math.random() < (_htEnv.cameraDensity || 0);
+                        createLedgerEntry({
+                            type: 'assault',
+                            district: _htEnv.district || gameState.currentDistrictId || 'commercial',
+                            masked: _htMaskedLedger,
+                            maskSignature: _htMaskedLedger,
+                            witnessEvidence: true,
+                            cameraEvidence: _htCamHit,
+                            biteMarks: true,
+                            witnesses: [{ type: 'civilian', faceSeen: !_htMaskedLedger && _htDetection.outcome === 'full', description: 'Saw the attack' }],
+                            cameraType: _htCamHit ? 'street_cam' : '',
+                            cameraQuality: _htCamHit ? (_htMaskedLedger ? 'none' : (_htDetection.outcome === 'full' ? 'clear' : 'partial')) : 'none'
+                        });
                     }
                     // Camera footage (9B): roll based on detection and district density
                     var _htFootage = rollHuntCameraFootage(_htDetection, _htEnv);
@@ -215690,6 +215832,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             // Bodycam incidents add pressure
             if ((sd.bodycamIncidents || 0) >= 3 && tier < 3) tier = 3;
+
+            // Evidence can't push the tier past what the case allows (no warrant = Tier 2 max)
+            tier = Math.min(tier, getSuspicionTierFor(getSuspicionCap()));
 
             sd.wantedTier = tier;
             gameState.flags.violentHuntsBlocked = (tier >= 4);
