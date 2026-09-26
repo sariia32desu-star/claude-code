@@ -35519,12 +35519,14 @@ audioSystem.playSFX('buttonClick');
                 // Jaewon: +3/hour when living together at romance 60+
                 var _jaewonRomance = (gameState.relationships && gameState.relationships.jaewon) ? gameState.relationships.jaewon.romance || 0 : 0;
                 if (gameState.flags.stayingWithJaewon && _jaewonRomance >= 60) {
-                    var _jaewonProximityGain = Math.floor(hoursPassedPartial * 3);
+                    var _jaewonProximityGain = accruePassive('jaewonProximity', 3, minutes);
                     if (_jaewonProximityGain > 0) {
                         gameState.flags.arousalChangedPassively = true;
                         gameState.arousalGainThisTick = true;
                         gameState.arousal = Math.min(100, gameState.arousal + _jaewonProximityGain);
                     }
+                } else {
+                    clearPassiveAccum('jaewonProximity');
                 }
                 // Other romance NPCs: +2/hour when in active companion/date scene at romance 60+
                 var _companionRomance = 0;
@@ -35534,13 +35536,18 @@ audioSystem.playSFX('buttonClick');
                     if (_compRel) _companionRomance = _compRel.romance || 0;
                 }
                 if (_companionRomance >= 60) {
-                    var _companionProximityGain = Math.floor(hoursPassedPartial * 2);
+                    var _companionProximityGain = accruePassive('companionProximity', 2, minutes);
                     if (_companionProximityGain > 0) {
                         gameState.flags.arousalChangedPassively = true;
                         gameState.arousalGainThisTick = true;
                         gameState.arousal = Math.min(100, gameState.arousal + _companionProximityGain);
                     }
+                } else {
+                    clearPassiveAccum('companionProximity');
                 }
+            } else {
+                clearPassiveAccum('jaewonProximity');
+                clearPassiveAccum('companionProximity');
             }
 
             // ── Step 6A: Passive source overflow check ──
@@ -35626,9 +35633,14 @@ audioSystem.playSFX('buttonClick');
                     if (minutesDesperatelyAroused >= 60) {
                         var _despCorr = gameState.corruption || 0;
                         var _despMHRate = _despCorr >= 8001 ? 1 : _despCorr >= 6001 ? -1 : _despCorr >= 4001 ? -2 : -3;
-                        var _despMHDelta = (_despMHRate > 0)
-                            ? Math.floor(hoursPassedPartial * _despMHRate)
-                            : -Math.floor(hoursPassedPartial * Math.abs(_despMHRate));
+                        var _despMHDelta;
+                        if (_despMHRate > 0) {
+                            clearPassiveAccum('desperateMHLoss');
+                            _despMHDelta = accruePassive('desperateMHGain', _despMHRate, minutes);
+                        } else {
+                            clearPassiveAccum('desperateMHGain');
+                            _despMHDelta = -accruePassive('desperateMHLoss', Math.abs(_despMHRate), minutes);
+                        }
                         if (_despMHDelta !== 0) {
                             gameState.mentalHealth = Math.max(0, Math.min(100, gameState.mentalHealth + _despMHDelta));
                         }
@@ -35648,6 +35660,8 @@ audioSystem.playSFX('buttonClick');
             } else {
                 // Reset tracking when arousal drops below Desperate
                 gameState.highArousalStartTime = null;
+                clearPassiveAccum('desperateMHGain');
+                clearPassiveAccum('desperateMHLoss');
             }
 
             // ── Step 5C: Twin-hunger convergence beat ──
