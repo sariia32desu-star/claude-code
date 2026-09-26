@@ -61013,14 +61013,6 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             return [VISION_OPENINGS[openingKey]].concat(karmaPages, VISION_INTIMATE_PAGES);
         }
 
-        function buildVisionImages() {
-            const lead = 1 + VISION_KARMA_PAGES[getVisionKarmaKey()].length;
-            const images = [];
-            for (let i = 0; i < lead; i++) images.push("Images/intro/vision.webm");
-            for (let i = 0; i < 3; i++) images.push("Images/intro/vision2.webm");
-            for (let i = 0; i < 3; i++) images.push("Images/intro/vision3.webm");
-            return images;
-        }
 
         // Story scenes
         const story = {
@@ -65994,10 +65986,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             the_vision_after_attack: {
-                image: "Images/intro/vision.webm",
-                partImages: function() { return buildVisionImages(); },
                 parts: function() { return buildVisionParts(gameState.karma <= -1000 ? 'attackDemonic' : 'attack'); },
-                finalImage: "",
                 text: function() {
                     const corruption = gameState.corruption || 0;
                     const isVirgin = gameState.isVirgin;
@@ -66039,7 +66028,6 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Tier: Deeply Corrupted (8001–10000)
                     return 'The vision releases you, and you stay still on the sidewalk to let it finish playing.\n\nThe woman\'s cunt clenching on your fingers. The man\'s helpless groan when the bite hit him, his hips jerking up to pump another load into you. That drunk\'s heart slowing under your lips while you decided whether to let it keep going.\n\nThat last one\'s the part you keep rewinding.\n\n<em>Oh, that\'s interesting.</em>\n\nPleasure and blood and being the one who decides when it ends. You already know what that power tastes like. The vision just gave it fangs.\n\nYour pussy\'s slick and swollen in your jeans, and you don\'t bother being embarrassed about it.\n\nThe guilt about your mother is still down there somewhere. You\'ll get to it later. You wipe her blood from your chin and start toward the city, unhurried.\n\nThere are a lot of people in this city.\n\n<em>You\'re looking forward to meeting them.</em>';
                 },
-                finalImage: "",
                 onEnter: () => {
                     gameState.thirst = Math.max(0, gameState.thirst - 20);
                     restoreHealthFromFeeding(20);
@@ -66127,10 +66115,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
             
             the_vision_cruel_path: {
-                image: "Images/intro/vision.webm",
-                partImages: function() { return buildVisionImages(); },
                 parts: function() { return buildVisionParts('cruel'); },
-                finalImage: "",
                 text: function() {
                     const corruption = gameState.corruption || 0;
                     const isVirgin = gameState.isVirgin;
@@ -66172,7 +66157,6 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Tier: Deeply Corrupted (8001–10000)
                     return 'The vision lets you go, and you stand on the porch letting the last image linger.\n\nThe man underneath you, his whole body arching off the bed when your fangs went in, his cock pumping another load into your pussy from the bite alone.\n\n<em>Oh, this is going to be fun.</em>\n\nYou\'ve always known you were built for too much. Wanting more, taking it, never apologizing. Now you\'ve got a life where that\'s the whole point.\n\nEven the alley gave you a shiver. His heart slowing, and you deciding whether to let it.\n\nYour clit\'s throbbing. The thirst is right there with it, and it\'ll always be there.\n\nSo\'s everything else.\n\nYou step off the porch light as anything and head toward the city.\n\n<em>You\'re looking forward to this.</em>';
                 },
-                finalImage: "",
                 onEnter: () => {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 3);
                     gameState.flags.hadVision = true;
@@ -66534,10 +66518,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
             
             the_vision: {
-                image: "Images/intro/vision.webm",
-                partImages: function() { return buildVisionImages(); },
                 parts: function() { return buildVisionParts('home'); },
-                finalImage: "", // Remove video when vision ends
                 text: function() {
                     const corruption = gameState.corruption || 0;
                     const isVirgin = gameState.isVirgin;
@@ -66580,7 +66561,6 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Tier: Deeply Corrupted (8001–10000)
                     return 'The vision releases you, and you stay still to let it finish playing.\n\nThe woman\'s cunt clenching on your fingers. The man\'s helpless groan when the bite hit him, hips jerking up to pump another load into you. That drunk\'s heart slowing under your lips while you decided whether to let it keep going.\n\nYou keep rewinding that last one.\n\n<em>Oh, that\'s interesting.</em>\n\nPleasure and blood and being the one who decides when it ends. You already know what that power tastes like. The vision just gave it fangs.\n\nYour pussy\'s slick in your underwear, and you don\'t bother being embarrassed.\n\nYou smooth the front of your jacket and start moving, unhurried, a girl with nothing ahead of her she\'s scared of.\n\nThere are a lot of people in this city.\n\n<em>You\'re looking forward to meeting them.</em>' + busLine;
                 },
-                finalImage: "",
                 onEnter: () => {
                     gameState.thirst = Math.min(getThirstCap(), gameState.thirst + 3);
                     gameState.flags.hadVision = true;
