@@ -30333,6 +30333,12 @@ audioSystem.playSFX('buttonClick');
                 bodyDiscovered: params.bodyDiscovered || false,
                 bodyDiscoveryDay: params.bodyDiscoveryDay || 0
             };
+            // Indecent exposure detail. getLedgerSeverity() and Cruz read these; they
+            // were being dropped here, so every exposure entry scored as minor.
+            if (params.exposureSeverity) entry.exposureSeverity = params.exposureSeverity;
+            if (params.exposureState) entry.exposureState = params.exposureState;
+            if (params.sheerLook) entry.sheerLook = params.sheerLook;
+            if (params.description) entry.description = params.description;
 
             gameState.evidenceLedger.push(entry);
             return id;
@@ -37616,6 +37622,31 @@ audioSystem.playSFX('buttonClick');
         // Camera districts (commercial/downtown): 30% chance, street_cam evidence.
         // Witness districts (residential/park): 15% chance, civilian witness evidence.
         // Max one entry per district per day. Slums generate no evidence.
+        // Mesh Step 12B: Cruz reads sheer entries as the indecent exposure they're filed as.
+        // When most of Kelsie's exposure entries are sheer, she says so. 'folder' is the
+        // case-folder confrontation; 'casual' is the street chat where she never accuses.
+        function getCruzSheerExposureLine(context) {
+            var led = gameState.evidenceLedger || [];
+            var total = 0, sheer = 0, cams = 0, look = '';
+            for (var i = 0; i < led.length; i++) {
+                if (led[i].type !== 'indecent_exposure') continue;
+                total++;
+                if (String(led[i].exposureState || '').indexOf('sheer_') === 0) {
+                    sheer++;
+                    if (led[i].evidence && led[i].evidence.cameraFootage) { cams++; if (led[i].sheerLook) look = led[i].sheerLook; }
+                }
+            }
+            if (!total || sheer * 2 <= total) return '';
+            if (context === 'casual') return '"Funny thing, though," she adds. "Most of them, she\'s technically clothed." Her eyes stay on your face. She already knows what you\'re wearing.\n\n';
+            if (cams >= 3) {
+                var words = ['Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+                var count = cams <= 9 ? words[cams - 3] + ' stills.' : 'A whole stack of stills.';
+                var what = look === 'lingerie' ? 'see-through underwear' : 'see-through ' + (look || 'dress');
+                return 'Cruz sees you looking. She taps the top printout. "' + count + ' Same ' + what + '. You know exactly what the cameras see."\n\nThen she files it under the rest and keeps going.\n\n';
+            }
+            return 'Cruz sees you looking. "Your indecent exposure file is interesting," she says. "Most of it\'s technically clothed."\n\nThen she files it under the rest and keeps going.\n\n';
+        }
+
         function checkExhibitionEvidence(sceneId) {
             // Map scene IDs to district/evidence config
             var _evidenceConfig = {
@@ -37630,15 +37661,26 @@ audioSystem.playSFX('buttonClick');
 
             // Check visible exposure (outerwear concealment applies)
             var _exposure = (typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel();
-            if (_exposure === 'clothed') return;
+
+            // Mesh Step 12A: clothed or in underwear, the mesh can still put her on camera.
+            // Framed makes no entry. getSheerState() already applies outerwear concealment.
+            var _sheer = null;
+            if (_exposure === 'clothed' || _exposure === 'underwear_only') {
+                var _sst = getSheerState();
+                if (isSheerExposureState(_sst.state)) _sheer = _sst;
+            }
+            if (_exposure === 'clothed' && !_sheer) return;
 
             // Daily cooldown per district
             var _today = gameState.time.day || 0;
             if (!gameState.flags._exhibEvidenceDays) gameState.flags._exhibEvidenceDays = {};
             if (gameState.flags._exhibEvidenceDays[_config.district] === _today) return;
 
-            // Probability gate
-            if (Math.random() >= _config.chance) return;
+            // Probability gate (Mesh Step 12A: a more see-through weave films better; lingerie is flat)
+            var _chance = _config.chance;
+            var _sheerLingerie = _sheer && _sheer.state.indexOf('sheer_lingerie') === 0;
+            if (_sheer && !_sheerLingerie) _chance *= _sheer.weaveMult;
+            if (Math.random() >= _chance) return;
 
             // Mark cooldown
             gameState.flags._exhibEvidenceDays[_config.district] = _today;
@@ -37650,6 +37692,23 @@ audioSystem.playSFX('buttonClick');
 
             // Create ledger entry
             var _isCamera = _config.source === 'camera';
+
+            // Mesh Step 12A: sheer severity. Braless or commando minor, bare and lingerie
+            // moderate. A night camera's IR or flash sees straight through: one level worse.
+            var _exposureState = _exposure;
+            var _sheerLook = '';
+            var _desc = '';
+            if (_sheer) {
+                _exposureState = _sheer.state;
+                _severity = (_sheer.state === 'sheer_braless' || _sheer.state === 'sheer_commando') ? 'minor' : 'moderate';
+                if (_isCamera && isNight()) _severity = _severity === 'minor' ? 'moderate' : 'major';
+                var _sg = _sheer.chestGarment || _sheer.hipsGarment;
+                _sheerLook = _sheerLingerie ? 'lingerie'
+                    : (_sg && (_sg.category === 'dress' || _sg.category === 'dresses' || _sg === _sheer.hipsGarment && _sg === _sheer.chestGarment)) ? 'dress'
+                    : _sheer.chestGarment ? 'top' : 'skirt';
+                _desc = _isCamera ? 'Street cam footage, subject in see-through clothing. Exposure visible in frame.'
+                    : 'Civilian witness report, subject in see-through clothing. Exposure visible to the naked eye.';
+            }
             createLedgerEntry({
                 type: 'indecent_exposure',
                 district: _config.district,
@@ -37661,9 +37720,11 @@ audioSystem.playSFX('buttonClick');
                 fingerprintsLeft: false,
                 cameraType: _isCamera ? 'street_cam' : '',
                 cameraQuality: _isCamera ? 'partial' : 'none',
-                witnesses: _isCamera ? [] : [{ type: 'civilian', faceSeen: Math.random() < 0.40, description: 'Civilian witness to public indecency' }],
+                witnesses: _isCamera ? [] : [{ type: 'civilian', faceSeen: Math.random() < 0.40, description: _sheer ? 'Civilian witness to public indecency, subject in see-through clothing' : 'Civilian witness to public indecency' }],
                 exposureSeverity: _severity,
-                exposureState: _exposure
+                exposureState: _exposureState,
+                sheerLook: _sheerLook,
+                description: _desc
             });
 
             // Minimal suspicion bump (not the main consequence; ledger entry is)
@@ -100391,7 +100452,9 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     // ── Step 12B: Cruz references indecent exposure reports in her case folder ──
                     if (gameState.flags.cruzNotesExhibition) {
                         desc += 'She flips past a few pages. You catch a glimpse of something that makes your stomach tighten. Indecent exposure incident reports. Camera stills. Your silhouette on a grainy street-cam printout, unmistakable even at low resolution.\n\n';
-                        desc += 'Cruz sees you looking. She doesn\'t linger on the page. Just files it under the rest and keeps going.\n\n';
+                        // Mesh Step 12B: a mostly-sheer file gets her comment instead
+                        var _cruzSheer = getCruzSheerExposureLine('folder');
+                        desc += _cruzSheer || 'Cruz sees you looking. She doesn\'t linger on the page. Just files it under the rest and keeps going.\n\n';
                     }
 
                     desc += '"Same 9mm pistol at every scene. Ballistics confirmed. One shooter." She flips a page. "But that\'s old news. Here\'s what keeps me up at night."\n\n';
@@ -133726,6 +133789,7 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     if (gameState.flags.cruzNotesExhibition) {
                         desc += 'She pauses. Pulls a phone from her jacket, scrolls, then shows you the screen. You catch a glimpse of a blurred image before she pulls it back. Street camera footage. A silhouette you recognize.\n\n';
                         desc += '"Public indecency reports," she says. Conversational. "Three or four of them now. Same general description. Same districts." She puts the phone away. "Doesn\'t fit the profile I\'m building. Which is what makes it interesting."\n\n';
+                        desc += getCruzSheerExposureLine('casual'); // Mesh Step 12B
                         desc += 'She lets the silence do the work. You keep your face flat.\n\n';
                     }
 
