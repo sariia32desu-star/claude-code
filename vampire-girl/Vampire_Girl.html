@@ -34601,6 +34601,37 @@ audioSystem.playSFX('buttonClick');
         // when Kelsie is visibly exposed. Guaranteed on transition, 15-minute cooldown.
         // 4 exposure states × 3 corruption voices × 4 lines = 48 total.
         var EXHIBITION_AMBIENT_LINES = {
+            // Mesh & Sheer Overhaul, Step 7C: sheer lingerie. She's technically dressed.
+            // {bra} and {panties} resolve to the worn items.
+            sheer_lingerie: {
+                innocent: [
+                    'You\'re wearing underwear. You keep telling yourself that. Your nipples show through it and so does your pussy, and a woman at the crosswalk turns her whole body away from you.',
+                    'You can see the dark of your nipples through your {bra} every time you look down. You stop looking down. Your bare slit shows through your {panties} anyway, and your pussy clenches like it knows.',
+                    'Someone laughs behind you. You tell yourself it isn\'t about you. It\'s about you. Your face burns, your nipples ache behind the mesh, and you\'re wet, and none of it will stop.'
+                ],
+                experienced: [
+                    'You\'re wearing underwear. Everyone can see what\'s under it. Your nipples stiffen behind your {bra} and your pussy\'s wet enough that your {panties} cling to your folds.',
+                    'A woman stares at your crotch and then at your face like she\'s trying to decide if you know. You know. Your slit shows through your {panties} and your clit throbs under her stare.',
+                    'Every step you tell yourself it counts as clothes. Your nipples, dark behind the cups, say it doesn\'t. So does the wet spreading through the crotch of your {panties}.'
+                ],
+                corrupted: [
+                    'Mesh bra, mesh panties, and nothing hidden under either. Your nipples push the grid and your slit\'s right there behind the panties. Technically you\'re dressed. Your dripping pussy says otherwise.',
+                    'A guy on a bike slows to a crawl beside you. You let him. Your nipples show dark through your {bra}, your bare slit through your {panties}, and you walk like you\'re in a dress. Your clit throbs every time he wobbles.',
+                    'You stop at the crosswalk and stand with your weight on one hip. The whole corner gets your tits through the cups and your pussy through the crotch. Your thighs are slick. The light changes and you take your time.'
+                ]
+            },
+            // Sheer bra with nothing over it; hips covered or in opaque panties.
+            sheer_lingerie_top: {
+                innocent: ['You\'re walking around in a see-through bra. Your nipples are right there, stiff and dark. You fold your arms, and your pussy clenches anyway.'],
+                experienced: ['Your {bra} is the only thing on your chest, and it hides nothing. Your nipples show dark through the cups. People look, and your pussy clenches every time.'],
+                corrupted: ['Nothing over your {bra}. Your nipples push dark and stiff against the cups for the whole street. You keep your shoulders back and your clit throbs every block.']
+            },
+            // Sheer panties with nothing over them; chest covered or in an opaque bra.
+            sheer_lingerie_bottom: {
+                innocent: ['Your bare slit shows through your {panties} and you can\'t do anything about it. You hold your hands in front of you. You\'re wet, and that\'s the worst part.'],
+                experienced: ['Your {panties} are all that\'s covering your pussy, and they barely do. Your slit shows through the crotch. Your clit throbs under every stare.'],
+                corrupted: ['Nothing over your {panties}. Your bare slit shows through the crotch, slick and swollen, and you walk slow so everyone gets it.']
+            },
             underwear_only: {
                 innocent: [
                     'Your bra and panties are all that\'s between you and every pair of eyes on this street. Your nipples press stiff against the thin fabric and the shape of your pussy shows through the {pantiesFabric}.',
@@ -34952,10 +34983,14 @@ audioSystem.playSFX('buttonClick');
 
             // Check visible exposure (outerwear concealment applies)
             var _exposure = (typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel();
-            if (_exposure === 'clothed') return;
+            // Mesh Overhaul Step 7C: sheer lingerie states get their own pools (the top/bottom
+            // variants can read 'clothed' by slot, so check them first)
+            var _sheerLingState = (typeof getSheerState === 'function') ? getSheerState().state : 'none';
+            var _isSheerLing = _sheerLingState.indexOf('sheer_lingerie') === 0;
+            if (_exposure === 'clothed' && !_isSheerLing) return;
 
             // Map exposure to pool key
-            var _poolKey = _exposure;
+            var _poolKey = _isSheerLing ? _sheerLingState : _exposure;
             if (_poolKey === 'underwear_only') _poolKey = 'underwear_only';
             var _pool = EXHIBITION_AMBIENT_LINES[_poolKey];
             if (!_pool) return;
@@ -34976,6 +35011,9 @@ audioSystem.playSFX('buttonClick');
 
             // Pick a random line (Mesh Overhaul Step 3C: resolve fabric placeholders)
             var _line = resolveFabricTokens(_lines[Math.floor(Math.random() * _lines.length)], 'panties');
+            var _ambO = gameState.currentOutfit || {};
+            _line = _line.replace(/\{bra\}/g, _ambO.bra ? proseItemName(_ambO.bra) : 'bra')
+                .replace(/\{panties\}/g, _ambO.panties ? proseItemName(_ambO.panties) : 'panties');
 
             // Display with exhibition thrill tier color
             var _thrillColor = getExhibitionThrillTier().color || '#cc88aa';
@@ -35035,9 +35073,11 @@ audioSystem.playSFX('buttonClick');
             if (o.bra) return;
             if (!(o.top || o.dress)) return;
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless()) return;
+            // Mesh Overhaul Step 7A: the sheer handler owns any zone that's bare behind mesh
+            if (_sheerOwnsZone('chest')) return;
 
             // Yield to both-at-once handler when commando too (Step 1C)
-            if (!o.panties && !!(o.bottom || o.dress)) return;
+            if (!o.panties && !!(o.bottom || o.dress) && !_sheerOwnsZone('hips')) return;
 
             // Outerwear concealment: full-cover coats suppress
             var _conceal = (typeof getOuterwearConcealment === 'function') ? getOuterwearConcealment() : '';
@@ -35045,6 +35085,7 @@ audioSystem.playSFX('buttonClick');
 
             // 30-minute in-game cooldown
             var _now = (gameState.time.day || 0) * 1440 + (gameState.time.hour || 0) * 60 + (gameState.time.minute || 0);
+            if (_now === (gameState.flags._lastSheerExposureAmbientTime || 0)) return;
             var _last = gameState.flags._lastBralessAmbientTime || 0;
             if (_now - _last < 30) return;
 
@@ -35066,12 +35107,6 @@ audioSystem.playSFX('buttonClick');
                 _lines.push(BRALESS_COLD_AMBIENT_LINES[_tierKey].replace(/\{top\}/g, _tn));
             }
 
-            // Beauty Obsessed overhaul (Step 2E): bare behind a sheer piece
-            var _sheerB = (typeof getVisibleSheerPieces === 'function') ? getVisibleSheerPieces() : {};
-            if (_sheerB.chest && SHEER_BRALESS_AMBIENT_LINES[_tierKey]) {
-                _lines.push(SHEER_BRALESS_AMBIENT_LINES[_tierKey].replace(/\{top\}/g, _sheerB.chest.name.toLowerCase()));
-            }
-
             // Pick random line and inject garment name
             var _line = resolveFabricTokens(_lines[Math.floor(Math.random() * _lines.length)].replace(/\{top\}/g, _tn), 'top');
 
@@ -35086,40 +35121,233 @@ audioSystem.playSFX('buttonClick');
             );
         }
 
-        // ── Sheer supplements (Beauty Obsessed overhaul, Step 2E) ──
-        // Mixed into the braless / commando / both pools when the bare skin sits
-        // behind a sheer piece. {top} and {bottom} resolve to the sheer garment.
-        var SHEER_BRALESS_AMBIENT_LINES = {
-            high: 'Your {top}\'s sheer and you\'re bare under it. Your stiff nipples are on display for the whole street, and every look that lands on them goes straight to your clit.',
-            midHigh: 'Your nipples press through the {top}, bare and dark behind the sheer fabric. You don\'t cover them. The ache between your legs grows with every block.',
-            mid: 'Your bare tits show through your {top} like there\'s nothing on at all. You can feel the moment each stranger notices. Your nipples harden every time.',
-            low: 'There\'s nothing under your {top}, and it\'s sheer. Your bare nipples show through it, dark and stiff, and anyone who looks can see them. Your arms cross over your chest on their own.'
+        // ══════════════════════════════════════════════════════════════
+        // ── Mesh & Sheer Overhaul, Step 7A: sheer exposure ambient interiority ──
+        // Bare skin behind mesh. Fires on street transitions before the both/braless/commando
+        // handlers, which yield for any zone the mesh owns. 30-minute cooldown, guaranteed
+        // when eligible. Concealment is handled by getSheerState().
+        // Placeholders: {top} chest garment, {bottom} hips garment, {outfit} the whole look,
+        // {noun} mesh / fishnet / sheer fabric.
+        // Folds in the BO Step 2E SHEER_BRALESS / SHEER_COMMANDO supplements (one per tier).
+        // ══════════════════════════════════════════════════════════════
+        var SHEER_BRALESS_EXPOSURE_LINES = {
+            high: [
+                'Your bare tits are right there under your {top}, nipples dark and stiff behind the {noun}. Everyone you pass gets the full shape of them. Your clit throbs every time someone\'s eyes drop and stay.',
+                'Your {top}\'s see-through and you\'re bare under it. Your stiff nipples are on display for the whole street, and every look that lands on them goes straight to your clit.',
+                'A man across the street stops mid-sentence into his phone. You roll your shoulders back so the {noun} pulls tight over your nipples. Let him finish his call staring at your tits. Your pussy\'s dripping.'
+            ],
+            midHigh: [
+                'Your nipples press through the {top}, bare and dark behind the {noun}. You don\'t cover them. The ache between your legs grows with every block.',
+                'You stopped folding your arms two blocks ago. Your tits show through your {top}, nipples stiff and dark, and the looks keep landing. Each one sends a pulse straight down to your clit.',
+                'A woman at the crosswalk looks at your chest, then at your face, then back at your chest. Your nipples tighten behind the {noun} while she watches. You hold her eyes until the light changes. Your pussy\'s slick.'
+            ],
+            mid: [
+                'Your bare tits show through your {top} like there\'s nothing on at all. You can feel the moment each stranger notices. Your nipples harden every time.',
+                'You can see your own nipples when you glance down, dark and stiff through the {noun}. So can the guy holding the door for you. He says "after you" to your tits. Your clit throbs and your face burns.',
+                'Your arms keep drifting up to cover your chest and you keep making them drop. Every time they drop, someone looks. Your nipples scrape the {noun} and your pussy clenches.'
+            ],
+            low: [
+                'There\'s nothing under your {top}, and the {noun} hides nothing. Your nipples are stiff and dark behind it and the whole street can see them. You fold your arms over your chest. Your pussy clenches anyway.',
+                'Two girls at a bus stop go quiet when you pass. One of them says "oh my god" under her breath. Your nipples are stiff and dark behind your {top}, and the heat in your face runs straight down to your pussy.',
+                'You hunch forward to make the {noun} hang away from your chest. It swings right back. Your nipples brush it, stiff and aching, and everyone on this block has seen them twice now. Your clit throbs and you hate it.'
+            ]
         };
-        var SHEER_COMMANDO_AMBIENT_LINES = {
-            high: 'Anyone who looks can see your bare pussy through your {bottom}. You want them to. You\'re dripping, and the fabric clings to your wet folds.',
-            midHigh: 'Your {bottom}\'s sheer and there\'s nothing under it. Your bare cunt is a shadow behind the fabric for anyone who looks low enough. Plenty of people do, and your clit throbs for every one.',
-            mid: 'Your bare pussy shows through your {bottom} in the right light. You know exactly which light. You\'re slick, and you keep walking through it.',
-            low: 'There\'s nothing under your {bottom}, and it\'s sheer. The shadow of your bare pussy shows through when the light hits right. You press your thighs together and walk faster, and you\'re already wet.'
+
+        var SHEER_COMMANDO_EXPOSURE_LINES = {
+            high: [
+                'Anyone who looks can see your bare pussy through your {bottom}. You want them to. You\'re dripping, and the {noun} clings to your wet folds.',
+                'You walk slow and let your hips roll. Your bare cunt\'s a dark slit behind the {noun} with every step, folds swollen and shining. A man on a bench forgets his sandwich. Your clit throbs for him.',
+                'You stop at a shop window like you\'re checking the display. You\'re checking your reflection: the dark line of your slit through your {bottom}, the wet shine on it. Everyone behind you is checking too.'
+            ],
+            midHigh: [
+                'Your {bottom}\'s see-through and there\'s nothing under it. Your bare cunt is a shadow behind the {noun} for anyone who looks low enough. Plenty of people do, and your clit throbs for every one.',
+                'You catch a guy\'s eyes dropping to your crotch and staying. You leave your thighs apart. Your bare slit shows through the {noun} and your pussy clenches, slick, while he looks.',
+                'Every stride pulls the {noun} flat against your bare pussy for a second, then lets it go. Slit, folds, the swell of your clit, all of it printed and gone and printed again. You\'re soaked.'
+            ],
+            mid: [
+                'Your bare pussy shows through your {bottom} with every step, slit and folds and the wet shine on them. You press your thighs together. It only gives them a better outline.',
+                'In the right light, your bare pussy shows straight through your {bottom}. You know exactly which light. You\'re slick, and you keep walking through it.',
+                'You sit on a bench to catch your breath and realize what sitting does. The {noun} stretches tight across your lap and your bare slit shows right through it. You stand up fast. Your clit\'s throbbing.'
+            ],
+            low: [
+                'There\'s nothing under your {bottom}, and it\'s see-through. The shadow of your bare pussy shows through when the light hits right. You press your thighs together and walk faster, and you\'re already wet.',
+                'A woman walking toward you looks down and her face does something complicated. You look down too. The dark line of your slit, right there through the {noun}. Your pussy clenches and your eyes sting.',
+                'You hold your bag in front of your crotch and walk like that for two blocks. Your arm aches. Your clit aches worse, swollen against nothing, and you can feel how wet you\'re getting.'
+            ]
         };
+
+        var SHEER_BARE_EXPOSURE_LINES = {
+            high: [
+                'You\'re naked in your {outfit}. Nipples stiff behind the {noun}, your bare cunt a dark slit below them. Every stare lands somewhere specific, and every one of them makes you wetter.',
+                'You walk the whole block with your arms loose at your sides. Tits, nipples, the bare slit of your pussy, all of it through the {noun} for anyone who wants it. Your thighs are slick to the knee and you keep the same slow pace.'
+            ],
+            midHigh: [
+                'Your {outfit} is technically clothing. Your nipples and your bare slit disagree, dark and plain behind the {noun}. You let the argument happen in public. Your pussy clenches through every block of it.',
+                'Someone behind you says "is she wearing anything" loud enough for you to hear. You don\'t turn around. Your clit throbs so hard you almost miss the curb.'
+            ],
+            mid: [
+                'Every time you glance down you see all of yourself. Nipples, belly, the bare line of your pussy, laid out behind the {noun}. Strangers get the same view. Your cunt clenches on it.',
+                'You can\'t cover everything. One arm over your tits leaves your bare slit on show. A hand over that leaves your nipples. You drop both and walk faster, dripping.'
+            ],
+            low: [
+                'You can see everything. Your nipples, dark and stiff. Your bare pussy through your {outfit}. Everyone else can see it too, and the heat in your face won\'t stop pooling between your legs.',
+                'A man looks up from his phone and doesn\'t look back down. You know what he\'s seeing: tits, nipples, slit, all of it behind a layer that barely counts. Your pussy clenches and your eyes sting.'
+            ]
+        };
+
+        // Weave supplements: one per zone, mixed into every draw when the weave applies.
+        var SHEER_WEAVE_SUPPLEMENTS = {
+            fishnet: {
+                chest: 'Your left nipple\'s pushed through one of the diamonds in your fishnet. Bare and stiff, right out in the open air.',
+                hips: 'The fishnet diamonds sit over your bare pussy like a grid somebody forgot to fill in. Every hole shows a slice of slit, and your clit\'s swollen in one of them.'
+            },
+            semi: {
+                chest: 'The haze of your {top} softens your tits into a shadow. Your nipples stay sharp: two dark points pressing through, and people keep squinting to be sure.',
+                hips: 'The semi-sheer haze turns your bare pussy into a shadow between your thighs. The wet patch where the {noun} clings to your folds is sharper than the rest of it.'
+            }
+        };
+        var SHEER_STACKED_SUPPLEMENTS = {
+            chest: 'Two layers of {noun} and it makes no difference. Your nipples show through both, darker where the grids overlap.',
+            hips: 'Mesh panties under your {bottom}, and your slit shows through both layers, darker where they overlap. Your clit throbs against the double grid.'
+        };
+        var SHEER_COLD_SUPPLEMENT = 'The cold air hits and your nipples go rigid behind the {noun}. There\'s nothing between them and the chill but a layer anyone can see through. Stiff, dark, and on display for every person walking toward you.';
+
+        // Zone ownership: once a zone is bare behind mesh, these handlers speak for it and
+        // the braless/commando/both handlers stand down for that zone.
+        function _sheerOwnsZone(zone) {
+            if (typeof getSheerState !== 'function') return false;
+            var st = getSheerState();
+            return zone === 'chest' ? st.chest === 'veiled' : st.hips === 'veiled';
+        }
+
+        function _resolveSheerTokens(line, st) {
+            var top = st.chestGarment ? proseItemName(st.chestGarment) : 'top';
+            var bottom = st.hipsGarment ? proseItemName(st.hipsGarment) : 'skirt';
+            var outfit = (st.chestGarment && st.chestGarment === st.hipsGarment) ? top
+                : (st.chestGarment && st.hipsGarment) ? top + ' and ' + bottom : (st.chestGarment ? top : bottom);
+            return line.replace(/\{top\}/g, top).replace(/\{bottom\}/g, bottom)
+                .replace(/\{outfit\}/g, outfit).replace(/\{noun\}/g, getSheerNoun(st));
+        }
+
+        function checkSheerExposureAmbientLine(sceneId) {
+            if (_arousalAmbientStreets.indexOf(sceneId) === -1) return;
+            if (gameState.isNaked || isEffectivelyNaked()) return;
+            var st = getSheerState();
+            var pool = st.state === 'sheer_bare' ? SHEER_BARE_EXPOSURE_LINES
+                : st.state === 'sheer_braless' ? SHEER_BRALESS_EXPOSURE_LINES
+                : st.state === 'sheer_commando' ? SHEER_COMMANDO_EXPOSURE_LINES : null;
+            if (!pool) return;
+
+            // 30-minute in-game cooldown
+            var _now = (gameState.time.day || 0) * 1440 + (gameState.time.hour || 0) * 60 + (gameState.time.minute || 0);
+            var _last = gameState.flags._lastSheerExposureAmbientTime || 0;
+            if (_now - _last < 30) return;
+            gameState.flags._lastSheerExposureAmbientTime = _now;
+
+            var _c = gameState.corruption || 0;
+            var _tierKey = _c >= 6001 ? 'high' : _c >= 4001 ? 'midHigh' : _c >= 2001 ? 'mid' : 'low';
+            var _lines = (pool[_tierKey] || []).slice();
+            if (_lines.length === 0) return;
+
+            var chestBare = st.chest === 'veiled', hipsBare = st.hips === 'veiled';
+            // Weave line (fishnet, semi) for each bare zone showing that weave
+            var _wz = st.zoneWeave || {};
+            if (chestBare && SHEER_WEAVE_SUPPLEMENTS[_wz.chest]) _lines.push(SHEER_WEAVE_SUPPLEMENTS[_wz.chest].chest);
+            if (hipsBare && SHEER_WEAVE_SUPPLEMENTS[_wz.hips]) _lines.push(SHEER_WEAVE_SUPPLEMENTS[_wz.hips].hips);
+            // Stacked: sheer underwear under sheer outerwear
+            if (chestBare && st.chestStacked && st.chestUnder) _lines.push(SHEER_STACKED_SUPPLEMENTS.chest);
+            else if (hipsBare && st.hipsStacked && st.hipsUnder) _lines.push(SHEER_STACKED_SUPPLEMENTS.hips);
+            // Cold weather: nipples rigid and fully visible
+            var _temp = gameState.weather && gameState.weather.temperature;
+            if (chestBare && (_temp === 'cold' || _temp === 'cool')) _lines.push(SHEER_COLD_SUPPLEMENT);
+            // Garment signature line, 1 in 3
+            if (Math.random() < 1 / 3 && typeof getSheerSignatureLine === 'function') {
+                var _voice = _c >= 6001 ? 'high' : _c >= 2001 ? 'mid' : 'low';
+                var _g = [];
+                if (chestBare && st.chestGarment) _g.push(st.chestGarment.id);
+                if (hipsBare && st.hipsGarment && _g.indexOf(st.hipsGarment.id) === -1) _g.push(st.hipsGarment.id);
+                var _sig = _g.length ? getSheerSignatureLine(_g[Math.floor(Math.random() * _g.length)], _voice) : '';
+                if (_sig) _lines.push(_sig);
+            }
+
+            var _line = _resolveSheerTokens(_lines[Math.floor(Math.random() * _lines.length)], st);
+            showMessage(
+                '<div style="text-align: center; padding: 8px;">' +
+                '<div style="color: #cbbde0; font-style: italic; line-height: 1.7; font-size: 0.95em;">' +
+                _line.split('\n\n').map(function(p) { return '<p style="margin-bottom: 1em;">' + p + '</p>'; }).join('') +
+                '</div></div>',
+                null,
+                { skipHistory: true }
+            );
+        }
+
+        // ── Mesh & Sheer Overhaul, Step 7D: mesh friction variants ──
+        // Used by the braless/commando/both friction handlers when the garment rubbing the
+        // bare zone is mesh. The grid is rougher than cotton and leaves crosshatch marks.
+        // high = 4001+, low = below.
+        var MESH_FRICTION_LINES = {
+            braless: {
+                high: [
+                    'The mesh grid scrapes your bare nipples with every step, rougher than any cotton. By the next block they\'re swollen and aching, and the ache runs straight down to your clit.',
+                    'Your nipples have been dragging across the mesh for an hour. There\'s a faint crosshatch pressed into them now, red and swollen. You roll your shoulders to make the grid bite again.'
+                ],
+                low: [
+                    'The mesh scratches your bare nipples every time you breathe. They\'re swollen and sore and stiffer than they\'ve ever been, and anyone can see exactly how stiff. Your pussy clenches with every scrape.',
+                    'You pull the mesh away from your chest to give your nipples a break. It snaps back. The grid scrapes them raw and your clit throbs in time with the sting.'
+                ]
+            },
+            commando: {
+                high: [
+                    'The mesh drags across your bare folds with every stride, a rough little grid working your clit. You\'re so wet it\'s started to cling. You keep walking and let it work.',
+                    'You sit down on purpose. The mesh presses a grid into your bare pussy, every square of it on your swollen clit. You rock your hips once. Then again.'
+                ],
+                low: [
+                    'The mesh presses a grid into your bare folds when you sit. You can feel every little square of it on your clit. You stand up fast and you\'re wetter than when you sat down.',
+                    'Every step the mesh scrapes your bare slit, rough and constant. Your clit\'s swollen and aching and you can\'t make it stop. You\'re soaking the grid, and anyone looking can see it.'
+                ]
+            },
+            both: {
+                high: ['The mesh works you everywhere at once. The grid scrapes your nipples raw up top and drags across your swollen clit below. You\'re dripping, and you\'ve stopped pretending to walk normally.'],
+                low: ['The mesh scratches your bare nipples and your bare pussy with every step. There\'s nowhere on you it isn\'t rubbing. Your clit throbs, your nipples sting, and you\'re soaked.']
+            }
+        };
+
+        // Mesh friction applies when the outer garment on that zone is mesh and the zone is bare under it.
+        function _meshFrictionZone(zone) {
+            if (typeof getSheerState !== 'function') return false;
+            var st = getSheerState();
+            if (zone === 'chest') return st.chest === 'veiled' && !st.chestUnder && getFabricNoun(st.chestGarment) === 'mesh';
+            return st.hips === 'veiled' && !st.hipsUnder && getFabricNoun(st.hipsGarment) === 'mesh';
+        }
+
+        function _meshFrictionLine(kind) {
+            var tier = (gameState.corruption || 0) >= 4001 ? 'high' : 'low';
+            var pool = MESH_FRICTION_LINES[kind][tier];
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
 
         // ── Sheer Ambient Interiority (Beauty Obsessed overhaul, Step 2E) ──
         // Fires on street transitions when her underwear shows through a sheer piece.
         // {sheer} is the sheer garment, {under} the bra or panties behind it.
-        // 45-minute cooldown. Four corruption tiers, 2 variants each.
+        // 45-minute cooldown. Four corruption tiers, 3 variants each (Mesh Overhaul Step 7B added one per tier).
         var SHEER_AMBIENT_LINES = {
             high: [
                 'Your {sheer} hides nothing, and your {under} is the only thing it\'s framing. You roll your hips into the next step and let the whole street look. Your cunt aches with it.',
+                'You adjust your {sheer} so your {under} sits just right behind it, and catch a man watching you do it. You smile at him. Your clit throbs.',
                 'A woman stares at your {under} through your {sheer} and doesn\'t look away. Neither do you. The heat between your thighs climbs until your nipples ache.'
             ],
             midHigh: [
                 'Your {under} shows through your {sheer} and you walk like you meant it, because you did. Every stare lands warm between your legs.',
+                'Your {under} behind your {sheer} gets you three second looks in one block. You count them. Each one lands warm between your thighs, and your pussy\'s slick by the corner.',
                 'You planned this: the {sheer}, the {under} underneath, how it all reads from across the street. People are reading it. Your pussy\'s slick and your stride stays slow.'
             ],
             mid: [
                 'You catch your reflection in a shop window. Your {under} sits framed under your {sheer}, every line of it on display. It\'s a good look, and the looks it gets make your nipples tighten.',
+                'A girl your age stops you to ask where you got your {sheer}. Her eyes keep sliding to your {under} behind it while you answer. Your nipples tighten and you lose track of the store name.',
                 'Someone behind you goes quiet as you pass. Your {under} is right there under the {sheer}, and you can feel exactly where their eyes are. Your clit throbs once.'
             ],
             low: [
+                'You keep checking your reflection to make sure your {under} doesn\'t show as much as you think. It shows exactly as much as you think. Your face burns and your pussy clenches every time someone looks.',
                 'Your {under} shows straight through your {sheer}. You knew it would. It looked incredible in the mirror, and out here every pair of eyes that drops to it makes your face burn and your pussy clench.',
                 'A man at the crosswalk reads your {under} through your {sheer} like it\'s a sign. You fold your arms. It doesn\'t help, and the heat pooling between your thighs doesn\'t care.'
             ]
@@ -35132,15 +35360,18 @@ audioSystem.playSFX('buttonClick');
             var o = gameState.currentOutfit;
             if (gameState.isNaked || isEffectivelyNaked()) return;
 
-            // Underwear behind a sheer piece (bare skin behind it belongs to the braless/commando pools)
-            var _sheer = getVisibleSheerPieces();
+            // Underwear behind a sheer piece (bare skin behind it belongs to the Step 7A pools).
+            // Mesh Overhaul Step 7B: reads the framed zones from getSheerState(), so sheer
+            // underwear under sheer outerwear (veiled, not framed) no longer lands here.
+            var _fst = getSheerState();
             var _under = null, _garment = null;
-            if (_sheer.chest && o.bra) { _under = o.bra; _garment = _sheer.chest; }
-            else if (_sheer.hips && o.panties) { _under = o.panties; _garment = _sheer.hips; }
-            if (!_under) return;
+            if (_fst.framedChest && _fst.chestUnder) { _under = _fst.chestUnder; _garment = _fst.chestGarment; }
+            else if (_fst.framedHips && _fst.hipsUnder) { _under = _fst.hipsUnder; _garment = _fst.hipsGarment; }
+            if (!_under || !_garment) return;
 
-            // Don't stack with the braless/commando/both lines on the same transition
+            // Don't stack with the sheer exposure / braless / commando / both lines on the same transition
             var _now = (gameState.time.day || 0) * 1440 + (gameState.time.hour || 0) * 60 + (gameState.time.minute || 0);
+            if (_now === (gameState.flags._lastSheerExposureAmbientTime || 0)) return;
             if (_now === (gameState.flags._lastBralessAmbientTime || 0)) return;
             if (_now === (gameState.flags._lastCommandoAmbientTime || 0)) return;
             if (_now === (gameState.flags._lastBothAmbientTime || 0)) return;
@@ -35205,9 +35436,11 @@ audioSystem.playSFX('buttonClick');
             if (o.panties) return;
             if (!(o.bottom || o.dress)) return;
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyBottomless()) return;
+            // Mesh Overhaul Step 7A: the sheer handler owns any zone that's bare behind mesh
+            if (_sheerOwnsZone('hips')) return;
 
             // Yield to both-at-once handler when braless too (Step 1C)
-            if (!o.bra && !!(o.top || o.dress)) return;
+            if (!o.bra && !!(o.top || o.dress) && !_sheerOwnsZone('chest')) return;
 
             // Outerwear concealment: full-cover coats suppress
             var _conceal = (typeof getOuterwearConcealment === 'function') ? getOuterwearConcealment() : '';
@@ -35215,6 +35448,7 @@ audioSystem.playSFX('buttonClick');
 
             // 30-minute in-game cooldown
             var _now = (gameState.time.day || 0) * 1440 + (gameState.time.hour || 0) * 60 + (gameState.time.minute || 0);
+            if (_now === (gameState.flags._lastSheerExposureAmbientTime || 0)) return;
             var _last = gameState.flags._lastCommandoAmbientTime || 0;
             if (_now - _last < 30) return;
 
@@ -35226,12 +35460,6 @@ audioSystem.playSFX('buttonClick');
             var _tierKey = _c >= 6001 ? 'high' : _c >= 4001 ? 'midHigh' : _c >= 2001 ? 'mid' : 'low';
             var _lines = COMMANDO_AMBIENT_LINES[_tierKey] ? COMMANDO_AMBIENT_LINES[_tierKey].slice() : null;
             if (!_lines || _lines.length === 0) return;
-
-            // Beauty Obsessed overhaul (Step 2E): bare behind a sheer piece
-            var _sheerC = (typeof getVisibleSheerPieces === 'function') ? getVisibleSheerPieces() : {};
-            if (_sheerC.hips && SHEER_COMMANDO_AMBIENT_LINES[_tierKey]) {
-                _lines.push(SHEER_COMMANDO_AMBIENT_LINES[_tierKey].replace(/\{bottom\}/g, _sheerC.hips.name.toLowerCase()));
-            }
 
             // Pick random line
             var _line = _lines[Math.floor(Math.random() * _lines.length)];
@@ -35281,6 +35509,8 @@ audioSystem.playSFX('buttonClick');
             if (!(o.top || o.dress)) return;
             if (!(o.bottom || o.dress)) return;
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless()) return;
+            // Mesh Overhaul Step 7A: the sheer handler owns any zone that's bare behind mesh
+            if (_sheerOwnsZone('chest') || _sheerOwnsZone('hips')) return;
 
             // Outerwear concealment: full-cover coats suppress
             var _conceal = (typeof getOuterwearConcealment === 'function') ? getOuterwearConcealment() : '';
@@ -35288,6 +35518,7 @@ audioSystem.playSFX('buttonClick');
 
             // 30-minute in-game cooldown
             var _now = (gameState.time.day || 0) * 1440 + (gameState.time.hour || 0) * 60 + (gameState.time.minute || 0);
+            if (_now === (gameState.flags._lastSheerExposureAmbientTime || 0)) return;
             var _last = gameState.flags._lastBothAmbientTime || 0;
             if (_now - _last < 30) return;
 
@@ -35304,15 +35535,6 @@ audioSystem.playSFX('buttonClick');
 
             // Resolve garment name for {top} placeholders
             var _tn = o.top ? o.top.name.toLowerCase() : o.dress ? o.dress.name.toLowerCase() : 'top';
-
-            // Beauty Obsessed overhaul (Step 2E): bare behind a sheer piece
-            var _sheerBoth = (typeof getVisibleSheerPieces === 'function') ? getVisibleSheerPieces() : {};
-            if (_sheerBoth.chest && SHEER_BRALESS_AMBIENT_LINES[_tierKey]) {
-                _lines.push(SHEER_BRALESS_AMBIENT_LINES[_tierKey].replace(/\{top\}/g, _sheerBoth.chest.name.toLowerCase()));
-            }
-            if (_sheerBoth.hips && SHEER_COMMANDO_AMBIENT_LINES[_tierKey]) {
-                _lines.push(SHEER_COMMANDO_AMBIENT_LINES[_tierKey].replace(/\{bottom\}/g, _sheerBoth.hips.name.toLowerCase()));
-            }
 
             // Pick random line and inject garment name
             var _line = resolveFabricTokens(_lines[Math.floor(Math.random() * _lines.length)].replace(/\{top\}/g, _tn), 'top');
@@ -35355,6 +35577,7 @@ audioSystem.playSFX('buttonClick');
             if (_now === (gameState.flags._lastBothAmbientTime || 0)) return;
 
             // 40-minute cooldown
+            if (_now === (gameState.flags._lastSheerExposureAmbientTime || 0)) return;
             var _last = gameState.flags._lastCommandoFrictionTime || 0;
             if (_now - _last < 40) return;
 
@@ -35385,6 +35608,9 @@ audioSystem.playSFX('buttonClick');
                     ? 'The fabric sticks to your bare folds. You\'re wet. You can feel the damp spot forming against the inside of your ' + _bn + ' and you can\'t make it stop.'
                     : 'The seam catches your bare clit and you flinch. The friction is constant and your body won\'t stop responding no matter how hard you try to ignore it.';
             }
+
+            // Mesh Overhaul Step 7D: mesh grid on a bare pussy
+            if (_meshFrictionZone('hips')) _line = _meshFrictionLine('commando');
 
             // Display as subtle italic micro-notification
             showMessage(
@@ -35423,6 +35649,7 @@ audioSystem.playSFX('buttonClick');
             if (_now === (gameState.flags._lastBothAmbientTime || 0)) return;
 
             // 40-minute cooldown
+            if (_now === (gameState.flags._lastSheerExposureAmbientTime || 0)) return;
             var _last = gameState.flags._lastBralessFrictionTime || 0;
             if (_now - _last < 40) return;
 
@@ -35451,6 +35678,9 @@ audioSystem.playSFX('buttonClick');
                     ? 'Your nipples are so stiff they ache. The fabric catches on them with every step. You hunch forward to ease the pressure and it doesn\'t help.'
                     : 'The fabric scrapes across your bare nipples and you flinch. They\'re so stiff the outline shows through your ' + _tn + ' and the friction won\'t let them soften.';
             }
+
+            // Mesh Overhaul Step 7D: mesh grid on bare nipples
+            if (_meshFrictionZone('chest')) _line = _meshFrictionLine('braless');
 
             // Display as subtle italic micro-notification
             showMessage(
@@ -35489,6 +35719,7 @@ audioSystem.playSFX('buttonClick');
             if (_now === (gameState.flags._lastCommandoAmbientTime || 0)) return;
 
             // 40-minute cooldown
+            if (_now === (gameState.flags._lastSheerExposureAmbientTime || 0)) return;
             var _last = gameState.flags._lastBothFrictionTime || 0;
             if (_now - _last < 40) return;
 
@@ -35513,6 +35744,12 @@ audioSystem.playSFX('buttonClick');
             } else {
                 _line = 'Your nipples ache against the fabric and your bare clit throbs against the seam of your ' + _bn + '. The friction is everywhere. You\'re wet and you can\'t make any of it stop.';
             }
+
+            // Mesh Overhaul Step 7D: mesh grid on either or both bare zones
+            var _mfC = _meshFrictionZone('chest'), _mfH = _meshFrictionZone('hips');
+            if (_mfC && _mfH) _line = _meshFrictionLine('both');
+            else if (_mfC) _line = _meshFrictionLine('braless');
+            else if (_mfH) _line = _meshFrictionLine('commando');
 
             // Display as subtle italic micro-notification (blended pink-lavender)
             showMessage(
@@ -199768,6 +200005,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 // ── Wet Clothing Erotic Overhaul, Step 8B: Wet Female Stranger ──
                 if (typeof checkWetFemaleApproach === 'function') {
                     checkWetFemaleApproach(sceneId);
+                }
+
+                // ── Mesh & Sheer Overhaul, Step 7A: bare skin behind mesh (runs before both/braless/commando) ──
+                if (typeof checkSheerExposureAmbientLine === 'function') {
+                    checkSheerExposureAmbientLine(sceneId);
                 }
 
                 // ── Braless & Commando Overhaul, Step 1C: Both-at-once ambient interiority ──
