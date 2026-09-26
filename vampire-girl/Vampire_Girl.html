@@ -38024,29 +38024,381 @@ audioSystem.playSFX('buttonClick');
             }
         }
         
-        /**
-         * Check if bra is visible (wearing bra but no top/dress)
-         */
-        // ── Sheer pieces (Beauty Obsessed overhaul, Step 2E) ──
-        // Returns the sheer garments currently on show. chest: a sheer dress or top the
-        // bra (or bare chest) shows through. hips: a sheer dress or bottom the panties
-        // (or bare pussy) show through. A full-cover coat hides both.
-        // Sheer pieces are clothes she chose to wear. They never count as visible
-        // underwear, so the 6001 corruption lock ignores them (isBraVisible and
-        // arePantiesVisible only look at empty slots).
-        function getVisibleSheerPieces() {
+        // ══════════════════════════════════════════════════════════════
+        // ── Mesh & Sheer Overhaul, Step 2A: MESH_GARMENTS registry ──
+        // Source of truth for see-through garments. Keyed by item ID, so saved
+        // items never need re-stamping and store items never need a flag copied.
+        // zones: which zones the garment shows through. weave: sheer | semi | fishnet.
+        // shape flags feed garment-specific prose hooks.
+        // ══════════════════════════════════════════════════════════════
+        var MESH_GARMENTS = {
+            bo_off_shoulder_mesh_mini_dress: { zones: ['chest','hips'], weave: 'sheer',   tint: 'black',     noun: 'mesh',         shape: { offShoulder: true, cutouts: true, mini: true } },
+            bo_mesh_mini_skirt:              { zones: ['hips'],         weave: 'sheer',   tint: 'black',     noun: 'mesh',         shape: { ruched: true, solidWaistband: true, mini: true } },
+            bo_rainbow_halter_mini_dress:    { zones: ['chest','hips'], weave: 'fishnet', tint: 'rainbow',   noun: 'fishnet',      shape: { halter: true, openBack: true, mini: true } },
+            bo_leopard_halter_mini_dress:    { zones: ['chest','hips'], weave: 'sheer',   tint: 'leopard',   noun: 'sheer fabric', shape: { halter: true, mini: true } },
+            jaewon_mesh_top:                 { zones: ['chest'],        weave: 'sheer',   tint: null,        noun: 'mesh',         shape: { jaewons: true } },
+            mesh_club_dress:                 { zones: ['chest','hips'], weave: 'semi',    tint: null,        noun: 'mesh',         shape: { mini: true } },
+            mesh_crop:                       { zones: ['chest'],        weave: 'sheer',   tint: null,        noun: 'mesh',         shape: { crop: true } },
+            mesh_tease_bra:                  { zones: ['chest'],        weave: 'sheer',   tint: null,        noun: 'mesh',         shape: {} },
+            mesh_tease_panties:              { zones: ['hips'],         weave: 'sheer',   tint: null,        noun: 'mesh',         shape: {} },
+            mesh_party_dress:                { zones: ['chest','hips'], weave: 'sheer',   tint: 'black',     noun: 'mesh',         shape: { oRing: true, underbustCutout: true, slitTies: true, mini: true } },
+            one_shoulder_club_dress:         { zones: ['chest','hips'], weave: 'sheer',   tint: 'chocolate', noun: 'mesh',         shape: { oneShoulder: true, bellSleeves: true, drawstring: true, mini: true } }
+        };
+        var MESH_WEAVE_MULT = { semi: 0.7, sheer: 1.0, fishnet: 1.1 };
+        // Higher = more transparent. Used when two sheer layers disagree.
+        var MESH_WEAVE_RANK = { semi: 1, sheer: 2, fishnet: 3 };
+
+        // Guarded: getSceneClothingVars() can run before this var is assigned during load.
+        function getMeshProfile(item) { return (item && MESH_GARMENTS && MESH_GARMENTS[item.id]) || null; }
+
+        // True when the item is see-through over the given zone.
+        function isMeshOverZone(item, zone) {
+            var p = getMeshProfile(item);
+            return !!(p && p.zones.indexOf(zone) !== -1);
+        }
+
+        // ── Step 2B: getSheerState() ──
+        // What can strangers see right now? Zones are evaluated separately, then combined.
+        // Zone status: opaque | framed | veiled | lingerie | underwear | bare
+        // Combined state (priority order): sheer_lingerie, sheer_lingerie_top,
+        // sheer_lingerie_bottom, sheer_bare, sheer_commando, sheer_braless, sheer_framed, none.
+        // Slot-based states (naked, topless, bottomless) own the body whenever they apply,
+        // so sheer states only exist when getExposureLevel() is clothed or underwear_only.
+        function _sheerZone(outers, under, zone) {
+            var z = { status: 'bare', garment: null, under: null, stacked: false, weave: null, profile: null };
+            if (outers.length > 0) {
+                for (var i = 0; i < outers.length; i++) {
+                    if (!isMeshOverZone(outers[i], zone)) { z.status = 'opaque'; return z; }
+                }
+                // Every outer layer is see-through. The outermost one names the look.
+                z.garment = outers[0];
+                z.under = under || null;
+                var layers = outers.slice();
+                var underSheer = !!(under && isMeshOverZone(under, zone));
+                if (underSheer) layers.push(under);
+                z.status = (under && !underSheer) ? 'framed' : 'veiled';
+                z.stacked = layers.length > 1;
+                // Stacked layers read at the most transparent weave.
+                for (var j = 0; j < layers.length; j++) {
+                    var p = getMeshProfile(layers[j]);
+                    if (!z.weave || MESH_WEAVE_RANK[p.weave] > MESH_WEAVE_RANK[z.weave]) z.weave = p.weave;
+                }
+                z.profile = getMeshProfile(z.garment);
+                return z;
+            }
+            if (under) {
+                if (isMeshOverZone(under, zone)) {
+                    z.status = 'lingerie';
+                    z.garment = under;
+                    z.weave = getMeshProfile(under).weave;
+                    z.profile = getMeshProfile(under);
+                } else {
+                    z.status = 'underwear';
+                }
+                return z;
+            }
+            return z;
+        }
+
+        function getSheerState() {
             var o = gameState.currentOutfit || {};
-            var res = { chest: null, hips: null };
-            var _conceal = (typeof getOuterwearConcealment === 'function') ? getOuterwearConcealment() : '';
-            if (_conceal === 'full') return res;
-            if (o.dress && o.dress.sheer) { res.chest = o.dress; res.hips = o.dress; }
-            if (o.top && o.top.sheer) res.chest = o.top;
-            if (o.bottom && o.bottom.sheer) res.hips = o.bottom;
-            // Mesh Overhaul Step 1E: a partial cover (hoodie, open jacket) hides the chest.
-            if (_conceal === 'partial') res.chest = null;
+            var res = {
+                state: 'none', chest: 'opaque', hips: 'opaque',
+                chestGarment: null, hipsGarment: null, chestUnder: null, hipsUnder: null,
+                stacked: false, chestStacked: false, hipsStacked: false,
+                framedChest: false, framedHips: false,
+                weave: null, hipsWeave: null, weaveMult: 1.0, tint: null,
+                zoneWeave: { chest: null, hips: null }
+            };
+            var _level = (typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed';
+            if (_level !== 'clothed' && _level !== 'underwear_only') return res;
+
+            // Outer layers per zone, outermost first. A top-slot item with category
+            // 'dress' covers the hips too (matches arePantiesVisible()).
+            var chestOuters = [];
+            if (o.top) chestOuters.push(o.top);
+            if (o.dress) chestOuters.push(o.dress);
+            var hipsOuters = [];
+            if (o.bottom) hipsOuters.push(o.bottom);
+            if (o.dress) hipsOuters.push(o.dress);
+            if (!o.bottom && !o.dress && o.top && o.top.category === 'dress') hipsOuters.push(o.top);
+
+            var chest = _sheerZone(chestOuters, o.bra, 'chest');
+            var hips = _sheerZone(hipsOuters, o.panties, 'hips');
+
+            // Outerwear concealment: full hides both zones, partial hides the chest.
+            var _conceal = (typeof getOuterwearConcealment === 'function') ? getOuterwearConcealment() : 'none';
+            if (_conceal === 'full' || _conceal === 'partial') chest = { status: 'opaque', garment: null, under: null, stacked: false, weave: null, profile: null };
+            if (_conceal === 'full') hips = { status: 'opaque', garment: null, under: null, stacked: false, weave: null, profile: null };
+
+            res.chest = chest.status;
+            res.hips = hips.status;
+            res.chestGarment = chest.garment;
+            res.hipsGarment = hips.garment;
+            res.chestUnder = chest.under;
+            res.hipsUnder = hips.under;
+            res.chestStacked = chest.stacked;
+            res.hipsStacked = hips.stacked;
+            res.stacked = chest.stacked || hips.stacked;
+            res.framedChest = chest.status === 'framed';
+            res.framedHips = hips.status === 'framed';
+            res.zoneWeave = { chest: chest.weave, hips: hips.weave };
+
+            var c = chest.status, h = hips.status;
+            if (c === 'lingerie' && h === 'lingerie') res.state = 'sheer_lingerie';
+            else if (c === 'lingerie') res.state = 'sheer_lingerie_top';
+            else if (h === 'lingerie') res.state = 'sheer_lingerie_bottom';
+            else if (c === 'veiled' && h === 'veiled') res.state = 'sheer_bare';
+            else if (h === 'veiled') res.state = 'sheer_commando';
+            else if (c === 'veiled') res.state = 'sheer_braless';
+            else if (c === 'framed' || h === 'framed') res.state = 'sheer_framed';
+
+            // weave/tint come from the chest garment; hipsWeave carries the hips when it differs.
+            if (chest.weave) {
+                res.weave = chest.weave;
+                res.tint = chest.profile ? chest.profile.tint : null;
+                if (hips.weave && (hips.garment !== chest.garment || hips.weave !== chest.weave)) res.hipsWeave = hips.weave;
+            } else if (hips.weave) {
+                res.weave = hips.weave;
+                res.tint = hips.profile ? hips.profile.tint : null;
+            }
+            if (res.weave) {
+                var _m = MESH_WEAVE_MULT[res.weave];
+                if (res.hipsWeave && MESH_WEAVE_MULT[res.hipsWeave] > _m) _m = MESH_WEAVE_MULT[res.hipsWeave];
+                res.weaveMult = _m;
+            }
             return res;
         }
 
+        // True for any state where strangers can see bare skin through mesh.
+        function isSheerExposureState(state) {
+            return state === 'sheer_braless' || state === 'sheer_commando' || state === 'sheer_bare' ||
+                state === 'sheer_lingerie' || state === 'sheer_lingerie_top' || state === 'sheer_lingerie_bottom';
+        }
+
+        // The noun for the most visible sheer garment: 'mesh', 'fishnet', or 'sheer fabric'.
+        function getSheerNoun(st) {
+            st = st || getSheerState();
+            var rank = { lingerie: 3, veiled: 3, framed: 1 };
+            var cR = rank[st.chest] || 0, hR = rank[st.hips] || 0;
+            var g = cR >= hR ? st.chestGarment : st.hipsGarment;
+            if (!g) g = st.chestGarment || st.hipsGarment;
+            var p = getMeshProfile(g);
+            return p ? p.noun : 'mesh';
+        }
+
+        // ── Step 2E: prose helpers ──
+        // getSheerZoneLine(zone, context): lowercase fragment, no terminal punctuation,
+        // naming what shows through the mesh on that zone. Body-branched like
+        // exhibitionCrowdFixation(). context: 'moving' adds motion to the chest line.
+        // Returns '' when the zone has no sheer involvement.
+        function getSheerZoneLine(zone, context) {
+            var st = getSheerState();
+            var ba = gameState.bodyAppearance || {};
+            var status = zone === 'hips' ? st.hips : st.chest;
+            var garment = zone === 'hips' ? st.hipsGarment : st.chestGarment;
+            var under = zone === 'hips' ? st.hipsUnder : st.chestUnder;
+            var stacked = zone === 'hips' ? st.hipsStacked : st.chestStacked;
+            var p = getMeshProfile(garment);
+            if (!p) return '';
+            var weave = st.zoneWeave[zone] || p.weave;
+            var grid = p.noun === 'sheer fabric' ? 'the fabric' : 'the grid';
+
+            if (status === 'framed') {
+                var uName = under ? under.name.toLowerCase() : (zone === 'hips' ? 'panties' : 'bra');
+                return 'your ' + uName + ' framed behind the ' + p.noun + ', every line of it on show';
+            }
+            if (status !== 'veiled' && status !== 'lingerie') return '';
+
+            var behind = status === 'lingerie' ? 'behind your ' + garment.name.toLowerCase()
+                : stacked ? 'behind two layers of ' + p.noun
+                : 'behind the ' + p.noun;
+            var wet = (gameState.arousal || 0) >= 60;
+
+            if (zone === 'chest') {
+                if (weave === 'fishnet') {
+                    if (ba.breastSize === 'large') return 'your heavy tits pressing into the fishnet, bare skin in every diamond and your nipples stiff and dark through the holes';
+                    if (ba.breastSize === 'small') return 'your small tits in the fishnet diamonds, nipples stiff and poking right through the holes';
+                    return 'your bare tits in the diamonds of the fishnet, nipples stiff and dark through the holes';
+                }
+                if (weave === 'semi') {
+                    if (ba.breastSize === 'large') return 'your heavy tits a soft shadow ' + behind + ', nipples two dark points pressing through the haze';
+                    if (ba.breastSize === 'small') return 'the small shape of your tits ' + behind + ', nipples sharp dark points through the haze';
+                    return 'your tits a soft shadow ' + behind + ', nipples dark and stiff through the haze';
+                }
+                if (ba.breastSize === 'large') {
+                    return context === 'moving'
+                        ? 'your heavy tits swaying ' + behind + ', nipples dark and stiff and pressing ' + grid
+                        : 'your heavy tits ' + behind + ', nipples dark and stiff and pressing ' + grid;
+                }
+                if (ba.breastSize === 'small') return 'your small tits ' + behind + ', nipples sharp and dark against ' + grid;
+                if (ba.bodyType === 'athletic') return 'your bare tits and the lean cut of your stomach ' + behind + ', nipples stiff and dark against ' + grid;
+                return context === 'moving'
+                    ? 'your bare tits shifting ' + behind + ' with every step, nipples stiff and dark against ' + grid
+                    : 'your bare tits ' + behind + ', nipples stiff and dark against ' + grid;
+            }
+
+            // hips
+            var slick = wet ? ', the slick on your folds shining through' : '';
+            if (weave === 'fishnet') return 'your bare pussy in the diamonds of the fishnet, a slice of slit in every hole' + slick;
+            if (weave === 'semi') return 'the dark shadow of your slit ' + behind + ', blurred by the haze and still easy to read' + slick;
+            if (ba.buttSize === 'large') return 'the bare slit of your pussy ' + behind + ', and your full ass on show through it from behind' + slick;
+            if (ba.buttSize === 'small') return 'the bare slit of your pussy ' + behind + ', your tight little ass just as visible from behind' + slick;
+            return 'the bare slit of your pussy ' + behind + ', your folds pressed to ' + grid + slick;
+        }
+
+        // getSheerSignatureLine(garmentId, voice): one garment-specific line.
+        // voice: 'low' | 'mid' | 'high' (defaults from corruption: <2001 low, <6001 mid, else high).
+        // Picks a zone the garment is actually showing bare skin on right now.
+        // Returns '' when the garment isn't worn or isn't see-through over bare skin.
+        var MESH_SIGNATURE_LINES = {
+            bo_off_shoulder_mesh_mini_dress: {
+                chest: {
+                    low: 'Your off-shoulder dress keeps sliding lower on your arms. You tug it up and the black mesh just drags across your bare nipples, stiff and dark and on show for anyone looking.',
+                    mid: 'The black mesh slips off your shoulders into its short sleeves and hangs across your tits like smoke. Your nipples push dark and stiff against it. You leave the neckline where it is.',
+                    high: 'You let the off-shoulder neckline ride low. Black mesh over bare tits, nipples stiff and dark behind it, a geometric cutout framing the skin between. Your clit throbs every time someone reads the pattern.'
+                },
+                hips: {
+                    low: 'The geometric cutouts on your dress line up wrong when you walk. Bare hip through one, the dark slit of your pussy behind the mesh under it. You pull the hem down. It\'s already as low as it goes.',
+                    mid: 'The black mesh hugs your hips, and every step shows the bare slit of your pussy behind it. Your pussy clenches and you can feel how wet you are.',
+                    high: 'The mini hem barely clears your ass. Under the black mesh your bare pussy\'s a clean dark slit, and you walk slow so everyone behind you gets to read it.'
+                }
+            },
+            bo_rainbow_halter_mini_dress: {
+                chest: {
+                    low: 'The rainbow fishnet holds nothing back. Bare skin sits in every diamond, and one of your stiff nipples sits right in a hole with nothing over it at all. You cup a hand over it and your pussy throbs.',
+                    mid: 'The halter ties at your neck and the rainbow fishnet hangs off it over bare tits. Your nipples keep catching in the diamonds, stiff and pink and out in the air.',
+                    high: 'Rainbow diamonds over bare tits, pink trim, and your nipples pushing right through the holes. You arch your back a little. The whole street gets color.'
+                },
+                hips: {
+                    low: 'The open back leaves you bare to the waist behind, and the fishnet below it shows bare pussy in every diamond. You feel the air in the holes. Your clit throbs every time it moves.',
+                    mid: 'Every diamond in the rainbow fishnet puts a slice of bare skin on display. Lower down, it\'s slices of your slit. You\'re dripping and the holes show that too.',
+                    high: 'The fishnet stretches over your hips and the diamonds widen. Bare folds in the holes, your clit swollen in one of them. You leave it there.'
+                }
+            },
+            bo_leopard_halter_mini_dress: {
+                chest: {
+                    low: 'The leopard print should hide something. It doesn\'t. Your nipples show dark between the spots, stiff enough that the print bends around them.',
+                    mid: 'Your nipples sit dark between the leopard spots, and the sheer halter hides nothing but the pattern. You feel every eye try to work out which spots are print.',
+                    high: 'Leopard spots over bare tits, your nipples stiff and dark between them. It reads like camouflage for half a second. Then someone gets there, and your clit pulses.'
+                },
+                hips: {
+                    low: 'The leopard print blurs your hips, but not enough. Your bare slit shows as a dark line between the spots. You press your thighs together and your pussy squeezes wet.',
+                    mid: 'Sheer leopard print, bare pussy under it. Your slit shows through between the spots, and the fabric\'s gone dark and clingy where you\'re wet.',
+                    high: 'The spots do nothing for your pussy. Bare slit, swollen folds, all of it right there behind the print, and you love watching people figure it out.'
+                }
+            },
+            jaewon_mesh_top: {
+                chest: {
+                    low: 'Jaewon\'s mesh top smells like her. It hides about as much as she\'d guess, which is nothing. Your nipples are stiff and dark behind it and your pussy aches at the thought of her seeing you in it.',
+                    mid: 'Her top still smells like Jaewon\'s perfume. Your bare nipples scrape against the mesh she wore, and your clit throbs every time you catch the scent.',
+                    high: 'You\'re wearing Jaewon\'s mesh top with nothing under it, nipples dark and stiff through the grid, her perfume on your skin. Every stranger who looks sees what she\'d see.'
+                }
+            },
+            mesh_club_dress: {
+                chest: {
+                    low: 'The club dress is only semi-sheer, and you keep telling yourself that counts. The haze softens everything but your nipples, which show dark and stiff right through it.',
+                    mid: 'The semi-sheer mesh turns your bare tits into a soft shadow and your nipples into two dark points pressing through. It\'s worse than clear. It makes people look twice.',
+                    high: 'Semi-sheer means they have to look harder. They do. Your nipples stiffen under the haze every time someone squints at your tits.'
+                },
+                hips: {
+                    low: 'The haze over your hips hides less than you hoped. There\'s a dark shadow where your bare pussy is, and it gets darker as you get wetter.',
+                    mid: 'The semi-sheer mini blurs the shape of your pussy into a shadow. The wet patch on the mesh stays sharp. Your clit throbs every time you feel it cling.',
+                    high: 'Under the haze of your club dress, your bare slit\'s a soft dark line. You like that people have to lean in to be sure.'
+                }
+            },
+            mesh_crop: {
+                chest: {
+                    low: 'Your mesh crop top leaves your stomach bare and does nothing for your tits. Nipples stiff and dark behind the mesh. You fold your arms and the hem rides up over your underboob.',
+                    mid: 'Bare stomach, see-through chest. The mesh crop ends right under your tits, and every time you lift an arm, the underside of them slips out below the hem.',
+                    high: 'Your crop top\'s a mesh window over bare tits, nipples stiff and dark behind it, your stomach bare under that. You stretch on purpose and let the hem climb.'
+                }
+            },
+            mesh_tease_bra: {
+                chest: {
+                    low: 'The mesh bra has cups and straps and a clasp, and your nipples still show. They\'re stiff and dark behind the grid and you can\'t stop checking.',
+                    mid: 'Your mesh bra lifts your tits and shows off everything it lifts. Nipples dark and stiff against the grid. Your pussy clenches every time you look down.',
+                    high: 'The mesh bra holds your tits up for display. Your nipples press the grid, stiff and dark, and you can\'t stop smiling about it.'
+                }
+            },
+            mesh_tease_panties: {
+                hips: {
+                    low: 'Your mesh panties sit right where they should and hide nothing. Your bare slit shows through the grid, and the mesh sticks to your folds where you\'re wet.',
+                    mid: 'The mesh panties print a grid over your pussy. Slit, folds, the swollen nub of your clit, all of it right there in the squares.',
+                    high: 'Your mesh panties are soaked through at the crotch and clinging to your folds. Everyone who looks gets the whole shape of your pussy, and you\'re dripping for them.'
+                }
+            },
+            bo_mesh_mini_skirt: {
+                hips: {
+                    low: 'The waistband of your mesh skirt is solid. Everything below it\'s see-through. Your bare pussy shows through the black mesh and you keep your hands folded in front of it.',
+                    mid: 'The ruched sides pull the black mesh tight over your hips, and the tighter it gets, the clearer your bare slit shows. Your clit throbs every step.',
+                    high: 'Solid waistband, sheer everything else. Your bare pussy sits right under the black mesh, and you tug the ruching higher so it pulls tighter.'
+                }
+            },
+            mesh_party_dress: {
+                chest: {
+                    low: 'The O-ring sits between your tits, and the mesh cups on either side of it hide nothing. Your nipples show dark and stiff through both. You keep touching the chain at your neck like it helps.',
+                    mid: 'The underbust cutout leaves a strip of bare skin under your tits, and the sheer cups above it show everything else. Your nipples press the mesh, stiff and dark.',
+                    high: 'The O-ring hangs between tits anyone can see straight through the cups, nipples dark and stiff on either side of the chain. Your pussy throbs every time the ring catches the light.'
+                },
+                hips: {
+                    low: 'The ribbon ties at your hem keep loosening. You check them every block. Under the mesh your bare slit shows anyway, ties or no ties.',
+                    mid: 'Black mesh over your hips, ribbon ties at the slits, and your bare pussy showing through between them. You feel one tie give a little and your clit throbs.',
+                    high: 'You leave one of the ribbon ties loose. The slit opens on your bare hip with every step, and behind the mesh your pussy\'s wet and on display.'
+                }
+            },
+            one_shoulder_club_dress: {
+                chest: {
+                    low: 'One thin string holds up the bare side of your chocolate mesh dress. Behind the mesh your nipples are stiff and dark, and the bronze haze hides none of it.',
+                    mid: 'On the bare-shoulder side there\'s a single string and chocolate mesh over your tit. Your nipple shows through, stiff and darker than the mesh.',
+                    high: 'That one string is all that holds up the bare side. The chocolate mesh lays a bronze haze over your tits and your nipples stay stiff and dark through it. Your bell sleeves swing when you walk, and every stare drops to your chest.'
+                },
+                hips: {
+                    low: 'The drawstring ruches the skirt up one hip and you can\'t get it back down. Bare thigh on that side, bare pussy behind the chocolate mesh on the other.',
+                    mid: 'You tug the drawstring and the hem climbs your hip. Through the chocolate mesh your bare slit shows, and the haze does nothing but tint it bronze.',
+                    high: 'You pull the drawstring tighter and let the hem ride up. Bronze haze over your bare pussy, your slit wet and dark behind it.'
+                }
+            }
+        };
+
+        function getSheerSignatureLine(garmentId, voice) {
+            var lines = MESH_SIGNATURE_LINES[garmentId];
+            if (!lines) return '';
+            if (!voice) {
+                var _c = gameState.corruption || 0;
+                voice = _c >= 6001 ? 'high' : _c >= 2001 ? 'mid' : 'low';
+            }
+            var st = getSheerState();
+            var zones = [];
+            var _see = function(s) { return s === 'veiled' || s === 'lingerie'; };
+            var _wornOn = function(g, u) { return (g && g.id === garmentId) || (u && u.id === garmentId); };
+            if (lines.chest && _see(st.chest) && _wornOn(st.chestGarment, st.chestUnder)) zones.push('chest');
+            if (lines.hips && _see(st.hips) && _wornOn(st.hipsGarment, st.hipsUnder)) zones.push('hips');
+            if (zones.length === 0) return '';
+            var z = zones[Math.floor(Math.random() * zones.length)];
+            return lines[z][voice] || '';
+        }
+
+        // ── Sheer pieces (Beauty Obsessed overhaul, Step 2E) ──
+        // Returns the sheer outer garments currently on show. chest: a sheer dress or top
+        // the bra (or bare chest) shows through. hips: a sheer dress or bottom the panties
+        // (or bare pussy) show through.
+        // Mesh Overhaul Step 2C: now a wrapper over getSheerState(), which reads the
+        // MESH_GARMENTS registry. Return shape is unchanged so every BO consumer keeps
+        // working. item.sheer is still maintained on BO items but nothing reads it.
+        // Sheer lingerie with nothing over it isn't a "sheer piece" here; that's
+        // visible underwear and belongs to the lingerie states.
+        function getVisibleSheerPieces() {
+            var st = getSheerState();
+            var res = { chest: null, hips: null };
+            if (st.chest === 'framed' || st.chest === 'veiled') res.chest = st.chestGarment;
+            if (st.hips === 'framed' || st.hips === 'veiled') res.hips = st.hipsGarment;
+            return res;
+        }
+
+        /**
+         * Check if bra is visible (wearing bra but no top/dress)
+         */
         function isBraVisible() {
             const outfit = gameState.currentOutfit;
             return outfit.bra && !outfit.top && !outfit.dress;
@@ -38111,6 +38463,7 @@ audioSystem.playSFX('buttonClick');
 
         function getSceneClothingVars() {
             var outfit = gameState.currentOutfit;
+            var _st = getSheerState();
             var _isDress = !!outfit.dress;
             var _hasTop = !!outfit.top;
             var _hasBottom = !!outfit.bottom;
@@ -38139,7 +38492,18 @@ audioSystem.playSFX('buttonClick');
                 hasBra: !!outfit.bra,
                 hasPanties: !!outfit.panties,
                 liftable: _isDress || _isSkirt,
-                pulldown: _isPants
+                pulldown: _isPants,
+                // Mesh Overhaul Step 2D: sheer awareness.
+                // braless/commando keep their meaning (a mesh bra is still a bra).
+                // Anything asking "can strangers see her nipples" reads seeThroughChest.
+                sheerState: _st.state,
+                topSheer: !!getMeshProfile(outfit.top || outfit.dress),
+                bottomSheer: !!getMeshProfile(outfit.bottom || outfit.dress),
+                braSheer: !!getMeshProfile(outfit.bra),
+                pantiesSheer: !!getMeshProfile(outfit.panties),
+                seeThroughChest: _st.chest === 'veiled' || _st.chest === 'lingerie',
+                seeThroughHips: _st.hips === 'veiled' || _st.hips === 'lingerie',
+                meshNoun: getSheerNoun(_st)
             };
         }
         
