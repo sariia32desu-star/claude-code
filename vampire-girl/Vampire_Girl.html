@@ -101560,7 +101560,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     desc += 'They\'re everywhere. Plainclothes officers pouring out of doorways, behind stacked crates, from the loading dock. Eight, ten, a dozen. Handguns drawn. Flashlights blinding. Radio chatter crackling in the dark.\n\n';
                     desc += 'And behind them, stepping out of a parked sedan with her badge catching the light:\n\n';
                     desc += 'Cruz.\n\n';
-                    desc += 'She staked out a Vajaros operation she predicted you\'d hit. And she was right.';
+                    desc += '"Evening," she says, at a normal speaking volume, and somehow it carries over all of them.\n\n';
+                    desc += 'She predicted which Vajaros operation you\'d hit, and she was right.';
 
                     if (karma >= 1000) {
                         desc += '\n\n<em>Your heart hammers. Cops. A dozen of them. Cruz planned this. She studied the pattern, picked the target, and waited. And you walked right into it like every other corner girl who thinks she\'s smarter than the detective.</em>';
@@ -101608,7 +101609,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var desc = 'You don\'t think. You move.\n\n';
                     desc += 'One second you\'re standing in the corridor with twelve flashlights pinning you to the wall. The next second you\'re through the service door, across the alley, over a chain-link fence, and three blocks south.\n\n';
                     desc += 'The whole thing takes less than two seconds.\n\n';
-                    desc += 'Behind you, silence. Then shouting. Then Cruz\'s voice, sharp and cracked: "What the FUCK was that."\n\n';
+                    desc += 'Behind you, silence. Then shouting. Then Cruz\'s voice, perfectly level, cutting through all of it: "Nobody fires. Get me every bodycam in this building."\n\n';
                     desc += 'You crouch behind a dumpster, breathing hard. Your mask is still on. Your heart\'s hammering. The thirst surges from the burst of speed, clawing at the edges of your vision.\n\n';
                     desc += 'Twelve cops just watched you move at a speed that shouldn\'t exist. Every flashlight was on you. Every bodycam was rolling.\n\n';
                     desc += 'Cruz saw it. All of it.';
@@ -101616,9 +101617,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (karma >= 1000) {
                         desc += '\n\n<em>You press your back against the dumpster and close your eyes. She saw you move. Twelve officers saw you move. Bodycam footage of a person breaking every law of physics.\n\nYou\'ve just made this so much worse.</em>';
                     } else if (karma <= -1000) {
-                        desc += '\n\n<em>Let them chew on that footage. Let Cruz watch it on loop and try to explain it to her captain. She wanted the Femme Phantom. She got a ghost.\n\nGood luck putting handcuffs on something that moves like that.</em>';
+                        desc += '\n\n<em>Let them chew on that footage. Let Cruz watch it on loop and try to explain it to the chief. She wanted the Femme Phantom. She got a ghost.\n\nGood luck putting handcuffs on something that moves like that.</em>';
                     } else {
-                        desc += '\n\n<em>The bodycam footage is going to show a person-shaped blur. That\'s it. A woman standing still, and then nothing where she used to be.\n\nCruz is smart. She\'ll know what she saw. She just won\'t believe it.</em>';
+                        desc += '\n\n<em>The bodycam footage is going to show a person-shaped blur. That\'s it. A woman standing still, and then nothing where she used to be.\n\nCruz is smart. She\'ll know exactly what she saw, and she won\'t waste a second pretending she didn\'t.</em>';
                     }
 
                     desc += '\n\n<span style="color: #ff4444;">+10 Thirst (vampire speed burst)</span>';
@@ -101670,7 +101671,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (karma >= 1000) {
                         desc += '\n\n<em>You didn\'t kill a single one of them. Gunwoo would\'ve been proud of the technique. Disappointed in the context.\n\nThe bodycam footage is going to be everywhere. A woman who fought through twelve officers without a weapon. Cruz will watch it a hundred times.</em>';
                     } else if (karma <= -1000) {
-                        desc += '\n\n<em>Twelve cops and they couldn\'t hold one woman. The footage is going to haunt their department for years. Every one of them will remember the night the Phantom walked through them like they were made of paper.\n\nCruz is going to be furious.</em>';
+                        desc += '\n\n<em>Twelve cops and they couldn\'t hold one woman. The footage is going to haunt their department for years. Every one of them will remember the night the Phantom walked through them like they were made of paper.\n\nCruz is going to study every frame of it.</em>';
                     } else {
                         desc += '\n\n<em>Your shoulder aches where the baton caught you. Your ribs throb. But everyone in that building is alive, and you\'re free.\n\nThe footage is the problem. Bodycams don\'t lie, and what those cameras recorded isn\'t something normal people can do.</em>';
                     }
@@ -101703,14 +101704,14 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += 'You\'re already moving. Silent. Vampire senses mapping the space in total dark. You can hear every heartbeat in the room, feel the air currents from their movements.\n\n';
                         desc += 'You slip behind the boiler. Through a maintenance hatch. Into a crawl space that smells like rust and rat droppings.\n\n';
                         desc += 'The cops sweep the building for forty-five minutes. Flashlights cutting through the dark. Dogs brought in. They find the service door where you entered, boot prints in the dust, nothing else.\n\n';
-                        desc += 'Cruz stands in the middle of the empty corridor, hands on her hips, jaw tight.\n\n';
-                        desc += '"She was here." Her voice is low. "She was standing right here and she\'s gone."\n\n';
+                        desc += 'Cruz stands in the middle of the empty corridor with her hands in her pockets, looking at the dust on the floor like it\'s a page of notes.\n\n';
+                        desc += '"She was here," she says, to nobody in particular. She sounds like she\'s memorizing something.\n\n';
                         desc += 'You wait in the crawl space until the last patrol car pulls away. Then you slip out a basement window and vanish.';
 
                         if (karma >= 1000) {
                             desc += '\n\n<em>Forty-five minutes in a crawl space, breathing dust, listening to cops search the building you were standing in thirty seconds earlier.\n\nCruz was ten feet from you twice. She didn\'t find you. She knows you were there, but she has nothing to prove it.</em>';
                         } else if (karma <= -1000) {
-                            desc += '\n\n<em>Forty-five minutes in the dark. Their flashlights swept right past you three times. Dogs walked within six feet. Nothing.\n\nYou listened to Cruz getting angrier with every empty room. She set the perfect trap and the Phantom dissolved into thin air. That\'s going to eat at her.</em>';
+                            desc += '\n\n<em>Forty-five minutes in the dark. Their flashlights swept right past you three times. Dogs walked within six feet. Nothing.\n\nYou listened to Cruz walk every room without once raising her voice. She set the perfect trap and came up empty, and it didn\'t seem to bother her at all. That bothers you.</em>';
                         } else {
                             desc += '\n\n<em>You held your breath for forty-five minutes. Literally. Vampire lungs. The dogs couldn\'t smell you through the rust and the rats.\n\nCruz knows. She was right about the target, right about the timing. She just couldn\'t catch something that doesn\'t need to breathe.</em>';
                         }
@@ -101774,17 +101775,17 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += '<em>"TRIGRAVE PD RELEASES STAKEOUT FOOTAGE: FEMME PHANTOM SUSPECT MOVES AT IMPOSSIBLE SPEED."</em>\n\n';
                         desc += 'You watch the clip. Grainy bodycam. A figure in a corridor. Flashlights hit her. And then she\'s just... gone. The footage skips like a bad edit, except it isn\'t an edit.\n\n';
                         desc += 'The comments section is already on fire. Half the city thinks it\'s fake. Half the city is scared.\n\n';
-                        desc += 'Cruz isn\'t in the comments. She doesn\'t need to be. She watched it happen live. She knows what she saw.';
+                        desc += 'Cruz watched it happen live. She knows what she saw.';
                     } else if (gameState.flags.cruzSawCombat) {
                         desc += 'You strip the mask in an alley. Check yourself. Bruises, nothing broken. You walk home slow.\n\n';
                         desc += 'The news breaks at dawn.\n\n';
                         desc += '<em>"FEMME PHANTOM FIGHTS THROUGH POLICE CORDON: TWELVE OFFICERS UNABLE TO CONTAIN SUSPECT."</em>\n\n';
                         desc += 'The bodycam compilation is brutal viewing. A masked woman disarming officers with martial arts that the talking heads on Channel 4 call "military-grade hand-to-hand." One expert says it\'s taekwondo. Another says it\'s impossible.\n\n';
-                        desc += 'Cruz\'s captain holds a press conference. He looks embarrassed. Cruz stands behind him with her arms crossed. She doesn\'t look embarrassed. She looks like she\'s thinking.';
+                        desc += 'The chief holds a press conference and looks embarrassed. Cruz stands behind him with her arms crossed, looking like the only person on that stage who got what she came for.';
                     } else if (gameState.flags.cruzStakeoutResult === 'hidden') {
                         desc += 'You slip home through back streets. Shower. Sit on the edge of your bed in the dark.\n\n';
                         desc += 'The news is quieter this time. "TRIGRAVE PD STAKEOUT YIELDS NO ARREST." Cruz\'s trap made the papers, but without footage or a sighting, the story dies by lunch.\n\n';
-                        desc += 'Cruz knows you were there. Her gut tells her. But guts don\'t hold up in court, and the building was clean.\n\n';
+                        desc += 'Cruz knows you were there. She doesn\'t need a gut feeling for that. But certainty doesn\'t hold up in court, and the building was clean.\n\n';
                         desc += 'She\'ll try again. You know that. She\'ll be smarter next time.';
                     } else {
                         desc += 'You make it home with a racing pulse and a partial sighting on somebody\'s bodycam. Could be worse. Could\'ve been clean.\n\n';
@@ -101926,7 +101927,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     } else if (karma <= -1000) {
                         desc += '<em>SWAT-rated body armor and assault rifles and they still couldn\'t hold you. Three officers down, none dead, all of them going to remember the masked woman who moved like something out of a nightmare.\n\nCruz keeps sending bigger teams. It keeps not working.</em>';
                     } else {
-                        desc += '<em>Blood on your sleeve. Already drying. The wound is closed by the time you stop running.\n\nThat\'s what the bodycams caught. A suspect who took a bullet and didn\'t slow down. Cruz is going to watch that footage and she\'s going to see the moment the blood stopped flowing.\n\nShe\'ll know what that means. She won\'t believe it. But she\'ll know.</em>';
+                        desc += '<em>Blood on your sleeve. Already drying. The wound is closed by the time you stop running.\n\nThat\'s what the bodycams caught. A suspect who took a bullet and didn\'t slow down. Cruz is going to watch that footage and she\'s going to see the moment the blood stopped flowing.\n\nShe\'ll know exactly what that means.</em>';
                     }
 
                     desc += '\n\n<span style="color: #ff4444;">+10 Thirst</span>';
@@ -101962,9 +101963,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         if (karma >= 1000) {
                             desc += '\n\n<em>You walked through thirty SWAT officers and they never knew. The smoke and the crossfire and the chaos gave you exactly the cover you needed.\n\nCruz is going to tear that building apart looking for evidence. She\'ll find shell casings and dead men and a window left slightly ajar. She\'ll know. But she\'ll have nothing.</em>';
                         } else if (karma <= -1000) {
-                            desc += '\n\n<em>Thirty armored officers and a detective who\'s been hunting you for weeks. You walked through them like they were furniture.\n\nThe Phantom was never in the building. That\'s the story. Cruz can choke on it.</em>';
+                            desc += '\n\n<em>Thirty armored officers and a detective who\'s been hunting you since the first raid. You walked through them like they were furniture.\n\nThe Phantom was never in the building. That\'s the story. Cruz can choke on it.</em>';
                         } else {
-                            desc += '\n\n<em>Your hands are steady. Your breathing is even. You just threaded through a SWAT operation in progress and nobody saw you leave.\n\nCruz brought an army and the army found an empty room. She\'s going to spend the next week wondering how.</em>';
+                            desc += '\n\n<em>Your hands are steady. Your breathing is even. You just threaded through a SWAT operation in progress and nobody saw you leave.\n\nCruz brought an army, and the army found an empty room. She\'s going to take that building apart until she knows how.</em>';
                         }
 
                         gameState.flags.cruzSwatResult = 'ghosted';
@@ -102020,20 +102021,20 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += 'Every network. Every feed. A SWAT bodycam recording of a masked woman going through a solid wall. The clip is eleven seconds long and it breaks the internet by noon.\n\n';
                         desc += '"FEMME PHANTOM: SWAT BODYCAM CAPTURES SUSPECT BREAKING THROUGH WALL AT IMPOSSIBLE SPEED."\n\n';
                         desc += 'The talking heads can\'t agree on anything. CGI fake. Military exosuit. Drugs in the building causing hallucinations. One anchor laughs on air. Another one doesn\'t.\n\n';
-                        desc += 'Cruz holds a press conference. She stands at the podium in a blazer that doesn\'t fit right, and she says the words she has to say: "The investigation is ongoing. We\'re analyzing all available evidence."\n\n';
-                        desc += 'She doesn\'t answer questions. She walks off stage. The camera catches her face as she turns.\n\n';
-                        desc += 'She looks tired. She doesn\'t look confused anymore.';
+                        desc += 'Cruz holds a press conference. She stands at the podium in her usual blazer and gives them exactly one sentence: "The investigation is ongoing, and it\'s going well."\n\n';
+                        desc += 'She walks off stage without taking a question. The camera catches her face as she turns away.\n\n';
+                        desc += 'She looks like someone who just found the last piece of a puzzle.';
                     } else if (gameState.flags.cruzSwatResult === 'ghosted') {
                         desc += 'Morning news is anticlimactic.\n\n';
                         desc += '"SWAT RAID ON VAJAROS OPERATION: MULTIPLE ARRESTS, FEMME PHANTOM NOT APPREHENDED."\n\n';
-                        desc += 'Cruz\'s captain calls it a success. They took down a cartel operation. Arrests. Drugs seized. Weapons confiscated.\n\n';
-                        desc += 'But Cruz isn\'t at the press conference. She\'s in the evidence room, going through every frame of every bodycam, looking for the moment the Phantom disappeared.\n\n';
-                        desc += 'She won\'t find it. You didn\'t disappear. You walked out. She just wasn\'t looking at the right door.';
+                        desc += 'The chief calls it a success. They took down a cartel operation. Arrests. Drugs seized. Weapons confiscated.\n\n';
+                        desc += 'Cruz skips the press conference. She\'s in the evidence room, going through every frame of every bodycam, looking for the moment the Phantom disappeared.\n\n';
+                        desc += 'She won\'t find it. You walked out through a window she wasn\'t watching. It won\'t happen twice.';
                     } else {
                         desc += 'The footage is grainy but it\'s enough.\n\n';
                         desc += 'A silhouette. A woman dropping two flights of stairs without breaking stride. The speed, the recovery, how the body moves. Experts on the morning shows call it "enhanced" and "atypical" and every other word that means "we can\'t explain this."\n\n';
-                        desc += 'Cruz isn\'t on the morning shows. She\'s in her office. The footage is on her screen. She\'s watched it forty times.\n\n';
-                        desc += 'She\'s past confusion now. Past denial. Whatever the Femme Phantom is, Cruz has accepted that the answer isn\'t in any textbook she\'s ever read.';
+                        desc += 'Cruz skips the morning shows. She\'s in her office with the footage on her screen. She\'s watched it forty times.\n\n';
+                        desc += 'Whatever the Femme Phantom is, Cruz has already accepted that it isn\'t in any textbook. She\'s started writing her own.';
                     }
 
                     desc += '\n\n<em>Cruz brought SWAT. Thirty officers, flashbangs, tactical breach. The biggest operation Trigrave PD has mounted in a decade, aimed at one person.\n\nIt wasn\'t enough. She knows that now. The question is what she does next.</em>';
@@ -102237,26 +102238,43 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (hasHistory) {
                         // They've met before. Cruz knows Kelsie.
                         desc += '"Kelsie."\n\n';
+
                         desc += 'You know that voice. You turn.\n\n';
-                        desc += 'Detective Gabriella Cruz. Badge on her hip, coffee in one hand, folder in the other. Same sharp eyes. Same patient attention.\n\n';
+
+                        desc += 'Detective Gabriella Cruz. Badge on her hip, coffee in one hand, a folder in the other, and that same unhurried attention.\n\n';
+
                         if (wasInterrogated) {
-                            desc += 'Last time you were in a room together, you were wearing a jumpsuit and she was laying photos on a table between you. Different context now. Same woman.\n\n';
+                            desc += 'Last time you were in a room together, you were in a jumpsuit and she was laying photos out on a table. Different street, same woman.\n\n';
+
                         }
-                        desc += '"We need to talk." She falls into step beside you. Professional distance. "This isn\'t about your old file. Something new."\n\n';
+                        desc += '"Walk with me." She falls into step beside you without waiting for an answer. "It\'s something new. Nothing to do with your old file."\n\n';
+
                         desc += '"The cartel attacks," you say.\n\n';
-                        desc += '"You watch the news." She sips her coffee. "Four Vajaros operations destroyed. Professional work. Whoever\'s doing this knows this neighborhood inside and out." Her eyes slide to yours. "Sound like anyone you know?"\n\n';
+
+                        desc += '"You watch the news." She sips her coffee. "Four Vajaros operations taken apart. Professional work. Whoever\'s doing it knows this neighborhood inside and out." Her eyes slide to yours. "Sound like anyone you know?"\n\n';
+
                         desc += '"I keep to myself, Detective. You know that."\n\n';
-                        desc += '"I know a lot of things about you, Kelsie Marie Summers." She says your full name like she\'s reading it off a file she\'s memorized. "That\'s what makes this conversation interesting."';
+
+                        desc += '"I know a lot of things about you, Kelsie Marie Summers." She says your full name like she\'s reading it off a file she memorized for fun. "That\'s what makes this interesting."';
+
                     } else {
                         // First meeting. Cruz is canvassing.
                         desc += '"Kelsie Summers?"\n\n';
-                        desc += 'You turn. A woman standing ten feet away. Mid-thirties, dark hair pulled back, leather jacket over a button-up. Badge on her hip, visible but relaxed. She\'s got a coffee in one hand and a folder in the other.\n\n';
+
+                        desc += 'You turn. A woman is standing ten feet away. Late twenties, dark hair in a braid over one shoulder, leather jacket over a button-up. Badge on her hip, visible and relaxed. Coffee in one hand, a folder in the other.\n\n';
+
                         desc += 'Detective Gabriella Cruz.\n\n';
-                        desc += 'You\'ve heard the name. Every dealer in the slums has. She\'s the cop who doesn\'t take envelopes, doesn\'t look the other way, doesn\'t play the game everyone else at Trigrave PD plays. She\'s been making rounds for weeks.\n\n';
-                        desc += '"That\'s me." You keep your voice level. Your hands stay in your pockets.\n\n';
-                        desc += '"I\'m canvassing the neighborhood. The cartel attacks." She sips her coffee. Casual. "You live around here, right? Riverside Apartments?"\n\n';
+
+                        desc += 'You\'ve heard the name. Every dealer in the slums has. She\'s the cop nobody\'s managed to bribe, scare or wait out. She runs the Detective Bureau and SWAT both, and she\'s younger than most of the people who work for her.\n\n';
+
+                        desc += '"That\'s me." You keep your voice level and your hands in your pockets.\n\n';
+
+                        desc += '"I\'m canvassing the neighborhood about the cartel attacks." She sips her coffee like she has nowhere better to be. "You live around here, right? Riverside Apartments?"\n\n';
+
                         desc += '"Yeah."\n\n';
-                        desc += '"Seen anything unusual lately? Gunfire, vehicles, people who don\'t belong?" Her eyes are on you. Steady. Brown, sharp, patient. She\'s reading you.';
+
+                        desc += '"Seen anything unusual? Gunfire, vehicles, people who don\'t belong?" Her brown eyes rest on you, steady and a little amused. She\'s reading you, and she isn\'t trying to hide it.';
+
                     }
 
                     return desc;
@@ -102278,33 +102296,65 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     if (hasHistory) {
                         desc += '"I don\'t know anything about the attacks."\n\n';
-                        desc += 'Cruz watches your face while she drinks her coffee. She\'s seen you lie before. She\'s cataloguing.\n\n';
+
+                        desc += 'Cruz watches your face over her coffee. She\'s seen you lie before, and she\'s comparing notes.\n\n';
+
                     } else {
                         desc += '"I keep to myself."\n\n';
-                        desc += 'Cruz nods. Writes something in her folder. Or pretends to.\n\n';
+
+                        desc += 'Cruz nods and writes something in her folder. Or pretends to.\n\n';
+
                     }
 
-                    desc += '"Four operations hit. Professional. Surgical." She closes the folder. "Whoever\'s doing this knows the slums like they live here. And they\'re trained."\n\n';
-                    desc += 'She pauses. Studies your face. You give her nothing.\n\n';
-                    desc += '"I stopped by the Iron Lotus Dojang last week. Spoke with your instructors." She says it like a footnote. It isn\'t. "Gunwoo. Oksana. Jensen. They all had a lot to say about you."\n\n';
+                    desc += '"Four operations hit. Professional. Surgical." She closes the folder. "Whoever\'s doing this knows the slums like they live here, and they\'re trained."\n\n';
+
+                    desc += 'She studies your face. You give her nothing. She looks like she expected that.\n\n';
+
+                    desc += '"I stopped by the Iron Lotus Dojang," she says, like it\'s a footnote. It isn\'t. "Spoke with your instructors. Gunwoo. Oksana. Jensen. They had a lot to say about you."\n\n';
+
                     desc += 'Your pulse stays flat. Vampire blood is good for that.\n\n';
+
                     desc += '"Gunwoo says you\'re the most talented student he\'s trained in thirty years. Oksana says you move like you were born fighting. Jensen..." She tilts her head. "Jensen said people are drawn to you. That there\'s something about you that makes people want to follow."\n\n';
+
                     desc += 'She tucks the folder under her arm.\n\n';
-                    desc += '"I found myself wondering, Kelsie. How much do you care about them? Gunwoo, Oksana, Jensen." Her voice doesn\'t change, but the question lands with weight. "And what they\'d think if they knew certain things."\n\n';
+
+                    desc += '"So I got to wondering, Kelsie. How much do you care about them?" Her voice doesn\'t change at all, and that\'s what makes it land. "And what they\'d think if they knew certain things."\n\n';
 
                     if (hasHistory) {
-                        desc += 'She holds your gaze for three seconds. Then she turns. "I\'ll be seeing you. I always am."\n\n';
+                        desc += 'She holds your gaze for three seconds, then turns. "I\'ll be seeing you. I always am."\n\n';
+
                     } else {
-                        desc += 'She pulls a card from her jacket. Holds it out. "If you hear anything. My number\'s on there."\n\nYou take the card. She watches your hands. How steady they are.\n\n';
-                        desc += '"Nice meeting you, Kelsie." She turns. Walks away.\n\n';
+                        desc += 'She pulls a card from her jacket and holds it out. "If you hear anything. My number\'s on there."\n\n';
+
+                        desc += 'You take the card. She watches your hands, how steady they are, and seems to find that interesting too.\n\n';
+
+                        desc += '"Nice meeting you, Kelsie." She turns and walks away.\n\n';
+
                     }
 
                     if (karma >= 1000) {
-                        desc += '<em>Gunwoo. Oksana. Jensen. She talked to all three of them. She walked into the dojang and asked about you and they told her everything because why wouldn\'t they? They\'re proud of you.\n\nAnd Cruz heard all of it and filed it next to crime scene photos.\n\nThe card sits in your pocket. Detective Gabriella Cruz. Trigrave PD, Homicide.\n\nYou should be scared. You are.</em>';
+                        desc += '<em>Gunwoo. Oksana. Jensen. She walked into the dojang and asked about you, and they told her everything, because why wouldn\'t they? They\'re proud of you.</em>\n\n';
+
+                        desc += '<em>And Cruz heard all of it and filed it next to crime scene photos.</em>\n\n';
+
+                        desc += '<em>The card sits in your pocket. Detective Gabriella Cruz. Trigrave PD, Detective Bureau.</em>\n\n';
+
+                        desc += '<em>You should be scared. You are.</em>';
+
                     } else if (karma <= -1000) {
-                        desc += '<em>She talked to Gunwoo. Oksana. Jensen. She sat in the dojang and listened to three people praise a girl they think is a martial artist, not a killer.\n\nShe\'s good. She pulled the personal angle without flinching. "What would they think if they knew certain things." That was aimed.\n\nShe\'s going to be a problem. But problems can be managed.</em>';
+                        desc += '<em>She talked to Gunwoo, Oksana and Jensen. She sat in the dojang and listened to three people praise a girl they think is a martial artist, and she never let on that she was looking at a killer.</em>\n\n';
+
+                        desc += '<em>She\'s good. She pulled the personal angle without a flicker. "What they\'d think if they knew certain things." That was aimed.</em>\n\n';
+
+                        desc += '<em>She\'s going to be a problem. But problems can be managed.</em>';
+
                     } else {
-                        desc += '<em>She asked about the dojang. About the people you train with. People who care about you.\n\nCruz isn\'t just building a case. She\'s mapping your world. Your connections. The people you\'d protect.\n\nShe got what she came for. She just doesn\'t know what to do with it yet.</em>';
+                        desc += '<em>She asked about the dojang, and about the people you train with. People who care about you.</em>\n\n';
+
+                        desc += '<em>Cruz is mapping your world, every connection, every person you\'d protect.</em>\n\n';
+
+                        desc += '<em>She got what she came for. Now she\'s deciding what to do with it.</em>';
+
                     }
 
                     return desc;
@@ -102320,24 +102370,36 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 text: function() {
-                    var desc = 'You spot her before she spots you. Cruz. Leaning against a wall across the street from The Hole, arms folded, no coffee this time. She\'s waiting.\n\n';
+                    var desc = '';
+
+                    desc += 'You spot her before she spots you. Cruz, leaning against a wall across the street from The Hole, arms folded, no coffee this time. She\'s waiting.\n\n';
+
                     desc += 'For you.\n\n';
-                    desc += 'She pushes off the wall when you approach. "Kelsie. Got a minute?"\n\n';
+
+                    desc += 'She pushes off the wall as you approach. "Kelsie. Got a minute?"\n\n';
+
                     desc += '"Do I have a choice?"\n\n';
-                    desc += '"Always." She falls into step beside you. Professional distance. "I wanted to follow up. Things have developed."\n\n';
-                    desc += 'She pulls a folder from inside her jacket. Thicker than last time. She opens it as you walk.\n\n';
+
+                    desc += '"Always." She falls into step beside you. "You just won\'t like the other ones. I wanted to follow up. Things have developed."\n\n';
+
+                    desc += 'She pulls a folder from inside her jacket, thicker than last time, and opens it as you walk.\n\n';
 
                     // ── Step 12B: Cruz references indecent exposure reports in her case folder ──
                     if (gameState.flags.cruzNotesExhibition) {
-                        desc += 'She flips past a few pages. You catch a glimpse of something that makes your stomach tighten. Indecent exposure incident reports. Camera stills. Your silhouette on a grainy street-cam printout, unmistakable even at low resolution.\n\n';
+                        desc += 'She flips past a few pages, and you catch a glimpse of something that makes your stomach tighten. Indecent exposure reports. Camera stills. Your silhouette on a grainy street-cam printout, unmistakable even at low resolution.\n\n';
+
                         // Mesh Step 12B: a mostly-sheer file gets her comment instead
                         var _cruzSheer = getCruzSheerExposureLine('folder');
                         desc += _cruzSheer || 'Cruz sees you looking. She doesn\'t linger on the page. Just files it under the rest and keeps going.\n\n';
                     }
 
-                    desc += '"Same 9mm pistol at every scene. Ballistics confirmed. One shooter." She flips a page. "But that\'s old news. Here\'s what keeps me up at night."\n\n';
-                    desc += 'She stops walking. Turns to face you.\n\n';
-                    desc += '"The forensics don\'t make sense, Kelsie." Her voice drops. "Entry trajectories, positioning of the bodies, time-of-death windows. My experts are telling me some of these men were killed faster than should be humanly possible. Multiple targets, near-simultaneous kills, in configurations that would require the shooter to move at speeds we can\'t replicate."';
+                    desc += '"Same 9mm pistol at every scene. Ballistics confirmed one shooter." She flips a page. "But that\'s old news. Here\'s the part I like."\n\n';
+
+                    desc += 'She stops walking and turns to face you.\n\n';
+
+                    desc += '"The forensics don\'t add up, Kelsie." She sounds pleased about it. "Entry angles, where the bodies fell, time-of-death windows. My experts tell me some of these men died faster than should be humanly possible. Multiple targets, near-simultaneous, at speeds nobody can replicate."\n\n';
+
+                    desc += 'She closes the folder. "They told me it was impossible. I told them to try harder."';
 
                     return desc;
                 },
@@ -102349,23 +102411,49 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             cruz_confrontation_2b: {
                 text: function() {
                     var karma = gameState.karma || 0;
-                    var desc = '"Sounds like your experts need better experts."\n\n';
-                    desc += 'Cruz doesn\'t smile. "That\'s what I told my captain. He agreed. So I brought in military analysts. Former special forces." She closes the folder. "They said the same thing. Some of these kills are impossible by any standard of human performance."\n\n';
+                    var desc = '';
+
+                    desc += '"Sounds like your experts need better experts."\n\n';
+
+                    desc += '"That\'s what I said." Cruz almost smiles. "So I called some people I served with. Special operations. People who\'ve seen what a human body can do when it\'s pushed past every limit." She tucks the folder away. "They said the same thing. Some of these kills are impossible by any standard of human performance."\n\n';
+
                     desc += 'She lets that sit between you.\n\n';
-                    desc += '"I went back to the Iron Lotus Dojang. Talked to Gunwoo again." Her eyes find yours. "He showed me your training footage. Sparring sessions with Oksana. Jensen watched the whole time from the back of the room, arms crossed, nodding like a proud father."\n\n';
+
+                    desc += '"I went back to the dojang. Gunwoo showed me your training footage." Her eyes find yours. "Sparring with Oksana. Jensen watching the whole thing from the back of the room, arms crossed, nodding like a proud father."\n\n';
+
                     desc += 'Something tightens in your chest. The dojang is yours. Those people are yours.\n\n';
-                    desc += '"You know what struck me? How they talk about you. Gunwoo gets this look, like he can\'t believe what he\'s watching when you spar. Oksana said you make her better. Jensen said you\'re the reason he still shows up." Cruz tilts her head. "People are drawn to you, Kelsie. They orbit you. These three especially."\n\n';
+
+                    desc += '"They orbit you, Kelsie. Gunwoo can\'t believe what he\'s watching when you spar. Oksana says you make her better. Jensen says you\'re the reason he still shows up." Cruz tilts her head. "People follow you. I find that very interesting."\n\n';
+
                     desc += 'She pauses.\n\n';
-                    desc += '"I keep thinking about what they\'d say if they saw the crime scene photos. The injuries. Kicks to the forehead, throat, base of the skull. Delivered with enough force to kill instantly, but calibrated. Precise. Like someone who knows exactly how much force is too much." She studies your face. "Someone trained. Someone disciplined. Someone who could hold back if they wanted to."\n\n';
+
+                    desc += '"I keep thinking about what they\'d say if they saw the crime scene photos. Kicks to the forehead, throat, base of the skull. Hard enough to kill instantly, but calibrated." She studies your face. "Someone trained. Someone disciplined. Someone who could hold back if she wanted to."\n\n';
+
                     desc += '"I\'m a waitress who does martial arts."\n\n';
-                    desc += '"Yeah." Cruz takes a step back. Her eyes don\'t leave yours. "I\'m sure that\'s all it is." She turns. "I\'ll be seeing you, Kelsie."\n\n';
+
+                    desc += '"Sure." Cruz takes a step back without taking her eyes off you. "And I\'m a meter maid." She turns. "I\'ll be seeing you, Kelsie."\n\n';
 
                     if (karma >= 1000) {
-                        desc += '<em>She knows. She doesn\'t have proof, but she knows. You can see it in her posture, how she stopped walking and faced you, in the questions she asked and the ones she didn\'t.\n\nGunwoo. Oksana. Jensen. She sat in the dojang and watched your sparring footage and talked to the people who care about you. She\'s mapping your soul.\n\nThe worst part? She\'s a good cop. Exactly the cop this city needs. And you\'re the thing she\'s hunting.</em>';
+                        desc += '<em>She knows. She doesn\'t have proof, but she knows. You could see it in how she stopped walking and faced you, in the questions she asked and the ones she didn\'t bother with.</em>\n\n';
+
+                        desc += '<em>She sat in the dojang and watched your sparring footage and talked to the people who care about you. She\'s mapping everything you love.</em>\n\n';
+
+                        desc += '<em>The worst part? She\'s a good cop, exactly the cop this city needs. And you\'re what she\'s hunting.</em>';
+
                     } else if (karma <= -1000) {
-                        desc += '<em>"Impossible by any standard of human performance." She said it like a puzzle she\'s obsessed with solving.\n\nShe\'ll never solve it. She\'ll chase the evidence in circles because the answer is something her reports can\'t contain. The Femme Phantom isn\'t human. And Gabriella Cruz, for all her brilliance, lives in a world where that explanation doesn\'t exist.\n\nBut she touched a nerve. Gunwoo. Oksana. Jensen. Leave them out of this.</em>';
+                        desc += '<em>"Impossible by any standard of human performance." She said it like a puzzle she\'s enjoying.</em>\n\n';
+
+                        desc += '<em>She\'s going to keep pulling at it. The Femme Phantom isn\'t human, and Gabriella Cruz is the one person in this city who might be arrogant enough to believe that before she can prove it.</em>\n\n';
+
+                        desc += '<em>But she touched a nerve. Gunwoo. Oksana. Jensen. Leave them out of this.</em>';
+
                     } else {
-                        desc += '<em>Military analysts. Former special forces. They couldn\'t explain it either.\n\nBut the dojang. That was personal. She didn\'t just pull records. She went there. She sat with Gunwoo and watched you fight on a screen and listened to three people describe you with pride in their voices.\n\nCruz isn\'t building a case. She\'s building a portrait. And it looks more like you with every brushstroke.</em>';
+                        desc += '<em>People she served with. They couldn\'t explain it either.</em>\n\n';
+
+                        desc += '<em>But the dojang was personal. She went past the records and walked in there herself, sat with Gunwoo, watched you fight on a screen, and listened to three people talk about you with pride in their voices.</em>\n\n';
+
+                        desc += '<em>Cruz is building a portrait, and it looks more like you with every stroke.</em>';
+
                     }
 
                     return desc;
@@ -102381,15 +102469,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 text: function() {
-                    var desc = 'She\'s sitting on the bench outside Manny\'s store. No folder, no coffee. Just sitting. When she sees you, she doesn\'t stand. She slides over and pats the empty space beside her.\n\n';
+                    var desc = '';
+
+                    desc += 'She\'s sitting on the bench outside Manny\'s store with no folder and no coffee, one arm stretched along the backrest. When she sees you, she stays put, slides over and pats the space beside her.\n\n';
+
                     desc += '"Sit down, Kelsie."\n\n';
-                    desc += 'Something in her voice is different. Tired. Quiet. The professional edge is still there, but underneath it, something else. She looks like she hasn\'t slept in days.\n\n';
+
                     desc += 'You sit.\n\n';
-                    desc += 'She stares at the street for a long time. A kid on a bike rides past. A car horn blares in the distance.\n\n';
-                    desc += '"I know."\n\n';
-                    desc += 'Two words. She says them looking at the pavement.\n\n';
+
+                    desc += 'She watches the street for a while. A kid rides past on a bike. A car horn goes off somewhere in the distance. She looks completely at home, like she owns the bench and is letting you borrow half of it.\n\n';
+
+                    desc += '"I know," she says.\n\n';
+
                     desc += '"Know what?"\n\n';
-                    desc += '"I know it\'s you." She turns. Her eyes are bloodshot. Exhausted. "The Femme Phantom. I know it\'s you."';
+
+                    desc += '"That it\'s you." She turns her head. Her eyes are clear and calm and a little amused. "The Femme Phantom. I know it\'s you."';
 
                     return desc;
                 },
@@ -102400,13 +102494,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
             cruz_confrontation_3b: {
                 text: function() {
-                    var desc = '"You don\'t know anything."\n\n';
-                    desc += '"Kelsie." Her voice is soft. "Every attack happens within a three-mile radius of this apartment complex. The ballistic pattern matches a 9mm sold through an underground dealer two blocks from here. The Femme Phantom has Taekwondo-consistent injuries at every crime scene, and you\'re the only black belt under twenty-five in this zip code."\n\n';
+                    var desc = '';
+
+                    desc += '"You don\'t know anything."\n\n';
+
+                    desc += '"Kelsie." She says it patiently, like she\'s explaining something to a slow student.\n\n"Every attack happens within three miles of your apartment complex. The 9mm was sold through an underground dealer two blocks from here. The Femme Phantom leaves taekwondo injuries at every scene, and you\'re the only black belt under twenty-five in this zip code."\n\nShe doesn\'t even sound like she\'s trying.\n\n';
+
                     desc += 'She counts on her fingers.\n\n';
-                    desc += '"The witness described a woman matching your height and build. The attack frequency maps to your work schedule at the diner. On nights you close early, someone dies." She drops her hand. "And your hands, Kelsie. The first time we talked, I watched your hands. They\'re a fighter\'s hands. Callused. Strong. Steady as stone."\n\n';
-                    desc += 'Silence. The bench is cold under you.\n\n';
+
+                    desc += '"A witness described a woman your height and build. The attacks map to your shifts at the diner. On the nights you close early, somebody dies." She drops her hand. "And your hands. The first time we talked, I watched your hands. Fighter\'s hands. Callused, strong, steady as stone."\n\n';
+
+                    desc += 'The bench is cold under you.\n\n';
+
                     desc += '"That\'s circumstantial," you say.\n\n';
-                    desc += '"All of it." She nods. "Every bit. Wouldn\'t survive a courtroom for thirty seconds." She exhales. Long. Slow. "But I\'m not here as a cop right now."';
+
+                    desc += '"All of it." She nods. "It wouldn\'t last thirty seconds in a courtroom." She stretches her legs out and crosses them at the ankle. "Lucky for you, I\'m not here to arrest you. If I were, you\'d already be in the car."\n\n';
 
                     return desc;
                 },
@@ -102418,15 +102520,25 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             cruz_confrontation_3c: {
                 text: function() {
                     var karma = gameState.karma || 0;
-                    var desc = '"Then why are you here?"\n\n';
-                    desc += 'Cruz looks at her hands. Opens them. Closes them.\n\n';
-                    desc += '"I\'ve been a cop in Trigrave for thirteen years. I\'ve watched the Vajaros poison this city since I was a rookie. I\'ve built cases that got thrown out. I\'ve watched judges get paid off. I\'ve seen good cops give up and bad cops get promoted and the cartel just keeps going, year after year, untouched."\n\n';
-                    desc += 'Her jaw tightens.\n\n';
-                    desc += '"And then someone starts tearing them apart. One person. In weeks, they\'ve done more damage to the Vajaros than the entire Trigrave PD managed in two decades." She turns to you. "The forensics say it\'s impossible. The military consultants say it\'s impossible. My own reports would get me laughed out of the department because the evidence points to something I can\'t explain and can\'t put in writing."\n\n';
-                    desc += 'She takes a breath.\n\n';
-                    desc += '"I don\'t understand what you are. I don\'t understand how you do what you do. But I understand what you\'re doing." Her voice breaks. Just a crack. She smooths it over fast. "And I need to know one thing."\n\n';
-                    desc += 'She looks at you. Really looks. Brown eyes, red-rimmed, and behind them, a woman who\'s spent her entire career fighting something she couldn\'t beat.\n\n';
-                    desc += '"When this is over. When the Vajaros are finished." Her voice is barely a whisper. "Does it stop?"';
+                    var desc = '';
+
+                    desc += '"Then why are you here?"\n\n';
+
+                    desc += 'Cruz looks out at the street.\n\n';
+
+                    desc += '"This city\'s been paying the Vajaros for twenty years. Judges, councilmen, half the cops in my building before I cleaned it out. I\'ve built cases on them that got thrown out by men who were on their payroll."\n\n';
+
+                    desc += 'Her jaw shifts, the closest thing to irritation you\'ve ever seen on her.\n\n';
+
+                    desc += '"Then someone starts taking them apart. One person. You\'ve done more damage to the Vajaros than the whole department managed in two decades." She turns to you. "My forensics say it\'s impossible. The people I served with say it\'s impossible. I say I don\'t care what you are, as long as you keep aiming it at them."\n\n';
+
+                    desc += 'She leans back against the bench, completely relaxed.\n\n';
+
+                    desc += '"I don\'t need to understand how you do it. I understand what you\'re doing, and I\'m going to let you finish. That\'s my call, not yours, and I can take it back whenever I want."\n\n';
+
+                    desc += 'She looks at you, level and unblinking.\n\n';
+
+                    desc += '"So I need one thing from you. When the Vajaros are finished," she says, like she\'s setting the terms of a contract, "does it stop?"';
 
                     return desc;
                 },
@@ -102438,21 +102550,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         choices.push({
                             text: '"It stops. I promise."',
                             action: function() {
-                                showMessage('"It stops. I promise."\n\nCruz holds your gaze. Searching. You let her.\n\n"I hope so." She stands. Wipes her eyes with the heel of her palm. When she speaks again, her voice is steady. Professional.\n\n"I never sat on this bench. We never had this conversation. My investigation will continue because that\'s my job." She buttons her jacket. "But I won\'t find anything. Because there\'s nothing to find."\n\nShe walks away. Her stride is measured. Her shoulders are straight.\n\nShe gets to the corner and stops. Doesn\'t turn around.\n\n"Be careful, Kelsie."\n\nThen she\'s gone.\n\n<em>You sit on the bench alone. A good cop just looked a killer in the eye and chose to walk away. Because the killer is destroying the thing she couldn\'t destroy.\n\nYou owe her the truth you just told her. When this is over, it stops.\n\nIt has to.</em>', function() { showScene('slums_district_street'); });
+                                showMessage('"It stops. I promise."\n\nCruz holds your gaze for a long moment, reading you. You let her.\n\n"Good." She stands and buttons her jacket. "I never sat on this bench, and we never had this conversation. My investigation stays open, because that\'s my job." She glances down at you. "But I\'m going to be very busy with other things until the Vajaros are gone."\n\nShe walks away, measured and unhurried, and stops at the corner without turning around.\n\n"Be careful, Kelsie. I\'d hate for anyone but me to be the one who catches you."\n\nThen she\'s gone.\n\n<em>You sit on the bench alone. A good cop just looked a killer in the eye and decided to let her finish, because the killer is doing something the cop couldn\'t.</em>\n\n<em>You owe her the promise you just made. When this is over, it stops.</em>\n\n<em>It has to.</em>', function() { showScene('slums_district_street'); });
                             }
                         });
                     } else if (karma <= -1000) {
                         choices.push({
                             text: '"The Vajaros will stop. That\'s all I can give you."',
                             action: function() {
-                                showMessage('"The Vajaros will stop. That\'s all I can give you."\n\nCruz stares at you. She heard what you said and what you didn\'t say.\n\n"That\'s not an answer."\n\n"It\'s the only one you\'re getting."\n\nSilence. A car passes. Then another.\n\nCruz stands. Slowly. "My investigation will continue. That\'s my job." She adjusts her jacket. "But some cases don\'t close, Kelsie. Some cases just... go cold."\n\nShe walks to the corner. Pauses.\n\n"I will figure out what you are. Someday." Her back is to you. "But right now, the Vajaros matter more."\n\nShe disappears around the building.\n\n<em>You sit on the bench and let her footsteps fade. A detective with thirteen years of service just gave you a pass. Temporary. She made that clear.\n\nShe\'ll be back. She\'ll keep digging. That\'s who she is. But for now, the cartel is bleeding and Cruz is smart enough to let the knife keep cutting.\n\nYou stand. Crack your neck. Get back to work.</em>', function() { showScene('slums_district_street'); });
+                                showMessage('"The Vajaros will stop. That\'s all I can give you."\n\nCruz looks at you. She heard what you said and everything you didn\'t.\n\n"That isn\'t an answer."\n\n"It\'s the only one you\'re getting."\n\nA car passes, then another.\n\nCruz stands and straightens her jacket, completely unbothered. "Then here\'s mine," she says. "When the Vajaros are gone, I\'m coming for you. And by then, I\'ll already have everything I need."\n\nShe walks to the corner and pauses there with her back to you.\n\n"Enjoy the head start."\n\nShe disappears around the building.\n\n<em>You sit on the bench and let her footsteps fade. A detective who\'s never lost a case just gave you a pass. A temporary one. She made that very clear.</em>\n\n<em>She\'ll be back. She\'ll keep digging, because that\'s who she is. But for now the cartel is bleeding, and Cruz is smart enough to let the knife keep cutting.</em>\n\n<em>You stand, crack your neck, and get back to work.</em>', function() { showScene('slums_district_street'); });
                             }
                         });
                     } else {
                         choices.push({
                             text: '"I don\'t know. Honestly? I don\'t know."',
                             action: function() {
-                                showMessage('"I don\'t know. Honestly? I don\'t know."\n\nCruz looks at you for a long time. Then she nods. And something in her expression settles. Like she expected that answer and respected it more than a lie.\n\n"Fair enough." She stands. Dusts off her jacket. "My investigation stays open. I\'ll keep building the case because that\'s who I am. But the evidence..." She trails off. "The evidence says things I can\'t write in reports. Things nobody would believe."\n\nShe looks at the sky. Gray. Overcast. Trigrave skies.\n\n"I\'ve been a cop for thirteen years. I\'ve never once looked at a case file and thought, \'This isn\'t possible.\' Until yours." She starts walking. "You scared me, Kelsie. You still do."\n\nShe stops at the corner.\n\n"But the Vajaros scare me more. And that\'s the only reason I\'m walking away right now."\n\nShe turns the corner. Gone.\n\n<em>You sit on the bench outside Manny\'s store and watch the street. A detective just told you she knows what you are. She can\'t prove it, can\'t explain it, can\'t file it in any system that exists.\n\nBut she knows.\n\nAnd she\'s letting you finish.\n\nThe weight of that settles on your shoulders. Heavier than any pistol.</em>', function() { showScene('slums_district_street'); });
+                                showMessage('"I don\'t know. Honestly? I don\'t know."\n\nCruz looks at you for a long time. Then she nods, like she expected that answer and respects it more than a lie.\n\n"Fair enough." She stands and brushes off her jacket. "My investigation stays open. I\'ll keep building the case, because that\'s what I do. But the evidence..." She shrugs. "The evidence says things I can\'t put in a report. Nobody in my building would believe them."\n\nShe looks up at the sky, gray and overcast.\n\n"I\'ve never once looked at a case file and thought, <em>this isn\'t possible.</em> Until yours." She starts walking. "I don\'t like not knowing things, Kelsie. You\'re the first thing in a long time I haven\'t figured out yet."\n\nShe stops at the corner.\n\n"But the Vajaros bother me more than you do. So they go first."\n\nShe turns the corner and she\'s gone.\n\n<em>You sit on the bench outside Manny\'s store and watch the street. A detective just told you she knows what you are. She can\'t prove it, can\'t explain it, can\'t file it anywhere.</em>\n\n<em>But she knows. And she\'s letting you finish.</em>\n\n<em>The weight of that settles on your shoulders, heavier than any pistol.</em>', function() { showScene('slums_district_street'); });
                             }
                         });
                     }
@@ -109775,13 +109887,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     text += 'An old man in the back of the crowd. He doesn\'t come forward. He just watches. His hands are folded in front of him and his eyes are wet and he\'s nodding. Slowly. The nod of someone who lived long enough to see something he\'d stopped believing in.\n\n';
                     
                     if (cruzKnows) {
-                        text += 'Cruz is at the edge of the crowd. She\'s not in the front. She\'s not reaching for you. She\'s standing with her arms crossed and her badge on her belt and her braid over her shoulder, watching you the way she watches everything: with total attention and absolute patience.\n\n';
+                        text += 'Cruz is at the edge of the crowd, well back from the front, arms crossed, badge on her belt, braid over her shoulder. She watches you like she watches everything, with total attention and no hurry at all.\n\n';
                         text += 'You find her through the crowd. She finds you.\n\n';
                         text += 'She nods. Once. The smallest movement.\n\n';
                         text += 'You nod back.\n\n';
                         text += 'Nobody in the crowd understands what just passed between you. That\'s fine. It wasn\'t for them.\n\n';
                     } else if (cruzAware) {
-                        text += 'You scan the crowd. Habit. Looking for the braid, the badge, the warm dark eyes.\n\n';
+                        text += 'You scan the crowd out of habit, looking for the braid, the badge, the dark eyes.\n\n';
                         text += 'She\'s not here. But she\'ll see the footage. Every second of it.\n\n';
                     }
                     
@@ -110007,9 +110119,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     if (cruzKnows) {
                         text += 'She pauses. Something shifts in her expression.\n\n';
-                        text += '"Your detective friend," she says. "The one with the braid. Cruz. She came by my office last week. Asked me to take care of you." Maxine looks at her coffee. "I asked her what she meant by that. She said, \'She\'s carrying more than anyone should carry alone. Just... keep an eye on her.\' "\n\n';
+                        text += '"Your detective friend," she says. "The one with the braid. Cruz. She came by my office." Maxine looks at her coffee. "She told me you\'d turn down any help I offered, and that I should give it to you anyway. Then she told me my security detail was sloppy and left."\n\n';
                         text += 'Your chest does something complicated.\n\n';
-                        text += '"She seems like a good person," Maxine says. "Scary. But good."\n\n';
+                        text += '"She seems like a good person," Maxine says. "Terrifying. But good."\n\n';
                     }
                     
                     text += 'She stands. Brushes off her slacks.\n\n';
@@ -110182,13 +110294,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             let text = '';
                             if (cruzKnows) {
                                 text += 'Maxine is watering the spider plant when you walk in. She doesn\'t turn around.\n\n';
-                                text += '"Your detective friend came by last week," she says. Casual. Watering. "The one with the braid. Cruz."\n\n';
+                                text += '"Your detective friend came by," she says, still watering. "The one with the braid. Cruz."\n\n';
                                 text += 'Your chest tightens.\n\n';
-                                text += '"She asked me to keep an eye on you." Maxine sets the watering can down. Turns around. "She said you carry more than you let on. She said you won\'t ask for help even when you need it. She said..." Maxine pauses. Smiles. "She said you drink your coffee cold, which she considers a crime worse than anything you\'ve stopped."\n\n';
+                                text += '"She told me to keep an eye on you." Maxine sets the watering can down and turns around. "Told me, not asked. She said you won\'t ask for help even when you need it. She said..." Maxine smiles. "She said you drink your coffee cold, which she considers a crime worse than anything you\'ve stopped."\n\n';
                                 text += 'You don\'t say anything. Your throat is doing something complicated.\n\n';
-                                text += '"I think she likes you," Maxine says. Gentle now. "I don\'t mean in a cop way. In a human way. In the way where someone watches another person carry something heavy and decides they\'d rather stand beside them than watch from across the street."\n\n';
+                                text += '"I think she likes you," Maxine says, gentler now. "She\'d never say it. She\'d arrest me for suggesting it. But she came all the way up here to make sure somebody had your back, and I don\'t think she does that for many people."\n\n';
                                 text += 'She picks up her coffee. Takes a sip. Watches you over the rim.\n\n';
-                                text += '"You\'re allowed to let people in, ' + name + '. That\'s the whole point, not weakness."';
+                                text += '"You\'re allowed to let people in, ' + name + '. That\'s the whole point."';
                             } else {
                                 text += '"I\'ve been reading the police reports," Maxine says. She\'s got a file open on her desk. Your file. The official one. "The officers are filing positive contact reports now. Do you know what those are?"\n\n';
                                 text += '"Reports where nothing went wrong?"\n\n';
@@ -136289,31 +136401,49 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const name = gameState.flags.heroName || 'Demigirl';
                     const compulsionFailed = !!gameState.flags.gabriellaCompulsionFailed;
-                    
-                    let text = 'You\'re passing a newsstand when you hear it.\n\n';
-                    text += 'Not from the TV. From behind the counter. The vendor has a police scanner tucked between the cash register and a stack of yesterday\'s papers, and the frequency is live, and the voice coming through the static is one you\'d know in any room, in any crowd, in any language.\n\n';
+
+                    let text = '';
+
+                    text += 'You\'re passing a newsstand when you hear it.\n\n';
+
+                    text += 'The vendor has a police scanner tucked between the register and a stack of yesterday\'s papers. The frequency\'s live, and the voice coming through the static is one you\'d know anywhere.\n\n';
+
                     text += 'Cruz.\n\n';
-                    text += '"...consistent with a single individual. Superhuman capability." Her voice is clinical. Measured. Every word placed with the precision of someone who\'s been rehearsing this briefing in her head for days. "Intervening in street-level crimes across multiple districts. Slums, Downtown, Commercial. The timing pattern suggests a single operator with high mobility."\n\n';
-                    text += 'A crackle. Someone responds. You can\'t make out the words.\n\n';
-                    text += '"Possibly same profile as our assault-pattern suspect. Possibly unrelated. I want footage pulled from traffic cams at each intervention site. Cross-reference timing with our existing timeline." She pauses. The scanner hisses. "And pull the social media posts. Everything tagged with that name they\'re using. ' + name + '."\n\n';
+
+                    text += '"...consistent with a single individual. Superhuman capability." Clinical, level, and a little bored, like she\'s reading a grocery list to people who can\'t keep up. "Intervening in street-level crimes across multiple districts. Slums, Downtown, Commercial. Timing says one operator with high mobility."\n\n';
+
+                    text += 'A crackle. Someone answers. You can\'t make out the words.\n\n';
+
+                    text += '"Possibly the same profile as my assault-pattern suspect. Possibly not. Pull the traffic cams at every intervention site and cross-reference against the existing timeline." The scanner hisses. "And pull the social media. Everything tagged with that name they\'re using. ' + name + '."\n\n';
+
                     text += 'Your name. In her mouth. On a police frequency.\n\n';
-                    text += 'The vendor flips a page of his magazine. He\'s not listening. The scanner is background noise to him, the same way it\'s background noise to everyone in this city who doesn\'t have a reason to pay attention to it.\n\n';
+
+                    text += 'The vendor flips a page of his magazine. The scanner\'s background noise to him, like it\'s background noise to everyone in this city who doesn\'t have a reason to listen.\n\n';
+
                     text += 'You have a reason.\n\n';
-                    text += 'Another question from the other end. You catch fragments. <em>"...classify as hostile?"</em>\n\n';
-                    text += '"No." Cruz\'s voice shifts. Something in it loosens by a fraction of a degree. "Don\'t classify it as hostile yet. Let the data tell us what it is."\n\n';
-                    text += '<em>Let the data tell us what it is.</em>\n\n';
-                    
+
+                    text += 'Another question from the other end. You catch a fragment. <em>"...classify as hostile?"</em>\n\n';
+
+                    text += '"No," Cruz says. "Not yet. Let the data tell us what it is. It always does, eventually. To me, anyway."\n\n';
+
+                    text += '<em>Not yet.</em>\n\n';
+
                     if (compulsionFailed) {
-                        text += 'She\'s looking at both halves of you now. The thing you were and the thing you\'re trying to be. She doesn\'t know they share a pulse.\n\n';
-                        text += 'And she said <em>yet</em>.\n\n';
-                        text += 'That word is going to keep you up tonight. The patience of it. The implicit promise that she\'ll follow this wherever it goes, at whatever speed the evidence sets, and she won\'t rush it, and she won\'t drop it, and she won\'t look away.\n\n';
-                        text += 'You walk. Your hands are in your pockets. Your heart is doing something it shouldn\'t be able to do at your age, which is hammering against your ribs like it wants out.';
+                        text += 'She\'s looking at both halves of you now, the thing you were and the thing you\'re trying to be. She doesn\'t know they share a pulse.\n\n';
+
+                        text += 'That <em>yet</em> is going to keep you up tonight. The patience in it. The flat promise that she\'ll follow this wherever it goes, at whatever speed the evidence sets, and she won\'t rush it and she won\'t drop it.\n\n';
+
+                        text += 'You walk with your hands in your pockets and your heart hammering against your ribs.';
+
                     } else {
-                        text += 'You walk away from the newsstand. Your reflection passes through a storefront window and keeps going.\n\n';
+                        text += 'You walk away from the newsstand. Your reflection slides across a storefront window and keeps going.\n\n';
+
                         text += 'She\'s investigating the vigilante. She\'s investigating you. She doesn\'t know they\'re the same person.\n\n';
+
                         text += '<em>Yet.</em>';
+
                     }
-                    
+
                     return text;
                 },
                 onEnter: () => {
@@ -136336,32 +136466,57 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const name = gameState.flags.heroName || 'Demigirl';
                     const crimes = gameState.flags.suitedCrimesStopped || 0;
-                    
-                    let text = 'Cruz is at the coffee shop.\n\n';
-                    text += 'Same table. Same position. Same cup that\'s been sitting there long enough for the steam to stop. She\'s reading something on her phone with the focused patience of a woman who knows exactly what she\'s waiting for.\n\n';
-                    text += 'You didn\'t come here on purpose. You were walking and your feet brought you here and she\'s already looking at you through the window when you realize it.\n\n';
-                    text += 'She waves you in. Two fingers. The smile.\n\n';
-                    text += 'You go. You don\'t know why you go. You should walk. You should turn around and cross three districts and never come back to this block. Instead you push through the door and the bell chimes and Cruz nudges the chair across from her with her foot and says "Sit" like you\'ve been meeting here every Tuesday for a year.\n\n';
-                    text += 'She buys you a coffee. You sit across from her. She talks about the weather. About the new bakery on Elm that does something criminal with cardamom. About the pigeon on Fourth Street that she swears has started following her.\n\n';
-                    text += 'Four minutes of this. Four minutes of warmth and small talk delivered with the specific patience of someone laying groundwork so thorough that when the real conversation starts, you won\'t realize the foundation was already under your feet.\n\n';
+
+                    let text = '';
+
+                    text += 'Cruz is at the coffee shop.\n\n';
+
+                    text += 'Same table, same seat, same cup that\'s gone cold beside her. She\'s reading something on her phone with the patience of a woman who knows exactly what she\'s waiting for and exactly when it\'ll walk past.\n\n';
+
+                    text += 'You didn\'t come here on purpose. Your feet brought you, and she\'s already looking at you through the window when you notice.\n\n';
+
+                    text += 'She waves you in with two fingers.\n\n';
+
+                    text += 'You go. You should turn around and cross three districts and never come back to this block. Instead you push through the door, the bell chimes, and Cruz nudges the chair across from her with her foot.\n\n';
+
+                    text += '"Sit," she says, like you do this every Tuesday.\n\n';
+
+                    text += 'She buys you a coffee. She talks about the bakery on Elm that does something criminal with cardamom, and the pigeon on Fourth Street she\'s convinced is following her. She lets it run for four minutes, easy and pointless, until you\'ve almost relaxed.\n\n';
+
                     text += 'Then she sets her cup down.\n\n';
+
                     text += '"There\'s a woman in a suit who\'s been stopping crimes across the city."\n\n';
-                    text += 'She watches you over the rim. Your face. Your hands. Whatever your body does when it hears its own secret spoken out loud by the one person in this city who pays attention to everything.\n\n';
-                    text += '"Superhuman speed. Superhuman strength. Appears and disappears." She pauses. "The footage is remarkable. I\'ve watched it frame by frame. How she moves, Kelsie. It\'s like watching water find the cracks in a surface. Every motion is exactly right."\n\n';
+
+                    text += 'She watches you over the rim. Your face, your hands, whatever your body does when it hears its own secret said out loud.\n\n';
+
+                    text += '"Superhuman speed. Superhuman strength. Appears and disappears." She shrugs. "The footage is decent. Her form\'s good. Her footwork\'s a little sloppy when she\'s tired."\n\n';
+
                     text += 'Your coffee\'s getting cold. You haven\'t touched it.\n\n';
+
                     text += '"You know what\'s interesting?" she asks.\n\n';
-                    text += 'You don\'t say anything. You\'re not sure you can.\n\n';
-                    text += '"The vigilante activity started the same week the assault pattern went quiet." She tilts her head. That one degree to the left. The one that means she\'s reading you at a depth you can\'t defend against. "Almost like someone had a change of heart. Or like the same person found a different outlet."\n\n';
-                    text += 'The espresso machine hisses behind the counter. Somewhere outside, a car horn.\n\n';
-                    text += '"The speed is the same," she says. Quiet now. Almost gentle. "The strength. The night activity pattern. The geographic overlap. I ran the timeline, Kelsie. Intervention sites mapped against the assault-pattern locations. You know what the correlation coefficient is?"\n\n';
-                    text += 'She pauses. Not for drama. Because what she\'s about to say is the point and she wants you to hear it arrive.\n\n';
+
+                    text += 'You don\'t say anything. You aren\'t sure you can.\n\n';
+
+                    text += '"The vigilante activity started right about when my assault pattern went quiet." She tilts her head that one degree to the left. "Almost like someone had a change of heart. Or like the same person found a new hobby."\n\n';
+
+                    text += 'The espresso machine hisses. Outside, a car horn.\n\n';
+
+                    text += '"Same speed. Same strength. Same night hours, same neighborhoods. I ran the intervention sites against the assault locations, Kelsie." She sounds almost bored by how easy it was. "Want to guess the correlation coefficient?"\n\n';
+
+                    text += 'She waits just long enough for you to understand you\'re not expected to answer.\n\n';
+
                     text += '"Point nine four."\n\n';
+
                     text += 'The number sits between you like a knife on a tablecloth.\n\n';
-                    text += '"I\'m not asking you to confirm anything," she says. Her voice is warm. Her eyes are warm. The warmth is the weapon and she wields it with the same precision she wields everything else. "I just think you should know that the Venn diagram of what I\'m investigating has gotten... interesting."\n\n';
-                    text += 'She picks up her coffee. Takes a sip. Sets it down.\n\n';
-                    text += '"Stay safe, Kelsie."\n\n';
-                    text += 'She said your name twice. Both times like she was saying something else underneath it. Both times like the name was a door she was choosing not to open, and she wanted you to see her hand on the knob.';
-                    
+
+                    text += '"I\'m not asking you to confirm anything," she says. "I just thought you should know that the Venn diagram of what I\'m investigating has gotten very small."\n\n';
+
+                    text += 'She picks up her coffee, takes a sip, and sets it down.\n\n';
+
+                    text += '"Get some sleep, Kelsie. You look like you were out late."\n\n';
+
+                    text += 'She said your name twice. Both times, it sounded like she had her hand on a door she was choosing not to open, and she wanted you to see it.';
+
                     return text;
                 },
                 onEnter: () => {
@@ -136393,34 +136548,53 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             hero_cruz_admission: {
                 text: function() {
                     const name = gameState.flags.heroName || 'Demigirl';
-                    
-                    let text = '"You already know."\n\n';
-                    text += 'The words come out before you decide to say them. Three words. Quieter than you expected. Heavier.\n\n';
-                    text += 'Cruz sets her coffee down. Her expression doesn\'t change. Her posture doesn\'t change. Nothing visible shifts in how she\'s sitting or holding her hands or tilting her head.\n\n';
-                    text += 'But something behind her eyes reorganizes. You watch it happen in real time. The careful architecture of professional distance that she\'s maintained through every conversation, every sighting, every two-finger wave, all of it reshuffles around the fact that you just said what you said.\n\n';
-                    text += '"Yeah," she says. Quietly. "I do."\n\n';
-                    text += 'The espresso machine cycles behind the counter. A chair scrapes somewhere in the back. Normal sounds in a normal coffee shop where something just became irreversible.\n\n';
-                    text += 'Cruz looks at her hands. She does this when she\'s choosing words. You\'ve learned that about her. The braid sits heavy over her shoulder. The badge is on her belt. The holster is under her arm. She\'s every inch a cop and right now she\'s deciding which version of that she wants to be.\n\n';
-                    text += '"I\'m not going to arrest you," she says. "I want you to know that first. Before anything else."\n\n';
-                    text += 'She lifts her head. Meets your eyes.\n\n';
-                    text += '"What you\'re doing in that suit..." She pauses. Chooses words with the precision of someone who knows exactly what they cost and has decided to pay. "That matters. The suit matters. The people you pull out of alleys and parking garages and van doors, they matter. What you\'re building out there, that thing the city is starting to feel when it sees you overhead, that matters more than..." She stops.\n\n';
-                    text += '"More than the other thing," you say.\n\n';
-                    text += '"We both know what I mean."\n\n';
-                    text += 'You do. The blood. The hunting. The version of you that exists when the suit is off and the mask is different.\n\n';
-                    text += 'Cruz finishes her coffee. The cup makes a small sound against the saucer. She stands. Badge visible. Holster visible. Braid heavy. Everything about her sharp and warm and present.\n\n';
-                    text += '"Keep going," she says. "Both things. You\'re going to have to figure out the balance yourself. But especially the suit. Especially ' + name + '."\n\n';
-                    text += 'She puts money on the table. Enough for both coffees.\n\n';
-                    text += '"I\'m pulling myself off the vigilante file," she says. Casual. Like she\'s mentioning the weather again. "Conflict of interest. My captain will reassign it to someone who doesn\'t have the full picture."\n\n';
-                    text += 'She walks to the door. Stops. Turns around.\n\n';
+
+                    let text = '';
+
+                    text += '"You already know."\n\n';
+
+                    text += 'The words come out before you decide to say them. Quieter than you expected, and heavier.\n\n';
+
+                    text += 'Cruz sets her coffee down. Nothing about her posture or her face changes. She looks like someone who was just handed the answer to a question she\'d already solved, and is checking her work.\n\n';
+
+                    text += '"Yeah," she says. "I do."\n\n';
+
+                    text += 'The espresso machine cycles behind the counter. A chair scrapes somewhere in the back. Ordinary sounds, in an ordinary coffee shop, where something just became permanent.\n\n';
+
+                    text += 'Cruz looks at her hands for a moment, choosing her words. The braid sits over her shoulder. Badge on her belt, holster under her arm. Every inch of her is a cop, and right now she\'s deciding which kind.\n\n';
+
+                    text += '"I\'m not going to arrest you," she says. "Let\'s get that out of the way first."\n\n';
+
+                    text += 'She lifts her head and meets your eyes.\n\n';
+
+                    text += '"The suit\'s useful. The people you pull out of alleys and parking garages and van doors are people I don\'t have to pull out myself. It\'s doing more for my city than half my officers." She shrugs. "I\'d be an idiot to take it off the board. I\'m not an idiot."\n\n';
+
+                    text += '"What about the other thing?" you say.\n\n';
+
+                    text += '"We both know what I mean." Her eyes stay level. "Keep the suit on more than you take it off, and we won\'t have to talk about the other thing."\n\n';
+
+                    text += 'You know what she means. The blood. The hunting. The version of you that exists when the suit\'s off and the mask is different.\n\n';
+
+                    text += 'Cruz finishes her coffee and stands. Badge visible, holster visible, completely at ease in a room with a vampire.\n\n';
+
+                    text += '"I\'m taking myself off the vigilante file," she says, like she\'s mentioning the weather. "Conflict of interest. The chief will hand it to someone who couldn\'t find you with a map and a flashlight."\n\n';
+
+                    text += 'She puts money on the table, enough for both coffees, and walks to the door. Then she stops and turns around.\n\n';
+
                     text += '"Kelsie."\n\n';
+
                     text += '"Yeah."\n\n';
-                    text += '"The correlation coefficient was actually point nine seven." The corner of her mouth does something small and complicated. "I rounded down. I didn\'t want to scare you."\n\n';
-                    text += 'The bell chimes. She\'s gone.\n\n';
-                    text += 'You sit in the coffee shop for a long time. Your coffee is cold. The chair across from you is empty. The space where she was sitting still smells like her, something clean and layered, and the napkin she was using has a phone number written on the back of it that she didn\'t mention.\n\n';
-                    text += 'You pick it up. Her handwriting is neat. Below the number, in smaller letters: <em>For emergencies. Both kinds.</em>\n\n';
-                    text += 'Someone knows. Someone who matters. Someone who could end you and chose not to. Someone who\'s choosing, every day, to stand between you and the system she represents.\n\n';
-                    text += 'The weight in your chest isn\'t fear. It\'s the opposite of fear. It\'s the specific gravity of being seen by the right person at the right depth and discovering that what they found there didn\'t make them leave.';
-                    
+
+                    text += '"The correlation coefficient was actually point nine seven." One corner of her mouth lifts. "I rounded down so you wouldn\'t panic in public."\n\n';
+
+                    text += 'The bell chimes, and she\'s gone.\n\n';
+
+                    text += 'You sit there a long time. Your coffee\'s cold. The napkin she was using has a phone number on the back, written in neat, sharp handwriting, and she never mentioned it.\n\n';
+
+                    text += 'Under the number, in smaller letters: <em>For emergencies. Both kinds.</em>\n\n';
+
+                    text += 'Someone knows. Someone who could end you with one phone call looked at everything you are and decided you\'re worth more to her city on the rooftops than in a cell. Coming from Cruz, that\'s practically a hug.';
+
                     return text;
                 },
                 onEnter: () => {
@@ -136432,7 +136606,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     advanceTime(30);
                     updateStatus();
                     trackGalleryScene('hero_cruz_admission');
-                    showNotification('<img src="Images/icons/hero-detective.png" class="icon" alt="detective"> Cruz knows. She\'s pulling herself off the case. For you.');
+                    showNotification('<img src="Images/icons/hero-detective.png" class="icon" alt="detective"> Cruz knows. She\'s taking herself off the vigilante file.');
                 },
                 choices: function() {
                     return [
@@ -136445,51 +136619,88 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const name = gameState.flags.heroName || 'Demigirl';
                     const tier = gameState.flags.heroReputationTier || 0;
-                    
-                    let text = 'You fall into step beside her. She doesn\'t look surprised. She never looks surprised.\n\n';
+
+                    let text = '';
+
+                    text += 'You fall into step beside her. She doesn\'t look surprised. She never looks surprised.\n\n';
+
                     text += '"Hey," she says.\n\n';
+
                     text += '"Hey."\n\n';
-                    text += 'You walk. She matches your pace as she always does, half a step to your left, close enough that your elbows could touch if either of you let them. The braid swings with her stride. Her badge catches the light.\n\n';
-                    text += 'She doesn\'t ask where you\'re going. She doesn\'t ask where you were. She\'s done asking you things she already knows the answers to.\n\n';
-                    
+
+                    text += 'You walk. She matches your pace half a step to your left, close enough that your elbows could touch. The braid swings with her stride. Her badge catches the light.\n\n';
+
+                    text += 'She doesn\'t ask where you\'re going or where you were. She\'s done asking you things she already knows.\n\n';
+
                     // Rotating walk conversations
                     const walks = [
                         function() {
-                            return '"I saw the thing last night," she says. "The one on Fifth Street."\n\n' +
-                            '"Yeah?"\n\n' +
-                            '"The guy with the knife. He had two priors. Assault, both of them. Did three years for the second one. Out six months." She pauses. "He was never going to stop on his own."\n\n' +
-                            'You don\'t say anything. She doesn\'t need you to.\n\n' +
-                            '"The victim filed a statement this morning. She used your name." Cruz glances at you. "Your other name. She wants to testify. At whatever hearing eventually happens." She shakes her head. "Testify for a vigilante. My captain\'s going to love that."\n\n' +
-                            '"Your captain doesn\'t know."\n\n' +
-                            '"My captain knows less than he thinks he does about a lot of things." The corner of her mouth lifts. "That\'s sort of the arrangement."';
+                            let w = '';
+                            w += '"I saw the thing last night," she says. "Fifth Street."\n\n';
+
+                            w += '"Yeah?"\n\n';
+
+                            w += '"The guy with the knife had two priors. Assault, both of them. Did three years on the second one." She sips her coffee. "He was never going to stop on his own. You saved me some paperwork."\n\n';
+
+                            w += 'You don\'t say anything. She doesn\'t need you to.\n\n';
+
+                            w += '"The victim filed a statement this morning. She used your name. Your other one." Cruz glances at you. "She wants to testify for you, at whatever hearing eventually happens." She snorts. "Testify for a vigilante. The chief\'s going to love that."\n\n';
+
+                            w += '"The chief doesn\'t know."\n\n';
+
+                            w += '"The chief knows less than he thinks about a lot of things." The corner of her mouth lifts. "That\'s most of why I like working for him."';
+
+                            return w;
                         },
                         function() {
-                            return '"You\'re tired," she says. Flat. Observational.\n\n' +
-                            '"I\'m fine."\n\n' +
-                            '"You\'re doing that thing with your jaw." She takes a sip of her coffee. "The clenching thing. You do it when you\'re running on empty. I noticed it three conversations ago."\n\n' +
-                            'Three conversations ago. She\'s been counting.\n\n' +
-                            '"You can\'t save a city if you fall apart in the middle of it," she says. Quiet. The warmth in her voice has an edge to it now. Concern shaped into something that lands harder than softness.\n\n' +
-                            '"I know."\n\n' +
-                            '"Do you?" She stops walking. Looks at you. Dark eyes, full attention, the weight of someone who takes everything seriously. Everything. "Because I\'ve read the data on vigilante burnout. The dropout rate is one hundred percent. You know why?"\n\n' +
-                            'You wait.\n\n' +
-                            '"Because nobody does this with backup." She holds your gaze. "You have backup now. Use it."';
+                            let w = '';
+                            w += '"You\'re tired," she says. It\'s an observation, flat as a lab result.\n\n';
+
+                            w += '"I\'m fine."\n\n';
+
+                            w += '"You\'re clenching your jaw." She takes a sip of her coffee. "You do it when you\'re running on empty. I noticed three conversations ago."\n\n';
+
+                            w += 'Three conversations ago. She\'s been keeping count.\n\n';
+
+                            w += '"You can\'t save a city if you fall apart in the middle of it," she says. "That\'s basic logistics."\n\n';
+
+                            w += '"I know."\n\n';
+
+                            w += '"Do you?" She stops walking and looks at you, dark eyes, full attention. "I\'ve read the data on vigilantes. The dropout rate is one hundred percent. They quit, or they die, or they get caught by somebody like me."\n\n';
+
+                            w += 'You wait.\n\n';
+
+                            w += '"None of them had backup." She holds your gaze. "You\'ve got me. That already puts you ahead of every one of them, so stop wasting it."';
+
+                            return w;
                         },
                         function() {
-                            return 'She\'s quiet for a full block. That\'s unusual. Cruz fills silence like water fills cracks. When she goes quiet, it\'s because what she\'s about to say has weight.\n\n' +
-                            '"My sister called last night," she says. "From Medellín. She asked if the ' + name + ' thing was real. The footage made it to Colombia."\n\n' +
-                            'You process that. Your suit. Your face. Your city. Seen by a woman in Medellín who called her sister about it.\n\n' +
-                            '"What did you tell her?" you ask.\n\n' +
-                            '"I told her it was real." Cruz looks straight ahead. "She asked if I\'d ever met her. ' + name + '. I said no."\n\n' +
-                            'She glances at you.\n\n' +
-                            '"I\'m a very good liar, Kelsie. For the record. In case you were wondering whether your secret was safe."\n\n' +
-                            '"I wasn\'t wondering."\n\n' +
-                            '"Good." She finishes her coffee. Crumples the cup. Tosses it into a trash can without looking. It goes in clean. "Because I\'d lie to a grand jury for you. Just so we\'re clear on the scope of the arrangement."';
+                            let w = '';
+                            w += 'She goes a full block without saying anything, which is unusual. When Cruz goes quiet, she\'s deciding how much to tell you.\n\n';
+
+                            w += '"My sister called from Medellín last night," she says. "She asked if the ' + name + ' thing was real. The footage made it to Colombia."\n\n';
+
+                            w += 'You think about that. Your suit, your city, seen by a woman in Medellín who called her sister about it.\n\n';
+
+                            w += '"What did you tell her?" you ask.\n\n';
+
+                            w += '"I told her it was real." Cruz looks straight ahead. "She asked if I\'d ever met her. I said no."\n\n';
+
+                            w += 'She glances at you.\n\n';
+
+                            w += '"I\'m a very good liar, Kelsie. For the record. In case you were wondering whether your secret was safe."\n\n';
+
+                            w += '"I wasn\'t wondering."\n\n';
+
+                            w += '"Good." She finishes her coffee, crumples the cup, and tosses it into a trash can without looking. It goes in clean. "Because I\'d lie to a grand jury for you. And I\'d win."';
+
+                            return w;
                         }
                     ];
-                    
+
                     const walkIdx = (gameState.flags.heroFansEncountered || 0) % walks.length;
                     text += walks[walkIdx]();
-                    
+
                     return text;
                 },
                 onEnter: () => {
@@ -136508,40 +136719,69 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     const name = gameState.flags.heroName || 'Demigirl';
                     const compulsionFailed = !!gameState.flags.gabriellaCompulsionFailed;
-                    
-                    let text = '"What do you think she is?"\n\n';
-                    text += 'The question comes out of your mouth before you finish deciding whether it\'s a good idea. Cruz is standing right there with her coffee and her sky-watching and her smile, and the question lands between you like a coin tossed off a building.\n\n';
-                    text += 'Cruz looks at you. The smile doesn\'t change but something behind it sharpens.\n\n';
-                    text += '"' + name + '?" She says the name like she\'s tasting it. "Interesting question. What do YOU think she is?"\n\n';
+
+                    let text = '';
+
+                    text += '"What do you think she is?"\n\n';
+
+                    text += 'The question\'s out of your mouth before you\'ve finished deciding whether it\'s a good idea. Cruz is right there with her coffee and her rooftop-watching, and the question lands between you like a coin tossed off a building.\n\n';
+
+                    text += 'Cruz looks at you. Her face doesn\'t move, but something behind it sharpens.\n\n';
+
+                    text += '"' + name + '?" She says the name like she\'s tasting it. "Interesting question. What do <em>you</em> think she is?"\n\n';
+
                     text += '"I\'m asking you."\n\n';
-                    text += '"You are." She nods. Takes a sip. Considers. "Okay. Professionally? She\'s an unregistered combatant operating outside legal authority. Superhuman capability with no confirmed identity. Intervention pattern consistent with a territory-based protector. Night-active. High mobility. Possibly the same biological profile as another open case I\'m working."\n\n';
-                    
+
+                    text += '"You are." She takes a sip. "Okay. Professionally? An unregistered combatant operating outside legal authority. Superhuman capability, no confirmed identity. Protects a territory. Active at night. Highly mobile. Possibly the same biology as another case I\'m working."\n\n';
+
                     if (compulsionFailed) {
-                        text += 'She pauses. Lets that last sentence sit.\n\n';
-                        text += '"Personally?" She lowers her coffee. "I think she\'s someone who got handed something she didn\'t ask for and decided to do something good with it. I think she\'s exhausted and scared and stubborn and she\'s going to keep going until someone either helps her or stops her."\n\n';
-                        text += 'She looks at you. The full weight of those dark eyes.\n\n';
+                        text += 'She lets that last part sit.\n\n';
+
+                        text += '"Personally?" She lowers the cup. "I think somebody handed her something she didn\'t ask for, and she decided to do something useful with it. I think she\'s tired and stubborn, and she\'s going to keep going until someone either helps her or stops her."\n\n';
+
+                        text += 'She looks at you with the full weight of those dark eyes.\n\n';
+
                         text += '"I think she drinks coffee."\n\n';
-                        text += 'The air between you turns into something with texture. You can feel it against your skin.\n\n';
-                        text += '"Hypothetically," Cruz says. Her voice is very soft now. "If I were going to help someone like that. What would she need?"\n\n';
+
+                        text += 'The air between you gets heavier.\n\n';
+
+                        text += '"Hypothetically," Cruz says. "If I were going to help someone like that. What would she need?"\n\n';
+
                         text += 'Your heart is doing things.\n\n';
+
                         text += '"Hypothetically," you say. "She\'d need someone to not arrest her."\n\n';
+
                         text += '"Done." Cruz doesn\'t blink. "What else?"\n\n';
+
                         text += '"Someone to make the data say what it needs to say."\n\n';
-                        text += '"Also done." She lifts her coffee. "What else?"\n\n';
-                        text += 'You look at her. She looks at you. The city moves around you both and neither of you is part of it right now.\n\n';
-                        text += '"Someone who knows," you say. Quiet. "And stays anyway."\n\n';
-                        text += 'Cruz takes a long sip of her coffee. Sets it down. The smile is gone. What\'s left is something realer.\n\n';
-                        text += '"I\'m right here," she says.';
+
+                        text += '"Also done. I\'m the one who writes the data." She lifts her coffee. "What else?"\n\n';
+
+                        text += 'You look at her. She looks at you. The city moves around you both.\n\n';
+
+                        text += '"Someone who knows," you say quietly. "And stays anyway."\n\n';
+
+                        text += 'Cruz takes a long sip of her coffee and sets it down.\n\n';
+
+                        text += '"Kelsie," she says. "I\'m the only person in this city qualified for that job."';
+
                     } else {
                         text += 'She pauses. "Personally, I think she\'s interesting. And I think she drinks coffee."\n\n';
-                        text += 'She looks at you sideways. The smile curls.\n\n';
+
+                        text += 'She looks at you sideways, and the corner of her mouth curls.\n\n';
+
                         text += '"Why do you ask?"\n\n';
+
                         text += '"Curious."\n\n';
-                        text += '"Mm." She nods. Sips. "Curiosity\'s a good quality. I\'m a big fan of curiosity."\n\n';
-                        text += 'She holds your gaze for one second longer than comfortable, and in that second you feel every layer of the conversation you just had fold in on itself.\n\n';
-                        text += '"Stay safe, Kelsie."';
+
+                        text += '"Mm." She nods and sips. "Curiosity\'s a good quality. It\'s gotten a lot of people arrested."\n\n';
+
+                        text += 'She holds your gaze one second longer than is comfortable, and in that second every layer of the conversation folds in on itself.\n\n';
+
+                        text += '"Stay out of trouble, Kelsie."';
+
                     }
-                    
+
                     return text;
                 },
                 onEnter: () => {
