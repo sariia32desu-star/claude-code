@@ -23471,6 +23471,156 @@ audioSystem.playSFX('buttonClick');
             return parts.join('\n\n');
         }
 
+        // ── Mesh & Sheer Overhaul, Step 15: Exhibition Seduction through the mesh ──
+        // hunt_seduction routes sheer states into the existing branches and sets
+        // gameState.flags._seductionSheer. The branch prose assumes she's bare in the open air,
+        // so while the flag is set these overlays add what the mesh shows, the target calling
+        // it out, and the peel before the first touch, and swap the lines that say otherwise.
+        var SHEER_SEDUCTION_BRANCH = {
+            sheer_braless: 'top', sheer_lingerie_top: 'top',
+            sheer_commando: 'btm', sheer_lingerie_bottom: 'btm',
+            sheer_bare: 'nkd', sheer_lingerie: 'bra'
+        };
+
+        function getSheerSeductionBranch() {
+            var st = getSheerState().state;
+            return SHEER_SEDUCTION_BRANCH[st] ? { state: st, branch: SHEER_SEDUCTION_BRANCH[st] } : null;
+        }
+
+        // The active sheer state, or '' when there is none. In the gallery it only counts when
+        // the gallery entry itself sets _seductionSheer (never a leftover from a save).
+        function _activeSeductionSheer() {
+            var s = gameState.flags._seductionSheer;
+            if (!s) return '';
+            if (gameState.flags._galleryMode) {
+                try {
+                    var e = SCENE_GALLERY_REGISTRY[_galleryActiveCatIndex].scenes[_galleryActiveSceneIndex];
+                    if (!e || !e.flagOverrides || e.flagOverrides._seductionSheer !== s) return '';
+                } catch (err) { return ''; }
+            }
+            return s;
+        }
+
+        function getSheerSeductionOverlay(stage, gender) {
+            var s = _activeSeductionSheer();
+            if (!s) return '';
+            var b = _sheerBodyCtx();
+            var n = b.noun;
+            var he = gender === 'f' ? 'she' : 'he', He = gender === 'f' ? 'She' : 'He', him = gender === 'f' ? 'her' : 'him', his = gender === 'f' ? 'her' : 'his';
+            var chest = b.bs === 'large' ? 'Your heavy tits sit right there behind the ' + n + ', nipples dark and stiff.'
+                : b.bs === 'small' ? 'Your small tits show straight through the ' + n + ', nipples stiff little points.'
+                : 'Your tits show straight through the ' + n + ', nipples dark and stiff.';
+            if (stage === 'approach') {
+                var seen = s === 'sheer_braless' || s === 'sheer_lingerie_top' ? chest
+                    : s === 'sheer_commando' || s === 'sheer_lingerie_bottom' ? 'Your bare slit shows through the ' + n + ', dark behind the grid, ' + b.hips + ' framing it.'
+                    : s === 'sheer_lingerie' ? 'Your nipples show dark through the cups of your ' + b.bra + '. Your bare slit shows through the crotch of your ' + b.panties + '.'
+                    : capFirst(b.shows) + ', all of it right there behind the grid.';
+                return 'The ' + n + ' does nothing to stop ' + him + '. ' + seen;
+            }
+            if (stage === 'proposition') {
+                var line = s === 'sheer_braless' || s === 'sheer_lingerie_top' ? '"You know I can see your nipples through that, right?"'
+                    : s === 'sheer_commando' || s === 'sheer_lingerie_bottom' ? '"You know I can see your pussy through that, right?"'
+                    : '"You know I can see everything, right?"';
+                return line + ' ' + he + ' says.\n\n"I know," you say. Your clit throbs when ' + his + ' eyes drop again.';
+            }
+            // undress: get them out before the first touch
+            var top = b.top, bottom = b.bottom;
+            var chestPeel;
+            var cg = b.st.chestGarment;
+            if (s === 'sheer_lingerie_top' || s === 'sheer_lingerie') {
+                chestPeel = He + ' drags the cups of your ' + b.bra + ' down under your tits instead of unhooking it.';
+            } else if (cg && (cg.category === 'tops' || cg.category === 'top')) {
+                chestPeel = He + ' shoves your ' + top + ' up over your tits and leaves it bunched at your collarbone.';
+            } else {
+                chestPeel = He + ' hooks ' + his + ' fingers in the neckline of your ' + top + ' and peels the ' + n + ' down off your tits. It bunches under them and holds them up for ' + him + '.';
+            }
+            var bare = b.bs === 'large' ? 'Your heavy tits spill out bare, nipples stiff in the air.' : b.bs === 'small' ? 'Your small tits are bare in the air, nipples tight.' : 'Your tits are bare in the air, nipples stiff.';
+            var hipsPeel = (s === 'sheer_lingerie_bottom' || s === 'sheer_lingerie')
+                ? He + ' hooks your ' + b.panties + ' and drags them down your thighs. ' + He + ' already knew exactly what was under them.'
+                : He + ' hikes your ' + bottom + ' up to your waist. ' + He + '\'s been looking at your pussy through it since the street. Now there\'s nothing over it at all.';
+            if (s === 'sheer_braless' || s === 'sheer_lingerie_top') return chestPeel + ' ' + bare;
+            if (s === 'sheer_commando' || s === 'sheer_lingerie_bottom') return hipsPeel;
+            if (s === 'sheer_lingerie') return He + ' takes a long look first. Your nipples show dark through the cups of your ' + b.bra + ' and your bare slit through the crotch of your ' + b.panties + ', and ' + he + ' looks at both like ' + he + '\'s deciding which to have first.';
+            // bare: the whole outfit down to a band at the waist
+            if (b.same) return He + ' peels the ' + n + ' down off your tits and hikes it up over your hips, and leaves it bunched at your waist, a band of ' + n + ' and nothing else. ' + bare;
+            return chestPeel + ' ' + bare + ' Then ' + he + ' hikes your ' + bottom + ' up to your waist.';
+        }
+
+        // Lines in the branch prose that put her bare in the open air before the peel.
+        // [scene regex, text regex, replacement builder]
+        var SHEER_SEDUCTION_FIXES = [
+            [/_top_approach_m$/, /Your bare skin in the open air, nipples visible, the full fact of it\./, function(b) { return 'Your bare tits behind the ' + b.noun + ', nipples visible through it, the full fact of it.'; }],
+            [/_top_approach_f$/, /the exposed curve of your breasts, how the cold air has tightened your nipples/, function(b) { return 'the curve of your breasts behind the ' + b.noun + ', how the cold air has tightened your nipples against it'; }],
+            [/_top_failure_disturbed_f$/, /your bare chest—the open air, all of it—/, function(b) { return 'your bare chest behind the ' + b.noun + '—all of it on show—'; }],
+            [/_top_failure_impressed_but_no_m$/, /your chest, bare and specific/, function(b) { return 'your chest, bare behind the ' + b.noun; }],
+            [/_top_proposition_f$/, /your bare chest in the night air/, function(b) { return 'your bare chest behind the ' + b.noun; }],
+            [/_top_soft_pivot_m$/, /your chest bare in the cool air, your nipples tightened from it/, function(b) { return 'your chest bare behind the ' + b.noun + ', your nipples tightened against it'; }],
+            [/_top_success_pivot_f$/, /Both palms flat against your bare skin, warm against the chill/, function(b) { return 'Both palms flat against your tits through the ' + b.noun + ', warm against the chill'; }],
+            [/_top_success_pivot_m$/, /his own hands on your bare skin/, function(b) { return 'his own hands on your tits through the ' + b.noun; }],
+            [/_top_sex_f$/, /Your bare chest in the open air\./, function(b) { return 'Your bare chest out of the ' + b.noun + ' and in the open air.'; }],
+            [/_btm_approach_f$/, /The bare stretch of you below your hem/, function(b) { return 'The bare stretch of you behind the ' + b.noun; }],
+            [/_btm_approach_m$/, /Bare skin where there should be fabric\./, function(b) { return 'Bare skin behind the ' + b.noun + ', right where fabric should be hiding it.'; }],
+            [/_btm_failure_dismissive_f$/, /the bare stretch below your hem/, function(b) { return 'the bare stretch behind the ' + b.noun; }],
+            [/_btm_proposition_f$/, /the bare stretch of you below the hem/, function(b) { return 'the bare stretch of you behind the ' + b.noun; }],
+            [/_btm_approach_m$/, /Below the hem: nothing\./, function(b) { return 'Behind the ' + b.noun + ': nothing.'; }],
+            [/_btm_soft_pivot_f$/, /your ([^.,]+?) on, the bare stretch of you from the hem all the way down\./, function(b, g) { return 'your ' + g + ' on, your bare pussy showing right through your ' + b.bottom + '.'; }],
+            [/_btm_soft_pivot_f$/, /Her palms spread across your bare hips\./, function(b) { return 'Her palms spread across your hips through the ' + b.noun + '.'; }],
+            [/_btm_soft_pivot_m$/, /your ([^.,]+?) on, the bare stretch of your thighs and everything above them visible below its hem\./, function(b, g) { return 'your ' + g + ' on, your bare pussy and everything around it visible straight through your ' + b.bottom + '.'; }],
+            [/_btm_success_pivot_f$/, /your ([^.,]+?) at your waist, bare skin from the hem all the way down\./, function(b) { return 'your ' + b.bottom + ' on, bare skin showing through ' + (b.st.hips === 'lingerie' ? 'them' : 'it') + ' from your hips down.'; }],
+            [/_btm_success_pivot_f$/, /Both at once, bare skin under her palms\./, function(b) { return 'Both at once, her palms on you through the ' + b.noun + '.'; }],
+            [/_btm_success_pivot_m$/, /His hands find your hips—under your ([^,]+?), on bare skin directly—/, function(b) { return 'His hands find your hips—on the ' + b.noun + ', your bare skin right under it—'; }],
+            [/_btm_proposition_f$/, /the hem of your ([^,]+?), the bare skin below it/, function(b) { return 'your ' + b.bottom + ', the bare skin behind ' + (b.st.hips === 'lingerie' ? 'them' : 'it'); }],
+            [/_nkd_approach_f$/, /She\'s bare\. All the way bare\. She walked up to me completely bare\./, function(b) { return 'She\'s bare under that. Every inch. She walked up to me in something I can see straight through.'; }],
+            [/_nkd_approach_m$/, /she\'s bare\. Every inch of her, out here in the open\./, function(b) { return 'she\'s bare under that. Every inch of her, out here behind a layer of ' + b.noun + '.'; }],
+            [/_nkd_success_pivot_m$/, /moving up your bare sides/, function(b) { return 'moving up your sides through the ' + b.noun; }],
+            [/_nkd_success_pivot_m$/, /Bare in my hands\./, function(b) { return 'Bare under the ' + b.noun + ', in my hands.'; }],
+            [/_nkd_soft_pivot_f$/, /against your bare sides/, function(b) { return 'against your sides through the ' + b.noun; }],
+            [/_nkd_success_pivot_f$/, /She walked out here bare and she\'s letting me touch her\./, function(b) { return 'She walked out here in see-through ' + b.noun + ' and she\'s letting me touch her.'; }]
+        ];
+
+        function installSheerSeductionOverlays() {
+            if (typeof story === 'undefined') return;
+            Object.keys(story).forEach(function(id) {
+                var m = /^exhibition_seduce_(bra|top|btm|nkd)_(.+)_([mf])$/.exec(id);
+                if (!m) return;
+                var sc = story[id], stage = m[2], gender = m[3];
+                var baseText = sc.text;
+                if (baseText) {
+                    sc.text = function() {
+                        var t = typeof baseText === 'function' ? baseText.apply(this, arguments) : baseText;
+                        if (!_activeSeductionSheer() || typeof t !== 'string') return t;
+                        var b = _sheerBodyCtx();
+                        SHEER_SEDUCTION_FIXES.forEach(function(fx) { if (fx[0].test(id)) t = t.replace(fx[1], function(all, g1) { return fx[2](b, g1); }); });
+                        if (stage === 'approach') t = _insertSheerParagraph(t, getSheerSeductionOverlay('approach', gender), /gaze|eyes|looking|look/i);
+                        if (stage === 'proposition' && t.split('\n\n').length > 1) t = _insertSheerParagraph(t, getSheerSeductionOverlay('proposition', gender), /./);
+                        if (stage === 'sex') {
+                            var _und = getSheerSeductionOverlay('undress', gender);
+                            // The bra branch undresses her itself, so its look-first beat opens the scene
+                            t = m[1] === 'bra' ? (_und ? _und + '\n\n' + t : t) : _insertSheerParagraph(t, _und, /./);
+                        }
+                        return t;
+                    };
+                }
+                // Every exit clears the flag; sheer lingerie takes the bra branch at naked rewards
+                if (/^(exit_success|exit_soft|failure_.+)$/.test(stage)) {
+                    var baseEnter = sc.onEnter;
+                    sc.onEnter = function() {
+                        var wasSheer = gameState.flags._seductionSheer;
+                        if (baseEnter) baseEnter.apply(this, arguments);
+                        if (wasSheer === 'sheer_lingerie' && m[1] === 'bra' && /^exit_/.test(stage)) {
+                            var d = stage === 'exit_success' ? [15, 10, 10] : [7, 2, 2];
+                            gameState.arousal = Math.min(100, (gameState.arousal || 0) + d[0]);
+                            gameState.corruption = Math.min(10000, (gameState.corruption || 0) + d[1]);
+                            applyExhibitionThrillGain(d[2]);
+                            updateStatus();
+                            showNotification('See-through underwear bonus (+' + d[0] + ' Arousal, +' + d[1] + ' Corruption, +' + d[2] + ' Exhibitionism Thrill)', 'achievement');
+                        }
+                        gameState.flags._seductionSheer = null;
+                    };
+                }
+            });
+        }
+
         function installSheerExhibitionOverlays() {
             if (typeof story === 'undefined') return;
             var _wrap = function(id, textFn, bonusFn) {
@@ -66426,9 +66576,18 @@ outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;backgroun
                     }
 
                     // Exhibition Seduction — route to the correct branch when exposed
-                    const _hsExposure = getExposureLevel();
+                    var _hsExposure = getExposureLevel();
                     const _hsCorruption = gameState.corruption || 0;
                     const _hsAppeal = calculateTotalAppeal();
+                    // Mesh Step 15A: clothed or in underwear, a sheer state picks the branch
+                    gameState.flags._seductionSheer = null;
+                    if ((_hsExposure === 'clothed' || _hsExposure === 'underwear_only') && _hsCorruption >= 6001 && _hsAppeal >= 80) {
+                        var _hsSheer = getSheerSeductionBranch();
+                        if (_hsSheer) {
+                            gameState.flags._seductionSheer = _hsSheer.state;
+                            _hsExposure = { bra: 'underwear_only', top: 'topless', btm: 'bottomless', nkd: 'naked' }[_hsSheer.branch];
+                        }
+                    }
                     if (_hsCorruption >= 6001 && _hsAppeal >= 80) {
                         if (_hsExposure === 'underwear_only') {
                             return [
@@ -201237,6 +201396,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
         // Mesh Step 10: sheer overlays and rewards on the 20 exhibition events
         installSheerExhibitionOverlays();
+        // Mesh Step 15: sheer overlays and exits on the Exhibition Seduction chains
+        installSheerSeductionOverlays();
         
 
 
