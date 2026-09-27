@@ -26532,6 +26532,17 @@ audioSystem.playSFX('buttonClick');
             return 'You run with both arms clamped over your see-through ' + bra + '. The porta potty is fifty feet away, and those fifty feet feel like a mile.\n\nA man on a bench turns to watch. You don\'t look at him. You can\'t.\n\nYou wrench the door open and throw yourself inside. The latch clicks. You stand there shaking, face on fire, your nipples stiff under your arms.';
         }
 
+        // Gallery: dress her for the Panties Exposed scenes (a tee, a bra, a lace thong, no bottom).
+        function bpeDressPantiesExposedForGallery() {
+            if (!gameState.flags._galleryMode) return;
+            gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                bottom: null, dress: null, outerwear: null,
+                top: { id: 'plain_white_tee', name: 'Plain White T-Shirt', category: 'tops', tags: ['material:cotton'] },
+                bra: { id: 'basic_black_bra', name: 'Basic Black Bra', category: 'bras', tags: ['material:cotton'] },
+                panties: { id: 'thong_panties', name: 'Lace Thong', category: 'panties', tags: ['material:lace'] }
+            });
+        }
+
         function checkAccidentalExposure(districtId) {
             // Only fires when clothed (not in any exhibition state)
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless()) return false;
@@ -52059,6 +52070,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'exhibition_seduce_bra_sex_m', label: 'Bra & Panties (Male)', galleryChain: { text: 'Turn around.', nextScene: 'exhibition_seduce_bra_sex_2_m' } },
                     { sceneId: 'exhibition_seduce_top_sex_m', label: 'Topless (Male)', galleryChain: { text: 'Let him.', nextScene: 'exhibition_seduce_top_sex_2_m' } },
                     { sceneId: 'exhibition_seduce_btm_sex_m', label: 'Bottomless (Male)', galleryChain: { text: 'Let him.', nextScene: 'exhibition_seduce_btm_sex_2_m' } },
+                    { sceneId: 'exhibition_seduce_pan_sex_m', label: 'Panties Exposed (Male)', galleryChain: { text: 'Let him.', nextScene: 'exhibition_seduce_pan_sex_2_m' } },
                     { sceneId: 'exhibition_seduce_nkd_sex_m', label: 'Fully Naked (Male)', galleryChain: { text: 'Turn around.', nextScene: 'exhibition_seduce_nkd_sex_2_m' } },
                     { sceneId: 'exhibition_seduce_bra_sex_f', label: 'Bra & Panties (Female)', galleryChain: { text: 'Continue.', nextScene: 'exhibition_seduce_bra_sex_2_f' } },
                     { sceneId: 'exhibition_seduce_top_sex_f', label: 'Topless (Female)' },
@@ -210857,6 +210869,111 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 choices: [
                     { text: 'Move on.', nextScene: 'city_exploration' }
                 ]
+            },
+
+            exhibition_seduce_pan_sex_m: {
+                galleryOnEnter: function() { bpeDressPantiesExposedForGallery(); },
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    var pan = x.pan, top = x.top;
+                    var panIt = x.thong ? 'it' : 'them';
+                    let desc = '';
+                    desc += 'He turns you by the hips until you\'re facing the brick, and steps in close behind you. You feel him look down.\n\n';
+                    desc += 'The hem of your ' + top + ' has ridden up to the small of your back. From where he\'s standing he has ' + getPantiesExposedAssView() + '.\n\n';
+                    desc += (x.butt === 'large' ? 'He fills both hands with your ass and squeezes, and it spills between his fingers.'
+                        : x.butt === 'small' ? 'His hands cover your tight little ass completely, fingers digging into the muscle.'
+                        : 'He takes your ass in both hands and squeezes, kneading, spreading your cheeks and letting them go.') + ' ' +
+                        (x.thong ? 'His thumbs trace the string down between your cheeks.'
+                        : x.cut === 'cheeky' ? 'His thumbs push under the leg bands where your cheeks spill out.'
+                        : 'His thumbs follow the leg bands of your ' + pan + ' down between your thighs.') + '\n\n';
+                    desc += '"Mmh—" You brace your palms flat on the brick.\n\n';
+                    desc += 'His fingers slide between your thighs from behind and find ' + (x.thong ? 'the thin strip of your ' + pan : 'the crotch of your ' + pan) + '. It\'s soaked through. He presses two fingers into it and drags them up and down your slit through the fabric, slow, and your clit jumps every time he passes over it.\n\n';
+                    desc += '"Soaked," he says against your ear. "You walked around like this?"\n\n';
+                    desc += '"Nnh— yes—"\n\n';
+                    desc += (x.thong ? 'He hooks the string with one finger and pulls it aside over the curve of your cheek, and cool air hits your bare pussy.'
+                        : 'He hooks the crotch of your ' + pan + ' with two fingers and pulls it aside, holding it against your thigh, and cool air hits your bare pussy.') + '\n\n';
+                    desc += 'Two fingers slide through your folds from behind, spreading you open, dragging slick up to your clit and back down. You\'re dripping onto his knuckles.\n\n';
+                    desc += '"Ah—" Your hips push back into his hand before you tell them to. ' +
+                        _bpeBt5(x.bt, 'Your slight body bends forward against the wall, your ass tipping up for him.', 'Your thighs flex and spread, holding you steady for him.',
+                            'Your hips roll back into him, your waist dipping.', 'Your thick thighs spread wider, and your ass pushes back heavy into his hand.',
+                            'Your thighs spread wider for him.') + '\n\n';
+                    desc += '"These are in the way," he says.\n\n';
+                    desc += (x.thong ? 'He hooks both thumbs in the sides of your ' + pan + ' and drags it down over your ass, the string peeling out from between your cheeks, all the way down your thighs until it drops around your ankles.'
+                        : x.cut === 'cheeky' ? 'He peels your ' + pan + ' down off your ass, the cheeky cut sliding off your cheeks, and down your thighs until they drop around your ankles.'
+                        : x.cut === 'boyshort' ? 'He works your ' + pan + ' down over your ass, the snug fabric rolling as it goes, and down your thighs until they drop around your ankles.'
+                        : 'He pulls your ' + pan + ' down over your ass and down your thighs until they drop around your ankles.') + ' You step out of ' + panIt + '.\n\n';
+                    desc += 'Now there\'s nothing on you below the hem of your ' + top + '. He looks for a long second, both hands on your bare ass, spreading you open.\n\n';
+                    desc += 'Then two fingers push into your cunt from behind. Slow. Your walls grip them hot and soaking, and he curls them down toward your front wall until he finds the ridged spot there.\n\n';
+                    desc += '"Mmf— there—" You press your forehead to the brick.\n\n';
+                    desc += 'His other hand comes around your hip and finds your clit from the front. He rubs it in tight circles while his fingers work in and out of you from behind, short, deep strokes, and the wet sounds bounce off the walls.\n\n';
+                    desc += '"Hhng—" Your thighs start to shake. You\'re rocking back onto his fingers and grinding into his other hand, and the pressure in your belly winds tighter with every stroke.\n\n';
+                    desc += '"Don\'t stop— don\'t—" The rest of it dissolves.\n\n';
+                    desc += 'You\'re right at the edge, clenching on his fingers, and he can feel it.\n\n';
+                    desc += 'He draws his fingers out of you.\n\n';
+                    desc += 'You make a sound you didn\'t plan to make. He laughs, low, right against the back of your neck.\n\n';
+                    desc += 'Behind you, his belt buckle clinks open.';
+                    return desc.trim();
+                },
+                onEnter: function() {
+                    completeSexConsensualMale({ thrill: 15, time: 15, skipPregnancy: true });
+                },
+                choices: [
+                    { text: 'Let him.', nextScene: 'exhibition_seduce_pan_sex_2_m' }
+                ]
+            },
+
+            exhibition_seduce_pan_sex_2_m: {
+                galleryOnEnter: function() { bpeDressPantiesExposedForGallery(); },
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    var pan = x.pan, top = x.top;
+                    let desc = '';
+                    desc += 'The head of his cock nudges at your pussy from behind. It slides through your wet folds once, twice, then finds your hole and pushes in.\n\n';
+                    desc += '"Hh—" The breath leaves you against the brick.\n\n';
+                    desc += 'He\'s thick, and the stretch opens you slowly, a burn right at the edge before it melts into fullness. He sinks all the way in until his hips are flush against ' +
+                        (x.butt === 'large' ? 'your full ass' : x.butt === 'small' ? 'your tight little ass' : 'your ass') + '. He holds there, and you feel him twitch inside you.\n\n';
+                    desc += '"Fuck," he breathes. "Look at you."\n\n';
+                    desc += 'Then his hands slide up under the hem of your ' + top + ' and push it up over your stomach, over your chest, until it bunches under your arms. ' +
+                        (x.braless ? 'There\'s nothing under it. His palms close on your bare tits' : 'He finds your bra and shoves the cups up, and your tits drop into his palms') +
+                        (x.bs === 'large' ? ', heavy enough to spill out of his hands.' : x.bs === 'small' ? ', his hands covering them completely.' : ', filling his hands.') + '\n\n';
+                    desc += 'He pinches both nipples at once and starts to move.\n\n';
+                    desc += 'Long strokes first, pulling almost all the way out before he drives back in. From this angle the head of his cock drags along the front wall of your cunt every time, and your nails scrape the brick.\n\n';
+                    desc += '"Nnh— ah—"\n\n';
+                    desc += _bpeBt5(x.bt, 'Every thrust lifts your slight body up onto your toes.', 'You brace your thighs and push back into every thrust.',
+                        'Your hips roll back to meet him, your ass bouncing against his stomach.', 'Your thick thighs shake, and your ass ripples every time his hips slap into it.',
+                        'You push back to meet every thrust.') + '\n\n';
+                    desc += 'He keeps that pace, unhurried, his hands kneading your tits under your rucked-up ' + top + ', his breath hot on the back of your neck. Your nipples are raw from his fingers, and your clit is aching for anything.\n\n';
+                    desc += 'One hand leaves your tit and slides down between your legs. His fingers find your clit and start rubbing in quick, tight circles.\n\n';
+                    desc += '"Ah— ah— fuck—"\n\n';
+                    desc += 'His strokes shorten and quicken, hips snapping into you, ' +
+                        (x.butt === 'large' ? 'the slap of skin on your full ass loud off both walls.' : x.butt === 'small' ? 'every thrust bottoming out hard against your tight little ass.' : 'the slap of skin loud off both walls.') +
+                        ' His fingers never leave your clit.\n\n';
+                    desc += 'The pressure gathers into one hot point under his fingers. Your thighs lock. Your forehead drops against the brick.\n\n';
+                    desc += '"I\'m gonna— I\'m—" You don\'t get to finish it.\n\n';
+                    desc += 'You cum with him buried inside you. Your cunt clamps down on his cock in hard spasms, one, two, a third that rolls on into a fourth, and your knees buckle.\n\n';
+                    desc += '"Nngh— ahh— oh fuck—" It tears out of you and bounces off the brick. He holds you up by the hips and keeps rubbing your clit through every shudder, until you\'re jerking away from his fingers.\n\n';
+                    desc += 'Your pussy keeps fluttering around him in smaller and smaller squeezes. Your legs are shaking so hard he has to hold you against the wall.\n\n';
+                    desc += 'He drives in twice more, hard, and holds deep. His cock jerks inside you in thick spurts, and a rough groan tears out of him against your shoulder.\n\n';
+                    desc += 'For a moment neither of you moves. His forehead rests between your shoulder blades, and you can feel his heart hammering against your back.\n\n';
+                    desc += 'He pulls out slowly. You turn around in his arms, back to the brick now, and press your mouth to his throat. He makes a soft sound. He thinks it\'s more of the same.\n\n';
+                    desc += 'Your fangs break skin. The venom turns the sting into something that drags another groan out of him, deeper than the last, and his weight sags against you.\n\n';
+                    desc += 'You drink. Copper floods your mouth in slow, heavy pulls, his heartbeat thudding through every swallow, until the thirst folds in on itself and goes quiet.\n\n';
+                    desc += 'You pull back and run your tongue over the punctures. They seal. Smooth skin where your fangs were.\n\n';
+                    desc += 'Somewhere out on the street a car alarm goes off and stops. The air smells like brick dust and sex.\n\n';
+                    desc += 'His cum is sliding down the inside of your thigh. You tug your ' + top + ' back down over your tits, pick your ' + pan + ' up off the ground, and pull ' + (x.thong ? 'it' : 'them') + ' back up over your wet thighs while he buckles his belt.';
+                    return desc.trim();
+                },
+                onEnter: function() {
+                    advanceTime(20);
+                    gameState.arousal = 0;
+                    gameState.thirst = 0;
+                    updateStatus();
+                },
+                choices: function() {
+                    // A soft success leaves through the soft exit
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_pan_exit_soft_m' : 'exhibition_seduce_pan_exit_success_m' }];
+                }
             },
 
             exhibition_seduce_pan_failure_impressed_but_no_m: {
