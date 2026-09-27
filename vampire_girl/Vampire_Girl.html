@@ -13426,6 +13426,7 @@
                 _jaewonMeshTopSexDay: 0,
                 _districtSheerExhibPregnancy: false,
                 _districtPantiesExhibPregnancy: false, // Bra/Panties Exposed Step 8
+                _districtPantiesTornPending: false,
                 _slumsSheerExhibPregnancy: false,
                 _sheerDiscovery: null,
                 _sheerDiscoveryCondom: null,
@@ -17121,6 +17122,7 @@
                 if (gameState.flags._jaewonMeshTopSexDay === undefined) gameState.flags._jaewonMeshTopSexDay = 0;
                 if (gameState.flags._districtSheerExhibPregnancy === undefined) gameState.flags._districtSheerExhibPregnancy = false;
                 if (gameState.flags._districtPantiesExhibPregnancy === undefined) gameState.flags._districtPantiesExhibPregnancy = false; // Bra/Panties Exposed Step 8
+                if (gameState.flags._districtPantiesTornPending === undefined) gameState.flags._districtPantiesTornPending = false;
                 if (gameState.flags._slumsSheerExhibPregnancy === undefined) gameState.flags._slumsSheerExhibPregnancy = false;
                 if (gameState.flags._sheerDiscovery === undefined) gameState.flags._sheerDiscovery = null;
                 if (gameState.flags._sheerDiscoveryCondom === undefined) gameState.flags._sheerDiscoveryCondom = null;
@@ -24710,9 +24712,29 @@ audioSystem.playSFX('buttonClick');
         // time. Routing only forces a scene below its cap: 4001 once Innocent is in, 8001 once
         // Experienced is in, Infinity once all three are. Until then the regular choices stay.
         var BPE_EXHIB_TIER_CAP = {
-            district_exhibition_panties: 8001,
+            district_exhibition_panties: Infinity,
             slums_exhibition_panties: 0
         };
+
+        // Bra/Panties Exposed Step 8: at 8001+ she has them tear her panties. onEnter runs before
+        // the scene text, so onEnter only marks it (flagKey); the scene's exit choice calls this
+        // to move the torn panties into the backpack (damage 100) and leave her bottomless.
+        function bpeTearPantiesToBackpack(flagKey) {
+            if (!gameState.flags[flagKey]) return;
+            gameState.flags[flagKey] = false;
+            if (gameState.flags._galleryMode) return;
+            var p = gameState.currentOutfit && gameState.currentOutfit.panties;
+            if (!p) return;
+            initializeItemDamage(p);
+            p.damage = 100;
+            p.category = getCategoryFromSlot('panties');
+            p.owned = true;
+            gameState.inventory.clothing.push(p);
+            gameState.currentOutfit.panties = null;
+            if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
+            checkAndSetExposureState();
+            updateStatus();
+        }
 
         function getHarassExhibScene(area) {
             var p = area === 'slums' ? 'slums' : 'district';
@@ -50610,7 +50632,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'district_exhibition_naked', label: 'District — Naked Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'district_wet_exhibition', label: 'District — Wet Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'district_sheer_exhibition', label: 'District: Sheer Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
-                    { sceneId: 'district_exhibition_panties', label: 'District: Panties Exposed Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001}] },
+                    { sceneId: 'district_exhibition_panties', label: 'District: Panties Exposed Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_exhibition_underwear', label: 'Slums — Underwear Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_exhibition_topless', label: 'Slums — Topless Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_exhibition_bottomless', label: 'Slums — Bottomless Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
@@ -115025,15 +115047,90 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     desc += '<p><em>Your hands went to the wall first. Your foot stepped out of your ' + panWord + ' first. The rest of you just caught up.</em></p>';
                     desc += '<p>You step out onto the street on hollow legs, cum soaking into your ' + panWord + ' and drying on your ass, and your pussy clenches when a man behind you slows down to look.</p>';
                     } else {
-                    // ══ DEEPLY CORRUPTED TIER (8001+): Step 8, next pass. ══
-                    desc += '<p>This tier isn\'t written yet.</p>';
+                    // ══ DEEPLY CORRUPTED TIER (8001+): she drives it. She leads them in, bends over
+                    // the lid before anyone touches her, and pulls the crotch aside herself. She tells
+                    // the tall one to tear her panties, then takes him from behind with the stocky one
+                    // in her mouth. She walks out bottomless; the torn panties go in her backpack
+                    // (onEnter marks it, the choice action moves them, so this text still sees them). ══
+                    var space = park ? 'space behind the shed' : 'alley';
+
+                    // ── SHE LEADS THEM IN (from behind) ──
+                    desc += '<p>The tall one reaches for your wrist. You take his hand instead and start walking, and the stocky one falls in behind you. By the time you get ' + alley + ', you\'re the one leading.</p>';
+                    desc += '<p>You walk slow so they get their fill. ' +
+                        (_butt === 'large' ? 'Your full ass rolls under the hem of your ' + top + ', ' : _butt === 'small' ? 'Your tight little ass flexes under the hem of your ' + top + ', ' : 'Your ass sways under the hem of your ' + top + ', ') +
+                        (thong ? 'the thong buried between your cheeks' : cut === 'cheeky' ? 'half out of your ' + pan : cut === 'boyshort' ? 'snug in your ' + pan : 'in nothing but your ' + pan) +
+                        '. You can hear the stocky one breathing through his mouth.</p>';
+                    desc += '<p>' + (park
+                        ? 'Corrugated metal. A stack of wet leaf bags. The path lights a hundred feet off through the trees, close enough to matter.'
+                        : 'Brick walls. The dumpster at the far end. The streetlight spilling in from the alley mouth, bright enough to matter.') + ' You stop in the middle of it in your ' + top + ' and your ' + pan + ', and you don\'t turn around yet.</p>';
+
+                    // ── THE STRIP: she does it ──
+                    desc += '<p>You bend over ' + bend + ' before either of them touches you. The metal\'s cold through your ' + top + '. You reach back with one hand and ' +
+                        (thong ? 'hook the string of your thong aside' : 'pull the crotch of your ' + pan + ' aside') + ', and you look back at them over your shoulder.</p>';
+                    desc += '<p>"This is what you\'ve been staring at," you say. "Come look closer."</p>';
+                    desc += '<p>The tall one gets there first. His palm lands on your ass ' +
+                        (_butt === 'large' ? 'and sinks into the full, heavy cheek' : _butt === 'small' ? 'and covers your tight little cheek almost whole' : 'and squeezes hard') +
+                        ', and his thumb slides down into your wet slit. "Fuck. You\'re dripping."</p>';
+                    desc += '<p>"I know."</p>';
+                    desc += '<p>You push up on one arm and drag your ' + top + ' up over your tits yourself. ' +
+                        (_braless ? '' : 'You tug your bra cups down under them too. ') +
+                        (_bs === 'large' ? 'Your heavy tits drop onto the cold lid, nipples hard as stone.' : _bs === 'small' ? 'Your small tits press to the cold lid, nipples tight.' : 'Your tits press bare to the cold lid, nipples hard.') +
+                        ' You arch so they scrape the metal, and you shiver.</p>';
+
+                    // ── ACT 1: HIS FINGERS, THE OTHER ONE IN HER MOUTH ──
+                    desc += '<p>"Fingers," you tell the tall one. "Two." He pushes two into you, and your cunt swallows them to the knuckle. "Mmh—yes—"</p>';
+                    desc += '<p>"Three." He gives you three, and the stretch makes your toes curl. You fuck yourself back onto his hand, slow and deep, and the wet sounds fill the ' + space + '.</p>';
+                    desc += '<p>The stocky one walks around to the other side of ' + bend + ' so he\'s in front of you. You reach across the lid, open his jeans, and pull his cock out. It\'s thick and already leaking. You look up at him and take it in your mouth.</p>';
+                    desc += '<p>You suck him in time with the tall one\'s fingers. Every thrust of that hand pushes you forward onto the stocky one\'s cock, and every drag back pulls you off it. "Mmf—mmf—" Spit runs down your chin onto the lid.</p>';
+                    desc += '<p>"Jesus," the stocky one says. His hand fists in your hair, and you let him keep it there.</p>';
+
+                    // ── THE TEAR ──
+                    desc += '<p>The tall one pulls his fingers out and hooks the waistband of your ' + panWord + ' to drag ' + panIt + ' down. You pull off the stocky one\'s cock and look back at him. "Tear ' + panIt + '."</p>';
+                    desc += '<p>' + (thong
+                        ? 'He grabs the string at your hip and yanks. It snaps with a sharp little sound, and the whole thong falls away from your ass.'
+                        : 'He grabs the waistband in both fists and pulls. The seam at your hip gives with a rip, then the other one, and your ' + pan + ' come away from your ass in one ruined piece.') +
+                        ' Your clit throbs at the sound.</p>';
+                    desc += '<p>You take the torn scrap out of his hand and drop it on the lid beside you. "Now fuck me."</p>';
+
+                    // ── ACT 2: THE TALL ONE BEHIND, THE STOCKY ONE IN FRONT ──
+                    desc += '<p>He spreads your cheeks with both thumbs and lines himself up. ' +
+                        (_bt === 'petite' ? 'You go up on your toes to meet him, your slight body stretched long across the lid.' : _bt === 'athletic' ? 'You brace your legs wide and push back, strong and steady.' : _bt === 'curvy' ? 'You tip your hips up for him, round and soft and bare now.' : _bt === 'thick' ? 'You spread your thick thighs and tip your soft ass up for him.' : 'You tip your hips up for him, bare now from the waist down.') + '</p>';
+                    desc += '<p>He pushes into you in one long, thick slide, all the way to the base. "Ahh—fuck—yes—" You clench around him on purpose and feel him twitch.</p>';
+                    desc += '<p>You take the stocky one back into your mouth and set the pace. You rock back onto the tall one and forward onto the stocky one, fucking yourself between them over the lid. ' +
+                        (_butt === 'large' ? 'Your full ass claps against the tall one\'s hips on every stroke.' : _butt === 'small' ? 'Your tight little ass smacks against the tall one\'s hips on every stroke.' : 'Your ass slaps against the tall one\'s hips on every stroke.') + '</p>';
+                    desc += '<p>Your bare tits drag across the cold lid, nipples scraping metal. Your clit grinds the edge every time you rock back. You can smell yourself over the ' + (park ? 'wet leaves' : 'garbage') + ', sharp and sweet.</p>';
+                    desc += '<p>You pull off the stocky one long enough to look toward the ' + (park ? 'path' : 'alley mouth') + '. Anyone walking past could see you: bent over ' + bend + ' with your ass bare, one cock in you and another wet from your mouth. "Harder," you tell the tall one. He gives it to you.</p>';
+                    desc += '<p>"Mmf—mmf—MMF—" The sounds are loud and wet and yours, and you don\'t care who hears.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>The pressure crests. Your cunt starts clenching around the tall one in quick, hungry squeezes, and your hips lose the rhythm and just grind back, frantic.</p>';
+                    desc += '<p>You pull off the stocky one to gasp. "Right there—don\'t stop—don\'t you dare stop—"</p>';
+
+                    // ── KELSIE'S ORGASM ──
+                    desc += '<p>You cum with the tall one buried to the base. Your cunt seizes around him in hard, rolling spasms, and ' +
+                        (_bt === 'petite' ? 'your small body shakes across the lid' : _bt === 'athletic' ? 'every muscle in your back and legs locks tight' : _bt === 'curvy' ? 'your hips roll back into him in slow, heavy shudders' : _bt === 'thick' ? 'your thick thighs quake and your soft ass trembles against him' : 'your whole body shudders across the lid') +
+                        '. "AH—fuck—FUCK—" It rings off ' + wallShort + ', and you let it.</p>';
+                    desc += '<p>You keep grinding back through it, wringing out every aftershock while your pussy flutters around him and slick runs down your bare thighs.</p>';
+
+                    // ── THEIR ORGASMS ──
+                    desc += '<p>You take the stocky one back in your mouth and suck him hard and fast while the tall one keeps fucking you. The stocky one cums first, his cock kicking on your tongue in thick, salty spurts. You swallow every one and lick your lips.</p>';
+                    desc += '<p>The tall one grabs your hips, pulls you back onto him, and cums deep, his cock throbbing inside you. "All of it," you tell him. You clench on every surge until he groans.</p>';
+
+                    // ── AFTERMATH: bottomless for the walk home ──
+                    desc += '<p>He pulls out. Cum runs out of you and down your bare thigh. There\'s nothing to catch it now, and you leave it.</p>';
+                    desc += '<p>You push up off the lid and tug your ' + top + ' back down over your tits. It stops at your hips. Below it you\'re bare now, your pussy swollen and dripping and out for anyone who looks.</p>';
+                    desc += '<p>You pick the torn scrap of your ' + panWord + ' up off the lid and shove it in your backpack.</p>';
+                    desc += '<p>The tall one\'s leaning on ' + wallShort + ', breathing hard. "You walked in here in your panties," he says. "You\'re walking out without them."</p>';
+                    desc += '<p>"That\'s the idea," you tell him.</p>';
+                    desc += '<p>You step out onto the street bare from the waist down, cum shining on your thighs, and you walk slow so the whole block gets a good look at your ass.</p>';
                     }
                     return desc;
                 },
                 onEnter: function() {
                     trackGalleryScene('district_exhibition_panties');
-                    // Panties outcome: they stay on below 8001. At 8001+ (written in a later pass)
-                    // they're torn and go into the backpack as damaged.
+                    // Panties outcome: they stay on below 8001. At 8001+ they're torn; the exit choice
+                    // moves them into the backpack as damaged (bpeTearPantiesToBackpack), after the text.
+                    gameState.flags._districtPantiesTornPending = (gameState.corruption || 0) >= 8001;
                     completeSexAssaultMale({
                         time: 15, hygiene: -30,
                         rapeType: 'district_exhibition_panties',
@@ -115060,11 +115157,15 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (gameState.flags._districtPantiesExhibPregnancy) {
                         gameState.flags._districtPantiesExhibPregnancy = false;
                         return [{ text: 'Keep walking.', action: function() {
-                            showMessage('<p>Three blocks out, something shifts. Deep in your belly. Below the ache they left. A settling. A lock turning.</p><p><em>Oh God. Oh God no.</em></p><p>Your hand presses flat against your stomach. Their cum is still soaking into your ' + (getSceneClothingVars().pantiesCut === 'thong' ? 'thong' : getSceneClothingVars().pantiesName) + '. You keep walking because there\'s nothing else to do.</p>');
+                            bpeTearPantiesToBackpack('_districtPantiesTornPending');
+                            showMessage('<p>Three blocks out, something shifts. Deep in your belly. Below the ache they left. A settling. A lock turning.</p><p><em>Oh God. Oh God no.</em></p><p>Your hand presses flat against your stomach. Their cum is still ' + (getSceneClothingVars().hasPanties ? 'soaking into your ' + (getSceneClothingVars().pantiesCut === 'thong' ? 'thong' : getSceneClothingVars().pantiesName) : 'running down your bare thighs') + '. You keep walking because there\'s nothing else to do.</p>');
                             showScene('city_exploration');
                         } }];
                     }
-                    return [{ text: 'Keep walking.', nextScene: 'city_exploration' }];
+                    return [{ text: 'Keep walking.', action: function() {
+                        bpeTearPantiesToBackpack('_districtPantiesTornPending');
+                        showScene('city_exploration');
+                    } }];
                 }
             },
 
