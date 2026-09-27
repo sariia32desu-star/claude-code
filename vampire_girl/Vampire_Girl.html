@@ -52074,6 +52074,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'exhibition_seduce_nkd_sex_m', label: 'Fully Naked (Male)', galleryChain: { text: 'Turn around.', nextScene: 'exhibition_seduce_nkd_sex_2_m' } },
                     { sceneId: 'exhibition_seduce_bra_sex_f', label: 'Bra & Panties (Female)', galleryChain: { text: 'Continue.', nextScene: 'exhibition_seduce_bra_sex_2_f' } },
                     { sceneId: 'exhibition_seduce_top_sex_f', label: 'Topless (Female)' },
+                    { sceneId: 'exhibition_seduce_pan_sex_f', label: 'Panties Exposed (Female)' },
                     { sceneId: 'exhibition_seduce_btm_sex_f', label: 'Bottomless (Female)' },
                     { sceneId: 'exhibition_seduce_nkd_sex_f', label: 'Fully Naked (Female)' },
                     { sceneId: 'exhibition_bus_sex', label: 'Bus — With Panties', flagOverrides: { _busSexGalleryPanties: true } },
@@ -211094,6 +211095,77 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 choices: [
                     { text: 'Keep going.', nextScene: 'exhibition_seduce_pan_sex_f' }
                 ]
+            },
+
+            exhibition_seduce_pan_sex_f: {
+                galleryOnEnter: function() { bpeDressPantiesExposedForGallery(); },
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    var pan = x.pan, top = x.top;
+                    var panIt = x.thong ? 'it' : 'them';
+                    let desc = 'She doesn\'t ask. She keeps you facing the wall with one hand flat between your shoulder blades, and looks down at what she\'s got.\n\n';
+                    desc += 'Brick cold under your palms. Her perfume, smoky with vanilla under it, close behind you.\n\n';
+                    desc += 'The hem of your ' + top + ' has ridden up to the small of your back, and she has ' + getPantiesExposedAssView() + '.\n\n';
+                    desc += (x.butt === 'large' ? 'She takes your ass in both hands and squeezes, and it overflows her grip.'
+                        : x.butt === 'small' ? 'Her hands cover your tight little ass, and she squeezes hard enough to make you gasp.'
+                        : 'She squeezes your ass in both hands, slow, spreading your cheeks and letting them go.') + ' ' +
+                        (x.thong ? 'Her fingertip runs down the string, following it between your cheeks.'
+                        : x.cut === 'cheeky' ? 'Her fingertips trace the leg bands where your cheeks spill out.'
+                        : 'Her fingertips trace the leg bands of your ' + pan + ' down to where they meet between your thighs.') + '\n\n';
+                    desc += '"Hhh—" You press your forehead to the brick.\n\n';
+                    desc += 'Her fingers slide between your thighs from behind and find ' + (x.thong ? 'the thin strip of your ' + pan : 'the crotch of your ' + pan) + ', soaked through. She rubs slow circles into it with two fingers, right over your clit, and your hips tip back into her hand on their own.\n\n';
+                    desc += '"You\'ve been wet this whole time," she murmurs.\n\n';
+                    desc += '"Nnh— yes—"\n\n';
+                    desc += 'She sinks to her knees behind you. You feel her breath first, warm on the backs of your thighs, then her mouth on your ass, a slow, open kiss that leaves lipstick on your skin.\n\n';
+                    desc += (x.thong ? 'She hooks the string with one finger and pulls it aside, and her tongue follows right behind it.'
+                        : 'She hooks the crotch of your ' + pan + ' aside and holds it against your thigh, and her tongue is on you before the air is.') + '\n\n';
+                    desc += 'One long stroke from behind, from your hole all the way down to your clit and back. You\'re so wet she has to swallow.\n\n';
+                    desc += '"Ahh—" Your fingers curl against the brick.\n\n';
+                    desc += '"Off," she says against your thigh.\n\n';
+                    desc += (x.thong ? 'She peels your ' + pan + ' down, the string sliding out from between your cheeks, all the way down your thighs until it drops around your ankles.'
+                        : x.cut === 'cheeky' ? 'She peels your ' + pan + ' down off your cheeks and down your thighs until they drop around your ankles.'
+                        : x.cut === 'boyshort' ? 'She rolls your ' + pan + ' down over your ass and down your thighs until they drop around your ankles.'
+                        : 'She pulls your ' + pan + ' down your thighs until they drop around your ankles.') + ' You step out of ' + panIt + ' and widen your stance for her.\n\n';
+                    desc += _bpeBt5(x.bt, 'Your slight body bends forward, your ass tipping up to her mouth.', 'Your thighs flex wide and hold you there for her.',
+                        'Your hips tip back, your waist dipping low for her.', 'Your thick thighs spread wide, and she pulls your cheeks apart with both hands to get closer.',
+                        'Your thighs spread wide for her.') + '\n\n';
+                    desc += 'Then she eats you from behind. Her tongue pushes into your cunt, curling, fucking you slowly with it, then drags down to your clit and flicks it hard before sliding back up. Her nose presses between your cheeks, and she doesn\'t care.\n\n';
+                    desc += '"Fuck— oh, fuck—"\n\n';
+                    desc += 'She reaches around your hip and finds your clit with her fingers, rubbing tight circles while her tongue works your hole. Your thighs start to shake.\n\n';
+                    desc += 'You\'re grinding back onto her face now, and the pressure in your belly is winding so tight you can\'t breathe around it.\n\n';
+                    desc += 'She pulls her mouth away. The sound you make is half a sob.\n\n';
+                    desc += 'She stands and turns you around by the hips, back to the brick now. Her mouth is shining, her lipstick smeared, and she\'s smiling.\n\n';
+                    desc += 'Her hands slide up under the hem of your ' + top + ' and push it up over your chest. ' +
+                        (x.braless ? 'There\'s nothing under it, and she makes a pleased sound at your bare tits' : 'She shoves the cups of your bra up, and your tits drop free') +
+                        (x.bs === 'large' ? ', heavy and full in the cold air.' : x.bs === 'small' ? ', small and tight, the nipples standing stiff.' : ', nipples tight in the cold air.') + '\n\n';
+                    desc += 'She bends her head and takes your nipple into her mouth, and two of her fingers slide into your cunt at the same time.\n\n';
+                    desc += '"Hhng—"\n\n';
+                    desc += 'She sucks hard, tongue flicking the tip, while her fingers curl forward into your front wall and her thumb settles on your clit. She moves from one nipple to the other and back, and she never lets her hand slow down.\n\n';
+                    desc += (x.bs === 'large' ? 'Her free hand squeezes your other tit, fingers sinking in.' : x.bs === 'small' ? 'Her free hand covers your other tit completely, pinching the nipple.' : 'Her free hand kneads your other tit, pinching the nipple.') + ' Your back arches off the brick into her mouth.\n\n';
+                    desc += '"Don\'t stop— please—"\n\n';
+                    desc += 'Her fingers drive short and fast, the heel of her hand grinding your clit, her teeth grazing your nipple. Your thighs lock. Your head falls back against the brick.\n\n';
+                    desc += '"I\'m—" You can\'t finish it.\n\n';
+                    desc += 'You cum hard on her fingers. Your cunt clamps down in thick spasms, one, two, three, and your hips buck into her hand while she keeps sucking your nipple through every one.\n\n';
+                    desc += '"Nngh— ahh— ah—" The sounds bounce off both walls. You don\'t care who hears.\n\n';
+                    desc += 'She doesn\'t stop until your hand on her shoulder turns from pulling to pushing. Then she eases, her fingers slowing to a lazy stroke and her mouth going soft on your breast while the aftershocks shiver down your thighs.\n\n';
+                    desc += 'Your legs are barely holding you up. She slides her fingers out slowly and licks them clean, watching you do nothing but breathe.\n\n';
+                    desc += 'She\'s close. Her throat is right there, her heartbeat jumping in the hollow of it.\n\n';
+                    desc += 'You catch her jaw and tilt her chin up. She lets you, eyes half-closed.\n\n';
+                    desc += 'Your fangs find the side of her neck. She gasps when they break skin, then the venom hits and the tension melts out of her with a soft sound.\n\n';
+                    desc += 'You drink. Warm copper floods your throat, bright and quick, and the hunger folds shut with each swallow.\n\n';
+                    desc += 'You pull away and seal the punctures with your tongue. The marks vanish.\n\n';
+                    desc += 'She picks your ' + pan + ' up off the ground and hands ' + panIt + ' over with a smile. You step back into ' + panIt + ' on shaking legs and tug your ' + top + ' down over your tits while she fixes her lipstick.';
+                    return desc;
+                },
+                onEnter: function() {
+                    completeSexConsensualFemale({ thrill: 15, time: 20 });
+                    gameState.thirst = 0;
+                },
+                choices: function() {
+                    // A soft success leaves through the soft exit
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_pan_exit_soft_f' : 'exhibition_seduce_pan_exit_success_f' }];
+                }
             },
 
             exhibition_seduce_pan_exit_success_f: {
