@@ -25525,7 +25525,7 @@ audioSystem.playSFX('buttonClick');
         // predates the Sex Standards). Tiers are written one at a time; BPE_MAST_TIER_CAP
         // holds the corruption below which a branch is written, and the scenes fall back to
         // their old routing above it.
-        var BPE_MAST_TIER_CAP = { alley_bra: Infinity, alley_pan: Infinity };
+        var BPE_MAST_TIER_CAP = { alley_bra: Infinity, alley_pan: Infinity, bench_bra: 8001 };
 
         // Shared body and garment words for the Bra Exposed masturbation branches.
         function _bpeMastBraCtx() {
@@ -25886,6 +25886,103 @@ audioSystem.playSFX('buttonClick');
             desc += '<p>When you straighten up and look back, he\'s still there. He watched all of it from behind, your ass tipped up and your fingers working and your hips jerking when you came. Now the heat drains out of you and leaves the other thing behind, and your face burns.</p>';
             desc += '<p>You let ' + (x.thong ? 'the string of your ' + pan : 'the crotch of your ' + pan) + ' snap back into place, wet and clinging, and tug the hem of your ' + top + ' down over it. It doesn\'t cover anything. It never did.</p>';
             desc += '<p>You walk out past him with your eyes on the ground and turn the other way. Your ' + pan + ' ' + x.panAre + ' soaked, your thighs are slick, and every step drags the wet fabric across your clit while the street gets the same view he did.</p>';
+
+            return desc;
+        }
+
+        function getBpeBenchMastBraText() {
+            var x = _bpeMastBraCtx();
+            var bra = x.bra, bottom = x.bottom, pan = x.pan;
+            var desc = '';
+
+            // ── LOCATION ──
+            desc += '<p>The bench is set back from the main path, half-shaded by an elm tree with branches low enough to brush the backrest. Grass on three sides. The pond thirty feet to the left, catching late light. A couple on a blanket across the field, too far to see detail. A man reading on another bench, fifty yards out.</p>';
+            desc += '<p>You sit down facing the path. The slats are warm from the sun, and with nothing on above your ' + bottom + ' but your ' + bra + ', the sun\'s warm on your bare stomach and shoulders too. Your thighs press together and the pressure goes straight to your clit.</p>';
+            desc += '<p>The path\'s empty for now. A jogger in the distance is heading this way, minutes out. You lean back against the backrest like you\'re only catching some sun.</p>';
+
+            // ── SETUP ──
+            desc += '<p>Your ' + bra + ' has had eyes on it all afternoon, ' +
+                (x.sporty ? 'the band hugging your tits flat' : x.bs === 'large' ? 'your heavy tits swelling over the cups' : x.bs === 'small' ? 'your small tits pressed up in the cups' : 'your tits pushed up in the cups') +
+                '. Your nipples have been hard against the lining since the park gates.</p>';
+
+            // ── ONE HAND UP ──
+            var cup;
+            if (x.sporty) {
+                cup = 'You check the couple on the blanket. Nobody\'s looking your way. You hook your thumb under the band of your ' + bra + ' and push it up over your chest, and ' +
+                    (x.bs === 'large' ? 'your heavy tits drop out bare into the sunlight under the rolled band.' : x.bs === 'small' ? 'your small tits come bare in the sunlight, nipples drawing up stiff.' : 'your tits spill out bare under the rolled band, nipples tight in the breeze.');
+            } else {
+                cup = 'You check the couple on the blanket. Nobody\'s looking your way. ' +
+                    (x.style === 'pushup' ? 'You slip two fingers into the left cup of your ' + bra + ' and ease it down. The padding folds under your breast and props it up in the sun, '
+                    : x.style === 'bralette' ? 'You nudge the thin left cup of your ' + bra + ' aside with one knuckle, and it slides away without a fight, '
+                    : x.style === 'corset' ? 'You tug the stiff top edge of your ' + bra + ' down on the left until the boning catches under your breast and lifts it, '
+                    : x.style === 'lace' ? 'You peel the left cup of your ' + bra + ' down slowly, the scalloped edge dragging over your nipple, '
+                    : 'You slip two fingers into the left cup of your ' + bra + ' and ease it down under your breast, ') +
+                    (x.bs === 'large' ? 'and your heavy tit rolls free into the sunlight, nipple tight and dark.' : x.bs === 'small' ? 'and your small tit comes bare in the sunlight, the nipple drawing up stiff.' : 'and your tit comes bare in the sunlight, the nipple pulling tight in the breeze.');
+            }
+            desc += '<p>' + cup + '</p>';
+
+            // ── OTHER HAND DOWN ──
+            if (x.lift) {
+                desc += '<p>You spread your knees and let your other hand drop to the hem of your ' + bottom + ', then slide underneath. ' + (x.commando
+                    ? 'There\'s nothing under it. Your fingers land on bare, slick folds, warm from the sun on the slats.'
+                    : x.thong ? 'You find the string of your ' + pan + ' and hook it aside, and your wet folds meet the warm air under the hem.'
+                    : 'The crotch of your ' + pan + ' is soaked through. You press on it, feel the heat bleed through the fabric, then hook it aside.') + '</p>';
+            } else {
+                desc += '<p>You spread your knees as far as your ' + bottom + ' allow, pop the button, and ease the zipper down. Your other hand slides inside' + (x.commando
+                    ? ', straight onto bare, slick folds.'
+                    : ' and under the waistband of your ' + pan + ', onto slick, swollen folds.') + '</p>';
+            }
+
+            desc += '<p>Birdsong in the elm. The pond sends up a smell of warm water and cut grass, and under it your own scent is building, sharp and musky, in the still air between your thighs. Fifty yards out, the man on the far bench turns a page.</p>';
+
+            // ── ACT 1: tease, nipple, clit ──
+            desc += '<p>You start slow, fingertips tracing the crease where your thigh meets your hip, then back across your folds, barely touching. ' +
+                (x.bt === 'petite' ? 'Your feet barely sit flat on the ground, and your knees fall open easily.'
+                : x.bt === 'athletic' ? 'Your thighs flex on the warm wood as your knees part.'
+                : x.bt === 'curvy' ? 'Your thighs spread soft and full on the slats.'
+                : x.bt === 'thick' ? 'Your thick thighs fill the bench, and the wood creaks as your knees fall apart.'
+                : 'Your knees drift apart on the warm wood.') + '</p>';
+            desc += '<p>Your other hand finds ' + x.bareTit + ' in the sun. You roll ' + (x.sporty ? 'one nipple' : 'the nipple') + ' between finger and thumb, slow, ' +
+                (x.bs === 'large' ? 'the heavy weight of your tit shifting in your palm.' : x.bs === 'small' ? 'your small tit fitting under your hand, the nipple hard as a bead.' : 'your tit filling your palm, warm from the sun.') +
+                ' The pull runs straight down to your clit.</p>';
+            desc += '<p>"Mmh—" Barely a sound. You press your lips together and check the path. The jogger\'s still far off.</p>';
+            desc += '<p>You part your folds with two fingers. You\'re soaking, hot and slippery all the way down, and your clit\'s swollen out from under its hood. The first slide of your fingertip across it jerks your thighs another inch apart.</p>';
+            desc += '<p>You rub slow circles on it, the pad of your middle finger pressing on the left side, keeping the motion small so it could pass for nothing from the path. ' +
+                (x.lift ? 'Your ' + bottom + ' sits bunched over your wrist, hiding almost nothing.' : 'The waistband of your ' + bottom + ' holds your wrist tight to your stomach, so every stroke stays small and deep.') + '</p>';
+            desc += '<p>"Hh—" It leaks through your lips. You can\'t keep it small. Your circles get faster, slick running down onto ' + (x.lift ? 'the slat under you' : 'the crotch of your ' + bottom) + ', and your hips start rocking forward on the bench.</p>';
+            desc += '<p>You pinch harder and pull, stretching your ' + x.nip + ' out in the sun until ' + (x.sporty ? 'they sting' : 'it stings') + ', and your cunt clenches around nothing.</p>';
+
+            // ── ACT 2: fingers inside ──
+            desc += '<p>You ease two fingers inside. Your walls grip them before you\'ve bottomed out, hot and soaking, and the stretch drops your chin to your chest. You curl them forward and find the ridged spot there, and your thumb takes over your clit.</p>';
+            desc += '<p>"Ah— fuck—" Slow, deep strokes, ' + (x.lift ? 'the wet sounds small but real under the birdsong.' : 'as deep as your ' + bottom + ' will let you, the wet sounds muffled in the fabric.') + ' ' +
+                (x.butt === 'large' ? 'Your full ass spreads on the slats as you grind down, and the bench groans.' : x.butt === 'small' ? 'Your hipbones press into the hard wood every time you grind down.' : 'The bench creaks under you every time you grind down.') + '</p>';
+
+            // ── THE WITNESS, from the front ──
+            desc += '<p>The jogger rounds the curve forty feet out. Mid-twenties, earbuds in, gray shirt dark with sweat, eyes on the middle distance.</p>';
+            desc += '<p>At twenty feet his gaze drifts to the bench, and his stride breaks.</p>';
+            desc += '<p>He gets all of you from the front: your ' + bra + (x.sporty ? ' rolled up over your tits' : ' with one cup pulled down') + ', ' + x.bareTit + ' out in the sunlight with your fingers on the ' + x.nip + ', your knees spread and your other hand buried ' + (x.lift ? 'under your ' + bottom : 'down the front of your open ' + bottom) + ' and moving.</p>';
+            desc += '<p>His pace halves and his head turns. You meet his eyes, and you keep going.</p>';
+            desc += '<p>You pull your ' + x.nip + ' out long for him and let ' + (x.sporty ? 'them' : 'it') + ' go, ' +
+                (x.bs === 'large' ? 'your heavy ' + x.tit + ' bouncing' : x.bs === 'small' ? 'your small ' + x.tit + ' jiggling' : 'your ' + x.tit + ' bouncing') +
+                ', and watch his throat move. Your cunt squeezes your fingers so hard your thighs shake.</p>';
+
+            // ── APPROACH ──
+            desc += '<p>The thrill hits you like a fist in the belly. You add a third finger, and the stretch makes your mouth fall open. Your feet are braced flat, knees wide, hips grinding forward onto your hand.</p>';
+            desc += '<p>He\'s slowed to a walk, chest heaving. You\'re past caring about the couple on the blanket or the man with his book. The pressure in your belly draws tighter and tighter, and every "nnh—" you let out is louder than the last.</p>';
+
+            // ── ORGASM: HIT ──
+            desc += '<p>You cum on the bench in full sun with your eyes on his. Your cunt seizes around your fingers in hard spasms, and your back bows against the backrest.</p>';
+            desc += '<p>A gush of slick floods your hand ' + (x.lift ? 'and drips onto the slat between your thighs' : 'and soaks the crotch of your ' + bottom) + '. "Ah— f-fuck—" It tears out of you, too loud for a park, and your hips buck forward, riding your own hand. Your nails dig into your ' + x.tit + '.</p>';
+
+            // ── LINGER ──
+            desc += '<p>You keep moving through it, thumb still pressing, fingers held deep while your walls flutter around them, each squeeze smaller than the last. Your thighs keep trembling long after.</p>';
+            desc += '<p>When it finally ends you sag against the backrest with ' + x.bareTit + ' still out in the sun, your clit twitching under your thumb, too sensitive to touch. You ease your fingers free and a wet string catches the light before it breaks.</p>';
+
+            // ── AFTERMATH (Corrupted) ──
+            desc += '<p>The heat ebbs and the park crashes back in: birdsong, the couple on the blanket, the jogger turning away now and walking fast toward the far exit. Your face is burning. ' + (x.lift ? 'The slat is wet under you, and anyone who sits here next will know.' : 'The crotch of your ' + bottom + ' is dark with it, and anyone who looks will know.') + '</p>';
+            desc += '<p>' + (x.sporty ? 'You roll the band of your ' + bra + ' back down over your tits' : 'You tuck your tit back into the cup of your ' + bra) + ' with shaking hands, your ' + x.nip + ' swollen and aching against the lining. ' +
+                (x.lift ? 'You wipe your fingers on the underside of the slat and smooth your ' + bottom + ' down over your wet thighs.' : 'You wipe your fingers on the underside of the slat, zip your ' + bottom + ', and fumble the button closed, the crotch damp against your pussy.') + '</p>';
+            desc += '<p>You stand on unsteady legs and head back up the path in your ' + bra + ', the shame hot across your chest and your pussy twitching with every step.</p>';
 
             return desc;
         }
@@ -51440,6 +51537,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench — Underwear', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _parkBenchMastGalleryExposure: 'underwear_only' } },
                     { sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench — Clothed', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _parkBenchMastGalleryExposure: 'clothed' } },
                     { sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench: Sheer', tiers: [{l:'Corrupted',v:6001},{l:'Deeply Corrupted',v:8001}], flagOverrides: { _parkBenchMastGalleryExposure: 'sheer' } },
+                    { sceneId: 'exhibition_masturbate_park_bench', label: 'Park Bench: Bra Exposed', tiers: [{l:'Corrupted',v:6001}], flagOverrides: { _parkBenchMastGalleryExposure: 'bra_exposed' } },
                     { sceneId: 'watcher_encounter_sex', label: 'The Watcher', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'rain_scene_sex', label: 'The Rain Scene', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'wet_umbrella_proximity', label: 'The Umbrella', tiers: [{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
@@ -178604,14 +178702,31 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             exhibition_masturbate_park_bench: {
                 galleryOnEnter: function() {
-                    if (!gameState.flags._galleryMode || gameState.flags._parkBenchMastGalleryExposure !== 'sheer') return;
+                    if (!gameState.flags._galleryMode) return;
+                    if (gameState.flags._parkBenchMastGalleryExposure === 'bra_exposed') {
+                        gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
+                            top: null, dress: null, outerwear: null,
+                            bottom: { id: 'mini_skirt', name: 'Mini Skirt', category: 'bottoms', tags: ['material:cotton'] },
+                            bra: { id: 'basic_black_bra', name: 'Basic Black Bra', category: 'bras', tags: ['material:cotton'] },
+                            panties: { id: 'thong_panties', name: 'Lace Thong', category: 'panties', tags: ['material:lace'] }
+                        });
+                        return;
+                    }
+                    if (gameState.flags._parkBenchMastGalleryExposure !== 'sheer') return;
                     gameState.currentOutfit = Object.assign(gameState.currentOutfit || {}, {
                         top: null, bottom: null, bra: null, panties: null, outerwear: null,
                         dress: { id: 'bo_off_shoulder_mesh_mini_dress', name: 'Off-Shoulder Mesh Mini Dress', category: 'dresses', appeal: 70, tags: ['provocative', 'material:mesh', 'occasion:club'] }
                     });
                 },
                 text: function() {
-                    var exposure = _bpeShim(gameState.flags._galleryMode ? (gameState.flags._parkBenchMastGalleryExposure || 'clothed') : getExposureLevel()); // BPE shim: Step 12A
+                    var _rawExposure = gameState.flags._galleryMode ? (gameState.flags._parkBenchMastGalleryExposure || 'clothed') : getExposureLevel();
+                    // Bra/Panties Exposed Step 12A: a visible, opaque bra has its own branch (written tiers only)
+                    var _bpeCv = getSceneClothingVars();
+                    if (_rawExposure === 'bra_exposed' && (gameState.corruption || 0) < BPE_MAST_TIER_CAP.bench_bra &&
+                        (gameState.flags._galleryMode || (getVisibleExposureLevel() === 'bra_exposed' && !_bpeCv.braSheer))) {
+                        return getBpeBenchMastBraText();
+                    }
+                    var exposure = _bpeShim(_rawExposure); // BPE shim: Step 12A
                     var corruption = gameState.corruption || 0;
                     var ba = gameState.bodyAppearance || {};
                     var _bs = ba.breastSize || 'average';
