@@ -35899,8 +35899,12 @@ audioSystem.playSFX('buttonClick');
             if (entry.forensic.fingerprintsLeft) addCaseLead(entry, 'prints_unmatched');
             if (entry.forensic.biteMarks) addCaseLead(entry, 'profile_zero');
 
-            // Trace evidence on every CSU scene she didn't sweep or clean
-            if (TPD_CSU_TYPES[entry.type] && !params.sceneSwept && !params.sceneCleaned) addCaseLead(entry, 'trace_evidence');
+            // Trace evidence on every CSU scene she didn't clean (Step 4: stealth 10+ sweeps it to half)
+            if (TPD_CSU_TYPES[entry.type] && !params.sceneCleaned) {
+                var _swept = params.sceneSwept || (!entry.linkedToKelsie && (gameState.stealth || 1) >= 10);
+                addCaseLead(entry, 'trace_evidence', _swept ? { strength: TPD_LEAD_CATALOG.trace_evidence.strength * 0.5 } : null);
+                if (_swept && !entry.linkedToKelsie) noteStealthSweep();
+            }
         }
 
         // Marks a case solved (any link method)
@@ -36086,8 +36090,20 @@ audioSystem.playSFX('buttonClick');
                     linkCrimeToSuspect(e.id, 'investigation');
                     fireIdentificationBeat(e);
                 } else if (inv.status === 'open' && inv.unit !== 'cruz' && today - inv.lastLeadDay > TPD_COLD_DAYS[inv.unit]) {
-                    // Cruz's cases never go cold. They stall on her desk until something new touches them.
                     inv.status = 'cold';
+                    // Step 4C: getting away with it counts as practice
+                    if (!inv.coldXPPaid) {
+                        inv.coldXPPaid = true;
+                        var _cn = getTPDCaseName(e);
+                        showNotification(_cn.charAt(0).toUpperCase() + _cn.slice(1) + ' case went cold. Nobody\'s knocking.');
+                        gainStealth(TPD_COLD_STEALTH_XP[inv.unit] || 2, 'a case gone cold');
+                    }
+                } else if (inv.status === 'open' && inv.unit === 'cruz' && !inv.stallXPPaid && today - inv.lastLeadDay >= 30) {
+                    // Cruz's cases never go cold. They stall on her desk until something new touches them.
+                    inv.stallXPPaid = true;
+                    var _cz = getTPDCaseName(e);
+                    showNotification('Cruz\'s file on ' + _cz + ' hasn\'t moved in a month. She hasn\'t closed it.');
+                    gainStealth(15, 'a stalled Cruz case');
                 }
                 if (typeof checkPersonOfInterest === 'function') checkPersonOfInterest(e);   // Step 8
             }
@@ -36162,6 +36178,126 @@ audioSystem.playSFX('buttonClick');
             if (!q || !q.length) return '';
             return '\n\n' + q.shift();
         }
+
+        // ══════════════════════════════════════════════════════════
+        // ── THE STEALTH SPINE (Trigrave PD Step 4) ───────────────
+        // ══════════════════════════════════════════════════════════
+        // Stealth decides how cleanly Kelsie commits a crime AND how well she covers it up.
+        //
+        // Stealth thresholds against TPD:
+        //   10+  Sweeps every scene as she leaves (trace evidence x0.5). Casing reads the presence band.
+        //   15+  Cover-up modifier 0.85. Spots marked cars first (field interviews -25%, Step 9).
+        //   20+  Changes her look: outfit-match window 3 days (Step 9). Spots plainclothes (Step 11).
+        //   25+  Kill-site cleanup also clears trace evidence. Casing reads the patrol rhythm.
+        //   30+  Cover-up modifier 0.70. Break the trail exit (Step 6). Casing flags Kestrel lanes.
+        //   35+  Rooftop exit (Step 6).
+        //   40+  Camera trace x0.5 (Step 6). Reads decoys (Step 11).
+        //   50+  Cover-up modifier 0.50. Wash the wound (Step 5). Casing sees Cruz's forecast.
+        //   60+  Camera trace x0.25, elimination sample chance halved (Steps 6, 8).
+        //   75+  Cover-up modifier 0.35. Pursuit escape bonus doubles (Step 10).
+        //   100  Cover-up modifier 0.25. Field interviews almost never fire (Step 9).
+
+        // 4A: how much of the soft evidence she leaves behind. Applies to every lead marked
+        // coverUp in the lead catalog (Step 3C).
+        function getCoverUpMult() {
+            var s = gameState.stealth || 1;
+            var m;
+            if (s >= 100) m = 0.25;
+            else if (s >= 75) m = 0.35;
+            else if (s >= 50) m = 0.50;
+            else if (s >= 30) m = 0.70;
+            else if (s >= 15) m = 0.85;
+            else m = 1.0;
+            // Crime-stealth clothing helps her disappear into the city afterward too
+            var fx = getActiveClothingEffects();
+            if (fx.crime_stealth > 0) m *= (1 - fx.crime_stealth * 0.5);
+            return m;
+        }
+
+        // Whether Kestrel drones are flying over a district right now. Downtown always has them;
+        // at Wanted Tier 2+ they fly anywhere presence is 30+; a saturated district always has them.
+        function tpdDronesOver(district) {
+            if (district === 'downtown') return true;
+            var tier = (gameState.suspicionData || {}).wantedTier || 0;
+            var p = getTPDPresence(district);
+            return p >= 75 || (tier >= 2 && p >= 30);
+        }
+
+        function tpdNumberWord(n) {
+            var ones = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+                'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+            var tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty'];
+            if (n < 20) return ones[n];
+            var t = Math.floor(n / 10), o = n % 10;
+            return tens[t] + (o ? '-' + ones[o] : '');
+        }
+
+        // 4D: the TPD read in every casing scene. Returns '' below stealth 10.
+        function getTPDCasingBlock(district, stealth) {
+            stealth = stealth || gameState.stealth || 1;
+            if (stealth < 10) return '';
+            var parts = [];
+            var band = getTPDPresenceBand(district);
+            var pick = function(a) { return a[Math.floor(Math.random() * a.length)]; };
+
+            // 10+: presence band
+            var bandLines = {
+                low: [
+                    'You\'ve been here a while and haven\'t seen a cruiser. TPD comes through this block, just rarely.',
+                    'One cruiser went by early on, two officers in it. Nothing since. This block doesn\'t get much attention.'
+                ],
+                moderate: [
+                    'One cruiser\'s rolled past since you got here. The block gets its patrol and not much more.',
+                    'A patrol car went by once, slow, and turned at the corner. Steady coverage, nothing heavy.'
+                ],
+                high: [
+                    'Two cruisers have rolled through since you got here. This block gets watched.',
+                    'There\'s been a uniform in sight for most of the time you\'ve been standing here. This block gets watched.'
+                ],
+                heavy: [
+                    'You\'ve lost count of the cruisers. From almost anywhere on this block, you can see a uniform.',
+                    'Cruisers at both ends of the street and officers on foot between them. This block\'s saturated.'
+                ]
+            };
+            parts.push(pick(bandLines[band]));
+
+            // 25+: patrol rhythm
+            if (stealth >= 25) {
+                var loop = Math.max(6, Math.round(55 - getTPDPresence(district) * 0.5));
+                var last = 1 + Math.floor(Math.random() * (loop - 1));
+                parts.push('The patrol loops back every ' + tpdNumberWord(loop) + ' minutes. The last one passed ' +
+                    tpdNumberWord(last) + ' minute' + (last === 1 ? '' : 's') + ' ago.');
+            }
+
+            // 30+: drone lanes
+            if (stealth >= 30) {
+                if (tpdDronesOver(district)) {
+                    parts.push((district === 'park' || district === 'dockyard')
+                        ? 'A Kestrel drone\'s working a lane nearby. It flies on a schedule, and this spot sits right under the edge of it.'
+                        : 'There\'s a Kestrel lane along the avenue. The drones fly it on a schedule, and the alley\'s under the edge of it.');
+                } else {
+                    parts.push('You check the sky out of habit. There aren\'t any Kestrel lanes over this part of the district right now.');
+                }
+            }
+
+            // 50+: Cruz's forecast (Step 12 sets it)
+            var F = gameState.flags || {};
+            if (stealth >= 50 && F.cruzForecastDistrict === district && F.cruzForecastDay === gameState.time.day) {
+                parts.push('More uniforms than this district usually gets. Somebody expected you here ' + (isDark() ? 'tonight' : 'today') + '.');
+            }
+
+            return parts.join('\n\n');
+        }
+
+        // 10+: the sweep. The first time it happens, she notices she's doing it.
+        function noteStealthSweep() {
+            if (gameState.flags.stealthSweepFelt) return;
+            gameState.flags.stealthSweepFelt = true;
+            showNotification('<em>On your way out, you wipe what you touched and scuff your footprints out of the grit. You didn\'t decide to. Your hands just did it.</em>');
+        }
+
+        // 4C: getting away with it counts as practice
+        var TPD_COLD_STEALTH_XP = { patrol: 2, property: 5, detective: 5, homicide: 10 };
 
         // ── Ledger: Count Linked Crimes by Type ──
         function countLinkedCrimes(crimeType) {
@@ -74130,6 +74266,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         }
                         desc += '\n\n';
                     }
+
+                    // ── TPD read (Trigrave PD Step 4D) ──
+                    // Street districts only; bars and venues aren't patrol blocks
+                    const _tpdCasingP = TPD_BASE_PRESENCE[district] != null ? getTPDCasingBlock(district, stealthLvl) : '';
+                    if (_tpdCasingP) desc += _tpdCasingP + '\n\n';
 
                     // ── Risk summary ──
                     let riskLevel;
@@ -119519,6 +119660,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         }
                     }
 
+                    // TPD read (Trigrave PD Step 4D)
+                    const _tpdCasingM = getTPDCasingBlock(location, stealthLvl);
+                    if (_tpdCasingM) desc += _tpdCasingM + '\n\n';
+
                     // Target read
                     if (isUndercover) {
                         desc += 'You pick out a target. Alone, walking steady, hands in jacket pockets. Something about the posture reads wrong. Too aware. Eyes moving in a pattern that\'s trained, scanning rooflines and doorways.\n\nCould be nothing. Could be someone who\'s paid to walk like that.';
@@ -120595,6 +120740,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             desc += '\n\nNo mask. Your face is bare. If there\'s a camera, it\'s got you. If anyone\'s home and catches a glimpse, they\'re describing you to police tomorrow.\n\nYou know the risk. You\'re here anyway.';
                         }
                     }
+
+                    // ── TPD read (Trigrave PD Step 4D) ──
+                    var _tpdCasingB = getTPDCasingBlock(location === 'slums' ? 'slums' : 'residential', gameState.stealth || 1);
+                    if (_tpdCasingB) desc += '\n\n' + _tpdCasingB;
 
                     // ── Lockpick status ──
                     desc += '\n\n' + (lockpicks > 0 ? 'You\'ve got ' + lockpicks + ' lockpick' + (lockpicks > 1 ? 's' : '') + ' on you.' : 'No lockpicks. You\'ll have to break a window or force the door.');
@@ -145749,6 +145898,16 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             gameState.flags._killSiteCleanup = true;
                             advanceTime(10);
                             updateStatus();
+
+                            // Trigrave PD Step 4B: stealth 25+ cleanup leaves CSU no trace evidence
+                            if ((gameState.stealth || 1) >= 25) {
+                                var _cleanEntry = getLedgerEntry(gameState.flags._lastMurderLedgerId);
+                                if (_cleanEntry && _cleanEntry.investigation) {
+                                    _cleanEntry.investigation.leads = _cleanEntry.investigation.leads.filter(function(L) {
+                                        return L.type !== 'trace_evidence' || L.developed;
+                                    });
+                                }
+                            }
 
                             // Mark cleanup on any pending discovery for this kill
                             var pending = gameState.flags._pendingBodyDiscoveries;
@@ -224052,6 +224211,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 text += getCasingEscapeBlock(env, stealth);
                 text += '\n\n';
             }
+
+            // === Block 6.5: TPD read (Trigrave PD Step 4D, stealth 10+) ===
+            var _tpdCasing = getTPDCasingBlock(env.district, stealth);
+            if (_tpdCasing) text += _tpdCasing + '\n\n';
 
             // === Full tactical overlay (stealth 50+) ===
             if (stealth >= 50) {
