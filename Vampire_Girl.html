@@ -36139,7 +36139,11 @@ audioSystem.playSFX('buttonClick');
                         L.developed = true;
                         developedToday = true;
                         inv.progress += L.strength * mult * (L.coverUp != null ? L.coverUp : 1);
-                        if (L.type === 'profile_zero') onProfileZeroProcessed(e);
+                        if (L.type === 'profile_zero') {
+                            onProfileZeroProcessed(e);
+                            // Step 8: her saliva's already on file, so the lab has a name the day it runs this
+                            if (gameState.flags.profileZeroMatched) { inv.progress = 100; }
+                        }
                         // Step 6E: a trace or track that ends at her door gives TPD the address
                         if ((L.type === 'trace_residence' || L.type === 'k9_residence') && L.residence && L.residence !== 'lurasi') {
                             gameState.flags.tpdKnownResidence = L.residence;
@@ -36164,7 +36168,8 @@ audioSystem.playSFX('buttonClick');
 
                 if (inv.progress >= 100) {
                     inv.status = 'identified';
-                    linkCrimeToSuspect(e.id, 'investigation');
+                    var _viaDna = gameState.flags.profileZeroMatched && caseHasDevelopedLead(e, 'profile_zero');
+                    linkCrimeToSuspect(e.id, _viaDna ? 'dna' : 'investigation');
                     fireIdentificationBeat(e);
                 } else if (inv.status === 'open' && inv.unit !== 'cruz' && today - inv.lastLeadDay > TPD_COLD_DAYS[inv.unit]) {
                     inv.status = 'cold';
@@ -36650,6 +36655,90 @@ audioSystem.playSFX('buttonClick');
             } else {
                 triggerRandomDistrictEvent('tpd_street_takedown', getDistrictReturnScene(district));
             }
+            return true;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ── PERSON OF INTEREST & THE ELIMINATION SAMPLE (Step 8) ──
+        // ══════════════════════════════════════════════════════════
+        // TPD doesn't need Kelsie to walk into Central Booking. Once a case names her, the
+        // Detective Bureau gets her prints and saliva the lawful way: from something she
+        // throws away, or a coffee Cruz hands her.
+
+        // 8A: an open case at 50+ with a developed lead that names a person makes her a POI.
+        // Pure forensics (unmatched prints, Profile Zero) never do it alone.
+        function checkPersonOfInterest(entry) {
+            var inv = entry && entry.investigation;
+            if (!inv || inv.status !== 'open' || inv.poiRaised || inv.progress < 50) return;
+            var named = inv.leads.some(function(L) { return L.developed && L.pointsAtKelsie; });
+            if (!named) return;
+            inv.poiRaised = true;
+            var F = gameState.flags;
+            if (!F.kelsiePOI) {
+                F.kelsiePOI = true;
+                F.kelsiePOIDay = gameState.time.day || 0;
+                openCaseOnKelsie();   // Cruz arrives while the case is still being built
+            }
+        }
+
+        // Converts every forensic lead that can now be matched: prints once they're on file,
+        // Profile Zero once her saliva is. Returns how many cases closed.
+        function convertForensicMatches() {
+            var F = gameState.flags;
+            var ledger = gameState.evidenceLedger || [];
+            var closed = { prints: 0, dna: 0 };
+            for (var i = 0; i < ledger.length; i++) {
+                var e = ledger[i];
+                if (e.linkedToKelsie || e.chargeStatus === 'unsolved') continue;
+                if (F.fingerprintsInSystem && e.forensic && e.forensic.fingerprintsLeft && e.forensicProcessed) {
+                    e.forensic.fingerprintsMatched = true;
+                    if (linkCrimeToSuspect(e.id, 'fingerprint')) closed.prints++;
+                    continue;
+                }
+                if (F.profileZeroMatched && caseHasDevelopedLead(e, 'profile_zero')) {
+                    if (linkCrimeToSuspect(e.id, 'dna')) closed.dna++;
+                }
+            }
+            return closed;
+        }
+
+        // 8B: puts her prints and saliva on file and converts everything that matches
+        function acquireEliminationSample(source) {
+            var F = gameState.flags;
+            if (F.eliminationSampleTaken) return;
+            F.eliminationSampleTaken = true;
+            F.eliminationSampleSource = source;
+            F.eliminationSampleDay = gameState.time.day || 0;
+            F.fingerprintsInSystem = true;
+            F.profileZeroMatched = true;
+            var closed = convertForensicMatches();
+            if (closed.prints + closed.dna > 0) {
+                F.sampleMatchPending = true;
+                F.sampleMatchDna = closed.dna > 0;
+                F.sampleMatchCount = closed.prints + closed.dna;
+            }
+        }
+
+        // 8B: each day as a POI, the Bureau watches what she throws away
+        function rollEliminationSample() {
+            var F = gameState.flags;
+            if (!F.kelsiePOI || F.eliminationSampleTaken || F.currentlyInCustody) return;
+            var chance = 0.15;
+            if ((F.cruzProfile || 0) >= 70) chance += 0.15;
+            if (F.workingAtDiner) chance += 0.05;            // the mug she drinks from on break
+            if ((gameState.stealth || 1) >= 60) chance *= 0.5;   // she's learned to take her trash with her
+            if (Math.random() >= chance) return;
+            var src;
+            if (F.workingAtDiner && Math.random() < 0.5) src = 'diner';
+            else src = ['bottle', 'cup', 'straw'][Math.floor(Math.random() * 3)];
+            acquireEliminationSample(src);
+        }
+
+        // 8C: the next time she's on the street after a match, Cruz is waiting with the evidence bag
+        function checkCruzSampleMatch(district) {
+            var F = gameState.flags;
+            if (!F.sampleMatchPending || F.sawSampleMatch || F.currentlyInCustody) return false;
+            triggerRandomDistrictEvent('cruz_sample_match', getDistrictReturnScene(district));
             return true;
         }
 
@@ -49558,6 +49647,7 @@ audioSystem.playSFX('buttonClick');
             advanceInvestigations();    // Trigrave PD Step 3: TPD works every open case
             checkWarrantConditions();
             checkForNewCharges();  // Refresh warrant charges from ledger
+            rollEliminationSample();    // Trigrave PD Step 8B: what a POI throws away
             enforceSuspicionCap();  // New or heavier charges move the ceiling and floor
             rollHotelDeskRecognition();   // Trigrave PD Step 6E
             gameState.flags.streetTakedownToday = false;
@@ -112984,6 +113074,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('commercial_district_street')) return;
+                    if (checkCruzSampleMatch('commercial')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('commercial')) return;   // Trigrave PD Step 6F
                     const _rce_c = checkRandomDistrictEvent('commercial');
                     if (_rce_c) { triggerRandomDistrictEvent(_rce_c, 'commercial_district_street'); return; }
@@ -113156,6 +113247,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('residential_district_street')) return;
+                    if (checkCruzSampleMatch('residential')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('residential')) return;   // Trigrave PD Step 6F
                     const _rce_r = checkRandomDistrictEvent('residential');
                     if (_rce_r) { triggerRandomDistrictEvent(_rce_r, 'residential_district_street'); return; }
@@ -113351,6 +113443,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     updateStatus();
                     
+                    if (checkCruzSampleMatch('slums')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('slums')) return;   // Trigrave PD Step 6F
 
                     // Territory confrontation: Vajaros enforcers contest a claimed corner
@@ -119426,6 +119519,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('medical_district_street')) return;
+                    if (checkCruzSampleMatch('medical')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('medical')) return;   // Trigrave PD Step 6F
                     const _rce_m = checkRandomDistrictEvent('medical');
                     if (_rce_m) { triggerRandomDistrictEvent(_rce_m, 'medical_district_street'); return; }
@@ -119529,6 +119623,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('downtown_district_street')) return;
+                    if (checkCruzSampleMatch('downtown')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('downtown')) return;   // Trigrave PD Step 6F
                     const _rce_d = checkRandomDistrictEvent('downtown');
                     if (_rce_d) { triggerRandomDistrictEvent(_rce_d, 'downtown_district_street'); return; }
@@ -119667,6 +119762,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('wendale')) return;
+                    if (checkCruzSampleMatch('wendale')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('wendale')) return;   // Trigrave PD Step 6F
                     
                     // Check for harassment event
@@ -139154,6 +139250,50 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 }
             },
 
+            // ── Trigrave PD Step 8C: the sample comes back ──
+            cruz_sample_match: {
+                text: function() {
+                    var F = gameState.flags;
+                    var src = F.eliminationSampleSource || 'cup';
+                    var ago = ((gameState.time.day || 0) - (F.eliminationSampleDay || 0)) <= 1 ? 'yesterday' : 'a few days ago';
+                    var items = {
+                        coffee: 'there\'s a paper cup with a lid from the shop on Ninth. You drank out of it ' + ago + ', and then you handed it to her.',
+                        diner: 'there\'s a white mug from the diner with a chip in the handle. You drank out of it on your break ' + ago + '.',
+                        bottle: 'there\'s a plastic water bottle, crushed in the middle. You tossed it in a trash can at a bus stop ' + ago + '.',
+                        cup: 'there\'s a paper cup from a food cart, the rim chewed flat. You threw it away on a corner ' + ago + '.',
+                        straw: 'there\'s a plastic straw, chewed at the end. You don\'t even remember having it.'
+                    };
+                    var desc = 'Cruz is sitting on a bench at the edge of the sidewalk when you come around the corner. She\'s got a coffee in one hand and a paper evidence bag in the other, folded over twice and sealed with red tape.\n\n';
+                    desc += 'She holds the bag up so you can see it. Inside, ' + (items[src] || items.cup) + '\n\n';
+                    desc += (src === 'coffee' ? '"Thanks for the coffee," she says.' : '"You should really recycle," she says.') + '\n\n';
+                    desc += 'She sets the bag on the bench beside her and pats it once, like you\'d pat a dog that did a good job.\n\n';
+                    if (F.sampleMatchDna) {
+                        desc += '"The lab called your spit <em>unclassifiable</em>." She sips her own coffee. "I\'ve waited my whole career for somebody to give me a word like that."\n\n';
+                    } else {
+                        desc += '"Your prints match a scene I\'ve had on my desk for a while." She sips her own coffee. "' + ((F.sampleMatchCount || 1) > 1 ? 'More than one, actually.' : 'Just the one. For now.') + '"\n\n';
+                    }
+                    if (F.warrantIssued) {
+                        desc += '"I\'d take you in right now." She shrugs. "But you\'d run, and I didn\'t bring the right equipment tonight. Next time I will."\n\n';
+                    } else {
+                        desc += '"The warrant gets signed in the morning," she says. "I wanted to be the one who told you."\n\n';
+                    }
+                    desc += '"You should get a lawyer, Kelsie. A creative one."\n\n';
+                    desc += 'She tucks the bag under her arm, stands, and walks off toward her car without looking back.';
+                    return desc;
+                },
+                onEnter: function() {
+                    gameState.flags.sawSampleMatch = true;
+                    gameState.flags.sampleMatchPending = false;
+                    gameState.flags.cruzSpottedToday = true;
+                    modifyCruzProfile(2, 'street encounter');
+                    advanceTime(5);
+                    updateStatus();
+                },
+                choices: function() {
+                    return [{ text: 'Watch her go.', action: function() { showScene(gameState.flags.randEventReturn || 'city_exploration'); } }];
+                }
+            },
+
             // ── Trigrave PD Step 6B: leaving a crime ──
             crime_exit_choice: {
                 text: function() {
@@ -139906,17 +140046,19 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     desc += '<strong style="color: #998877; font-size: 0.9em; letter-spacing: 1px;">STATION TWO</strong>\n\n';
 
                     if (arrestNum <= 1) {
-                        desc += 'Fingerprints.\n\n';
+                        desc += 'The second station is fingerprints.\n\n';
 
                         desc += 'The technician takes your right hand without asking. She uncurls your fingers one at a time and presses each one into the scanner with a firm, practiced grip that says she\'s done this so many times her hands know the shape of strangers\' fingers better than her own.\n\n';
 
-                        desc += 'Each fingertip lights up blue under the glass. The machine clicks. Processes. Clicks again. Ten fingers. Ten scans. Ten unique patterns that belong to something that was alive before this city was a trading post, before this continent had a name anyone in this room would recognize.\n\n';
+                        desc += 'Each fingertip lights up blue under the glass, and the machine clicks, processes, and clicks again. Ten fingers make ten scans, ten unique patterns that belong to something that was alive before this city was a trading post, before this continent had a name anyone in this room would recognize.\n\n';
 
-                        desc += 'The technician doesn\'t look at your face. She\'s watching the screen, making sure each scan registered clean. Doing her job. You\'re a task, a set of hands, a row in a database that\'s about to grow by one.\n\n';
+                        desc += 'The technician doesn\'t look at your face. She\'s watching the screen, making sure each scan registered clean, doing her job. You\'re a task, a set of hands, a row in a database that\'s about to grow by one.\n\n';
+
+                        desc += 'Then she tears open a paper sleeve and holds up a swab. "Open, please." She runs it along the inside of your cheek, twice, and seals it in a tube with your booking number on the label.\n\n';
 
                         desc += '"Good. Next station."\n\n';
                     } else {
-                        desc += 'Fingerprints. The technician pulls your file, sees the match from last time. "Already in the system." She runs a confirmation scan on your right index finger, watches the screen blink green, and waves you through.\n\n';
+                        desc += 'The technician pulls your file for fingerprints and sees the match from last time. "Already in the system." She runs a confirmation scan on your right index finger, watches the screen blink green, and swabs the inside of your cheek before she waves you through.\n\n';
                     }
 
                     // Station 3: Mugshot
@@ -139999,6 +140141,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.suspicionData.hasCompositeSketch = true;
                     gameState.flags.mugshotTaken = true;
                     gameState.flags.fingerprintsInSystem = true; // Prints now in police database
+
+                    // Trigrave PD Step 8: a full booking includes a cheek swab. Profile Zero has a name now.
+                    gameState.flags.profileZeroMatched = true;
+                    convertForensicMatches();
 
                     // Trigrave PD Step 6E: the key card or keys in her personal effects give up the address
                     var _bookRes = getKelsieResidence();
@@ -143216,8 +143362,15 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                         desc += '"I\'ll see you around," she says.\n\n';
 
-                        desc += 'She says it the same way she\'d say the sun sets in the west.';
+                        desc += 'She says it like she\'d say the sun sets in the west.';
 
+                    }
+
+                    // Trigrave PD Step 8B: the coffee. A POI's cup is fair game once she's done with it.
+                    if (gameState.flags._cruzCoffeeOffer) {
+                        desc += gameState.flags.gabriellaCompulsionFailed
+                            ? '\n\nBefore she peels off, she holds out a second cup, lid on, still warm. "Got you one," she says. "It\'s getting cold."'
+                            : '\n\nThe coffee she ordered you is still sitting by your hand, lid on, the paper sleeve printed with the logo of the shop on Ninth. Cruz nods at it. "Drink up. It\'s paid for."';
                     }
 
                     return desc;
@@ -143225,6 +143378,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 onEnter: () => {
                     const compulsionFailed = !!gameState.flags.gabriellaCompulsionFailed;
                     const hasIllusion = !!gameState.flags.illusionUnlocked;
+
+                    // Trigrave PD Step 8B: a POI without a sample on file gets offered the cup.
+                    // (Not when she's about to try compulsion across the table and walk out.)
+                    gameState.flags._cruzCoffeeOffer = !!gameState.flags.kelsiePOI && !gameState.flags.eliminationSampleTaken &&
+                        !(!compulsionFailed && hasIllusion);
 
                     if (!compulsionFailed && hasIllusion) {
                         if (!gameState.flags.cruzCompulsionScene) gameState.flags.cruzCompulsionScene = 'table';
@@ -143244,13 +143402,29 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     advanceTime(30);
                     updateStatus();
                 },
-                choices: [{
-                    text: 'Leave.',
-                    action: () => showScene(gameState.flags.randEventReturn || 'city_exploration')
-                }]
+                choices: function() {
+                    var back = function() { showScene(gameState.flags.randEventReturn || 'city_exploration'); };
+                    if (!gameState.flags._cruzCoffeeOffer) return [{ text: 'Leave.', action: back }];
+                    return [
+                        { text: 'Drink it.', action: function() {
+                            gameState.flags._cruzCoffeeOffer = false;
+                            acquireEliminationSample('coffee');
+                            showMessage('You take a sip. It\'s bitter and too hot, and your body doesn\'t know what to do with it, but you swallow it anyway.\n\n'
+                                + '"I\'ll take that," Cruz says, and holds out her hand for the cup. It\'s such an ordinary gesture that you give it to her.\n\n'
+                                + 'She drops it in her coat pocket like trash she\'s being nice about, and walks away.', back);
+                        }},
+                        { text: 'Leave it.', action: function() {
+                            gameState.flags._cruzCoffeeOffer = false;
+                            gameState.flags.cruzCoffeeRefused = (gameState.flags.cruzCoffeeRefused || 0) + 1;
+                            modifyCruzProfile(5, 'refused the coffee');
+                            showMessage('You leave the cup where it is.\n\n'
+                                + 'Cruz glances at it, then at you, and the corner of her mouth lifts. "Not a coffee person," she says, mostly to herself. "Noted."', back);
+                        }}
+                    ];
+                }
             },
             
-            // ===== HERO SYSTEM: CRUZ — HERO PATH =====
+            // ===== HERO SYSTEM: CRUZ, HERO PATH =====
             
             hero_cruz_vigilante_aware: {
                 text: function() {
@@ -148144,6 +148318,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         return;
                     }
                     if (checkCruzEncounters('riverside_park')) return;
+                    if (checkCruzSampleMatch('park')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('park')) return;   // Trigrave PD Step 6F
                     const _rce_p = checkRandomDistrictEvent('park');
                     if (_rce_p) { triggerRandomDistrictEvent(_rce_p, 'riverside_park'); return; }
@@ -154315,6 +154490,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     advanceTime(2);
                     checkAndSetExposureState();
                     updateStatus();
+                    if (checkCruzSampleMatch('dockyard')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('dockyard')) return;   // Trigrave PD Step 6F
                 },
                 text: function() {
@@ -192204,6 +192380,7 @@ wet_car_slowdown: {
                         return;
                     }
                     if (checkCruzEncounters('fitness_district_street')) return;
+                    if (checkCruzSampleMatch('fitness')) return;   // Trigrave PD Step 8C
                     if (checkStreetTakedown('fitness')) return;   // Trigrave PD Step 6F
                     const _rce_f = checkRandomDistrictEvent('fitness');
                     if (_rce_f) { triggerRandomDistrictEvent(_rce_f, 'fitness_district_street'); return; }
