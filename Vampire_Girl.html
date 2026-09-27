@@ -20871,7 +20871,7 @@ audioSystem.playSFX('buttonClick');
             );
         }
         
-        function checkNakedPolice() {
+        function checkNakedPolice(district) {
             if (!gameState.isNaked) return false;
             
             const startTime = gameState.nakedStartTime;
@@ -20883,7 +20883,8 @@ audioSystem.playSFX('buttonClick');
             const minutesPassed = currentMinutes - startMinutes;
             const hoursPassed = minutesPassed / 60;
             
-            return hoursPassed >= 2;
+            // Trigrave PD Step 2D: two hours at Commercial presence, scaled by district
+            return minutesPassed >= getTPDClockLimit(120, district);
         }
         
         // ── NAKED DISTRICT REACTION POOL ──
@@ -21040,7 +21041,7 @@ audioSystem.playSFX('buttonClick');
             
             showMessage(fullReaction, () => {
                 updateStatus();
-                if (checkNakedPolice()) {
+                if (checkNakedPolice(districtId)) {
                     handlePoliceArrive();
                 }
             });
@@ -22835,7 +22836,7 @@ audioSystem.playSFX('buttonClick');
         // 4B: sheer lingerie police clock. Three hours in a mesh bra and panties with
         // nothing over them (naked gets two). Runs on district street entry.
         // Returns true when the police arrive (the caller stops processing the street).
-        function tickSheerLingeriePolice() {
+        function tickSheerLingeriePolice(district) {
             var st = getSheerState();
             var eligible = st.state === 'sheer_lingerie' && !gameState.isNaked &&
                 ((gameState.corruption || 0) >= getSheerStateGate('sheer_lingerie') || gameState.flags.clothesDestroyedInCombat);
@@ -22851,7 +22852,7 @@ audioSystem.playSFX('buttonClick');
             }
             var s = gameState.sheerLingerieStartTime;
             var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
-            if (nowMin - startMin < 180) return false;
+            if (nowMin - startMin < getTPDClockLimit(180, district)) return false;
             handleSheerPoliceArrive();
             return true;
         }
@@ -22919,7 +22920,7 @@ audioSystem.playSFX('buttonClick');
             return null;
         }
 
-        function tickIndecencyPolice() {
+        function tickIndecencyPolice(district) {
             var cs = getIndecencyClockState();
             if (!cs) {
                 gameState.indecencyClockStartTime = null;
@@ -22933,7 +22934,7 @@ audioSystem.playSFX('buttonClick');
             }
             var s = gameState.indecencyClockStartTime;
             var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
-            if (nowMin - startMin < cs.limit) return false;
+            if (nowMin - startMin < getTPDClockLimit(cs.limit, district)) return false;
             handleIndecencyPoliceArrive(cs.state);
             return true;
         }
@@ -22946,7 +22947,7 @@ audioSystem.playSFX('buttonClick');
             var t = gameState.time;
             var nowMin = (t.day * 24 * 60) + (t.hour * 60) + (t.minute || 0);
             var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
-            return Math.max(0, cs.limit - (nowMin - startMin));
+            return Math.max(0, getTPDClockLimit(cs.limit) - (nowMin - startMin));
         }
 
         // ── Exhibition arrests: the stop. The arrival plays, then she chooses. ──
@@ -33605,6 +33606,399 @@ audioSystem.playSFX('buttonClick');
             }
         };
 
+        // ===== TPD PRESENCE & RESPONSE ENGINE (Trigrave PD Step 2) =====
+        // Baseline patrol density per district. TPD staffs every shift evenly:
+        // the night shift is as heavy as the day shift, which is exactly why
+        // officers stand out more at 3 AM.
+        var TPD_BASE_PRESENCE = {
+            downtown: 70, medical: 55, commercial: 50, fitness: 40,
+            residential: 35, wendale: 35, park: 30, dockyard: 22, slums: 15
+        };
+
+        // 0-100 police presence for a district right now. Every police-chance
+        // calculation in the game routes through this.
+        function getTPDPresence(district) {
+            var p = TPD_BASE_PRESENCE[district];
+            if (p == null) p = 35;
+            var sd = gameState.suspicionData || {};
+            var tier = sd.wantedTier || 0;
+
+            // The city responds to its own heat
+            p += [0, 5, 10, 20, 35][Math.min(tier, 4)];
+
+            // District heat pulls extra patrols into the area
+            var heat = getDistrictHeat(district);
+            if (heat >= 80) p += 20;
+            else if (heat >= 50) p += 10;
+
+            // An open serious case in this district (Step 3) means more cars
+            if (typeof countOpenCasesInDistrict === 'function') {
+                p += Math.min(15, countOpenCasesInDistrict(district, 'serious') * 5);
+            }
+
+            // Cruz's forecast (Step 12): she staffed the district she expects you in
+            var F = gameState.flags || {};
+            if (F.cruzForecastDistrict === district &&
+                F.cruzForecastDay === gameState.time.day) p += 15;
+
+            // A warrant puts her face in every briefing
+            if (F.warrantIssued) p += 10;
+
+            return Math.max(5, Math.min(100, p));
+        }
+
+        // Presence band: 'low' (under 25), 'moderate' (25-49), 'high' (50-74), 'heavy' (75+)
+        function getTPDPresenceBand(district) {
+            var p = getTPDPresence(district);
+            if (p >= 75) return 'heavy';
+            if (p >= 50) return 'high';
+            if (p >= 25) return 'moderate';
+            return 'low';
+        }
+
+        // How loud each crime is to the city: alarms, screams, 911 calls.
+        var TPD_CRIME_NOISE = {
+            pickpocketing: 0.10, blood_theft: 0.30, burglary: 0.35,
+            mugging: 0.55, hunt_partial: 0.25, hunt_full: 0.60,
+            exposure: 0.40, drug_deal: 0.20, assault: 0.60
+        };
+
+        // The chance TPD reaches a crime while it's in progress.
+        function getTPDResponseChance(district, crimeType) {
+            var presence = getTPDPresence(district) / 100;
+            var noise = TPD_CRIME_NOISE[crimeType] || 0.4;
+            var chance = presence * noise;
+            // A professional picks her moment. Stealth cuts the odds TPD is close enough to matter.
+            chance *= (1 - getStealthBonus());
+            return Math.max(0.02, Math.min(0.95, chance));
+        }
+
+        // Exhibition police clocks run faster where TPD is thick on the ground and slower where
+        // it's thin. Commercial (presence 50) keeps the written limit; Downtown's runs about 40%
+        // faster, the Slums' at about a third of the speed. The street scene that ticks a clock
+        // passes its district, and the remaining-time readouts reuse the last one.
+        function getTPDClockDistrict(district) {
+            if (district) gameState.flags._exhibClockDistrict = district;
+            return gameState.flags._exhibClockDistrict || gameState.currentDistrictId || null;
+        }
+        function getTPDClockLimit(baseMinutes, district) {
+            var d = getTPDClockDistrict(district);
+            if (!d) return baseMinutes;
+            var scale = Math.max(0.3, Math.min(2, getTPDPresence(d) / 50));
+            return Math.round(baseMinutes / scale);
+        }
+
+        var TPD_AMBIENT_LINES = {
+            downtown: {
+                high: {
+                    day: [
+                        'A motor officer\'s parked at the corner of Third with her helmet on the tank, watching the crosswalk fill and empty. Every so often she says something into her shoulder mic without taking her eyes off it.',
+                        'Two officers on foot work the block outside the courthouse, stopping to give a tourist directions. One of them points up the avenue. The other keeps watching the crowd while he does it.',
+                        'A Kestrel drone hangs over the intersection at Fifth, small and gray against the glass towers. Nobody looks up at it anymore. It looks down at all of them.'
+                    ],
+                    night: [
+                        'A cruiser idles outside the bars on Fourth with its windows down. The officer inside\'s holding a coffee and watching the line at the door.',
+                        'A Kestrel drone\'s red light blinks above the avenue, drifting a slow line from one end of the block to the other. It turns at the corner and comes back.',
+                        'Two officers walk the club strip at a steady pace, nodding at the bouncers by name. The bouncers nod back. Nobody on this street starts anything while they\'re in sight.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'Cruisers sit at every major intersection, parked at angles you can\'t drive around. Officers stand at the corners with tablets, and every so often one of them looks from the screen to a face and back.',
+                        'There\'s a motor unit at every crosswalk on Third. Above them, three Kestrel drones hold a line down the avenue, spaced so their cameras overlap.',
+                        'A command van\'s parked on Third with its antenna mast pointed at the sky. Officers come and go from the side door in pairs, and every pair that comes out walks off in a different direction.'
+                    ],
+                    night: [
+                        'There\'s a Kestrel drone parked in the air above the intersection, red light blinking, and a second one working the next avenue over. A motor unit\'s parked at the curb. Its rider\'s standing beside it, reading every face that passes.',
+                        'Officers are checking IDs outside the bars, politely, one at a time. The line\'s gone quiet, and it stays exactly where it is.',
+                        'Every cruiser that passes slows at the corner, and the officer inside turns to look down the sidewalk before rolling on. Three of them have gone by since you got here.'
+                    ]
+                }
+            },
+            medical: {
+                high: {
+                    day: [
+                        'A TPD cruiser\'s parked nose-out in the ambulance bay at Trigrave General. The hospital substation keeps an officer on the floor around the clock, and the car never moves.',
+                        'Two officers stand by the pharmacy entrance, talking with the hospital\'s security guard. One of them\'s got a paper cup of cafeteria coffee. The other\'s watching the parking garage.',
+                        'A patrol car rolls slowly through the hospital lot, down one row and up the next. The officer inside checks every car with somebody sitting in it.'
+                    ],
+                    night: [
+                        'The ER entrance is lit up white, and there\'s a uniformed officer standing just inside the sliding doors. She doesn\'t lean on anything, and she doesn\'t look at her phone.',
+                        'A cruiser idles at the curb outside the blood bank with its parking lights on. The officer inside has the window cracked and his radio turned low.',
+                        'Two officers walk the lit sidewalk between the hospital and the parking structure, slow and steady, trying the stairwell doors as they pass.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'There are two cruisers in the ambulance bay today instead of one, and an officer on every entrance to Trigrave General. Visitors are signing in at a folding table by the doors.',
+                        'A motor unit\'s parked outside the pharmacy, and its rider\'s comparing faces to something on his phone. Another officer\'s walking the parking garage level by level.',
+                        'A Kestrel drone circles the hospital complex at rooftop height, slow and patient, passing over the blood bank every couple of minutes.'
+                    ],
+                    night: [
+                        'Every entrance to Trigrave General has an officer on it tonight. The one at the ER looks up each time the doors slide open and doesn\'t look down until they close.',
+                        'A Kestrel drone\'s red light blinks over the parking structure. Below it, a cruiser idles at the exit ramp with its headlights on the ticket booth.',
+                        'Two cruisers sit at opposite ends of the block with their engines running. Between them, the sidewalk\'s empty except for a nurse on a smoke break who keeps glancing from one to the other.'
+                    ]
+                }
+            },
+            commercial: {
+                high: {
+                    day: [
+                        'A motor officer\'s parked outside the department store with her arms folded, watching the crowd come and go through the revolving doors.',
+                        'A cruiser works its way down the block in traffic, the officer inside checking the storefronts on one side, then the other.',
+                        'Two officers on foot at the corner of Ninth, walking the block they walk every hour. One of them nods at a shop owner hosing down his sidewalk. He nods back like it\'s a ritual.'
+                    ],
+                    night: [
+                        'Two officers on foot at the corner of Ninth, walking the block they walk every hour. One of them nods at a shop owner locking up. He nods back like it\'s a ritual.',
+                        'A cruiser\'s parked outside the 24-hour pharmacy with its dome light on. The officer inside is writing a report, and every thirty seconds she looks up at the street.',
+                        'A shop\'s roll-down gate is stuck halfway, and a patrol officer\'s standing beside it with a flashlight, waiting for the owner to come back out and finish.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'Patrol cars every other block. Officers walk the sidewalks in pairs, and some of them are carrying printouts they check against the crowd.',
+                        'A motor unit\'s posted at every corner of the shopping strip, engines off, riders standing. There isn\'t a single jaywalker on the street today.',
+                        'A Kestrel drone hangs over the plaza, turning slowly, and the shoppers underneath it have started walking a little faster.'
+                    ],
+                    night: [
+                        'More uniforms than you\'ve ever seen here after dark. Two officers on every corner, one of them talking into a shoulder radio, and a cruiser rolling past at walking speed with the officer inside scanning faces.',
+                        'Two Kestrel drones work the length of the strip, red lights blinking, trading places at the midpoint. The closed shops underneath them glow with their own security lights.',
+                        'A cruiser\'s parked across the mouth of the alley behind the department store, headlights on, pointed straight down it.'
+                    ]
+                }
+            },
+            fitness: {
+                moderate: {
+                    day: [
+                        'A patrol car\'s parked outside the smoothie bar, and its officer\'s inside, in line, in uniform. The girl at the register doesn\'t blink. He\'s in there every day.',
+                        'A cruiser rolls past the boxing gym at an easy pace. One of the guys on the heavy bag lifts a glove at it, and the officer lifts two fingers off the wheel.'
+                    ],
+                    night: [
+                        'A single cruiser\'s parked by the 24-hour gym with its engine running. The officer inside has his eyes on the lot, where a few people are loading gym bags into their trunks.',
+                        'A patrol car passes once, slow, headlights sweeping the dark storefronts. It comes around about every half hour. You\'ll see it again.'
+                    ]
+                },
+                high: {
+                    day: [
+                        'Two officers on bikes cruise the length of the strip and stop at the corner to talk to a trainer outside his gym. They ride off when he points up the block.',
+                        'A motor officer\'s parked at the intersection by the supplement shops, one boot up on the curb, watching the foot traffic.'
+                    ],
+                    night: [
+                        'Two cruisers have passed since you got here, one each way. Between them, the district\'s quiet except for the thump of music from a gym that never closes.',
+                        'An officer\'s standing outside the 24-hour gym talking to the night manager. Her flashlight\'s clipped to her vest and switched on, pointed at the ground.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'There are cruisers parked at both ends of the strip, and a Kestrel drone\'s working its way down the block at roof height. The morning joggers keep glancing up at it.',
+                        'Officers are walking through the gyms today. You watch one step into the boxing gym, look at every face in the room, and step back out.'
+                    ],
+                    night: [
+                        'A Kestrel drone\'s red light blinks over the parking lots. Every lot in the district has a cruiser idling somewhere in it.',
+                        'A motor unit\'s posted at the main intersection in and out of the district. Its rider\'s got a flashlight, and she\'s using it on faces.'
+                    ]
+                }
+            },
+            residential: {
+                moderate: {
+                    day: [
+                        'A patrol car idles outside the elementary school, windows down, the officer inside eating a sandwich with his eyes on the crosswalk.',
+                        'A cruiser rolls down the block at exactly the speed limit. An old man on his porch raises his coffee mug at it, and the officer waves back.'
+                    ],
+                    night: [
+                        'A cruiser crosses the end of the street, slow, its headlights washing over the parked cars. It turns the corner and doesn\'t come back. It\'ll be by again later.',
+                        'A patrol car\'s parked by the playground with its lights off. You can just make out the shape of the officer inside and the glow of a laptop on the dash.'
+                    ]
+                },
+                high: {
+                    day: [
+                        'The same cruiser\'s been around the block twice now, and it\'s slower the second time. Somebody reported something, or somebody\'s looking for something.',
+                        'Two officers are going door to door on the next street over, clipboards in hand. A woman in a bathrobe talks to them from her porch with her arms crossed.'
+                    ],
+                    night: [
+                        'A cruiser rolls through the neighborhood at five miles an hour, its spotlight sweeping driveways, side yards, the gaps between houses.',
+                        'There\'s a patrol car at each end of the street. Their headlights are off, but their engines are running, and neither one\'s moving.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'Officers are knocking on doors up and down the block. One of them\'s showing a woman something on a tablet. She shakes her head, then looks again.',
+                        'A Kestrel drone drifts over the rooftops at chimney height, and every dog on the street is barking at it.'
+                    ],
+                    night: [
+                        'A cruiser\'s parked at every other intersection, and each one has its spotlight on, aimed down a different street.',
+                        'A Kestrel drone hums over the backyards in slow, careful passes. Porch lights click on as it goes over, one house after another.'
+                    ]
+                }
+            },
+            wendale: {
+                moderate: {
+                    day: [
+                        'A patrol car\'s parked in the shade outside the community pool. The officer\'s leaning on the fender, chatting with the lifeguard about something that makes them both laugh.',
+                        'A cruiser rolls past at a crawl, and a kid on a bike races it for half a block. The officer lets him win.'
+                    ],
+                    night: [
+                        'A single cruiser makes its slow loop past the cul-de-sacs, headlights sweeping across the manicured lawns. Wendale gets its patrol every night, whether it needs one or not.',
+                        'A patrol car sits at the entrance to the subdivision with its engine off. The officer inside is doing paperwork by the light of the dash.'
+                    ]
+                },
+                high: {
+                    day: [
+                        'Two cruisers have passed in ten minutes. A woman watering her roses watches the second one go by, then goes inside with the hose still running.',
+                        'An officer\'s standing at the end of a driveway, talking to a man in a golf shirt. The man keeps pointing down the street. The officer keeps writing.'
+                    ],
+                    night: [
+                        'A cruiser\'s parked across from the playground with its spotlight trained on the swings. It\'s been there since you got here.',
+                        'Patrol cars loop the neighborhood in a pattern you can almost count. Porch lights are on at houses that usually shut them off by ten.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'There are cruisers parked on the corners in Wendale, which never happens. The neighborhood\'s watching them from behind the blinds, and they\'re watching the neighborhood right back.',
+                        'A Kestrel drone drifts low over the cul-de-sacs, and the kids who usually ride their bikes out here have all been called inside.'
+                    ],
+                    night: [
+                        'A Kestrel drone\'s red light moves slowly over the rooftops. Below it, a cruiser\'s idling at the entrance to the subdivision with its spotlight on the road.',
+                        'Every intersection on the main road has a patrol car on it tonight. Wendale\'s asleep, and TPD\'s standing guard over it.'
+                    ]
+                }
+            },
+            park: {
+                moderate: {
+                    day: [
+                        'A pair of officers on bicycles coasts along the river path, slow enough to say hello to the joggers. Most of the joggers say it back.',
+                        'A patrol car\'s parked by the boathouse with its windows down. The officer inside is watching the ducks, and the path, and everyone on it.'
+                    ],
+                    night: [
+                        'A flashlight beam moves along the river path far ahead of you, swinging side to side. Bike patrol. It\'ll come back this way eventually.',
+                        'A cruiser\'s parked in the lot by the north gate with its headlights pointed into the trees. Nothing\'s moving under them. It stays anyway.'
+                    ]
+                },
+                high: {
+                    day: [
+                        'Two bike officers have ridden past twice now, and the second time they stopped to talk to the man who sells hot dogs by the pond.',
+                        'A motor officer\'s parked where the main path meets the street, watching everyone who comes in and out of the park.'
+                    ],
+                    night: [
+                        'A cruiser\'s crawling along the park road with its spotlight working the tree line. It lingers on every bench.',
+                        'Two flashlight beams cross the lawn by the pond, then split up and go opposite ways around it.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'A Kestrel drone\'s drifting over the treetops, and there are officers posted at every gate. One of them checks a tablet every time somebody walks in.',
+                        'Bike patrols on every path, and a cruiser parked right on the grass by the boathouse. Parents are keeping their kids closer than usual.'
+                    ],
+                    night: [
+                        'Spotlights from two cruisers sweep the lawn from opposite sides. Above the river, a Kestrel drone\'s red light hangs still, watching the bridge.',
+                        'Every gate has a patrol car idling outside it. Somewhere on the far side of the pond a dog barks, and a flashlight snaps toward the sound.'
+                    ]
+                }
+            },
+            dockyard: {
+                low: {
+                    day: [
+                        'A port authority truck makes its round of the gates. TPD\'s out here somewhere too, but mostly you see them at the main entrance, where a cruiser sits and watches the trucks roll in and out.',
+                        'A patrol car passes along the waterfront road once and doesn\'t slow down. The cameras down here are on the gates, and the cops follow the cameras.'
+                    ],
+                    night: [
+                        'A cruiser idles at the main gate with its headlights on the barrier arm. Past the gate, the container rows run dark in both directions, and nobody\'s watching them.',
+                        'You hear a patrol car before you see it, tires hissing along the waterfront road. It passes the end of the pier and keeps going.'
+                    ]
+                },
+                moderate: {
+                    day: [
+                        'A cruiser\'s parked by the gate office, and the officer inside is talking to a foreman through the open window. The foreman keeps looking at his clipboard instead of the cop.',
+                        'Two officers walk the waterfront road at an unhurried pace, stopping to look down each row of containers as they pass.'
+                    ],
+                    night: [
+                        'A patrol car makes a slow lap of the container yard, its spotlight bouncing off corrugated steel. It passes the end of your row without stopping.',
+                        'A cruiser\'s parked at the foot of a crane with its lights off. The officer inside is watching the gate cameras on his laptop.'
+                    ]
+                },
+                high: {
+                    day: [
+                        'There\'s a TPD cruiser at every gate today, not just the main one. The truck drivers are having their paperwork checked, and none of them are arguing about it.',
+                        'A motor officer\'s riding the rows between the containers, slow, stopping at the end of each one to look down it.'
+                    ],
+                    night: [
+                        'Two cruisers work the container yard from opposite ends, spotlights sweeping, meeting in the middle and turning back.',
+                        'A patrol car\'s parked at the end of the pier with its headlights out over the water. The officer\'s standing beside it with a flashlight, looking down at the pilings.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'A Kestrel drone\'s working the container rows in a grid, and there are officers on foot at every gate. The port authority guys look like they\'ve never seen this many cops at once.',
+                        'Two cruisers are parked across the waterfront road, boxing it in. Every truck that comes through gets stopped, and every driver gets looked at.'
+                    ],
+                    night: [
+                        'A Kestrel drone\'s red light moves over the container yard in slow, straight lines. On the ground, flashlight beams move between the rows, keeping pace with it.',
+                        'Every gate has a cruiser on it with its lights on and its engine running. The Dockyard\'s never been this bright at night.'
+                    ]
+                }
+            },
+            slums: {
+                low: {
+                    day: [
+                        'A cruiser rolls through with two officers in it, windows up, neither of them smiling. It doesn\'t stop. It\'ll be back around this evening, two officers in it, like always.',
+                        'A patrol car\'s parked outside the corner store while its two officers grab coffee. The Vajaros kid on the stoop across the street watches them the whole time.'
+                    ],
+                    night: [
+                        'A cruiser crawls the far end of the block with two officers in it. It doesn\'t stop. It never stops here, and it never skips a night either.',
+                        'Headlights sweep the end of the street, and a patrol car passes under the one working streetlight. A couple of guys on the corner turn their backs to it until it\'s gone.'
+                    ]
+                },
+                moderate: {
+                    day: [
+                        'Two cruisers have come through in the last half hour, which is a lot for the Slums. The corners have gone quiet, and the guys who usually work them are sitting on stoops instead.',
+                        'A pair of officers is walking the block on foot, close together, hands resting on their belts. People step out of their way without being asked.'
+                    ],
+                    night: [
+                        'A patrol car\'s parked under the only working streetlight on the block, engine running, two officers inside. Nobody\'s dealing within sight of it.',
+                        'A cruiser\'s spotlight slides along the fronts of the row houses, pauses at a doorway, and moves on.'
+                    ]
+                },
+                high: {
+                    day: [
+                        'Cruisers have been in and out all day, always in pairs. A Vajaros SUV pulled away from the curb the second the first one turned the corner.',
+                        'Two officers are talking to a woman on her front step while a third stands at the bottom of the stairs, watching the street. They\'ve got all the time in the world, and they\'re using it.'
+                    ],
+                    night: [
+                        'Two patrol cars are parked nose to tail at the corner with four officers standing around them, talking low. The corner boys have moved three blocks over.',
+                        'A cruiser rolls past, then another, then a third. The street stays silent until all three sets of taillights are gone.'
+                    ]
+                },
+                heavy: {
+                    day: [
+                        'There\'s a Kestrel drone over the Slums in broad daylight, and everybody on the block keeps looking up at it, then at each other. TPD doesn\'t usually bother.',
+                        'Cruisers sit at the ends of every block, and officers walk the sidewalks in pairs. The Vajaros have gone invisible, and the whole neighborhood\'s holding its breath.'
+                    ],
+                    night: [
+                        'A Kestrel drone\'s red light blinks over the rooftops, and two cruisers sit at the intersection with their spotlights crossed. The Slums have never been this lit up after dark.',
+                        'Patrol cars are parked on every corner that has a streetlight, and a few that don\'t. Their engines run all night.'
+                    ]
+                }
+            }
+        };
+
+        // One ambient TPD line for a district street scene, chosen by presence band and
+        // light. The line's always there, so the player learns to read the city's police
+        // weather at a glance. Returns '' for a district with no pool.
+        function getTPDAmbientLine(district) {
+            var pool = TPD_AMBIENT_LINES[district];
+            if (!pool) return '';
+            var order = ['low', 'moderate', 'high', 'heavy'];
+            var idx = order.indexOf(getTPDPresenceBand(district));
+            // Bands below a district's baseline are never reached; fall back to the nearest one written
+            var band = null;
+            for (var i = idx; i < order.length && !band; i++) if (pool[order[i]]) band = pool[order[i]];
+            for (var j = idx - 1; j >= 0 && !band; j--) if (pool[order[j]]) band = pool[order[j]];
+            if (!band) return '';
+            var lines = isDark() ? band.night : band.day;
+            if (!lines || !lines.length) return '';
+            return '\n\n' + lines[Math.floor(Math.random() * lines.length)];
+        }
+
         // ── Suspicion cap (heat follows the case) ──
         // Before a warrant, police don't know who they're looking for: heat tops out at
         // Tier 2 (active investigation) and never blocks crime or hunting. A warrant lifts
@@ -38897,7 +39291,9 @@ audioSystem.playSFX('buttonClick');
             fitness:     0.40,
             residential: 0.20,
             park:        0.15,
-            slums:       0.05
+            slums:       0.05,
+            dockyard:    0.25,   // port-authority cameras on the gates, almost nothing on the water
+            wendale:     0.30    // mid-density residential
         };
 
         // ── District Hunt Profiles (Step 8B) ──────────────────────
@@ -50030,8 +50426,8 @@ audioSystem.playSFX('buttonClick');
             var left = function(st, limit) { return limit - (nowMin - ((st.day * 24 * 60) + (st.hour * 60) + (st.minute || 0))); };
             var best = null;
             var take = function(m) { if (m !== null && m !== undefined && !isNaN(m)) best = best === null ? m : Math.min(best, m); };
-            if (gameState.isNaked && gameState.nakedStartTime) take(left(gameState.nakedStartTime, 120));
-            if (gameState.sheerLingerieStartTime && typeof getSheerState === 'function' && getSheerState().state === 'sheer_lingerie') take(left(gameState.sheerLingerieStartTime, 180));
+            if (gameState.isNaked && gameState.nakedStartTime) take(left(gameState.nakedStartTime, getTPDClockLimit(120)));
+            if (gameState.sheerLingerieStartTime && typeof getSheerState === 'function' && getSheerState().state === 'sheer_lingerie') take(left(gameState.sheerLingerieStartTime, getTPDClockLimit(180)));
             if (typeof getIndecencyClockRemaining === 'function') take(getIndecencyClockRemaining());
             return best === null ? null : Math.max(0, best);
         }
@@ -108481,6 +108877,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (heatLevel.tier === 'burning') patrolChance = 30;
                     if (heatLevel.tier === 'nuclear') patrolChance = 50;
                     patrolChance += Math.max(0, ((gameState.drugDealsToday || 0) - 2)) * 8;
+                    // Trigrave PD Step 2D: patrols scale with TPD presence where the deal happens
+                    var _dealDistrict = (territory && TERRITORY_DATA[territory] && TERRITORY_DATA[territory].district) || 'slums';
+                    patrolChance = Math.min(95, patrolChance * (getTPDPresence(_dealDistrict) / 20));
                     // Vajaros protection at claimed territories
                     if (gameState.drugSupplier === 'vajaros' && territory && isTerrityClaimed(territory)) {
                         patrolChance = Math.max(0, patrolChance - 10);
@@ -111597,8 +111996,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('commercial')) return;
-                    if (tickSheerLingeriePolice()) return;
-                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
+                    if (tickSheerLingeriePolice('commercial')) return;
+                    if (tickIndecencyPolice('commercial')) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('commercial')) return;
@@ -111624,7 +112023,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     if (gameState.isNaked) {
                         handleNakedDistrictEntry('commercial');
-                        if (checkNakedPolice()) {
+                        if (checkNakedPolice('commercial')) {
                             handlePoliceArrive();
                         }
                     }
@@ -111649,11 +112048,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const tier = gameState.suspicionData?.wantedTier || 0;
                     const distHeat = getDistrictHeat('commercial');
                     
-                    if (tier >= 4) {
-                        desc += '\n\nPatrol cars every other block. Pairs of officers walking the sidewalks with photos in their hands. A helicopter circles somewhere to the south, its searchlight sweeping rooftops.';
-                    } else if (tier >= 3 || distHeat >= 60) {
-                        desc += '\n\nMore uniforms than usual. Two officers on the corner, one talking into a shoulder radio. A cruiser rolls past at walking speed, the officer inside scanning faces.';
-                    } else if (tier >= 2) {
+                    // Trigrave PD Step 2E: the presence band sets the police weather
+                    desc += getTPDAmbientLine('commercial');
+                    if (tier >= 2 && tier < 3 && distHeat < 60) {
                         desc += '\n\nYou notice a plain sedan parked at the corner. Engine off. Someone in the driver\'s seat who isn\'t eating, isn\'t on their phone, isn\'t doing anything at all.';
                     }
                     
@@ -111770,8 +112167,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('residential')) return;
-                    if (tickSheerLingeriePolice()) return;
-                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
+                    if (tickSheerLingeriePolice('residential')) return;
+                    if (tickIndecencyPolice('residential')) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('residential')) return;
@@ -111797,7 +112194,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     if (gameState.isNaked) {
                         handleNakedDistrictEntry('residential');
-                        if (checkNakedPolice()) {
+                        if (checkNakedPolice('residential')) {
                             handlePoliceArrive();
                         }
                     }
@@ -111822,10 +112219,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const tierRes = gameState.suspicionData?.wantedTier || 0;
                     const distHeatRes = getDistrictHeat('residential');
                     
+                    // Trigrave PD Step 2E: the presence band sets the police weather
+                    desc += getTPDAmbientLine('residential');
                     if (tierRes >= 4 || distHeatRes >= 60) {
                         desc += '\n\nA neighborhood watch sign you\'ve never noticed before hangs from a lamppost. Fresh zip ties. Someone printed new ones.';
-                    } else if (tierRes >= 3 && distHeatRes >= 40) {
-                        desc += '\n\nA cruiser rolls through the neighborhood at five miles an hour. Searchlight sweeping driveways. Looking for someone.';
                     }
                     
                     
@@ -111962,8 +112359,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('slums')) return;
-                    if (tickSheerLingeriePolice()) return;
-                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
+                    if (tickSheerLingeriePolice('slums')) return;
+                    if (tickIndecencyPolice('slums')) return; // Bra/Panties Exposed Step 2H
                     
                     // Check for harassment event (once per day)
                     const lastHarassmentDay = gameState.flags.lastSlumsHarassmentDay || 0;
@@ -112056,7 +112453,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     if (gameState.isNaked) {
                         handleNakedDistrictEntry('slums');
-                        if (checkNakedPolice()) {
+                        if (checkNakedPolice('slums')) {
                             handlePoliceArrive();
                         }
                     }
@@ -112116,6 +112513,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         }
                     }
                     
+                    desc += getTPDAmbientLine('slums'); // Trigrave PD Step 2E
                     desc += getWetDistrictAwareness('slums');
                     desc += getSheerDistrictAwareness('slums'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('slums');
@@ -118039,8 +118437,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('medical')) return;
-                    if (tickSheerLingeriePolice()) return;
-                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
+                    if (tickSheerLingeriePolice('medical')) return;
+                    if (tickIndecencyPolice('medical')) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('medical')) return;
@@ -118061,7 +118459,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     if (gameState.isNaked) {
                         handleNakedDistrictEntry('medical');
-                        if (checkNakedPolice()) {
+                        if (checkNakedPolice('medical')) {
                             handlePoliceArrive();
                         }
                     }
@@ -118083,6 +118481,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     
                     
+                    desc += getTPDAmbientLine('medical'); // Trigrave PD Step 2E
                     desc += getSheerDistrictAwareness('medical'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('medical');
                     desc += "\n\nWhat do you want to do?";
@@ -118137,8 +118536,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('downtown')) return;
-                    if (tickSheerLingeriePolice()) return;
-                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
+                    if (tickSheerLingeriePolice('downtown')) return;
+                    if (tickIndecencyPolice('downtown')) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('downtown')) return;
@@ -118165,7 +118564,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         handleNakedDistrictEntry('downtown');
                         
                         // Check if police timer is up
-                        if (checkNakedPolice()) {
+                        if (checkNakedPolice('downtown')) {
                             handlePoliceArrive();
                         }
                     }
@@ -118190,11 +118589,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const tierDT = gameState.suspicionData?.wantedTier || 0;
                     const distHeatDT = getDistrictHeat('downtown');
                     
-                    if (tierDT >= 4) {
-                        desc += '\n\nThe police presence is suffocating. Cruisers at every major intersection. Officers checking IDs outside bars. A command van parked on Third with its antenna array pointed at the sky.';
-                    } else if (tierDT >= 3 || distHeatDT >= 60) {
-                        desc += '\n\nMore cops than usual. You count three cruisers in two blocks. An officer stands outside a pharmacy studying foot traffic with the focused patience of someone waiting for a specific face.';
-                    } else if (tierDT >= 2) {
+                    // Trigrave PD Step 2E: the presence band sets the police weather
+                    desc += getTPDAmbientLine('downtown');
+                    if (tierDT >= 2 && tierDT < 3 && distHeatDT < 60) {
                         desc += '\n\nA dark sedan sits at the curb with its parking lights on. The silhouette inside hasn\'t moved in ten minutes.';
                     }
                     
@@ -118287,8 +118684,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('wendale')) return;
-                    if (tickSheerLingeriePolice()) return;
-                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
+                    if (tickSheerLingeriePolice('wendale')) return;
+                    if (tickIndecencyPolice('wendale')) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('wendale')) return;
@@ -118308,7 +118705,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         handleNakedDistrictEntry('wendale');
                         
                         // Check if police timer is up
-                        if (checkNakedPolice()) {
+                        if (checkNakedPolice('wendale')) {
                             handlePoliceArrive();
                         }
                     }
@@ -118329,7 +118726,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += "Wendale sleeps early. This is your mother's world, the one you left behind.";
                     }
                     
-                    
+                    desc += getTPDAmbientLine('wendale'); // Trigrave PD Step 2E
                     desc += "\n\nWhat do you want to do?";
                     return desc;
                 },
@@ -143148,20 +143545,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     advanceTime(2);
                     updateStatus();
                     
-                    // Check for police intervention: patrols thicken as heat rises
-                    if (gameState.citySuspicion >= 20) {
-                        // 0% at 20, ~17% at 40 (pre-warrant ceiling), ~67% at 100
-                        const policeChance = (gameState.citySuspicion - 20) / 120;
-                        if (Math.random() < policeChance) {
-                            gameState.flags.policeInterrupted = true;
-                        }
-                    }
-
                     // Detection roll (Step 4): determines clean/partial/full
                     var _htTarget = gameState.flags._huntTarget || {};
                     var _htEnv = gameState.flags._huntEnvironment || {};
                     var _htApproach = gameState.flags._approachMod || 0;
                     var _htDetection = rollHuntDetection(_htTarget, _htEnv, _htApproach);
+
+                    // Police intervention (Trigrave PD Step 2D): TPD can only respond to a hunt
+                    // somebody saw. Clean hunts are invisible to them at any suspicion level.
+                    var _htPoliceDistrict = _htEnv.district || gameState.currentDistrictId || 'commercial';
+                    var _htPoliceChance = 0;
+                    if (_htDetection.outcome === 'partial') _htPoliceChance = getTPDResponseChance(_htPoliceDistrict, 'hunt_partial');
+                    else if (_htDetection.outcome === 'full') _htPoliceChance = getTPDResponseChance(_htPoliceDistrict, 'hunt_full');
+                    if (_htPoliceChance > 0 && Math.random() < _htPoliceChance) {
+                        gameState.flags.policeInterrupted = true;
+                    }
 
                     // Stealth XP (Step 4D): scaled by outcome + approach bonuses
                     var _htStealthXP = _htDetection.outcome === 'clean' ? 12
@@ -146542,6 +146940,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         desc += "\n\n<em>The park benches look inviting. You could sleep here if you needed to...</em>";
                     }
                     
+                    desc += getTPDAmbientLine('park'); // Trigrave PD Step 2E
                     desc += getWetDistrictAwareness('park');
                     desc += getSheerDistrictAwareness('park'); // Mesh Overhaul Step 8C
                     
@@ -152740,6 +153139,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     } else {
                         desc += 'Floodlights carve white circles into the dark. Beyond them, the water is black and flat.';
                     }
+
+                    desc += getTPDAmbientLine('dockyard'); // Trigrave PD Step 2E
 
                     // Post-takeover flavor
                     if (gameState.flags.vajarosTakeoverComplete) {
@@ -190603,8 +191004,8 @@ wet_car_slowdown: {
 
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('fitness')) return;
-                    if (tickSheerLingeriePolice()) return;
-                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
+                    if (tickSheerLingeriePolice('fitness')) return;
+                    if (tickIndecencyPolice('fitness')) return; // Bra/Panties Exposed Step 2H
                     
                     const isNight = isDark();
                     if (checkDistrictHarassment('fitness', isNight)) {
@@ -190622,7 +191023,7 @@ wet_car_slowdown: {
                     
                     if (gameState.isNaked) {
                         handleNakedDistrictEntry('fitness');
-                        if (checkNakedPolice()) {
+                        if (checkNakedPolice('fitness')) {
                             handlePoliceArrive();
                         }
                     }
@@ -190643,6 +191044,7 @@ wet_car_slowdown: {
                         desc += "The after-work rush fills the district. Every gym and studio is packed.";
                     }
                     
+                    desc += getTPDAmbientLine('fitness'); // Trigrave PD Step 2E
                     desc += getFugitiveFlavor('fitness');
                     return desc;
                 },
@@ -224351,29 +224753,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             });
         }
 
+        // Trigrave PD Step 2D: police arrival during a mugging runs through TPD presence
         function getMuggingPoliceChance(location) {
-            const suspicion = gameState.citySuspicion || 0;
-            const tier = gameState.suspicionData?.wantedTier || 0;
-            const districtHeat = getDistrictHeat(location);
-            
-            // Slums have very low police presence regardless
-            if (location === 'slums') {
-                return Math.min(0.15, 0.01 + (suspicion * 0.0009));
-            }
-            
-            // Base chance scales with suspicion
-            let chance = 0.05 + (suspicion * 0.0075);
-            
-            // Wanted tier escalation
-            if (tier >= 2) chance += 0.10;
-            if (tier >= 3) chance += 0.15;
-            if (tier >= 4) chance += 0.25;
-            
-            // District heat escalation
-            if (districtHeat >= 50) chance += 0.10;
-            if (districtHeat >= 80) chance += 0.20;
-            
-            return Math.min(0.95, chance);
+            return getTPDResponseChance(location, 'mugging');
         }
         
         function forestEncounter() {
