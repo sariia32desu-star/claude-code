@@ -22973,6 +22973,7 @@ audioSystem.playSFX('buttonClick');
 
         // Compel: they forget the call and drive off. Costs thirst; the clock starts over.
         function doExhibPoliceCompel(clock, state) {
+            recordCompulsionEcho(gameState.currentDistrictId);   // Trigrave PD Step 9E
             var c = gameState.corruption || 0;
             var t = gameState.time;
             var now = { day: t.day, hour: t.hour, minute: t.minute || 0 };
@@ -35009,6 +35010,7 @@ audioSystem.playSFX('buttonClick');
             gameState.flags[site.lastFlag] = gameState.time.day;
 
             if (choice === 'compel') {
+                if (site.police) recordCompulsionEcho(site.district);   // Trigrave PD Step 9E: Officer Reyes loses four minutes
                 // They wipe the recording and forget. Clean, but pushing an alert mind costs.
                 bags = takeBloodBags(site.maxBags, site.source + '_caught_compel');
                 gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 15);
@@ -35359,6 +35361,9 @@ audioSystem.playSFX('buttonClick');
             seedCaseLeads(entry, params);
             if (entry.linkedToKelsie) markCaseIdentified(entry);
 
+            // Outfit (Trigrave PD Step 9B): whatever a witness or a camera could describe
+            if ((entry.witnesses && entry.witnesses.length) || entry.evidence.cameraFootage) entry.outfit = snapshotOutfit();
+
             // K9 (Trigrave PD Step 10D, pulled forward by Step 7B): occupied-home burglaries
             // and any assault on an officer get a dog while the scent's fresh
             if (entry.type === 'police_assault' || entry.type === 'police_killing') entry.k9Fresh = true;
@@ -35486,7 +35491,8 @@ audioSystem.playSFX('buttonClick');
                 'police_assault': 'Assault on Law Enforcement',
                 'police_killing': 'Murder of Law Enforcement',
                 'assault': 'Aggravated Assault',
-                'indecent_exposure': 'Indecent Exposure'
+                'indecent_exposure': 'Indecent Exposure',
+                'bribery_attempt': 'Attempted Bribery of an Officer'
             };
             return labels[crimeType] || 'Criminal Activity';
         }
@@ -35816,7 +35822,7 @@ audioSystem.playSFX('buttonClick');
         var TPD_CASE_NOUNS = {
             murder: 'homicide', burglary: 'burglary', pickpocketing: 'pickpocketing', mugging: 'robbery',
             blood_theft: 'hospital theft', fleeing: 'pursuit', escape: 'escape', police_assault: 'officer assault',
-            police_killing: 'officer killing', assault: 'assault', indecent_exposure: 'indecency'
+            police_killing: 'officer killing', assault: 'assault', indecent_exposure: 'indecency', bribery_attempt: 'bribery'
         };
         function getTPDCaseName(entry) {
             var d = TPD_DISTRICT_NAMES[entry.district] || 'city';
@@ -35841,7 +35847,7 @@ audioSystem.playSFX('buttonClick');
             if (t === 'murder') return 'homicide';
             if (t === 'mugging' || t === 'assault') return 'detective';
             if (t === 'burglary' || t === 'blood_theft' || t === 'fleeing') return 'property';
-            if (t === 'pickpocketing' || t === 'indecent_exposure') return 'patrol';
+            if (t === 'pickpocketing' || t === 'indecent_exposure' || t === 'bribery_attempt') return 'patrol';
             return 'detective';
         }
 
@@ -36739,6 +36745,115 @@ audioSystem.playSFX('buttonClick');
             var F = gameState.flags;
             if (!F.sampleMatchPending || F.sawSampleMatch || F.currentlyInCustody) return false;
             triggerRandomDistrictEvent('cruz_sample_match', getDistrictReturnScene(district));
+            return true;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ── FIELD INTERVIEWS & THE COMPULSION ECHO (Step 9) ──────
+        // ══════════════════════════════════════════════════════════
+        // TPD stops people: politely, lawfully, constantly. Bribery and seduction never work
+        // on a TPD officer. Compulsion always does, and TPD's paperwork notices the hole it leaves.
+
+        // 9B: the visible pieces of an outfit a witness or camera can describe
+        var TPD_OUTFIT_SLOTS = ['outerwear', 'top', 'dress', 'headwear', 'footwear'];
+        function snapshotOutfit() {
+            var o = gameState.currentOutfit || {};
+            var ids = [];
+            TPD_OUTFIT_SLOTS.forEach(function(slot) { if (o[slot] && o[slot].id) ids.push(o[slot].id); });
+            return ids;
+        }
+
+        // An open case in this district, recent enough to remember, where she's wearing two
+        // or more of the same visible pieces right now
+        function findOutfitMatchCase(district) {
+            var window = (gameState.stealth || 1) >= 20 ? 3 : 7;   // stealth 20+ changes her look
+            var today = gameState.time.day || 0;
+            var now = snapshotOutfit();
+            var best = null;
+            (gameState.evidenceLedger || []).forEach(function(e) {
+                if (e.district !== district || e.linkedToKelsie || !e.outfit || !e.outfit.length) return;
+                if (!e.investigation || e.investigation.status === 'identified' || today - e.day > window) return;
+                var hits = e.outfit.filter(function(id) { return now.indexOf(id) !== -1; }).length;
+                if (hits >= 2 && (!best || e.day > best.day)) best = e;
+            });
+            return best;
+        }
+
+        // A change of clothes after a crime clears the description for it
+        function clearRecentOutfitRisk() {
+            var today = gameState.time.day || 0;
+            (gameState.evidenceLedger || []).forEach(function(e) { if (today - e.day <= 0) e.outfit = null; });
+        }
+
+        // Adds progress straight to a case from a stop or an interview
+        function bumpCaseProgress(entry, amount, pointsAtKelsie) {
+            if (!entry || !entry.investigation || entry.linkedToKelsie) return;
+            var inv = entry.investigation;
+            inv.leads.push({ type: 'field_interview', strength: amount, developDay: 0, developed: true, pointsAtKelsie: !!pointsAtKelsie });
+            inv.progress = Math.min(100, inv.progress + amount);
+            reopenCase(entry);
+            inv.lastLeadDay = gameState.time.day || 0;
+        }
+
+        // The case a stop is about: the outfit match, or her strongest open named case
+        function getFieldInterviewCase() {
+            var id = gameState.flags._fieldInterviewCase;
+            if (id) return getLedgerEntry(id);
+            var best = null;
+            (gameState.evidenceLedger || []).forEach(function(e) {
+                var inv = e.investigation;
+                if (!inv || inv.status !== 'open' || e.linkedToKelsie || !inv.poiRaised) return;
+                if (!best || inv.progress > best.investigation.progress) best = e;
+            });
+            return best;
+        }
+
+        // 9A: runs on district travel, before random district events
+        function checkFieldInterview(district) {
+            var F = gameState.flags;
+            var today = gameState.time.day || 0;
+            if (F.currentlyInCustody || F.fieldInterviewToday || F.lastPoliceEncounterDay === today) return false;
+            if (F.warrantIssued) return false;   // warrant encounters keep their own system
+            var sd = gameState.suspicionData || {};
+            var match = 0;
+            if ((sd.facialRecognition || 0) >= 30) match += 0.15;
+            if (sd.hasCompositeSketch) match += 0.25;
+            if (F.kelsiePOI) match += 0.25;
+            var outfitHit = findOutfitMatchCase(district);
+            if (outfitHit) match += 0.40;
+            if (match <= 0) return false;
+            var chance = (getTPDPresence(district) / 100) * match;
+            var st = gameState.stealth || 1;
+            if (st >= 100) chance *= 0.2; else if (st >= 15) chance *= 0.75;   // she spots the marked car first
+            if (Math.random() >= chance) return false;
+            F.fieldInterviewToday = true;
+            F._fieldInterviewCase = outfitHit ? outfitHit.id : null;
+            F._fieldInterviewMatch = match;
+            F._fieldInterviewDistrict = district;
+            F._fieldInterviewReason = outfitHit ? 'outfit' : (F.kelsiePOI ? 'poi' : 'sketch');
+            F._fiEntered = false; F._fiBribed = false; F._fiFlirted = false;
+            F._fiPair = (district === 'downtown' || district === 'commercial') && Math.random() < 0.5;
+            gameState.currentDistrictId = district;
+            triggerRandomDistrictEvent('tpd_field_interview', getDistrictReturnScene(district));
+            return true;
+        }
+
+        // 9E: every compulsion of an on-duty officer leaves a hole in a shift
+        function recordCompulsionEcho(district) {
+            var F = gameState.flags;
+            F.compulsionEchoes = (F.compulsionEchoes || 0) + 1;
+            if (!F.compulsionEchoLog) F.compulsionEchoLog = [];
+            F.compulsionEchoLog.push({ day: gameState.time.day || 0, district: district || gameState.currentDistrictId || '' });
+            var sd = gameState.suspicionData || (gameState.suspicionData = {});
+            sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 3);
+            if (F.cruzEchoPatternSeen) modifyCruzProfile(5, 'compulsion echo');
+        }
+
+        // 9E: three lapse reports on Cruz's desk, and she comes to tell you so
+        function checkCruzEchoPattern(district) {
+            var F = gameState.flags;
+            if (F.cruzEchoPatternSeen || !F.gabriellaCruzAssigned || (F.compulsionEchoes || 0) < 3 || F.currentlyInCustody) return false;
+            triggerRandomDistrictEvent('cruz_echo_pattern', getDistrictReturnScene(district));
             return true;
         }
 
@@ -49651,6 +49766,7 @@ audioSystem.playSFX('buttonClick');
             enforceSuspicionCap();  // New or heavier charges move the ceiling and floor
             rollHotelDeskRecognition();   // Trigrave PD Step 6E
             gameState.flags.streetTakedownToday = false;
+            gameState.flags.fieldInterviewToday = false;   // Trigrave PD Step 9A
             
             if (gameState.flags.warrantIssued && !gameState.flags.currentlyInCustody) {
                 gameState.flags.policeEncounterToday = false;
@@ -110136,6 +110252,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     choices.push({
                         text: '<img src="Images/icons/eye.png" class="icon" alt="compel"> Compel. Make ' + (gameState.flags._currentBuyer || {}).him + ' forget.',
                         action: function() {
+                            recordCompulsionEcho(gameState.currentDistrictId || 'slums');   // Trigrave PD Step 9E: he's an officer
                             gameState.thirst = Math.min(100, (gameState.thirst || 0) + 20);
                             modifyDrugHeat(3);
                             modifyDrugReputation(-3);
@@ -110676,6 +110793,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         text: '<img src="Images/icons/eye.png" class="icon" alt="compel"> Compel them. All of them.',
                         action: function() {
                             // Compel attempt: extremely risky with this many officers
+                            recordCompulsionEcho(gameState.currentDistrictId || 'slums');   // Trigrave PD Step 9E
                             var roll = Math.random();
                             gameState.thirst = Math.min(100, (gameState.thirst || 0) + 40);
                             if (roll < 0.3) {
@@ -113075,7 +113193,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     if (checkCruzEncounters('commercial_district_street')) return;
                     if (checkCruzSampleMatch('commercial')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('commercial')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('commercial')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('commercial')) return;   // Trigrave PD Step 9A
                     const _rce_c = checkRandomDistrictEvent('commercial');
                     if (_rce_c) { triggerRandomDistrictEvent(_rce_c, 'commercial_district_street'); return; }
                     if (checkAndTriggerHeroEvent('commercial_district_street')) return;
@@ -113248,7 +113368,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     if (checkCruzEncounters('residential_district_street')) return;
                     if (checkCruzSampleMatch('residential')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('residential')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('residential')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('residential')) return;   // Trigrave PD Step 9A
                     const _rce_r = checkRandomDistrictEvent('residential');
                     if (_rce_r) { triggerRandomDistrictEvent(_rce_r, 'residential_district_street'); return; }
                     if (checkAndTriggerHeroEvent('residential_district_street')) return;
@@ -113444,7 +113566,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                     
                     if (checkCruzSampleMatch('slums')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('slums')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('slums')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('slums')) return;   // Trigrave PD Step 9A
 
                     // Territory confrontation: Vajaros enforcers contest a claimed corner
                     if (gameState.flags.territoryContestPending) {
@@ -119520,7 +119644,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     if (checkCruzEncounters('medical_district_street')) return;
                     if (checkCruzSampleMatch('medical')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('medical')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('medical')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('medical')) return;   // Trigrave PD Step 9A
                     const _rce_m = checkRandomDistrictEvent('medical');
                     if (_rce_m) { triggerRandomDistrictEvent(_rce_m, 'medical_district_street'); return; }
                     if (checkAndTriggerHeroEvent('medical_district_street')) return;
@@ -119624,7 +119750,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     if (checkCruzEncounters('downtown_district_street')) return;
                     if (checkCruzSampleMatch('downtown')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('downtown')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('downtown')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('downtown')) return;   // Trigrave PD Step 9A
                     const _rce_d = checkRandomDistrictEvent('downtown');
                     if (_rce_d) { triggerRandomDistrictEvent(_rce_d, 'downtown_district_street'); return; }
                     if (checkAndTriggerHeroEvent('downtown_district_street')) return;
@@ -119763,7 +119891,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('wendale')) return;
                     if (checkCruzSampleMatch('wendale')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('wendale')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('wendale')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('wendale')) return;   // Trigrave PD Step 9A
                     
                     // Check for harassment event
                     const isNight = isDark();
@@ -138328,6 +138458,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                     advanceTime(15);
                                     modifyHygiene(60);
                                     applyCrimeExit('walk_home', { silent: true });   // Trigrave PD Step 6B
+                                    clearRecentOutfitRisk();   // Trigrave PD Step 9B: fresh clothes, fresh description
                                     updateStatus();
                                     showMessage('You cut through the back streets to your building. Inside, you strip off the bloody clothes, shove them in a trash bag, and pull on a clean shirt and a clean jacket.\n\nThe girl in the mirror looks normal. Nobody would guess.', function() { showScene('city_exploration'); });
                                 }
@@ -138479,6 +138610,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                     advanceTime(15);
                                     modifyHygiene(60);
                                     applyCrimeExit('walk_home', { silent: true });   // Trigrave PD Step 6B
+                                    clearRecentOutfitRisk();   // Trigrave PD Step 9B: fresh clothes, fresh description
                                     updateStatus();
                                     showMessage('You take the back route home. Inside, the bloody clothes go into a trash bag, and you tie it tight and shove it under the sink.\n\nYou come out of it with clean clothes, clean hands, and a clean face in the mirror.\n\nThe smell of copper lingers in your nose, but that\'s just you.', function() { showScene('city_exploration'); });
                                 }
@@ -139250,6 +139382,187 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 }
             },
 
+            // ── Trigrave PD Step 9C: the field interview ──
+            tpd_field_interview: {
+                text: function() {
+                    var F = gameState.flags;
+                    var d = F._fieldInterviewDistrict || gameState.currentDistrictId || 'commercial';
+                    var tod = getTimeOfDay();
+                    var greet = tod === 'morning' ? 'Morning' : tod === 'afternoon' ? 'Afternoon' : 'Evening';
+                    var desc = '';
+                    if (F._fiBribed || F._fiFlirted) {
+                        desc = 'Calloway\'s still waiting, pen ready, as friendly as she was a minute ago. The stop goes on exactly where it left off.\n\n"So," she says. "Where are you headed?"';
+                        return desc;
+                    }
+                    if (F._fiPair) {
+                        desc = 'Two officers on foot patrol step into your path from the corner, one on either side of the sidewalk. The older one\'s a woman with gray in her braid and sergeant\'s stripes on her sleeve.\n\n'
+                            + '"' + greet + ', ma\'am. Sergeant Calloway, TPD. You mind if I ask you a couple of questions?"\n\n'
+                            + 'Her partner stays a step back and a step to the side, where he can see your hands.';
+                    } else {
+                        desc = 'A motor officer rolls to the curb ahead of you and kills the engine. She pulls off one glove, then the other, and sets them on the tank.\n\n'
+                            + '"' + greet + ', ma\'am. Sergeant Calloway, TPD." She doesn\'t step off the bike yet. "You mind if I ask you a couple of questions?"\n\n'
+                            + 'Her voice is friendly. Her right hand\'s resting on her thigh, a few inches from her holster, and it stays there.';
+                    }
+                    var reason = F._fieldInterviewReason;
+                    if (reason === 'outfit') {
+                        var o = gameState.currentOutfit || {};
+                        var piece = (o.outerwear || o.top || o.dress || o.footwear || {});
+                        var pieceName = piece.name ? proseItemName(piece) : 'clothes';
+                        desc += '\n\n"You match the description of someone we\'d like to talk to about an incident in the ' + (TPD_DISTRICT_NAMES[d] || 'area') + '," she says. Her eyes go to your ' + pieceName + ' and stay there a second longer than they need to.';
+                    } else if (reason === 'poi') {
+                        desc += '\n\n"Your name came up in something the Detective Bureau\'s working on," she says. "Probably nothing. I\'d just like to see some ID."';
+                    } else {
+                        desc += '\n\n"You look an awful lot like a sketch we got handed at roll call," she says, without any heat in it.';
+                    }
+                    desc += '\n\nShe asks where you\'re headed, and whether you\'ve got some identification on you.';
+                    return desc;
+                },
+                onEnter: function() {
+                    var F = gameState.flags;
+                    if (F._fiEntered) return;
+                    F._fiEntered = true;
+                    F.lastPoliceEncounterDay = gameState.time.day;
+                    F.fieldInterviewsTotal = (F.fieldInterviewsTotal || 0) + 1;
+                    // The description matched, and she wrote it down
+                    var c = F._fieldInterviewCase ? getLedgerEntry(F._fieldInterviewCase) : null;
+                    if (c && c.investigation && !c.linkedToKelsie) {
+                        addCaseLead(c, 'outfit_match', { developed: true });
+                        c.investigation.progress = Math.min(100, c.investigation.progress + 12 * (TPD_UNIT_MULT[c.investigation.unit] || 1));
+                        reopenCase(c);
+                        c.investigation.lastLeadDay = gameState.time.day || 0;
+                    }
+                    advanceTime(5);
+                    updateStatus();
+                },
+                choices: function() {
+                    var F = gameState.flags;
+                    var back = function() { showScene(gameState.flags.randEventReturn || 'city_exploration'); };
+                    var pad = F._fiPair ? 'the notepad in her hand' : 'the pad clipped to her handlebar';
+                    var matchCase = getFieldInterviewCase();
+                    var choices = [];
+
+                    choices.push({ text: 'Cooperate.', action: function() {
+                        var cha = gameState.charisma || 0;
+                        var composure = (gameState.stealth || 1) + cha / 2 + 20 + Math.random() * 30;
+                        var pressure = 40 + (F._fieldInterviewMatch || 0) * 60;
+                        if (composure >= pressure) {
+                            showMessage('"Where are you headed?"\n\n"Home."\n\nCalloway looks at you for a while, then at your hands, then at your shoes. She writes something on ' + pad + '.\n\n"Get home safe, ma\'am."\n\nShe means it. She also wrote down what you\'re wearing.', back);
+                            return;
+                        }
+                        showMessage('"Where are you headed?"\n\n"Home."\n\nCalloway looks at you for a while, and something in her face settles. She says something into her shoulder mic, too low for you to catch all of it, and waits for the answer.\n\n"I\'m going to ask you to come down to the station and give a statement," she says. "You\'re not under arrest. It\'d help us clear some things up."', function() {
+                            showChoices([
+                                { text: 'Go with her.', action: function() {
+                                    var unit = matchCase && matchCase.investigation ? matchCase.investigation.unit : 'detective';
+                                    var m;
+                                    if (unit === 'homicide' || unit === 'cruz') {
+                                        m = 'Detective Sergeant Nadia Osei meets you in a small room on Fourth Street with a legal pad and a box of tissues. She\'s warm right up until the questions start, and then she\'s very precise.\n\n'
+                                            + 'She asks about a night in the ' + (TPD_DISTRICT_NAMES[matchCase ? matchCase.district : ''] || 'city') + '. She asks it three different ways, twenty minutes apart, and writes down every answer.\n\n'
+                                            + 'When it\'s over, she thanks you for coming in on your own. "It\'ll be noted," she says.';
+                                    } else {
+                                        m = 'The interview room on Fourth Street has a table, two chairs, and a thermos of tea that Detective Andre Tolliver offers you twice. You leave it alone. He\'s wearing a gray cardigan with his reading glasses pushed up into his hair, and he never raises his voice.\n\n'
+                                            + 'He asks where you were on a night you don\'t remember well, and whether you\'ve ever been on a street you remember very well. He writes everything down in careful block capitals.\n\n'
+                                            + 'When it\'s over, he thanks you for your time and walks you to the door himself. "You\'ve been very helpful," he says, and he sounds like he means it, which is worse.';
+                                    }
+                                    advanceTime(90);
+                                    bumpCaseProgress(matchCase, 10, true);
+                                    modifyCruzProfile(5, 'voluntary interview');
+                                    updateStatus();
+                                    showMessage(m, back);
+                                }},
+                                { text: 'Decline and walk away.', action: function() {
+                                    bumpCaseProgress(matchCase, 5, true);
+                                    showMessage('"I\'d rather not," you say.\n\nCalloway nods like that\'s a reasonable answer, because legally it is. "That\'s your right, ma\'am."\n\nShe writes it down anyway.', back);
+                                }}
+                            ]);
+                        });
+                    }});
+
+                    choices.push({ text: 'Ask if you\'re being detained.', action: function() {
+                        bumpCaseProgress(matchCase, 5, true);
+                        showMessage('"Am I being detained?"\n\n"No, ma\'am," Calloway says. "You\'re free to go."\n\nShe steps back to give you the sidewalk. Her pen\'s already moving before you\'ve taken three steps.', back);
+                    }});
+
+                    if (F.illusionUnlocked) {
+                        choices.push({ text: 'Compel her.', action: function() {
+                            gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 10);
+                            recordCompulsionEcho(F._fieldInterviewDistrict);
+                            updateStatus();
+                            showMessage('You catch her eyes' + (F._fiPair ? ', then her partner\'s,' : '') + ' and push, soft and steady. "You already talked to me. I checked out fine. You\'re going to finish your loop."\n\n'
+                                + 'Calloway blinks. ' + (F._fiPair ? 'She nods to you like you\'re a stranger, and the two of them walk on.' : 'She pulls her gloves back on one at a time, nods to you like you\'re a stranger, and rolls away from the curb.') + '\n\n'
+                                + 'Somewhere in her report tonight, there\'s going to be four minutes she can\'t account for, and Calloway writes everything down.', back);
+                        }});
+                    }
+
+                    choices.push({ text: 'Run. Vampire speed.', action: function() {
+                        var sd = gameState.suspicionData || (gameState.suspicionData = {});
+                        sd.bodycamIncidents = (sd.bodycamIncidents || 0) + 1;
+                        sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 10);
+                        modifyCitySuspicion(8, 'fleeing', F._fieldInterviewDistrict, 'cop');
+                        if (F.kelsiePOI) {
+                            var fid = createLedgerEntry({ type: 'fleeing', district: F._fieldInterviewDistrict, witnessEvidence: true, cameraEvidence: true, supernaturalEvidence: true,
+                                witnesses: [{ type: 'cop', faceSeen: true, description: 'Fled a field interview at inhuman speed' }], cameraType: 'bodycam', cameraQuality: 'clear' });
+                            linkCrimeToSuspect(fid, 'caught_in_act');
+                        }
+                        calculateWantedTier();
+                        updateStatus();
+                        showMessage('You go. The sidewalk smears around you, and Calloway\'s voice snaps out behind you, flat and clear, calling it in before you\'ve reached the corner.\n\nShe didn\'t get your name. She got your face, your clothes, and eight seconds of bodycam that nobody at Fourth Street is going to be able to explain.', back);
+                    }});
+
+                    if (!F._fiBribed && (gameState.money || 0) >= 20) {
+                        choices.push({ text: 'Offer her money.', action: function() {
+                            F._fiBribed = true;
+                            var bid = createLedgerEntry({ type: 'bribery_attempt', district: F._fieldInterviewDistrict, witnessEvidence: true, cameraEvidence: true,
+                                witnesses: [{ type: 'cop', faceSeen: true, description: 'Offered cash during a field interview' }], cameraType: 'bodycam', cameraQuality: 'clear' });
+                            if (F.kelsiePOI) linkCrimeToSuspect(bid, 'caught_in_act');
+                            modifyCitySuspicion(5, 'bribery', F._fieldInterviewDistrict, 'cop');
+                            modifyCruzProfile(5, 'bribery attempt');
+                            updateStatus();
+                            showMessage('You fold two twenties between your fingers and hold them low, below where the bodycam sits.\n\n'
+                                + 'Calloway looks at the money. Then she looks at you, and her face stays exactly as friendly as it was.\n\n'
+                                + '"Ma\'am, I\'m noting that you just offered me cash." She says it like she\'s reading back an order at a drive-through. "Put it away, please."\n\n'
+                                + 'She writes it down while you watch.', function() { showScene('tpd_field_interview'); });
+                        }});
+                    }
+
+                    if (!F._fiFlirted && (gameState.corruption || 0) >= 4001) {
+                        choices.push({ text: 'Get closer. Soften her up.', action: function() {
+                            F._fiFlirted = true;
+                            modifyCruzProfile(5, 'seduction attempt');
+                            showMessage('You step in closer than you need to and let your voice go soft.\n\n'
+                                + 'Calloway takes one step back, which puts her exactly out of reach, and keys her shoulder mic. "Twenty-two, can I get a second unit to my location."\n\n'
+                                + 'Then she\'s polite again. "Let\'s keep a little space between us, ma\'am."', function() { showScene('tpd_field_interview'); });
+                        }});
+                    }
+
+                    return choices;
+                }
+            },
+
+            // ── Trigrave PD Step 9E: the holes in the shifts ──
+            cruz_echo_pattern: {
+                text: function() {
+                    var n = gameState.flags.compulsionEchoes || 3;
+                    var num = (n <= 19 ? tpdNumberWord(n) : String(n));
+                    num = num.charAt(0).toUpperCase() + num.slice(1);
+                    var hair = (typeof hairColorWord === 'function') ? hairColorWord() : 'dark';
+                    return 'Cruz falls into step beside you on the sidewalk like the two of you planned it. She\'s reading something on her tablet, and she doesn\'t look up from it.\n\n'
+                        + '"' + num + ' officers have filed lapse reports lately." She turns a page without looking at it. "Good officers. Clean evals. Each one lost about four minutes, and each one lost them standing next to a small woman with ' + hair + ' hair."\n\n'
+                        + 'She looks up.\n\n'
+                        + '"Whatever you\'re doing to my officers, it leaves a hole in their shift. I\'ve started collecting the holes."\n\n'
+                        + 'She peels off at the next corner without saying goodbye.';
+                },
+                onEnter: function() {
+                    gameState.flags.cruzEchoPatternSeen = true;
+                    gameState.flags.cruzSpottedToday = true;
+                    modifyCruzProfile(15, 'compulsion echo pattern');
+                    advanceTime(5);
+                    updateStatus();
+                },
+                choices: function() {
+                    return [{ text: 'Keep walking.', action: function() { showScene(gameState.flags.randEventReturn || 'city_exploration'); } }];
+                }
+            },
+
             // ── Trigrave PD Step 8C: the sample comes back ──
             cruz_sample_match: {
                 text: function() {
@@ -139945,6 +140258,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     return desc;
                 },
                 onEnter: function() {
+                    recordCompulsionEcho(gameState.currentDistrictId);   // Trigrave PD Step 9E
                     gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 20);
                     advanceTime(5);
                     updateStatus();
@@ -148319,7 +148633,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     }
                     if (checkCruzEncounters('riverside_park')) return;
                     if (checkCruzSampleMatch('park')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('park')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('park')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('park')) return;   // Trigrave PD Step 9A
                     const _rce_p = checkRandomDistrictEvent('park');
                     if (_rce_p) { triggerRandomDistrictEvent(_rce_p, 'riverside_park'); return; }
                     tryStyleComment('park');
@@ -154491,7 +154807,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     checkAndSetExposureState();
                     updateStatus();
                     if (checkCruzSampleMatch('dockyard')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('dockyard')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('dockyard')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('dockyard')) return;   // Trigrave PD Step 9A
                 },
                 text: function() {
                     var timeOfDay = getTimeOfDay();
@@ -192381,7 +192699,9 @@ wet_car_slowdown: {
                     }
                     if (checkCruzEncounters('fitness_district_street')) return;
                     if (checkCruzSampleMatch('fitness')) return;   // Trigrave PD Step 8C
+                    if (checkCruzEchoPattern('fitness')) return;   // Trigrave PD Step 9E
                     if (checkStreetTakedown('fitness')) return;   // Trigrave PD Step 6F
+                    if (checkFieldInterview('fitness')) return;   // Trigrave PD Step 9A
                     const _rce_f = checkRandomDistrictEvent('fitness');
                     if (_rce_f) { triggerRandomDistrictEvent(_rce_f, 'fitness_district_street'); return; }
                     tryStyleComment('fitness');
