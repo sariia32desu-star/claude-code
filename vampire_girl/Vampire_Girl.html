@@ -20932,14 +20932,21 @@ audioSystem.playSFX('buttonClick');
                 return false; // Already harassed today
             }
             
-            // GUARANTEED if wearing visible underwear
-            if (isWearingVisibleUnderwear()) {
+            // GUARANTEED if topless, bottomless, or naked
+            var _exposure = (typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed';
+            if (_exposure === 'topless' || _exposure === 'bottomless' || _exposure === 'naked') {
                 return true;
             }
 
-            // GUARANTEED if topless, bottomless, or naked
-            var _exposure = _bpeShim((typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed'); // BPE shim: Step 7A
-            if (_exposure === 'topless' || _exposure === 'bottomless' || _exposure === 'naked') {
+            // GUARANTEED if wearing visible underwear. Bra/Panties Exposed Step 7A: an opaque, dry
+            // bra over a bottom is legal, so it only raises the chance (below). Soaked through or
+            // mesh, it's guaranteed like the rest.
+            var _braLook = false;
+            if (_exposure === 'bra_exposed') {
+                var _hVis = getVisibleExposureLevel();
+                if (_hVis === 'bra_exposed' && (isWetBraThrough() || getSceneClothingVars().braSheer)) return true;
+                _braLook = _hVis === 'bra_exposed';
+            } else if (isWearingVisibleUnderwear()) {
                 return true;
             }
             
@@ -20969,6 +20976,11 @@ audioSystem.playSFX('buttonClick');
             if ((gameState.suspicionData?.hotDistricts || []).includes(district)) chance += 0.25;
             // Mesh Step 11: what the mesh shows draws them in
             chance += getSheerRiskBonus('harass');
+            // Bra/Panties Exposed Step 7A: +0.15 (+0.10 more at night); a sports bra +0.05
+            if (_braLook) {
+                if (getSceneClothingVars().braStyle === 'sporty') chance += 0.05;
+                else chance += isNight ? 0.25 : 0.15;
+            }
             
             return Math.random() < chance;
         }
@@ -24540,13 +24552,169 @@ audioSystem.playSFX('buttonClick');
 
         // Exhibition scene a harassment grope leads into, or null when she's in no exhibition
         // state. area 'district' or 'slums'. Sheer runs ahead of wet: mesh was see-through first.
+        // ══════════════════════════════════════════════════════════════
+        // ── Bra Exposed & Panties Exposed Overhaul, Step 7: harassment ──
+        // Openers and gropes for both states, district (<p> paragraphs, the tall one and the
+        // stocky one) and slums ('\n\n' paragraphs, the leader, the wiry one and the big one).
+        // Panties Exposed comes at her from behind; Bra Exposed from the front.
+        // ══════════════════════════════════════════════════════════════
+        function _bpeHarassJoin(area, paras) {
+            return area === 'slums' ? paras.join('\n\n') : paras.map(function(p) { return '<p>' + p + '</p>'; }).join('');
+        }
+
+        function getBpeHarassOpener(area) {
+            var _ba = gameState.bodyAppearance || {};
+            var _bs = _ba.breastSize || 'average';
+            var _bt = _ba.bodyType || 'ordinary';
+            var cv = getSceneClothingVars();
+            var slums = area === 'slums';
+            var paras;
+            if (cv.pantiesExposed) {
+                var top = cv.topName, pan = cv.pantiesName, cut = cv.pantiesCut;
+                var cutLine = cut === 'thong' ? 'The thong\'s a thin line between your cheeks, and the light catches everything else.'
+                    : cut === 'cheeky' ? 'Your cheeks hang half out of your ' + pan + ' with every step.'
+                    : cut === 'boyshort' ? 'Your ' + pan + ' stretch snug over every curve.'
+                    : 'Your ' + pan + ' cup your ass, and nothing covers them.';
+                var legs = _bt === 'petite' ? 'You feel tiny in front of him, bare legs and a ' + top + ' and nothing in between.'
+                    : _bt === 'athletic' ? 'His eyes track the lean muscle of your bare thighs.'
+                    : _bt === 'curvy' ? 'His eyes follow the flare of your hips down to your bare thighs.'
+                    : _bt === 'thick' ? 'His eyes linger on your thick bare thighs.'
+                    : 'His eyes take their time on your bare legs.';
+                var braless = cv.braless ? ' Then he looks up, and your nipples are stiff through your ' + top + '. "No bra either," he says.' : '';
+                paras = slums ? [
+                    'They let you walk past the doorway first. Then three sets of footsteps fall in behind you, and the talking stops.',
+                    'From back there they\'ve got ' + getPantiesExposedAssView() + ', under the hem of your ' + top + '. ' + cutLine,
+                    '"No pants," the wiry one says, and laughs. "She came down here in her fuckin\' underwear."',
+                    'The leader walks around in front of you and looks you over. ' + legs + braless,
+                    '"Down here," he says, "that\'s an invitation."'
+                ] : [
+                    'They let you pass first. You hear their footsteps fall in behind you, and then you hear them stop talking.',
+                    'From back there they\'ve got ' + getPantiesExposedAssView() + ', under the hem of your ' + top + '. ' + cutLine,
+                    '"No pants," the stocky one says behind you. "She\'s walking around in her fuckin\' underwear."',
+                    'The tall one comes around in front of you and blocks the sidewalk. ' + legs + braless
+                ];
+                return _bpeHarassJoin(area, paras);
+            }
+            // Bra Exposed
+            var bra = cv.braName, bottom = cv.bottomName;
+            var chest = _bs === 'large' ? 'your heavy tits swell over the cups with every breath.'
+                : _bs === 'small' ? 'your small tits sit high in the cups, nipples stiff enough to show.'
+                : 'your tits push up in the cups with every breath.';
+            var jeer = cv.braStyle === 'sporty' ? '"Out for a jog, sweetheart?"'
+                : cv.braStyle === 'pushup' ? '"Look at those, all pushed up for us,"'
+                : cv.braStyle === 'lace' ? '"Is that lace? I can see her nipples through it,"'
+                : cv.braStyle === 'bralette' ? '"She walked out here in her bra,"'
+                : cv.braStyle === 'corset' ? '"Fuckin\' corset, out on the street,"'
+                : '"Forget your shirt, sweetheart?"';
+            var wet = isWetBraThrough() ? 'The rain\'s soaked your ' + bra + ' through. Your nipples show dark under the wet cups, and ' + (slums ? 'all three of them' : 'both of them') + ' can see.' : '';
+            paras = slums ? [
+                'Their eyes are on your chest before the leader gets a word out. You\'re in your ' + bra + ' and your ' + bottom + ' on a slums sidewalk, and ' + chest,
+                jeer + ' the wiry one says, and flicks his cigarette away.',
+                'The leader steps in close enough that you can smell him. He stares down at your ' + bra + '. "Walking around down here in that," he says. "You know what you\'re asking for."'
+            ] : [
+                'They\'re looking at your chest before they say a word. You\'re in your ' + bra + ' and your ' + bottom + ', and under the streetlight ' + chest,
+                jeer + ' the stocky one says.',
+                'The tall one steps in close, right in front of you, and stares down at your ' + bra + '. "Dressed like that, out here," he says. "You wanted us to look."'
+            ];
+            if (wet) paras.splice(1, 0, wet);
+            return _bpeHarassJoin(area, paras);
+        }
+
+        function getBpeHarassGrope(area) {
+            var _ba = gameState.bodyAppearance || {};
+            var _bs = _ba.breastSize || 'average';
+            var _butt = _ba.buttSize || 'average';
+            var cv = getSceneClothingVars();
+            var _tbg = getBreastGrab();
+            var _bg = getDinerButtGrab();
+            var slums = area === 'slums';
+            var paras;
+            if (cv.pantiesExposed) {
+                var top = cv.topName, pan = cv.pantiesName, thong = cv.pantiesCut === 'thong';
+                var grabber = slums ? 'The big one' : 'The stocky one';
+                var squeeze = _butt === 'large' ? 'His palm spreads over one full, heavy cheek and squeezes.'
+                    : _butt === 'small' ? 'His hand covers most of your tight little ass and squeezes.'
+                    : 'He squeezes a handful of bare cheek.';
+                paras = [
+                    grabber + '\'s hand lands on your bare ass from behind. ' + squeeze + ' ' +
+                        (thong ? 'His fingers find the string of your thong and hook under it.' : 'His fingers slide under the leg band of your ' + pan + '.'),
+                    (thong ? 'He tugs the string aside' : 'He pulls the crotch of your ' + pan + ' aside') + ', and two fingers find your pussy from behind. "She\'s soaked," he says. "Walking around like this and soaked."',
+                    (slums ? 'The leader' : 'The tall one') + ' shoves his hand up under your ' + top + '. ' + (cv.braless ? 'No bra. His palm ' + _tbg.cup + '.' : 'He shoves your bra up, and his palm ' + _tbg.cup + '.') + ' ' + _tbg.nippleDrag
+                ];
+                if (slums) paras.push('The wiry one laughs in your ear. "Walked in here with your ass out. You knew."');
+                return _bpeHarassJoin(area, paras);
+            }
+            // Bra Exposed: hands on the cups, then a cup yanked down
+            var bra = cv.braName, bottom = cv.bottomName;
+            var tits = _bs === 'large' ? 'your heavy tits' : _bs === 'small' ? 'your small tits' : 'your tits';
+            var outLine = _bs === 'large' ? 'Your heavy tit spills out over the top of it,' : _bs === 'small' ? 'Your small tit pops free,' : 'Your tit springs out,';
+            var lead = slums ? 'The leader' : 'The tall one';
+            paras = [
+                lead + '\'s hands go straight to your chest. He cups ' + tits + ' over your ' + bra + ' and squeezes, thumbs dragging across your nipples through the fabric.',
+                'Then he hooks a finger in one cup and yanks it down. ' + outLine + ' nipple stiff in the open air, right there on the ' + (slums ? 'slums sidewalk' : 'street') + '. ' + (slums ? 'The wiry one whistles.' : '"There she is," he says.')
+            ];
+            var other = slums ? 'The big one' : 'The stocky one';
+            if (cv.commando) {
+                paras.push(other + '\'s hand ' + (cv.liftable ? 'slides up under your ' + bottom : 'shoves down the front of your ' + bottom) + ' and finds bare pussy. "No panties," he says. "Tits out and nothing under any of it."');
+            } else {
+                paras.push(other + '\'s hand slides to your ass. ' + _bg.squeeze);
+            }
+            return _bpeHarassJoin(area, paras);
+        }
+
+        // Grope gains: Panties Exposed 25/25, Bra Exposed 18/15 (arousal / corruption). null otherwise.
+        function getBpeGropeGains() {
+            var lvl = getExposureLevel();
+            if (lvl === 'panties_exposed') return { arousal: 25, corruption: 25 };
+            if (lvl === 'bra_exposed') return { arousal: 18, corruption: 15 };
+            return null;
+        }
+
+        // ── 7D: the Bra Exposed layer in the choice scenes ──
+        // The cup that got pulled down during the grope: fixed or left, and what her body did.
+        // Returns '' unless she's in Bra Exposed with an opaque bra. kind: 'aggressive',
+        // 'firm', 'passive', or 'flirt'.
+        function getBraExposedHarassLayer(kind) {
+            var cv = getSceneClothingVars();
+            if (!cv.braExposed || cv.braSheer) return '';
+            var _bs = (gameState.bodyAppearance || {}).breastSize || 'average';
+            var bra = cv.braName;
+            var tit = _bs === 'large' ? 'your heavy tit' : _bs === 'small' ? 'your small tit' : 'your tit';
+            var c = gameState.corruption || 0;
+            var p;
+            if (kind === 'aggressive') {
+                p = 'One cup of your ' + bra + ' is still yanked down. You shove ' + tit + ' back into it with shaking fingers. ' +
+                    (_bs === 'large' ? 'It barely fits back in.' : _bs === 'small' ? 'It slips back in easily, and that somehow makes it worse.' : 'The cup settles crooked.') +
+                    ' Your nipple\'s stiff and throbbing against the fabric, and you hate that it is.';
+            } else if (kind === 'firm') {
+                p = 'While they back off, you fix your ' + bra + '. One cup was pulled down the whole time you were telling them no, ' + tit + ' out on the sidewalk. You tug it back up without looking away from them. Under the cup, your nipple aches.';
+            } else if (kind === 'passive') {
+                if (c < 6000) {
+                    p = 'You don\'t fix your ' + bra + ' until you\'re a block away. One cup\'s still shoved down, ' + tit + ' out, and anyone could have seen. Your face burns. Your pussy clenches anyway.';
+                } else if (c < 8000) {
+                    p = 'Your ' + bra + '\'s still pulled down on one side. You take your time tucking ' + tit + ' back into the cup, and your nipple drags against the edge on the way in. Your clit throbs.';
+                } else {
+                    p = 'You leave the cup where they left it, pulled down under ' + tit + ', nipple out and stiff for the rest of the block. A woman across the street stares. You let her, and your pussy clenches.';
+                }
+            } else {
+                p = 'One of them already has a cup of your ' + bra + ' yanked down. ' +
+                    (_bs === 'large' ? 'Your heavy tit spills into his palm' : _bs === 'small' ? 'Your small tit fits right in his palm' : 'Your tit fills his palm') +
+                    ', nipple stiff between his fingers, bare in the open air. You leave it there. Your pussy clenches when he pinches.';
+            }
+            return '\n\n' + p;
+        }
+
         function getHarassExhibScene(area) {
             var p = area === 'slums' ? 'slums' : 'district';
-            var exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 7C
+            var exposure = getExposureLevel();
             var scene = null;
             if (exposure === 'underwear_only' || exposure === 'topless' || exposure === 'bottomless' || exposure === 'naked') {
                 scene = p + '_exhibition_' + (exposure === 'underwear_only' ? 'underwear' : exposure);
             }
+            // Bra/Panties Exposed Step 7C: Panties Exposed is forced to its own gang scene at every
+            // tier (Steps 8 and 9 add them; until a scene exists, the regular choices stay).
+            // Bra Exposed forces nothing: a soaked bra goes to the wet scene below, a mesh bra to sheer.
+            if (exposure === 'panties_exposed' && story[p + '_exhibition_panties']) scene = p + '_exhibition_panties';
             if (getSheerHarassState()) scene = p + '_sheer_exhibition';
             if (!scene && ((gameState.weather && gameState.weather.clothesWetness) || 0) >= 60) scene = p + '_wet_exhibition';
             return scene;
@@ -112661,7 +112829,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var corruption = gameState.corruption || 0;
                     var timesHarassed = gameState.flags.streetHarassmentCount || 0;
                     var district = gameState.flags.harassmentDistrict || 'street';
-                    var exposure = _bpeShim((typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed'); // BPE shim: Step 7B
+                    var exposure = (typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed'; // Bra/Panties Exposed Step 7B: both states have their own branches
                     var cv = getSceneClothingVars();
                     var hasBra = cv.hasBra;
                     var hasPanties = cv.hasPanties;
@@ -112722,6 +112890,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += '<p>Their reaction is immediate. You\'re standing on the sidewalk in your bra and panties. Your tits swell above the cups. Your nipples press against thin fabric. The shadow of your pussy is visible through the stretched ' + cv.pantiesFabric + '.</p>';
                         desc += '<p>"Fuck me," the tall one breathes. His eyes trace the line of your panties across your hips. "You come out here in your underwear?"</p>';
                         desc += '<p>The stocky one steps closer, cutting off the gap to your left. They\'ve spread wider, blocking the path.</p>';
+                    } else if (exhibState === 'panties_exposed' || exhibState === 'bra_exposed') {
+                        // Bra/Panties Exposed Step 7B
+                        desc += getBpeHarassOpener('district');
                     } else if (exhibState === 'braless_commando') {
                         desc += '<p>The tall one\'s eyes settle on your chest. Your nipples are stiff and visible through your ' + (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : 'top') + ', the shape of your bare tits clear through thin fabric.</p>';
                         desc += '<p>"No bra." The stocky one says it like an observation. He\'s already looking lower, at how your ' + (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : 'skirt') + ' hangs without anything underneath to break the line.</p>';
@@ -112745,7 +112916,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (_wetMeshH) { desc += _wetMeshH; _wetness = 0; }
 
                     // ── WET CLOTHING AWARENESS (Wet Clothing Overhaul, District 5A) ──
-                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
+                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState !== 'bra_exposed' && exhibState !== 'panties_exposed' && exhibState.indexOf('sheer_') !== 0) {
                         var _topName = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomName = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
                         var _bs = ba.breastSize || 'average';
@@ -112793,7 +112964,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     var cv = getSceneClothingVars();
                     var corruption = gameState.corruption || 0;
-                    var exposure = _bpeShim((typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed'); // BPE shim: Step 7B
+                    var exposure = (typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed'; // Bra/Panties Exposed Step 7B: both states have their own branches
                     var hasBra = cv.hasBra;
                     var hasPanties = cv.hasPanties;
 
@@ -112829,6 +113000,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += '<p>Their hands are on you instantly. The tall one slides his hand under your bra cup, rough fingers on bare skin. He ' + _tbg.squeeze + '. The stocky one hooks two fingers into the waistband of your panties and tugs down, exposing the top of your hip.</p>';
                         desc += '<p>"Just underwear," the tall one says. "Might as well be naked." His thumb drags across your nipple through the thin fabric and your back tenses.</p>';
                         desc += '<p>The stocky one\'s hand slides inside your panties from behind. Fingers probing, finding wet folds. "She\'s soaked through them."</p>';
+                    } else if (exhibState === 'panties_exposed' || exhibState === 'bra_exposed') {
+                        // Bra/Panties Exposed Step 7B
+                        desc += getBpeHarassGrope('district');
                     } else if (exhibState === 'braless_commando') {
                         desc += '<p>The tall one slides his hand under your ' + (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : 'top') + '. His palm ' + _tbg.cup + '. "Knew it." ' + _tbg.nippleDrag + '</p>';
                         desc += '<p>The stocky one shoves his hand under your ' + (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : 'skirt') + '. His fingers find bare pussy. No panties. "Bare underneath too." His grin widens. "Nothing on under any of it."</p>';
@@ -112846,7 +113020,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // ── WET CLOTHING GROPE MODIFICATIONS (Wet Clothing Overhaul, District 5B) ──
                     var _wetnessG = (gameState.weather && gameState.weather.clothesWetness) || 0;
-                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
+                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState !== 'bra_exposed' && exhibState !== 'panties_exposed' && exhibState.indexOf('sheer_') !== 0) {
                         var _topNameG = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomNameG = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
 
@@ -112866,9 +113040,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     return desc;
                 },
                 onEnter: function() {
-                    var exposure = _bpeShim((typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed'); // BPE shim: Step 7B
+                    var exposure = (typeof getExposureLevel === 'function') ? getExposureLevel() : 'clothed'; // Bra/Panties Exposed Step 7B: both states have their own branches
                     var arousalGain = (exposure === 'naked') ? 30 : (exposure === 'bottomless' || exposure === 'topless') ? 25 : (exposure === 'underwear_only') ? 25 : 15;
                     var corruptionGain = (exposure === 'naked' || exposure === 'bottomless' || exposure === 'topless' || exposure === 'underwear_only') ? 25 : 20;
+                    // Bra/Panties Exposed Step 7B: Panties Exposed 25/25, Bra Exposed 18/15
+                    var _bpeG = getBpeGropeGains();
+                    if (_bpeG) { arousalGain = _bpeG.arousal; corruptionGain = _bpeG.corruption; }
                     // Mesh Step 11: sheer grope gains
                     var _sheerG = getSheerGropeGains();
                     if (_sheerG) { arousalGain = _sheerG.arousal; corruptionGain = _sheerG.corruption; }
@@ -112907,7 +113084,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             street_harassment_aggressive: {
-                text: 'You shove them back. <strong>Hard.</strong>\n\nThey stumble. Surprised.\n\n"What the fuck?!"\n\n"Don\'t fucking touch me," you snap.\n\nPeople are watching now. They back off.\n\n"Crazy bitch," one mutters.\n\nThey walk away. Grumbling.\n\nYou\'re left breathing hard. Angry. But safe.',
+                text: function() { return 'You shove them back. <strong>Hard.</strong>\n\nThey stumble. Surprised.\n\n"What the fuck?!"\n\n"Don\'t fucking touch me," you snap.\n\nPeople are watching now. They back off.\n\n"Crazy bitch," one mutters.\n\nThey walk away. Grumbling.\n\nYou\'re left breathing hard. Angry. But safe.' + getBraExposedHarassLayer('aggressive'); }, // Bra/Panties Exposed Step 7D
                 onEnter: () => {
                     // Arousal suppressed by anger
                     gameState.arousal = Math.max(0, gameState.arousal - 10);
@@ -112929,7 +113106,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             street_harassment_firm: {
-                text: 'You step back. Look them in the eyes.\n\n"Don\'t touch me."\n\nYour voice is calm. Firm.\n\nThey pause. Exchange glances.\n\n"Alright, alright. No need to be like that."\n\nThey back off. Hands up.\n\nBut as they walk away, one calls back: "Stuck-up bitch."\n\nYou ignore them. Keep walking.',
+                text: function() { return 'You step back. Look them in the eyes.\n\n"Don\'t touch me."\n\nYour voice is calm. Firm.\n\nThey pause. Exchange glances.\n\n"Alright, alright. No need to be like that."\n\nThey back off. Hands up.\n\nBut as they walk away, one calls back: "Stuck-up bitch."\n\nYou ignore them. Keep walking.' + getBraExposedHarassLayer('firm'); }, // Bra/Panties Exposed Step 7D
                 onEnter: () => {
                     // Moderate arousal
                     applyArousal(6);
@@ -112957,7 +113134,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return [
                             'You freeze.\n\nCan\'t move. Can\'t speak.\n\nThey take it as permission.\n\nHands explore more boldly. Groping your breasts. Your ass.\n\n"She\'s not saying no," one laughs.\n\nYour body responds despite yourself. Nipples hardening. Heat building.',
 
-                            'One hand slides under your ' + cv.topName + '. Pinches your nipple.\n\nYou gasp. Still frozen.\n\n"Fuck, she likes it," he grins.\n\nThe other\'s hand cups your pussy. Rubs.\n\nYou\'re getting wet. Your body betraying you.\n\n<em>Why can\'t I move?</em>',
+                            'One hand slides under your ' + (cv.braExposed ? cv.braName : cv.topName) + '. Pinches your nipple.\n\nYou gasp. Still frozen.\n\n"Fuck, she likes it," he grins.\n\nThe other\'s hand cups your pussy. Rubs.\n\nYou\'re getting wet. Your body betraying you.\n\n<em>Why can\'t I move?</em>',
 
                             '"Should we take her somewhere?" one suggests.\n\n<em>No,</em>\n\nThe thought snaps you out of it.\n\nYou shove them away and <strong>run</strong>.\n\nTheir laughter follows you down the street.'
                         ];
@@ -112966,26 +113143,29 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return [
                             'You don\'t move.\n\nTheir hands slide under your clothes. Fingers on bare skin. One cups your breast, the other grips your hip and pulls you back against him.\n\nYour breath catches. Your nipple stiffens against his palm.\n\n"She likes it," one says.\n\nYou do. That\'s the thing. You really do.\n\nYou let your weight settle back against the one behind you. Feel his hard-on press against your ass. His grip tightens.',
 
-                            'One hand slides lower. Fingers tracing the ' + (cv.liftable ? 'hem of your ' + cv.bottomName : 'waistband of your ' + cv.bottomName) + '.\n\n"Come with us," he says. Low. Close to your ear.\n\nYou let the moment stretch. Let him think you\'re considering it.\n\nThen you step forward out of his grip. Turn around. Look him dead in the face.\n\nHis expression is hungry and half-wrecked and you enjoy every second of it.\n\n"Maybe next time," you say.\n\nHe blinks. His hand hangs in the air where your hip used to be.\n\nYou fix your ' + cv.topName + ', give the other one a look that makes him swallow hard, and keep walking.\n\nYour pulse is still up. Your skin is still warm where they touched you. But your feet know where they\'re going and it isn\'t that alley.'
+                            'One hand slides lower. Fingers tracing the ' + (cv.liftable ? 'hem of your ' + cv.bottomName : 'waistband of your ' + cv.bottomName) + '.\n\n"Come with us," he says. Low. Close to your ear.\n\nYou let the moment stretch. Let him think you\'re considering it.\n\nThen you step forward out of his grip. Turn around. Look him dead in the face.\n\nHis expression is hungry and half-wrecked and you enjoy every second of it.\n\n"Maybe next time," you say.\n\nHe blinks. His hand hangs in the air where your hip used to be.\n\nYou fix your ' + (cv.braExposed ? cv.braName : cv.topName) + ', give the other one a look that makes him swallow hard, and keep walking.\n\nYour pulse is still up. Your skin is still warm where they touched you. But your feet know where they\'re going and it isn\'t that alley.'
                         ];
                     } else {
                         // DEEPLY CORRUPTED - Lets them grope, teases, walks away
                         return [
-                            'You don\'t move.\n\nTheir hands get bolder. One slides up your hip. The other palms your breast through your ' + cv.topName + ', thumb finding the nipple and pressing circles until it stiffens under the fabric.\n\nYou let them. Eyes forward. Breathing steady.\n\nThe one behind you pushes close. His hard-on grinds against your lower back. His breath goes hot and fast against your neck.\n\n"She\'s not fighting it," he mutters to the other. His voice has gotten thick.\n\n<em>Cute.</em>',
+                            'You don\'t move.\n\nTheir hands get bolder. One slides up your hip. The other palms your breast through your ' + (cv.braExposed ? cv.braName : cv.topName) + ', thumb finding the nipple and pressing circles until it stiffens under the fabric.\n\nYou let them. Eyes forward. Breathing steady.\n\nThe one behind you pushes close. His hard-on grinds against your lower back. His breath goes hot and fast against your neck.\n\n"She\'s not fighting it," he mutters to the other. His voice has gotten thick.\n\n<em>Cute.</em>',
 
                             'You give it a few more seconds. Let his breathing get desperate. Let the hand on your breast squeeze harder, let the one on your hip drag you back against him.\n\nThen you step forward. Casual. Like you remembered somewhere to be.\n\nEvery hand falls away at once.\n\n"Hey\u2014" One grabs at your wrist.\n\nYou catch his fingers. Hold them for exactly one second. Let him feel how warm your skin is. Then you drop them.\n\n"Thanks for the warm-up, boys."\n\nYou walk. Shoulders loose. Hips easy. Slow enough that they can watch every step.\n\nSomeone says something behind you. Frustrated. Half-strangled. You don\'t bother catching the words.\n\nThe grin stays on your face for two blocks.'
                         ];
                     }
                 },
-                text: function() {
+                // Bra/Panties Exposed Step 7D: the pulled-down cup, then the scene's own text
+                text: function() { return story.street_harassment_passive._bpeBaseText() + getBraExposedHarassLayer('passive'); },
+                _bpeBaseText: function() {
+                    var cv = getSceneClothingVars();
                     const corruption = gameState.corruption || 0;
                     
                     if (corruption < 6000) {
                         return 'You lean against a wall. Heart pounding.\n\n<em>What just happened?</em>\n\nYou were groped. Violated. And you... froze.\n\nYour body responded. Got wet. Got aroused.\n\n<em>What\'s wrong with me?</em>';
                     } else if (corruption < 8000) {
-                        return 'You smooth your ' + cv.topName + ' and roll your shoulders.\n\nThe heat between your legs hasn\'t faded. You enjoyed that more than you probably should have.\n\n<em>Probably.</em>\n\nYou keep walking, the ghost of their hands still on your skin.';
+                        return 'You smooth your ' + (cv.braExposed ? cv.braName : cv.topName) + ' and roll your shoulders.\n\nThe heat between your legs hasn\'t faded. You enjoyed that more than you probably should have.\n\n<em>Probably.</em>\n\nYou keep walking, the ghost of their hands still on your skin.';
                     } else {
-                        return 'You brush your ' + cv.topName + ' flat where their hands wrinkled it.\n\n<em>Fun.</em>\n\nYour skin still hums where they touched you. The clench between your thighs is a quiet suggestion you\'ll deal with later. Or you won\'t.\n\nYou round the corner and keep walking.';
+                        return 'You brush your ' + (cv.braExposed ? cv.braName : cv.topName) + ' flat where their hands wrinkled it.\n\n<em>Fun.</em>\n\nYour skin still hums where they touched you. The clench between your thighs is a quiet suggestion you\'ll deal with later. Or you won\'t.\n\nYou round the corner and keep walking.';
                     }
                 },
                 onEnter: () => {
@@ -113024,7 +113204,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             street_harassment_flirt: {
-                text: function() {
+                // Bra/Panties Exposed Step 7D: the pulled-down cup, then the scene's own text
+                text: function() { return story.street_harassment_flirt._bpeBaseText() + getBraExposedHarassLayer('flirt'); },
+                _bpeBaseText: function() {
+                    var cv = getSceneClothingVars();
                     const corruption = gameState.corruption || 0;
                     if (corruption >= 9000) {
                         return 'You don\'t pull away.\n\nYou <strong>moan</strong>. Low and deliberate. Let your hips roll back into their hands.\n\nThey freeze for half a second. Then the grins spread.\n\n\"Holy shit,\" one breathes. \"She\'s actually into it.\"\n\nYou turn your head just enough. Meet his eyes. Let him see there\'s nothing reluctant in yours.';
@@ -114645,7 +114828,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     var corruption = gameState.corruption || 0;
                     var timesHarassed = gameState.flags.slumsHarassmentCount || 0;
-                    var exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 7B
+                    var exposure = getExposureLevel(); // Bra/Panties Exposed Step 7B: both states have their own branches
                     var cv = getSceneClothingVars();
                     var hasBra = cv.hasBra;
                     var hasPanties = cv.hasPanties;
@@ -114684,6 +114867,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += 'Their eyes lock on your chest before the leader gets a word out. Your bare tits are out in the open, nipples stiff and dark against the night air, your breasts rising and falling with each breath.\n\n"Holy shit," the wiry one mutters. He\'s staring at your nipples.\n\nThe leader takes a step closer. His eyes haven\'t left your chest. "You walked into my block like that?" His voice is thick. "Tits out? For us?"\n\nThe big one\'s arms unfold. His hands hang loose at his sides. All three of them are looking at your bare breasts and their body language has shifted from idle threat to something hungrier.';
                     } else if (exhibState === 'underwear_only') {
                         desc += 'Their reaction is immediate. You\'re standing on a slums sidewalk in your bra and panties. The swell of your tits above the cups, the shape of your nipples pressing through the thin fabric, the shadow of your pussy visible through the stretched ' + cv.pantiesFabric + ' of your underwear.\n\n"Fuckin\' hell," the leader breathes. His eyes trace the line of your panties across your hips, the crease where the fabric pulls tight between your thighs. "You come out here in your underwear?"\n\nThe wiry one flicks his cigarette. The big one steps forward, closing the gap to arm\'s reach. They\'ve spread wider, cutting off the side streets.';
+                    } else if (exhibState === 'panties_exposed' || exhibState === 'bra_exposed') {
+                        // Bra/Panties Exposed Step 7B
+                        desc += getBpeHarassOpener('slums');
                     } else if (exhibState === 'braless_commando') {
                         desc += 'The leader\'s eyes land on your chest first. Your nipples are stiff and visible through your ' + (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : 'top') + ', the shape of your bare tits printed through thin fabric, areolae dark against the cloth.\n\n"No bra," the wiry one says. Low, to the leader. An observation.\n\nThe leader grins. He\'s already looking lower, at how your ' + (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : 'skirt') + ' hangs against your thighs with nothing underneath to break the line. He can\'t see it yet. But he suspects.\n\n"Dressed real light tonight, sweetheart." He takes a step. "Real fuckin\' light."';
                     } else if (exhibState === 'braless') {
@@ -114712,7 +114898,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (_wetMeshH) { desc += _wetMeshH; _wetness = 0; }
 
                     // ── WET CLOTHING AWARENESS (Wet Clothing Overhaul, Step 5A) ──
-                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
+                    if (_wetness >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState !== 'bra_exposed' && exhibState !== 'panties_exposed' && exhibState.indexOf('sheer_') !== 0) {
                         var _topName = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomName = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
                         var _bs = ba.breastSize || 'average';
@@ -114778,7 +114964,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 text: function() {
                     var corruption = gameState.corruption || 0;
                     var timesHarassed = gameState.flags.slumsHarassmentCount || 0;
-                    var exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 7B
+                    var exposure = getExposureLevel(); // Bra/Panties Exposed Step 7B: both states have their own branches
                     var cv = getSceneClothingVars();
                     var hasBra = cv.hasBra;
                     var hasPanties = cv.hasPanties;
@@ -114820,6 +115006,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += 'The wiry one hooks a finger in the waistband of your panties. Pulls the fabric out an inch. Looks down. "Fuckin\' pretty." He lets the elastic snap back against your hip.\n\n';
                         desc += 'The big one presses against your back. His hand reaches around, slides inside the front of your panties, and two fingers push through your folds. The ' + cv.pantiesFabric + ' stretches around his thick wrist. Your pussy is wet, swollen, and his fingertip finds your clit and grinds it in a rough circle.\n\n';
                         desc += '"She\'s drenched," the big one says. His fingers push deeper into your panties, two of them sliding inside you. Your walls clench around them through the stretched ' + cv.pantiesFabric + '. The leader shoves your other bra cup up. Both ' + _tbg.adj + ' tits exposed, both nipples hard, his mouth closing over one while the wiry one takes the other.';
+                    } else if (exhibState === 'panties_exposed' || exhibState === 'bra_exposed') {
+                        // Bra/Panties Exposed Step 7B
+                        desc += getBpeHarassGrope('slums');
                     } else if (exhibState === 'braless_commando') {
                         desc += 'The leader\'s hand slides up under your ' + (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : 'top') + '. His fingers hit bare skin immediately. No bra. His palm ' + _tbg.cup + '. ' + _tbg.nippleDrag + ' "Knew it," he mutters. "No fuckin\' bra."\n\n';
                         desc += 'The wiry one\'s hand slides under your ' + (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : 'skirt') + '. His fingers push past your waistband and find bare skin. No panties. Just bare mound, soft and warm, and his fingers slide lower and split your wet folds. He lets out a breath. "Nothing underneath. Nothing at all. She came here bare."\n\n';
@@ -114845,7 +115034,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // ── WET CLOTHING GROPE MODIFICATIONS (Wet Clothing Overhaul, Step 5B) ──
                     var _wetnessG = (gameState.weather && gameState.weather.clothesWetness) || 0;
-                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState.indexOf('sheer_') !== 0) {
+                    if (_wetnessG >= 40 && exhibState !== 'naked' && exhibState !== 'bottomless' && exhibState !== 'topless' && exhibState !== 'underwear_only' && exhibState !== 'bra_exposed' && exhibState !== 'panties_exposed' && exhibState.indexOf('sheer_') !== 0) {
                         var _topNameG = (gameState.currentOutfit.top ? gameState.currentOutfit.top.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'top');
                         var _bottomNameG = (gameState.currentOutfit.bottom ? gameState.currentOutfit.bottom.name.toLowerCase() : gameState.currentOutfit.dress ? gameState.currentOutfit.dress.name.toLowerCase() : 'skirt');
 
@@ -114873,10 +115062,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 onEnter: () => {
                     // Initial arousal and corruption from being groped (Mesh Step 11: sheer states hit harder)
                     var _sheerG = getSheerGropeGains();
-                    applyArousal(_sheerG ? _sheerG.arousal : 15);
+                    var _bpeG = getBpeGropeGains(); // Bra/Panties Exposed Step 7B
+                    applyArousal(_sheerG ? _sheerG.arousal : _bpeG ? _bpeG.arousal : 15);
                     
                     // Initial corruption gain just from being harassed (before response choice)
-                    gameState.corruption = (gameState.corruption || 0) + (_sheerG ? _sheerG.corruption : 20);
+                    gameState.corruption = (gameState.corruption || 0) + (_sheerG ? _sheerG.corruption : _bpeG ? _bpeG.corruption : 20);
                     
                     updateStatus();
                 },
@@ -114909,7 +115099,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             slums_harassment_aggressive: {
-                text: function() {
+                // Bra/Panties Exposed Step 7D: the pulled-down cup, then the scene's own text
+                text: function() { return story.slums_harassment_aggressive._bpeBaseText() + getBraExposedHarassLayer('aggressive'); },
+                _bpeBaseText: function() {
+                    var cv = getSceneClothingVars();
                     const timesHarassed = gameState.flags.slumsHarassmentCount || 0;
                     
                     if (timesHarassed === 0) {
@@ -114939,7 +115132,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             slums_harassment_firm: {
-                text: function() {
+                // Bra/Panties Exposed Step 7D: the pulled-down cup, then the scene's own text
+                text: function() { return story.slums_harassment_firm._bpeBaseText() + getBraExposedHarassLayer('firm'); },
+                _bpeBaseText: function() {
+                    var cv = getSceneClothingVars();
                     const timesHarassed = gameState.flags.slumsHarassmentCount || 0;
                     
                     if (timesHarassed === 0) {
@@ -114973,7 +115169,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (corruption < 6000) {
                         // LOW CORRUPTION - Freezes up, runs away in shame
                         return [
-                            'You freeze.\n\nThe hands keep exploring. Squeezing. Violating.\n\n"That\'s it," one breathes. "Just relax."\n\nYour mind is racing but your body won\'t move. Paralyzed by shock and fear and... something else.\n\nHis hand slides under your ' + cv.topName + '. Grabs your bare breast. Pinches your nipple.',
+                            'You freeze.\n\nThe hands keep exploring. Squeezing. Violating.\n\n"That\'s it," one breathes. "Just relax."\n\nYour mind is racing but your body won\'t move. Paralyzed by shock and fear and... something else.\n\nHis hand slides under your ' + (cv.braExposed ? cv.braName : cv.topName) + '. Grabs your bare breast. Pinches your nipple.',
 
                             '"Look at her," another laughs. "Not even fighting back."\n\nThe one behind you grinds his erection against your ass. Hands on your hips.\n\n"Such a good girl," he whispers in your ear. "Just standing there and taking it."\n\nHis hand slides down. Cups your pussy. Rubs.\n\nYour body responds. Heat. Wetness. <em>God, why am I getting turned on?</em>',
 
@@ -114984,28 +115180,31 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     } else if (corruption < 8000) {
                         // CORRUPTED - Enjoys the groping, teases, walks away
                         return [
-                            'You don\'t move.\n\nTheir hands get bolder. One slides under your ' + cv.topName + ' from behind, palm rough and hot against your bare waist. Another cups your breast through the fabric, thumb working a slow circle until the nipple stiffens.\n\nYou let your weight settle back. Just slightly.\n\nThe one behind you reads it immediately. His grip tightens.\n\n"She\'s not going anywhere," he says, low.',
+                            'You don\'t move.\n\nTheir hands get bolder. One slides under your ' + (cv.braExposed ? cv.braName : cv.topName) + ' from behind, palm rough and hot against your bare waist. Another cups your breast through the fabric, thumb working a slow circle until the nipple stiffens.\n\nYou let your weight settle back. Just slightly.\n\nThe one behind you reads it immediately. His grip tightens.\n\n"She\'s not going anywhere," he says, low.',
 
-                            'His hand traces your waistband. "Come with us."\n\nYou let the moment sit. Let him think you\'re deciding.\n\nThen you step forward out of his grip. Turn around and look at him.\n\nHis expression is open and hungry and half-wrecked, and you take your time looking at it.\n\n"Next time," you say.\n\nHe blinks. His hand stays in the air where your hip used to be.\n\nYou fix your ' + cv.topName + ' and give the one to his left a look that makes him swallow. Then you walk. Slow enough that every one of them watches. Fast enough that following would look pathetic.\n\nYour pulse is still up when you turn the corner.'
+                            'His hand traces your waistband. "Come with us."\n\nYou let the moment sit. Let him think you\'re deciding.\n\nThen you step forward out of his grip. Turn around and look at him.\n\nHis expression is open and hungry and half-wrecked, and you take your time looking at it.\n\n"Next time," you say.\n\nHe blinks. His hand stays in the air where your hip used to be.\n\nYou fix your ' + (cv.braExposed ? cv.braName : cv.topName) + ' and give the one to his left a look that makes him swallow. Then you walk. Slow enough that every one of them watches. Fast enough that following would look pathetic.\n\nYour pulse is still up when you turn the corner.'
                         ];
                     } else {
                         // DEEPLY CORRUPTED - Lets them grope, teases, walks away
                         return [
-                            'You don\'t move.\n\nTheir hands get confident. One palms your breast through your ' + cv.topName + ', thumb pressing circles until the nipple stiffens under the fabric. The one behind you pushes close, his hard-on grinding against your lower back, breath hot on the back of your neck.\n\nYou let them. Eyes ahead. Breathing steady.\n\n"She isn\'t fighting it," one mutters. His voice has gone thick.\n\n<em>Cute.</em>',
+                            'You don\'t move.\n\nTheir hands get confident. One palms your breast through your ' + (cv.braExposed ? cv.braName : cv.topName) + ', thumb pressing circles until the nipple stiffens under the fabric. The one behind you pushes close, his hard-on grinding against your lower back, breath hot on the back of your neck.\n\nYou let them. Eyes ahead. Breathing steady.\n\n"She isn\'t fighting it," one mutters. His voice has gone thick.\n\n<em>Cute.</em>',
 
                             'You give it a few more seconds. Let the breathing get desperate. Let the hand on your breast squeeze harder, let the one behind you drag you back against him.\n\nThen you step forward. Casual. Like you remembered somewhere to be.\n\nEvery hand falls away at once.\n\n"Hey—" One reaches for your wrist.\n\nYou catch his fingers. Hold them exactly one second. Let him feel how warm your skin is. Drop them.\n\n"Thanks, boys."\n\nYou walk. Shoulders loose. Hips easy. Slow enough that they can watch the whole thing.\n\nSomeone says something behind you. Frustrated. Half-strangled. You don\'t catch the words.\n\nThe grin stays on your face for the rest of the block.'
                         ];
                     }
                 },
-                text: function() {
+                // Bra/Panties Exposed Step 7D: the pulled-down cup, then the scene's own text
+                text: function() { return story.slums_harassment_passive._bpeBaseText() + getBraExposedHarassLayer('passive'); },
+                _bpeBaseText: function() {
+                    var cv = getSceneClothingVars();
                     const corruption = gameState.corruption || 0;
                     
                     if (corruption < 6000) {
-                        return 'You collapse against a wall. Breathing hard.\n\nYour whole body is trembling. Aroused. Ashamed. Confused.\n\n<em>Why didn\'t I stop them sooner?</em>\n\nYou can still feel their hands. Still hear their words.\n\n<em>Little slut.</em>\n\n<em>Dripping wet.</em>\n\nYou look down. Your nipples are visible through your ' + cv.topName + '. Your thighs are slick.\n\n<em>What\'s wrong with me?</em>';
+                        return 'You collapse against a wall. Breathing hard.\n\nYour whole body is trembling. Aroused. Ashamed. Confused.\n\n<em>Why didn\'t I stop them sooner?</em>\n\nYou can still feel their hands. Still hear their words.\n\n<em>Little slut.</em>\n\n<em>Dripping wet.</em>\n\nYou look down. Your nipples are visible through your ' + (cv.braExposed ? cv.braName : cv.topName) + '. Your thighs are slick.\n\n<em>What\'s wrong with me?</em>';
                     } else if (corruption < 8000) {
-                        return 'You smooth your ' + cv.topName + ' where their hands wrinkled it.\n\nThe heat between your thighs hasn\'t faded. You enjoyed that more than you probably should have.\n\n<em>Probably.</em>\n\nYou keep walking, the warmth of their hands still on your skin.';
+                        return 'You smooth your ' + (cv.braExposed ? cv.braName : cv.topName) + ' where their hands wrinkled it.\n\nThe heat between your thighs hasn\'t faded. You enjoyed that more than you probably should have.\n\n<em>Probably.</em>\n\nYou keep walking, the warmth of their hands still on your skin.';
                     } else {
-                        return 'You brush your ' + cv.topName + ' flat.\n\n<em>Fun.</em>\n\nYour skin still hums where they touched you. The clench between your thighs is a quiet suggestion you\'ll deal with later.\n\nYou head back out into the street and keep moving.';
+                        return 'You brush your ' + (cv.braExposed ? cv.braName : cv.topName) + ' flat.\n\n<em>Fun.</em>\n\nYour skin still hums where they touched you. The clench between your thighs is a quiet suggestion you\'ll deal with later.\n\nYou head back out into the street and keep moving.';
                     }
                 },
                 onEnter: () => {
@@ -115044,7 +115243,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
             },
 
             slums_harassment_moan_choice: {
-                text: function() {
+                // Bra/Panties Exposed Step 7D: the pulled-down cup, then the scene's own text
+                text: function() { return story.slums_harassment_moan_choice._bpeBaseText() + getBraExposedHarassLayer('flirt'); },
+                _bpeBaseText: function() {
+                    var cv = getSceneClothingVars();
                     const corruption = gameState.corruption || 0;
                     if (corruption >= 9000) {
                         return 'You don\'t pull away.\n\nYou moan. Let your body go pliant in their hands.\n\nSilence. Then the leader laughs, low and satisfied.\n\n"She\'s actually into it."\n\nYou look over your shoulder. "What gave it away?"';
