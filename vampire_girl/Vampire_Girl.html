@@ -50870,8 +50870,9 @@ audioSystem.playSFX('buttonClick');
         }
 
         // Exhibition arrest: thirst freezes five points short of her body type's overflow
-        // (petite 85, ordinary/athletic 95, curvy 100, thick 110) from the surrender to the release,
-        // so the overflow can never cut into the arrest scenes.
+        // (petite 85, ordinary/athletic 95, curvy 100, thick 110) from the surrender until she walks
+        // out of Central Booking, so the overflow can never cut into the arrest scenes. The fatigue
+        // passout defers for the same stretch.
         function getExhibCustodyThirstFreeze() { return getThirstCap() - 5; }
         function applyExhibCustodyThirstFreeze() {
             if (!gameState.flags || !gameState.flags._exhibCustody) return;
@@ -51158,7 +51159,7 @@ audioSystem.playSFX('buttonClick');
             // Sex scenes: the sex system's live encounter, or a scene whose onEnter
             // called a completeSex* function (see requestScenePagination).
             const _inSexScene = !!gameState.flags.currentSexEncounter || (_scenePaginationSceneId !== null && _scenePaginationSceneId === currentScene);
-            const _fatigueDeferred = inCombat || _inSexScene || gameState.flags._galleryMode || gameState.flags.overflowInProgress || gameState.flags.isSleeping;
+            const _fatigueDeferred = inCombat || _inSexScene || gameState.flags._galleryMode || gameState.flags.overflowInProgress || gameState.flags.isSleeping || !!gameState.flags._exhibCustody;
             if (gameState.fatigue < 100) {
                 // Nothing to pass out from; drop any lock a hijacked passout left behind
                 gameState.flags.fatiguePassoutInProgress = false;
@@ -137942,12 +137943,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags._exhibReleaseResult = { fine: fine, paid: paid, dress: needDress };
                     advanceTime(20); // the walk out of the building still counts as custody
                     applyExhibCustodyThirstFreeze();
-                    gameState.flags._exhibCustody = false;
                     updateStatus();
                     showNotification('Released with a citation (-$' + paid + ', Mental Health ' + (mh > 0 ? '+' : '') + mh + ')');
                 },
                 choices: function() {
                     return [{ text: 'Walk away from Central Booking.', action: function() {
+                        // Custody ends on the street: a deferred overflow or passout fires after this, never over the release
+                        gameState.flags._exhibCustody = false;
                         gameState.flags._exhibArrest = null;
                         gameState.flags._exhibReleaseResult = null;
                         showScene('city_exploration');
