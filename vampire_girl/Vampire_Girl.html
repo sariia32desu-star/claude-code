@@ -26427,6 +26427,111 @@ audioSystem.playSFX('buttonClick');
             return out.length ? out : null;
         }
 
+        // ── BPE Step 12C: Riverside Park for Underwear Only, Bra Exposed and Panties Exposed ──
+        // The park level the three park scenes read: the partial states use what strangers can
+        // actually see (outerwear hides them), everything else is the raw level as before.
+        function getParkExposureLevel() {
+            var raw = getExposureLevel();
+            return (raw === 'bra_exposed' || raw === 'panties_exposed') ? getVisibleExposureLevel() : raw;
+        }
+
+        // A dry, opaque bra is a look; the park treats it as dressed. Everything else that isn't
+        // clothed sends her to the porta potty first.
+        function isParkIndecent() {
+            var lvl = getParkExposureLevel();
+            if (lvl === 'clothed') return false;
+            if (lvl === 'bra_exposed') return !isLegallyDressed();
+            return true;
+        }
+
+        function getParkUnderwearAwareness(exposure) {
+            var cv = getSceneClothingVars();
+            var c = gameState.corruption || 0;
+            var ba = gameState.bodyAppearance || {};
+            var bs = ba.breastSize || 'average', bt = ba.bodyType || 'ordinary';
+            var porta = '\n\nThe porta potty is across the field. You could change there.';
+            if (exposure === 'bra_exposed') {
+                if (cv.braSheer) return '';
+                var bra = cv.braName, bottom = cv.bottomName;
+                var jog = cv.braStyle === 'sporty' ? 'In a sports bra you could almost pass for a jogger, if you were jogging. ' : '';
+                var t;
+                if (c >= 6001) {
+                    t = '\n\n' + jog + 'You stroll the path in your ' + bra + ' and your ' + bottom + ' like it\'s a summer dress. ' +
+                        (bt === 'petite' ? 'On your slight frame the look is all chest and bare skin.' : bt === 'athletic' ? 'Your bare stomach catches the light, every line of it.'
+                        : bt === 'curvy' ? 'Your waist pinches in under the cups, and your hips sway.' : bt === 'thick' ? 'Your soft stomach and full chest are on show, and you let them be.'
+                        : 'Your bare stomach catches the light.') +
+                        ' A couple on a blanket stop talking to watch you pass.\n\nYou roll your shoulders back for them. Your nipples are hard in the cups, and your clit throbs with every step.';
+                } else if (c >= 2001) {
+                    t = '\n\n' + jog + 'Your ' + bra + ' and your ' + bottom + ', out in Riverside Park. ' +
+                        (bs === 'large' ? 'Your heavy tits sit high in the cups, and every man on the path clocks them.' : bs === 'small' ? 'Your small tits sit pert in the cups, nipples pressing through.'
+                        : 'Your tits sit high in the cups, on show for the whole path.') +
+                        ' A guy on a bench lowers his book an inch and doesn\'t raise it again.\n\nIt\'s legal. You keep telling yourself that, and your pussy keeps getting wetter every time somebody looks.';
+                } else {
+                    t = '\n\n' + jog + 'You\'re in your ' + bra + ' and your ' + bottom + ' in the middle of Riverside Park, and it feels like every bench is facing you. A dad pushing a stroller looks at your chest, then very hard at the pond.' +
+                        '\n\nYou keep your arms folded over the cups. Your face is hot, your nipples are stiff against the lining anyway, and there\'s a damp, needy ache in your pussy you can\'t walk off.';
+                }
+                if (isWetBraThrough()) t += '\n\nThe soaked ' + bra + ' clings see-through to your nipples, and that isn\'t a look anymore.' + porta;
+                return t;
+            }
+            if (exposure === 'panties_exposed') {
+                if (cv.pantiesSheer) return '';
+                var top = cv.topName, pan = cv.pantiesName, thong = cv.pantiesCut === 'thong';
+                var crotch = thong ? 'the soaked strip of your ' + pan : 'the soaked crotch of your ' + pan;
+                if (c >= 6001) {
+                    return '\n\nYou walk the long way around the pond in your ' + top + ' and your ' + pan + ', slow, letting the path behind you have ' + getPantiesExposedAssView() + '.' +
+                        '\n\n' + (bt === 'petite' ? 'Your slight hips swing with every step.' : bt === 'athletic' ? 'Your ass flexes with every stride.' : bt === 'curvy' ? 'Your hips roll with every step.'
+                            : bt === 'thick' ? 'Your thick thighs brush together with every step.' : 'Your hips sway with every step.') +
+                        ' A man feeding the ducks turns around and forgets the bread.\n\nYou don\'t look back. ' + capFirst(crotch) + ' drags across your clit with every step, and your clit throbs every time.';
+                } else if (c >= 2001) {
+                    return '\n\nYou\'re in your ' + top + ' and your ' + pan + ' in a public park. For the last fifty yards, the path behind you has been getting ' + getPantiesExposedAssView() + '.' +
+                        '\n\nA jogger slows to your pace behind you instead of passing. You don\'t look back. Your cheeks are hot, and so is ' + crotch + '.' + porta;
+                }
+                return '\n\nYour ' + top + ' stops at your hips, and below it there\'s nothing but your ' + pan + ' in the middle of Riverside Park.' +
+                    '\n\nBehind you, a woman walking her dog stops dead. You can feel her eyes on ' + getPantiesExposedAssView() + '. You pull your hem down with both hands, and it does nothing.' +
+                    '\n\nYour face burns. Your pussy clenches in the crotch anyway, damp and aching.' + porta;
+            }
+            if (exposure === 'underwear_only') {
+                if (typeof getSheerState === 'function' && getSheerState().state.indexOf('sheer_lingerie') === 0) return '';
+                var ubra = cv.braName, upan = cv.pantiesName, ucups = cv.braStyle === 'sporty' ? 'fabric' : 'cups';
+                if (c >= 6001) {
+                    return '\n\nYou stroll through Riverside Park in your ' + ubra + ' and ' + upan + ' like it\'s a bikini at the beach. Families pull their kids closer. A jogger nearly trips over the edge of the path.' +
+                        '\n\nYou stretch your arms over your head and let them all look. Your nipples are hard against the ' + ucups + ', and the crotch of your ' + upan + ' is soaked.';
+                } else if (c >= 2001) {
+                    return '\n\nBra and panties, out in Riverside Park. Your ' + ubra + ' has ' +
+                        (cv.braStyle === 'sporty' ? (bs === 'large' ? 'your heavy tits squashed flat' : bs === 'small' ? 'your small tits hugged flat' : 'your tits squashed flat') : bs === 'large' ? 'your heavy tits spilling over the top' : bs === 'small' ? 'your small tits pushed up' : 'your tits pushed up') +
+                        ', and the path behind you gets ' + getPantiesExposedAssView() + '.' +
+                        '\n\nA man on a bench stops pretending to read. You walk faster, and the ache in your pussy only gets worse with every step.' + porta;
+                }
+                return '\n\nYou\'re in your ' + ubra + ' and ' + upan + ' in a public park, and there\'s nowhere to put your hands. One arm over your chest and one hand low in front cover almost nothing.' +
+                    '\n\nAn elderly couple on a bench stare openly. The woman says something sharp to her husband, and he doesn\'t look away.' +
+                    '\n\nYour face is on fire. Your nipples are stiff against the ' + ucups + ', and your pussy\'s wet in your ' + upan + ' anyway.' + porta;
+            }
+            return '';
+        }
+
+        // The rush to the porta potty, for the underwear states that reach it.
+        function getParkPortaRushText(exposure) {
+            var cv = getSceneClothingVars();
+            var c = gameState.corruption || 0;
+            var top = cv.topName, pan = cv.pantiesName, bra = cv.braName;
+            var fun = '\n\nThe porta potty door squeaks open. You step inside and lock it.\n\nThe smell is vile, but your backpack\'s on the floor with something to wear inside it, and you suppose the fun has to end somewhere.';
+            var slam = '\n\nYou yank the porta potty door open, squeeze inside, and slam it hard enough to rock the whole thing on its base.\n\nThe air is rank. You don\'t care. You lean on the plastic wall and let out a long, shaky breath, ';
+            if (exposure === 'panties_exposed') {
+                if (c >= 6001) return 'You cross the grass at an easy pace, your ' + top + ' riding up and your ' + pan + ' on show to everyone behind you. You let them look.' + fun;
+                if (c >= 2001) return 'You walk fast across the open grass, tugging the hem of your ' + top + ' down with both hands. It doesn\'t cover your ass. It was never long enough to.' + slam + 'your pussy still clenching in the damp crotch of your ' + pan + '.';
+                return 'You run, both hands fisted in the back of your ' + top + ', dragging it down over your ' + pan + ' with every step. It doesn\'t reach.\n\nA man on a bench turns to watch you go. You don\'t look at him. You can\'t.\n\nYou wrench the porta potty door open and throw yourself inside. The latch clicks. You stand there shaking, face on fire, the crotch of your ' + pan + ' damp against you.';
+            }
+            if (exposure === 'underwear_only') {
+                if (c >= 6001) return 'You cross the grass at an easy pace in your ' + bra + ' and ' + pan + '. A few heads turn. You let them.' + fun;
+                if (c >= 2001) return 'You walk fast across the open grass, one arm over your ' + bra + ', angling away from the family near the pond.' + slam + 'your nipples still stiff and your pussy aching in your ' + pan + '.';
+                return 'You run in your ' + bra + ' and ' + pan + ', one arm clamped over your chest and the other hand pressed low in front. The porta potty is fifty feet away, and those fifty feet feel like a mile.\n\nA woman walking her dog stops dead. You don\'t look at her. You can\'t.\n\nYou wrench the door open and throw yourself inside. The latch clicks. You stand there shaking, face on fire, wet in your ' + pan + ' and hating it.';
+            }
+            // An indecent bra: soaked through or mesh
+            if (c >= 6001) return 'You cross the grass at an easy pace, your nipples showing dark through your ' + bra + '. A few heads turn. You let them.' + fun;
+            if (c >= 2001) return 'You walk fast across the grass with your arms folded over your ' + bra + ', since it hides nothing now.' + slam + 'your nipples stiff under your forearms.';
+            return 'You run with both arms clamped over your see-through ' + bra + '. The porta potty is fifty feet away, and those fifty feet feel like a mile.\n\nA man on a bench turns to watch. You don\'t look at him. You can\'t.\n\nYou wrench the door open and throw yourself inside. The latch clicks. You stand there shaking, face on fire, your nipples stiff under your arms.';
+        }
+
         function checkAccidentalExposure(districtId) {
             // Only fires when clothed (not in any exhibition state)
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless()) return false;
@@ -145365,7 +145470,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const timeOfDay = getTimeOfDay();
                     const isHomeless = !gameState.flags.hasApartment && !gameState.flags.stayingWithJaewon;
                     const fatigue = gameState.fatigue || 0;
-                    const exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 12C
+                    const exposure = getParkExposureLevel(); // Bra/Panties Exposed Step 12C
                     const corruption = gameState.corruption || 0;
                     
                     let desc = "You're in the Residential District, standing in Riverside Park.\n\n";
@@ -145394,6 +145499,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     } else if (exposure === 'bottomless') {
                         desc += "\n\nYou\'re exposed from the waist down in a public park. The breeze on your bare legs and between your thighs is a constant reminder. A woman walking her dog gives you one horrified look and changes direction.\n\nThe porta potty is across the field. You could change there.";
                     }
+                    // Bra/Panties Exposed Step 12C: the underwear states
+                    desc += getParkUnderwearAwareness(exposure);
                     
                     if (isHomeless && (fatigue > 60 || isNightTime()) && exposure === 'clothed') {
                         desc += "\n\n<em>The park benches look inviting. You could sleep here if you needed to...</em>";
@@ -145430,11 +145537,11 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const choices = [];
                     const isHomeless = !gameState.flags.hasApartment && !gameState.flags.stayingWithJaewon;
                     const fatigue = gameState.fatigue || 0;
-                    const exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 12C
+                    const exposure = getParkExposureLevel(); // Bra/Panties Exposed Step 12C
                     const hasClothesInBag = gameState.inventory.clothing.length > 0;
                     
-                    // When exposed, porta potty is the priority option
-                    if (exposure !== 'clothed') {
+                    // When exposed, porta potty is the priority option (a dry, opaque bra is a look, not exposure)
+                    if (isParkIndecent()) {
                         if (hasClothesInBag) {
                             choices.push({ text: '<img src="Images/icons/dress.png" class="icon" alt="change"> Rush to the porta potty and get dressed', nextScene: "park_porta_potty_naked" });
                         } else {
@@ -145521,8 +145628,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             park_porta_potty: {
                 text: function() {
-                    const exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 12C
-                    if (exposure !== 'clothed') {
+                    const exposure = getParkExposureLevel(); // Bra/Panties Exposed Step 12C
+                    if (exposure !== 'clothed' && isParkIndecent()) {
                         return 'The porta potty. Four walls of green plastic. A lock that works.\n\nYou pull the door open, step inside, and slam it shut behind you. The latch clicks into place.\n\nThe smell is exactly as bad as you\'d expect. But the privacy is instant and absolute and right now that\'s worth more than clean air.\n\nYou stand there for a second, breathing. No eyes on you. No cameras. No whispered comments. Just you and the terrible smell and blessed, glorious privacy.\n\nYou can change into whatever you have in your backpack.';
                     }
                     return "A single porta potty stands at the edge of the park.\n\nIt\'s not glamorous, but it\'s functional. Private.\n\nYou can change clothes here if you need to.";
@@ -145571,6 +145678,9 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             park_porta_potty_naked: {
                 text: function() {
                     const corruption = gameState.corruption || 0;
+                    // Bra/Panties Exposed Step 12C: the underwear states get their own rush
+                    const _parkLvl = getParkExposureLevel();
+                    if (_parkLvl === 'panties_exposed' || _parkLvl === 'underwear_only' || _parkLvl === 'bra_exposed') return getParkPortaRushText(_parkLvl);
                     
                     if (corruption >= 6001) {
                         return 'You cross the grass at a leisurely pace. A few heads turn. You let them.\n\nThe porta potty door squeaks open. You step inside, pull it shut, lock it.\n\nThe smell is vile. You wrinkle your nose.\n\nBut your backpack is on the floor and there are clothes inside it, and you suppose the fun has to end somewhere.\n\n<em>For now.</em>';
