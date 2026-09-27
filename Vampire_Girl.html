@@ -148043,36 +148043,62 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const rufusRapeCount = gameState.flags.rufusRapeCount || 0;
                     const corruption = gameState.corruption || 0;
                     const hasRoom = gameState.flags.hasCheapMotelRoom || false;
+                    const roomNo = gameState.cheapMotelRoomNumber || '7';
 
                     let desc;
 
-                    if (rufusRapeCount === 0) {
-                        // First visit; full Rufus introduction
-                        desc = 'The Lurasi Motel sits at the wrong end of the slums like something that forgot to die. The neon sign above the office buzzes low and angry, half its letters burned to dark, spelling nothing. The paint on the facade is peeling back in long curls. Graffiti coats the east wall top to bottom, overlapping tags in three colors, none of them good.\n\nThe parking lot holds a handful of beat-up sedans and one car with its rear window punched out, cardboard taped over the gap.\n\nYou push through the office door. It swings heavy. Inside, the air smells like industrial cleaner and old carpet, and underneath that, something faintly warmer that doesn\'t belong here. Sandalwood, maybe. Burned low, burned out, but still there.\n\nThe overhead strip buzzes. Flickers once.\n\nBehind the scratched plexiglass counter, a man looks up from his book.\n\nYour brain stutters.\n\nHe isn\'t what you expected to find in a place like this. Jaw cut from something dense, cheekbones high and clean. His hair is the dark brown of old teak, cropped close at the sides, slightly longer on top, worn back from his face with zero apparent effort.\n\nHis eyes are the color of deep-water malachite, that particular green with weight behind it that makes it difficult to look at directly and equally difficult to stop.\n\nHe\'s built the way people who actually use their bodies get built. Broad shoulders filling out a plain black thermal. Forearms resting on the counter, thick with old muscle, a faded rope of scar tissue running from his left wrist to the inside of his elbow like a healed river.\n\nHe looks thirty-two. Maybe thirty-three. He looks like someone who has been thirty-three for a long time.\n\n<em>What is he doing here. Men who look like that don\'t run motels in the slums. Men who look like that are fronts for something.</em>\n\nHe sets his book down. Unhurried. A small pull at the corner of his mouth, like your presence was something he already knew was coming.';
+                    if (rufusRapeCount === 0 && gameState.flags._rufusFirstMeet) {
+                        // First meeting: Kelsie hears the werewolf heartbeat; Rufus clocks the vampire
+                        const knowsForest = !!gameState.flags.visitedForestInterior;
+                        const forestRaped = (gameState.flags.werewolfRapeCount || 0) > 0;
+                        desc = 'The Lurasi Motel sits at the wrong end of the slums like something that forgot to die. Half the letters on the neon sign above the office are burned out, and the ones still lit buzz low and angry, spelling nothing.\n\nPaint peels off the facade in long curls. Graffiti coats the east wall top to bottom, three colors of tags stacked over each other, and the lot holds a handful of beat-up sedans and one car with cardboard taped over its missing rear window.\n\nYou push through the office door. It swings heavy behind you, and the air inside is warm and close: industrial cleaner, old carpet, a stick of sandalwood burning low somewhere behind the counter.\n\nThen you hear it, and your feet stop.\n\nA heartbeat, somewhere past the plexiglass. It\'s heavy and doubled, two strokes landing almost on top of each other, like a heart that has to beat twice to feed whatever it\'s carrying.\n\n';
+                        if (knowsForest) {
+                            desc += 'You know that rhythm. You\'ve heard it in the Culmida Forest, crashing toward you through the purple fog, a half second before a wall of black fur and teeth hit you at full speed.' + (forestRaped ? ' You\'ve felt it pounding against your back while one of them held you down in the loam.' : '') + '\n\n';
+                        } else {
+                            desc += 'You\'ve never heard it before in your life, and you know it anyway, the same way you know which heartbeats on a crowded street belong to prey. Something old in your blood puts a name to it before you can.\n\n';
+                        }
+                        desc += '<em>Werewolf.</em>\n\nYou breathe in through your nose, slow, and the sandalwood comes apart. Under it there\'s musk and pine sap and wet earth, a wild green smell with no business in a motel lobby. Whoever lit that incense is burning it to cover this.\n\nBehind the scratched plexiglass, a man looks up from his book.\n\nYour whole body goes tight.\n\nHe looks thirty-two, maybe thirty-three, and like he\'s been thirty-three for a long time. His jaw\'s cut from something dense, his cheekbones high and clean, his dark brown hair cropped close at the sides and pushed back with zero apparent effort.\n\nHis eyes are deep-water malachite, a heavy green that\'s hard to look at directly and harder to look away from. You check them for the gold ring the forest wolves get right before they lunge. There\'s nothing there but green, calm and a little amused.\n\nHe\'s built like someone who actually uses his body. Broad shoulders fill out a plain black thermal, and his forearms rest on the counter, thick with old muscle, a faded rope of scar tissue running from his left wrist to the inside of his elbow.\n\n<em>A werewolf. Running a motel. In the slums. With a paperback.</em>\n\nYour fangs press against your gums, and you hold them there. Every instinct you\'ve got wants you back out that door, and the only thing keeping your feet planted is that he hasn\'t moved a muscle.\n\n';
+                        if (gameState.flags._rufusFirstMeetNaked) {
+                            desc += 'You\'re also standing in his lobby in nothing but your skin, which isn\'t helping. His eyes drop once, take in all of you without any hurry, and come back up to your face like your body was the least interesting thing about you.\n\n';
+                        }
+                        desc += 'He sets his book face down on the counter and folds his hands.\n\n"Relax," he says. His voice is low and unhurried, and it fills the little room without trying. "If I wanted to fight you, sweetheart, you\'d have known before you reached the door."\n\n"I..." Your voice comes out thinner than you\'d like. You clear your throat. "I didn\'t say anything."\n\n"You didn\'t have to. You stopped dead on my welcome mat and sniffed the air like a bloodhound." The corner of his mouth pulls up. "Your ears are good. Mine are better."\n\n';
+                        desc += gameState.illusionActive ? 'He tilts his head and studies your face, taking his time about it.\n\n"Nice work, by the way." He nods at you, at the warm color in your cheeks and the brown in your eyes. "The illusion. Most of your kind wear theirs like a cheap Halloween mask, and you can spot the seams from across the street. Yours is clean. If I couldn\'t smell you, I\'d have bought it."\n\n"Smell me," you repeat.\n\n"Cold copper and night air." He says it like he\'s reading you the weather. "Nice smell. Loud, though, to a nose like mine."\n\n' : 'His eyes move over your face, the pale skin and the red eyes you didn\'t bother to hide, and he clicks his tongue.\n\n"Walking the slums with your fangs out." He shakes his head. "You\'ve got an illusion in you, vampire. I can smell it. Use it. Most people around here don\'t look closely, and the ones who do are a lot worse than me."\n\n';
+                        desc += '<em>He knows.</em>\n\nOf course he knows. You\'ve been in his lobby for maybe thirty seconds, and he\'s already read you top to bottom and filed you away like a regular who left her umbrella.\n\n"You\'re a werewolf," you say, because one of you has to say it out loud.\n\n"Guilty."\n\n"You\'re a werewolf," you say again, "running a motel."\n\n"Forty a night. Ice machine\'s broken." He picks the book back up and finds his page. "What, you thought we all live in the woods and chew on hikers?"\n\n';
+                        desc += knowsForest ? '"The ones I\'ve met do."\n\nHe laughs, short and low, and it catches you off guard how much it sounds like any other guy laughing. "Fair. Some of us never learn to hold the leash." He turns a page. "I learned."\n\n' : '"I mean... yeah?"\n\nHe laughs, short and low, and it catches you off guard how much it sounds like any other guy laughing. "Some of us do. Some of us learn to hold the leash." He turns a page. "I learned."\n\n';
+                        desc += 'Your shoulders come down half an inch. Only half. Your fingers are still curled at your sides, and he can definitely hear that too.\n\nHis heart hasn\'t sped up once since you walked in. Everything in your blood says werewolves run hot and loud, all hunger and rage, and this one\'s sitting behind a counter with a slow, easy rhythm, reading a paperback about a lighthouse.\n\n<em>Okay. Weird. But okay.</em>';
+                    } else if (rufusRapeCount === 0) {
+                        // Return visit before the first night upstairs
+                        desc = 'The neon sign\'s still spelling nothing. The same beat-up sedans sit in the lot, and the car with the cardboard window hasn\'t moved an inch.\n\nThe office door swings heavy behind you. Sandalwood and old carpet, and under both of them that wild green musk you know to listen for now.\n\nThe doubled heartbeat\'s right where you left it, slow and steady behind the plexiglass. Rufus doesn\'t look up right away; he finishes his sentence first.\n\n"Vampire," he says pleasantly, and turns the page.\n\n"Werewolf," you say back.\n\nThe corner of his mouth pulls. Apparently this is a thing now.';
                     } else {
-                        // Post-rape return; Rufus knows. Kelsie knows.
-                        desc = 'The Lurasi\'s neon sign still spells nothing. The parking lot still holds the same beat-up sedans, the cardboard-windowed car. The graffiti on the east wall hasn\'t changed.\n\nNone of this is what you\'re paying attention to.\n\nThe office door swings heavy behind you. The air hits you immediately: industrial cleaner, old carpet, and underneath both of those, sandalwood. Warm and specific. You notice it differently now.\n\nRufus looks up from behind the plexiglass.\n\nThose malachite eyes find yours and stay there for one measured second. In that second you understand that he already knew you were coming. The same way he knew you would come back after the first time. The same way he knew, when he handed you the key, exactly what would happen in room ' + (gameState.cheapMotelRoomNumber || '7') + '.\n\n';
+                        // Post-assault return; Kelsie knows the wolf in the dark was him
+                        desc = 'The Lurasi\'s neon sign still spells nothing. Same sedans in the lot, same cardboard window, same graffiti crawling up the east wall.\n\nYou don\'t notice any of it.\n\nThe office door swings heavy behind you. The sandalwood hits first, then the musk underneath it, and your stomach turns over, because now you know exactly what that smell looks like up close: black fur, a long muzzle, and those green eyes.\n\nHis heart thuds behind the plexiglass, doubled and unhurried. Rufus looks up from his book, and his eyes find yours and stay there. He heard you coming from the parking lot. He knew you\'d come back, the same way he knew, when he handed you the key, what would happen in room ' + roomNo + '.\n\n';
 
                         if (corruption < 2000) {
-                            desc += 'Your hands are not entirely steady.\n\nThe counter feels very far to walk to. His eyes are patient and unhurried and that is somehow worse than if they were hungry.\n\n<em>He knows. He knows exactly what he did and he\'s sitting there like it was simply the natural conclusion of you handing him forty dollars.</em>\n\nHe watches you cross the lobby without looking away.';
+                            desc += 'Your hands won\'t stay steady. You shove them in your pockets, and he hears that too.\n\nThe counter feels a mile away. Your fangs ache in your gums, and part of you wants to put them in his throat, while the rest of you remembers how easily he held both your wrists in one hand.\n\n<em>He knows what he did. He\'s sitting there like it came with the room.</em>\n\nHe watches you cross the lobby and doesn\'t look away once.';
                         } else if (corruption < 4000) {
-                            desc += 'You make yourself meet his eyes.\n\nIt\'s harder than it should be. You\'re not exactly afraid of him. Something in his look is like being read accurately, and accurate isn\'t the same thing as comfortable.\n\n<em>I came back. He knows I came back.</em>\n\nHe sets his book down with the particular unhurriedness of someone who was already waiting.';
+                            desc += 'You make yourself meet his eyes. It\'s harder than it should be.\n\nFear\'s part of it, but a smaller part than it ought to be. Mostly, being looked at by him feels like being read out loud, every line of you, and you still haven\'t decided if you hate it.\n\n<em>I came back. He knows I came back.</em>\n\nHe sets his book down and waits for you. He was already waiting.';
                         } else if (corruption < 6000) {
-                            desc += 'There\'s a pull. Low and specific. You knew it was there before you walked through the door.\n\nHe looks at you the way he always looks at you: like you are the expected conclusion of something he set in motion a long time ago. Patient. Certain. That faint pull at the corner of his mouth that suggests something is funny to him that he hasn\'t explained.\n\nYour body remembers his tongue. The warmth it left. You\'re already a little warm now, standing here.';
+                            desc += 'There\'s a pull low in your belly, and you felt it before you touched the door.\n\nHe looks at you with that same patience, like you\'re the natural end of something he started a long time ago, the corner of his mouth tugging at a joke he hasn\'t let you in on.\n\nYour body remembers the heat of his tongue. You\'re already a little warm just standing here, and you\'re pretty sure he can smell it on you.';
                         } else if (corruption < 8000) {
-                            desc += 'He\'s exactly where he always is. Book. Counter. Those green eyes that never quite let you go.\n\nYou came back. You both know why you came back and neither of you is going to name it.\n\nA pull at the corner of his mouth. Something older than a smile, and not quite one.\n\n<em>He\'s been waiting.</em>\n\nYou cross the lobby to the counter.';
+                            desc += 'He\'s exactly where he always is: book, counter, and those green eyes that never quite let you go.\n\nYou came back. You both know why, and neither of you is going to say it out loud.\n\nHis mouth pulls at the corner, something older than a smile. He\'s been waiting, and he counted your steps across the lot.\n\nYou cross the lobby to the counter.';
                         } else {
-                            desc += 'He\'s already watching when you walk in. Just sitting there, doing nothing else. Just waiting with the particular patience of someone who keeps his own time.\n\nYou feel the warmth of his attention across the whole length of the lobby. Something low and wide in your chest.\n\n"Hi," you say when you reach the counter.\n\nHis mouth pulls at the corner. His eyes move over your face. "Hi," he says, and the word from his voice takes up all the space in the small room.';
+                            desc += 'He\'s already watching when you walk in. His book\'s closed on the counter, and he\'s just sitting there with the patience of something that keeps its own time.\n\nYou can feel his attention across the whole lobby, warm and heavy, settling low in your chest.\n\n"Hi," you say when you reach the counter.\n\nHis mouth pulls at the corner. "Hi, vampire." The word fills the little room, and you like hearing it from him a lot more than you should.';
                         }
                     }
 
                     if (hasRoom) {
-                        desc += '\n\nYou already have a room here. Room ' + (gameState.cheapMotelRoomNumber || '7') + '.';
+                        desc += '\n\nYou already have a room here. Room ' + roomNo + '.';
                     }
-                    
+
                     return desc;
                 },
                 onEnter: () => {
+                    // First meeting fires once; older saves that already know Rufus skip it
+                    const _rf = gameState.flags;
+                    _rf._rufusFirstMeet = !_rf.rufusMet && !((_rf.rufusRapeCount || 0) > 0) && !_rf.hasCheapMotelRoom && !_rf.rufusUnderworldUnlocked;
+                    _rf.rufusMet = true;
+                    _rf._rufusFirstMeetNaked = !!_rf._rufusMeetNaked && _rf._rufusFirstMeet;
+                    _rf._rufusMeetNaked = false;
                     gameState.currentLocationId = "cheap_motel";
                     advanceTime(5);
                     updateStatus();
@@ -148098,20 +148124,25 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                                     let rentMsg;
 
                                     if (rufusRapeCountNow === 0) {
-                                        // First time renting; original ominous pitch
-                                        rentMsg = 'You step up to the plexiglass.\n\n"I need a room."\n\nHe doesn\'t reach for anything. Just looks at you for a moment the way someone looks at something they\'ve seen before and already made up their mind about.\n\n"Yeah," he says. His voice is low and deep and unhurried, one that takes up space without trying. "You do."\n\nHe slides a short form and a pen through the slot. "Name. Forty cash."\n\nYou fill it in. Slide the bills.\n\nHe smooths them flat once with two fingers and doesn\'t count them. Reaches under the counter. Produces a room key on a plastic fob, worn down to just a number.\n\n"Room ' + (gameState.cheapMotelRoomNumber) + '."\n\nHe sets it in the slot tray. Doesn\'t let go immediately.\n\n"You\'re going to sleep well here." His eyes hold yours through the scratched plexiglass. Green and level and completely certain of something. "Better than you have in a while. I see to that personally." The corner of his mouth lifts again, that same unhurried pull that suggests something is funny to him that hasn\'t been explained to you. "It\'s the one thing the Lurasi gets right."\n\nHe lets go of the key.\n\n<em>That shouldn\'t have landed the way it did. There\'s no reason that sentence should still be in your ears.</em>';
+                                        // First rental is the full pitch; a re-rent before the first night is short
+                                        if (!gameState.flags.rufusRentedBefore) {
+                                            rentMsg = 'You step up to the plexiglass. "I need a room."\n\n"Yeah," Rufus says, already reaching under the counter. "You do. You\'ve got that look, like you\'ve been sleeping with one eye open for a month."\n\n"Is it safe?" It slips out before you can dress it up. "Sleeping here. With you downstairs."\n\nHe slides a short form and a pen through the slot, and he actually seems to think about it. "Safer than a park bench. Nobody gets into this building unless I let them in, and nobody in the slums is dumb enough to try." He taps the form. "Name. Forty cash."\n\nYou fill it in and slide the bills through. He smooths them flat with two fingers and doesn\'t count them.\n\nThe key comes out on a plastic fob worn down to a number. "Room ' + (gameState.cheapMotelRoomNumber) + '."\n\nHe sets it in the tray and keeps two fingers on it.\n\n"You\'re going to sleep well here. Better than you have in a while." His eyes hold yours through the scratched plexiglass, green and level and completely sure of something. "I see to that personally. It\'s the one thing the Lurasi gets right."\n\nHe lets go of the key.\n\nIt\'s warm from his hand when you pick it up, and that last line\'s still sitting in your ears when you reach the stairs.\n\n<em>Werewolves don\'t do hospitality. So what\'s he doing?</em>';
+                                        } else {
+                                            rentMsg = 'He\'s got the form out before you reach the counter. "Back for another room?"\n\n"You said I\'d sleep well."\n\n"I did." He smooths your forty flat and sets the key for room ' + (gameState.cheapMotelRoomNumber) + ' in the tray. "I stand by it."\n\nYou fill in your name. He watches you write it with the patience of someone who\'s already memorized it.';
+                                        }
                                     } else if (corruptionNow < 2000) {
-                                        rentMsg = 'You make yourself approach the counter.\n\nHe doesn\'t wait for you to speak. He already has the form out. Pen on top. Like he knew.\n\nYou fill it in. Slide the forty dollars. Your hands are steady. Mostly.\n\nHe smooths the bills flat. Reaches for the key. Room ' + (gameState.cheapMotelRoomNumber) + '.\n\nHe puts it in the tray and looks at you through the plexiglass. That same patient green. Nothing in his face that reads as guilt or apology.\n\n"You\'ll sleep," he says. A fact. No inflection.\n\n<em>He knows what he\'s going to do. He\'s telling me he\'s going to do it. And I\'m taking the key.</em>\n\nYou take the key.';
+                                        rentMsg = 'You make yourself walk up to the counter. The whole way there you keep his heartbeat in your ears, like listening hard enough will warn you next time.\n\nHe has the form out before you say a word, pen on top.\n\nYou fill it in and slide the forty through. Your hands are mostly steady. He smooths the bills flat and puts the key for room ' + (gameState.cheapMotelRoomNumber) + ' in the tray, and nothing in his face looks anything like guilt.\n\n"You\'ll sleep," he says.\n\n<em>He\'s telling me what he\'s going to do. And I\'m taking the key anyway.</em>\n\nYour fingers close around it.';
                                     } else if (corruptionNow < 4000) {
-                                        rentMsg = 'You slide the forty dollars through the slot.\n\nHe picks the bills up without looking at them. Already has the key ready. Room ' + (gameState.cheapMotelRoomNumber) + '.\n\nHe puts it in the tray and his eyes find yours through the plexiglass and stay there.\n\n"Back again," he says. His voice doesn\'t question it.\n\nYou don\'t answer. You take the key.\n\n<em>He already knew I would come back. He knew before I did.</em>';
+                                        rentMsg = 'You slide the forty through the slot. He picks it up without looking at it, the key for room ' + (gameState.cheapMotelRoomNumber) + ' already waiting in his other hand.\n\n"Back again," he says, and leaves it there.\n\nYou don\'t answer. You take the key, and the doubled beat of his heart follows you all the way to the stairs.\n\n<em>He knew I\'d come back. He knew before I did.</em>';
                                     } else if (corruptionNow < 6000) {
-                                        rentMsg = 'He has the form ready.\n\nYou fill it out. Forty dollars. He smooths the bills once and sets the key for room ' + (gameState.cheapMotelRoomNumber) + ' in the tray without ceremony.\n\n"Room ' + (gameState.cheapMotelRoomNumber) + '," he says. Then, quieter, just enough that only you would hear through the plexiglass: "Sleep well."\n\nThe words do something to the base of your spine.\n\nYou take the key and don\'t look back at him. You don\'t need to. You can feel his eyes on you all the way to the stairs.';
+                                        rentMsg = 'He has the form ready. You fill it out and pay, and he sets the key for room ' + (gameState.cheapMotelRoomNumber) + ' in the tray without any ceremony.\n\n"Room ' + (gameState.cheapMotelRoomNumber) + '," he says. Then, lower, pitched for your ears alone: "Sleep well, vampire."\n\nIt does something to the base of your spine. You take the key and don\'t look back. You don\'t need to; you can feel his eyes on you all the way up.';
                                     } else if (corruptionNow < 8000) {
-                                        rentMsg = 'You slide the money through without being asked.\n\nHe takes it. Doesn\'t count it. Produces the key for room ' + (gameState.cheapMotelRoomNumber) + ' and holds it in the slot tray between two fingers.\n\nYou reach for it. His fingers don\'t release it immediately.\n\nYou look up. Those green eyes through the plexiglass. A slight pull at the corner of his mouth.\n\n"Good to see you," he says.\n\nHe releases the key.';
+                                        rentMsg = 'You slide the money through without being asked. He produces the key for room ' + (gameState.cheapMotelRoomNumber) + ' and holds it in the tray between two fingers.\n\nWhen you reach for it, he doesn\'t let go right away. You look up into that calm green.\n\n"Good to see you," he says, and releases it.';
                                     } else {
-                                        rentMsg = '"Room," you say.\n\nHe\'s already reaching for it. Room ' + (gameState.cheapMotelRoomNumber) + '. He puts it in the tray and when you take it his fingers brush yours through the slot and linger for exactly one second.\n\n"I\'ve been thinking about you," you say.\n\nHis mouth pulls at the corner. "I know," he says. Simple. No performance in it.\n\nYou take the stairs two at a time.';
+                                        rentMsg = '"Room," you say.\n\nHe\'s already reaching for it. When you take the key for room ' + (gameState.cheapMotelRoomNumber) + ', his fingers brush yours through the slot and stay there a second.\n\n"I\'ve been thinking about you," you tell him.\n\n"I know. I could smell it on you from the lot." He says it simply, with no performance in it.\n\nYou take the stairs two at a time.';
                                     }
 
+                                    gameState.flags.rufusRentedBefore = true;
                                     showMessage(rentMsg, () => showScene('cheap_motel_entrance'));
                                 }
                             });
@@ -148133,26 +148164,26 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                                 let message;
 
                                 if (rufusRapeCountCO === 0) {
-                                    message = 'You slide the key back through the slot.\n\nRufus picks it up without looking. Turns it over once in his fingers, slow and deliberate, like he\'s reading something off the metal.\n\n"Already?" Something in his voice carries the weight of a question that already knows the answer. "Most people find it hard to leave." His eyes come up to yours through the plexiglass. That green, straight and level. "The Lurasi grows on you."';
+                                    message = 'You slide the key back through the slot.\n\nRufus turns it over once in his fingers, slow, like he\'s reading something off the plastic. "Already? Most people have a hard time leaving." His eyes come up to yours. "The Lurasi grows on you."\n\n"The Lurasi smells like wet dog," you tell him.\n\nHe snorts, and for a second he looks almost offended. "That\'s the carpet." He drops the key behind the counter. "Mostly."';
                                 } else if (corruptionCO < 2000) {
-                                    message = 'You set the key in the slot tray.\n\nRufus picks it up. He looks at it, then at you, and says nothing for a long moment.\n\n"You don\'t have to check out," he says finally. His voice is level. Nothing in it that sounds like an apology or acknowledgment of what he\'s or what he does here. Just the simple offer of a room, stated plainly.\n\n<em>Like that\'s the thing to address. Like that\'s what I should be thinking about.</em>\n\nYou don\'t answer him. You leave.';
+                                    message = 'You set the key in the tray. He picks it up and looks at it, then at you, and says nothing for a long moment.\n\n"You don\'t have to check out," he says finally. His voice is level and completely free of apology. He\'s offering you a room, like that\'s the thing that needs addressing.\n\n<em>Like that\'s the part I should be thinking about.</em>\n\nYou don\'t answer him. You leave.';
                                 } else if (corruptionCO < 4000) {
-                                    message = 'You slide the key through the slot.\n\nHe takes it. His eyes come up to yours. Patient and green and entirely untroubled.\n\n"You\'ll come back," he says.\n\nYou don\'t confirm it. You don\'t deny it either.\n\n<em>You both already know.</em>';
+                                    message = 'You slide the key through. He takes it, and his eyes come up to yours, patient and green and entirely untroubled.\n\n"You\'ll come back," he says.\n\nYou don\'t confirm it, and you don\'t deny it either. You both already know.';
                                 } else if (corruptionCO < 6000) {
-                                    message = 'You set the key in the tray.\n\nHe picks it up and holds it for a moment, turning it between his fingers the same way he did when he first handed it to you.\n\n"Leaving?" he says.\n\n"For now," you say.\n\nThe corner of his mouth moves. He sets the key behind the counter.';
+                                    message = 'You set the key in the tray. He turns it between his fingers, the same way he did the first time he handed it over.\n\n"Leaving?" he says.\n\n"For now."\n\nThe corner of his mouth moves. He sets the key behind the counter.';
                                 } else if (corruptionCO < 8000) {
-                                    message = 'You put the key in the slot.\n\nHe doesn\'t take it right away. He looks at you through the plexiglass with those green eyes, steady and unhurried.\n\n"Already," he says.\n\n"I\'ll be back," you say.\n\nA slow pull at the corner of his mouth. He takes the key. "I know."';
+                                    message = 'You put the key in the slot. He leaves it sitting there and watches you through the plexiglass, steady and unhurried.\n\n"Already," he says.\n\n"I\'ll be back."\n\nA slow pull at the corner of his mouth. He takes the key. "I know."';
                                 } else {
-                                    message = 'You lean on the counter and push the key through the slot.\n\nHe takes it and his fingers close over yours through the gap for one moment before you pull back.\n\n"I\'ll miss you," you say, and mean it in a way you\'re not going to examine too closely right now.\n\nHis eyes are warm. "You know where to find me," he says. "You always do."';
+                                    message = 'You lean on the counter and push the key through. His fingers close over yours through the gap and stay there until you pull back.\n\n"I\'ll miss you," you say, and you\'re not going to look too closely at how much you mean it.\n\nHis eyes are warm. "You know where to find me." The corner of his mouth lifts. "Follow the wet dog smell."';
                                 }
 
                                 if (checkoutResult.itemsInStorage > 0) {
-                                    message += '\n\nYou mention your ' + (checkoutResult.itemsInStorage) + ' item' + (checkoutResult.itemsInStorage === 1 ? '' : 's') + ' left in the room.\n\nRufus nods once. "I\'ll hold them." A slight tilt of his head toward the door behind the counter. "Office. Ask for me when you come back."\n\nHe says it like there\'s no other person you would ask. Like there\'s no other person here at all.\n\n<em>Your clothes are in his office. That\'s... fine. Probably fine.</em>';
+                                    message += '\n\nYou mention the ' + (checkoutResult.itemsInStorage) + ' item' + (checkoutResult.itemsInStorage === 1 ? '' : 's') + ' you left in the room.\n\nRufus nods once. "I\'ll hold them in my office. Ask for me when you come back." He says it like there\'s nobody else here you\'d ask, and there really isn\'t.\n\n<em>Your clothes are sitting in a werewolf\'s office. That\'s... fine. Probably fine.</em>';
                                 } else if (checkoutResult.itemsReturned > 0) {
                                     message += '\n\nYou grabbed your ' + (checkoutResult.itemsReturned) + ' item' + (checkoutResult.itemsReturned === 1 ? '' : 's') + ' from the room.';
                                 }
                                 
-                                message += '\n\nYou step back from the counter. He\'s already returned to his book, but the set of his shoulders suggests he hasn\'t entirely let you go from his attention.';
+                                message += '\n\nYou step back from the counter. He\'s already back in his book, but you\'d bet money he\'s still listening to your footsteps.';
                                 
                                 showMessage(
                                     message,
@@ -148184,7 +148215,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                                 
                                 let message = '';
                                 if (retrieved.length > 0) {
-                                    message += 'Rufus disappears through the door behind the counter. Back in under a minute, your ' + (retrieved.length) + ' item' + (retrieved.length === 1 ? '' : 's') + ' folded or bundled with a tidiness that sits wrong in a place like this.\n\nHe slides them through the slot. "Your things." His eyes find yours through the plexiglass. "They were fine."';
+                                    message += 'Rufus disappears through the door behind the counter and comes back in under a minute with your ' + (retrieved.length) + ' item' + (retrieved.length === 1 ? '' : 's') + ', folded with a neatness that doesn\'t belong anywhere near this building.\n\nHe slides them through the slot. "Your things. Nobody touched them." His nose wrinkles slightly. "They smell like vampire. Nobody wanted to."';
                                 }
                                 
                                 if (stillStored.length > 0) {
@@ -148193,7 +148224,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                                     } else {
                                         message += 'Your bag\'s full. Can\'t take anything.';
                                     }
-                                    message += '\n\nRufus leans against the counter. "Leave the rest. No one touches what\'s in my office." A fact, handed over flat, not a promise.';
+                                    message += '\n\nRufus leans on the counter. "Leave the rest. Nobody touches what\'s in my office." He says it flat, as a fact.';
                                 }
                                 
                                 showMessage(message, () => showScene('cheap_motel_entrance'));
@@ -148224,59 +148255,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             rufus_underworld_approach: {
                 text: function() {
-                    let desc = 'You don\'t ask for a room.\n\n';
-
-                    desc += 'You stand at the counter and look at him through the plexiglass. He looks back. The book stays open on his lap.\n\n';
-
-                    desc += '"I know what this place is," you say.\n\n';
-
-                    desc += 'Those malachite eyes stay on yours. Level and unhurried. The strip light buzzes overhead.\n\n';
-
-                    desc += '"It\'s a motel," he says.\n\n';
-
-                    desc += '"It\'s a front." You keep your voice flat. Steady. Facts laid on a counter. "The motel\'s not where the money comes from. The people who pass through here aren\'t all looking for a room. Some of them are looking for you."\n\n';
-
-                    desc += 'Something shifts in his face. A degree of tilt to his head, a fraction less warmth in the green. He\'s listening differently now.\n\n';
-
-                    desc += '"And what are you looking for?"\n\n';
-
-                    desc += '"In."\n\n';
-
-                    desc += 'The neon outside pulses through the blinds. He studies you the way someone studies a hand of cards they didn\'t expect to be dealt.\n\n';
-
-                    desc += '"Most people who come to me with that word leave through the back door." His voice hasn\'t changed. Same low register. "Headfirst."\n\n';
-
-                    desc += '"I\'m not most people."\n\n';
-
-                    desc += '"No." He closes the book. Sets it on the counter. "You\'re not."\n\n';
-
-                    desc += 'He leans forward. Forearms on the plexiglass shelf, the scarred one and the clean one. Something you haven\'t seen from him before. Recognition. A frequency locking in.\n\n';
-
-                    desc += '"I\'ve been watching you since you first walked through that door. The way you move. The way you scan a room before you sit down."\n\n';
-
-                    desc += 'He pauses. "You carry yourself like someone who\'s done things that don\'t wash off. And you\'re standing here asking me for more."\n\n';
-
-                    desc += 'You hold his gaze. You don\'t flinch.\n\n';
-
-                    desc += 'The corner of his mouth pulls. That same unhurried movement, but this time there\'s something behind it closer to respect than amusement.\n\n';
-
-                    desc += '"All right." He straightens up. Reaches under the counter. Not a key this time.\n\n';
-
-                    desc += 'He pulls out a phone. Prepaid, no case. Sets it in the slot tray.\n\n';
-
-                    desc += '"My number\'s the only one in it. You call when you need something. Don\'t text or leave messages. I\'ll answer or I won\'t."\n\n';
-
-                    desc += 'You take the phone. It\'s warm from sitting under the counter.\n\n';
-
-                    desc += '"This isn\'t charity," he says. "Everything costs. And I don\'t do refunds."\n\n';
-
-                    desc += '"I\'m not looking for charity."\n\n';
-
-                    desc += '"No." His eyes hold yours one more time. "You\'re looking for a partner."\n\n';
-
-                    desc += 'He picks up his book again. Opens it to the same page.\n\n';
-
-                    desc += '"Welcome to the real Lurasi."';
+                    let desc = 'You skip the room this time. You lean on the counter and look at him through the plexiglass until he looks back, his book still open on his lap.\n\n"I know what this place is," you say.\n\nHis heart stays exactly where it was, slow and doubled. One eyebrow goes up. "It\'s a motel."\n\n"It\'s a front." You keep your voice flat and steady, laying the facts on the counter one at a time. "The rooms don\'t make you any money. Half the people who walk through that door aren\'t here to sleep. They\'re here for you."\n\nHe studies you for a while, and the green goes a shade cooler. He\'s listening differently now.\n\n"And what are you here for, vampire?"\n\n"In."\n\nThe neon outside pulses red through the blinds.\n\n"Most people who come to me with that word leave through the back door," he says, in the same easy voice. "Headfirst."\n\n"Most people didn\'t walk into a werewolf\'s lobby and keep their feet." You let your fangs slide down, just the tips, just enough for him to see. "I\'m still standing here."\n\nSomething moves in his face. He closes the book and sets it on the counter.\n\n"Still standing," he agrees.\n\nHe leans forward, forearms on the plexiglass shelf, the scarred one and the clean one.\n\n"I\'ve been watching you since you first walked through that door. You scan every room before you sit down, and you listen to every heart in it. You carry yourself like someone who\'s done things that don\'t wash off." His head tilts. "And now you\'re asking me for more."\n\nYou hold his gaze. Your hands want to shake, and you don\'t let them.\n\nThe corner of his mouth pulls, and this time there\'s respect in it.\n\n"All right." He reaches under the counter and comes up with a phone, prepaid, no case, and sets it in the tray.\n\n"My number\'s the only one in it. Call when you need something. Don\'t text, don\'t leave messages. I\'ll answer or I won\'t."\n\nYou pick it up. It\'s warm from sitting under the counter, and it hits you that he\'s been keeping it there for a while, waiting on you to ask.\n\n"Everything costs," he says. "I don\'t do charity, and I don\'t do refunds."\n\n"I\'m not asking for charity."\n\n"Good. Because what you\'re after is a partner." His eyes hold yours one more time. "Somebody else with teeth."\n\nHe picks his book back up and opens it to the same page, like nothing happened.\n\n"Welcome to the real Lurasi."';
 
                     return desc;
                 },
@@ -148297,23 +148276,23 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const money = gameState.money || 0;
                     const day = gameState.time.day;
 
-                    let desc = 'Rufus sets his book aside when you lean on the counter. He already knows this isn\'t about a room.\n\n';
+                    let desc = 'Rufus sets his book aside when you lean on the counter. He could tell from your walk across the lot that you aren\'t here for a room.\n\n';
 
-                    desc += '"What do you need?" Low voice. No preamble.\n\n';
+                    desc += '"What do you need?" he asks, without any preamble.\n\n';
 
                     if (susp >= 60) {
-                        desc += 'He glances at you with something that might be concern. "You\'re running hot. I can feel it from here. Let\'s see what we can do."\n\n';
+                        desc += 'He takes a slow breath through his nose, and his brow creases with something that might be concern. "You\'re running hot. I can smell cop coffee on you from here. Let\'s see what we can do."\n\n';
                     } else if (susp >= 40) {
-                        desc += '"You\'ve got heat," he says. "I can work with that."\n\n';
+                        desc += '"You\'ve got heat," he says. "I can work with heat."\n\n';
                     }
 
                     // Servant operation flavor text
                     const turnedServants = (gameState.bloodFarmCaptives || []).filter(c => c.turned);
                     const activeServants = turnedServants.filter(c => c.task !== 'idle' && !c.capturedFlag).length;
                     if (activeServants >= 5) {
-                        desc += 'Rufus studies you over the counter.\n\n"You\'re running crew now." His voice stays level. "People on the street, every night, hitting multiple districts. That\'s an operation."\n\nHe leans forward.\n\n"Operations attract investigators. People with badges and warrants and nothing better to do than pull threads. You know that, right?"\n\n';
+                        desc += 'Rufus studies you over the counter.\n\n"You\'re running a crew now." His voice stays level. "People on the street every night, hitting multiple districts. That\'s an operation."\n\nHe leans forward. "Operations attract investigators. People with badges and warrants and nothing better to do than pull threads. You know that, right?"\n\n';
                     } else if (activeServants >= 3) {
-                        desc += 'Rufus glances at you. "You\'ve got people working. I can tell." He taps the counter once. "Heat profile changed. Spread thinner. That\'s smart, up to a point."\n\n';
+                        desc += '"You\'ve got people working. I can tell," Rufus says, and taps the counter once. "Your heat\'s spread thinner. That\'s smart, up to a point."\n\n';
                     }
 
                     desc += '<strong>Available services:</strong>\n\n';
@@ -148442,7 +148421,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
 
             rufus_service_paperwork: {
-                text: 'Rufus pulls the burner from under the counter. Dials a number from memory. Waits.\n\n"It\'s me." A long pause. He doesn\'t look at you while he talks. "The active case. 14th precinct. Yeah, that one." Another pause. "The physical evidence log. Move it. I don\'t care where. Filing error. Happens all the time."\n\nHe hangs up. Slides the phone back under the counter.\n\n"Chain of custody breaks, the case gets weaker. Doesn\'t disappear. Just gets harder to build." He folds his arms. "My guy\'s a filing clerk at the precinct. Been there nineteen years. Knows where every cabinet leads and which ones nobody checks."\n\nHe holds out his hand through the slot.\n\n"Five hundred."\n\nYou pay him. He doesn\'t count it.\n\n"Give it two days," he says. "You\'ll feel the difference."',
+                text: 'Rufus pulls the burner out from under the counter and dials a number from memory.\n\n"It\'s me." He doesn\'t look at you while he talks. "The active case, 14th precinct. Yeah, that one." He listens for a while. "The physical evidence log. Move it. I don\'t care where. Filing error. Happens all the time."\n\nHe hangs up and slides the phone back under the counter.\n\n"When the chain of custody breaks, the case gets weaker. It\'ll still be there, just harder to build." He folds his arms. "My guy\'s a filing clerk. Nineteen years at that precinct. He knows where every cabinet leads and which ones nobody checks."\n\nHe holds his hand out through the slot. "Five hundred."\n\nYou pay him. He doesn\'t count it, and you get the feeling he can tell from the weight.\n\n"Give it two days," he says. "You\'ll feel the difference."',
                 onEnter: () => {
                     gameState.money -= 500;
                     gameState.suspicionData.evidenceLevel = Math.max(0, (gameState.suspicionData.evidenceLevel || 0) - 20);
@@ -148459,21 +148438,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             rufus_service_witnesses: {
                 text: function() {
-                    let desc = 'Rufus leans back in his chair.\n\n';
-
-                    desc += '"Witnesses are easy. People don\'t want to remember bad things. You just have to give them permission to forget."\n\n';
-
-                    desc += 'He pulls out a folder. Actual paper. You catch a glimpse of names, addresses, the edge of a police report you don\'t know how he got.\n\n';
-
-                    desc += '"My guys visit them at home. Friendly. Conversational. They mention the case and let the doubt in sideways. \'Are you sure it was that night?\' \'The lighting was bad, right?\' \'You\'d been drinking.\'"\n\n';
-
-                    desc += 'He closes the folder.\n\n';
-
-                    desc += '"Nobody gets hurt. Nobody gets threatened. They just get... less certain. And uncertain witnesses don\'t hold up on a stand."\n\n';
-
-                    desc += 'He holds out his hand.\n\n';
-
-                    desc += '"Eight hundred. These things take a personal touch."';
+                    let desc = 'Rufus leans back in his chair until it creaks.\n\n"Witnesses are easy. People don\'t want to remember bad things. You just have to give them permission to forget."\n\nHe pulls out a folder, actual paper, and you catch names, addresses, and the edge of a police report you have no idea how he got.\n\n"My guys visit them at home. Friendly, conversational. They bring up the case and let the doubt in sideways. \'Are you sure it was that night?\' \'The lighting was bad, right?\' \'You\'d been drinking.\'"\n\nHe closes the folder.\n\n"Nobody gets hurt or threatened. They just get less certain, and uncertain witnesses fall apart on a stand."\n\n"Nobody gets hurt," you repeat, and you can\'t keep the doubt out of your voice. "You\'re a werewolf."\n\n"And you\'re a vampire who hasn\'t eaten anybody in my lobby. We both have manners." He holds out his hand. "Eight hundred. These things take a personal touch."';
 
                     return desc;
                 },
@@ -148498,15 +148463,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const heat = sd.districtHeat || {};
                     const hotList = Object.entries(heat).filter(([k, v]) => v > 0).sort((a, b) => b[1] - a[1]);
 
-                    let desc = '"Where\'s the heat?" Rufus asks.\n\n';
-
-                    desc += 'You tell him. He nods once.\n\n';
-
-                    desc += '"I\'ll have a crew run a string of petty shit in the opposite end of the city. Smash-and-grabs, car break-ins, a dumpster fire or two. Enough noise to pull uniforms off your block and put them somewhere else."\n\n';
-
-                    desc += 'He tilts his head.\n\n';
-
-                    desc += '"Three hundred. And don\'t go back to that district for a few days or you\'re wasting both our time."';
+                    let desc = '"Where\'s the heat?" Rufus asks.\n\nYou tell him. He nods once.\n\n"I\'ll have a crew run a string of petty shit at the other end of the city. Smash-and-grabs, car break-ins, a dumpster fire or two. Enough noise to pull the uniforms off your block."\n\nHe tilts his head. "Three hundred. And stay out of that district for a few days, or you\'re wasting both our time."';
 
                     // Store the hottest district for the choice
                     if (hotList.length > 0) {
@@ -148550,7 +148507,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
 
             rufus_service_digital: {
-                text: 'Rufus doesn\'t make a call for this one. He texts. Three messages to three different numbers, thumb moving fast across a phone you haven\'t seen before. A different burner.\n\n"I\'ve got a kid in the Philippines who does DMCA takedowns for fifty bucks a batch," he says, not looking up. "Another one in Bucharest who\'s very good at getting content flagged by the algorithm. And a third one I won\'t tell you about who has access to server infrastructure you don\'t want to know exists."\n\nHe finishes the last text. Pockets the phone.\n\n"Within forty-eight hours, the footage gets flagged, buried, or wiped. The posts get reported from a hundred accounts simultaneously. Platforms don\'t investigate. They just nuke anything that trips the automated threshold."\n\nHe holds out his hand.\n\n"Six hundred. The internet forgets fast when you know which levers to pull."',
+                text: 'Rufus doesn\'t make a call for this one. He texts, three messages to three different numbers, his thumb flying across a burner you\'ve never seen before.\n\n"I\'ve got a kid in the Philippines who does DMCA takedowns for fifty bucks a batch," he says without looking up. "Another one in Bucharest who\'s very good at getting content flagged by the algorithm. And a third I won\'t tell you about, who has access to server infrastructure you don\'t want to know exists."\n\n"You have a guy for everything."\n\n"I\'ve been alive a long time. You collect people." He pockets the phone. "Within forty-eight hours the footage gets flagged, buried, or wiped. A hundred accounts report the posts at once. The platforms don\'t investigate; they just nuke whatever trips the automated threshold."\n\nHe holds out his hand. "Six hundred. The internet forgets fast when you know which levers to pull."',
                 onEnter: () => {
                     gameState.money -= 600;
                     gameState.suspicionData.cameraFootage = Math.max(0, (gameState.suspicionData.cameraFootage || 0) - 15);
@@ -148570,23 +148527,15 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const stats = gameState.flags.servantCrimeStats;
                     const taskForce = stats && stats.gangTaskForceFormed;
 
-                    let desc = 'Rufus pulls out two phones. The burner and a different one you haven\'t seen before. Matte black, no case.\n\n';
-                    desc += 'He dials the first. Waits. Someone picks up.\n\n';
-                    desc += '"The linked cases from this week. The ones flagged as coordinated." He turns away from you, voice dropping. "Reclassify them. Split the files across precincts. Different dates, different case numbers. Make it look like whoever connected them was reaching."\n\n';
-                    desc += 'He hangs up. Dials the second phone.\n\n';
-                    desc += '"The physical linkage report. The one cross-referencing suspect descriptions." He listens. "It goes missing tonight. Filing error. Interdepartmental transfer that never arrived." He listens again. "You\'ve done it before."\n\n';
-                    desc += 'He pockets both phones and faces you.\n\n';
-                    desc += '"Five thousand."\n\n';
-                    desc += 'You pay. He folds the bills without counting.\n\n';
+                    let desc = 'Rufus pulls out two phones: the burner, and a matte black one with no case that you haven\'t seen before.\n\nHe dials the first and waits for someone to pick up.\n\n"The linked cases from this week. The ones flagged as coordinated." He turns away and drops his voice, which is pointless, since you can hear both ends of the call. "Reclassify them. Split the files across precincts. Different dates, different case numbers. Make it look like whoever connected them was reaching."\n\nHe hangs up and dials the second.\n\n"The physical linkage report, the one cross-referencing suspect descriptions." He listens. "It goes missing tonight. Interdepartmental transfer that never arrived." He listens again. "You\'ve done it before."\n\nHe pockets both phones and turns back to you. "Five thousand."\n\nYou pay. He folds the bills without counting them.\n\n';
 
                     if (taskForce) {
-                        desc += '"I also reached out to a journalist I know. Freelancer, works the crime beat. She\'ll run a piece next week about how the task force is chasing shadows. Anonymous sources inside the department casting doubt on the pattern analysis. Enough to slow them down."\n\n';
+                        desc += '"I also called a journalist I know. Freelancer, works the crime beat. She\'ll run a piece next week about the task force chasing shadows, with anonymous sources inside the department picking apart the pattern analysis. That\'ll slow them down."\n\n';
                     } else {
-                        desc += '"I also put a thread on one of those true crime boards. Detailed breakdown of why the Trigrave crime wave is actually separate operations with different signatures. The armchair detectives\'ll run with it. Muddies the water for the real ones."\n\n';
+                        desc += '"I also put a thread up on one of those true crime boards. A detailed breakdown of why the Trigrave crime wave is really a handful of separate operations with different signatures. The armchair detectives\'ll run with it and muddy the water for the real ones."\n\n';
                     }
 
-                    desc += 'He looks at you.\n\n';
-                    desc += '"This buys you time. Weeks if you\'re smart about it. Use them."';
+                    desc += 'He looks at you. "This buys you time. Weeks, if you\'re smart about it. Use them."\n\n"You\'re scary good at this," you tell him.\n\n"I\'ve had practice." He sounds pleased with himself anyway.';
 
                     return desc;
                 },
@@ -148620,47 +148569,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     var desc = '';
 
-                    desc += '"A warrant." Rufus turns the word over like he\'s tasting it. Rolling it across his tongue the way a sommelier rolls wine, looking for the note that tells him what he\'s working with.\n\n';
-
-                    desc += '"That\'s a different problem than evidence. Evidence is paperwork. Paperwork gets lost." He leans back in his chair. The springs creak. "A warrant is a machine. Once it\'s in the system, the system runs it. Patrol officers check plates and scan faces and file reports and nobody has to tell them to. The machine does it."\n\n';
-
-                    desc += 'He folds his arms. Studies you.\n\n';
-
-                    desc += '"But machines have people in them. And people have prices."\n\n';
-
-                    desc += 'He pulls the burner from under the counter. Dials. Waits.\n\n';
-
-                    desc += 'The first call is short. Twelve seconds. He says a name and a case number and hangs up.\n\n';
-
-                    desc += 'The second call is longer. A full minute. You hear a voice on the other end, tinny and careful, the voice of someone talking in a room they\'re not sure is private. Rufus listens. Nods at things you can\'t hear. Says "yeah" twice and "the Summers warrant" once and hangs up.\n\n';
-
-                    desc += 'The third call lasts forty seconds and consists entirely of numbers. Dollar amounts. Account routing. A language that has no nouns.\n\n';
-
-                    desc += 'He sets the phone down. Looks at you.\n\n';
-
-                    desc += '"Something like this? Normally runs twenty, twenty-five thousand." He pauses. Lets that number fill the room. "My contact at the DA\'s office doesn\'t get out of bed for less. He\'s got a pension to protect and a boat payment and a wife who asks where the money comes from and a practiced answer for when she does."\n\n';
-
-                    desc += 'He leans forward. His eyes on yours. The look of a man who respects what he\'s looking at and wants you to know it.\n\n';
-
-                    desc += '"Five thousand. For you." He taps the counter once. "Because you\'ve earned it. Because you walk into my motel and I don\'t have to explain what the world is to you. Because you\'re the real thing, Kelsie, and the real thing is rare, and I look after rare things."\n\n';
-
-                    desc += 'He holds out his hand through the slot.\n\n';
-
-                    desc += '"My guy reclassifies the warrant as administrative error. Takes a week to propagate through the system. During that week, patrol officers get a \'do not detain\' override on your name. Encounters drop to almost nothing. After seven days, the warrant disappears from the database."\n\n';
-
-                    desc += 'He pulls his hand back. Sets it flat on the counter.\n\n';
-
-                    desc += '"The charges don\'t disappear. They\'re suspended. Filed under a case number nobody\'s going to pull up unless someone pushes it." He pauses. The question he\'s about to ask is the one he already knows the answer to. "Is anybody pushing the case?"\n\n';
-
-                    desc += 'Cruz.\n\n';
-
-                    desc += 'The answer sits in your chest like a stone. Cruz is pushing the case. Cruz will always push the case. The warrant disappearing from a database doesn\'t erase the folder on her desk, the photos on her evidence board, the composite sketch she carries in her blazer pocket.\n\n';
-
-                    desc += 'Rufus reads your face.\n\n';
-
-                    desc += '"Yeah," he says. "I figured. Well." He shrugs. One shoulder. "My guy handles the system. Your detective\'s something you handle yourself."\n\n';
-
-                    desc += '"Five thousand. We have a deal?"';
+                    desc += '"A warrant." Rufus turns the word over like he\'s tasting it, rolling it across his tongue, hunting for the note that tells him what he\'s working with.\n\n"That\'s a different problem than evidence. Evidence is paperwork, and paperwork gets lost." He leans back, and the chair springs creak. "A warrant\'s a machine. Once it\'s in the system, the system runs it. Patrol officers check plates and scan faces and file reports, and nobody has to tell them to."\n\nHe folds his arms and studies you. "But machines have people in them. And people have prices."\n\nHe pulls the burner out from under the counter and dials.\n\nThe first call is short, twelve seconds of a name and a case number. The second runs a full minute. You can hear the voice on the other end, tinny and careful, someone talking in a room they aren\'t sure is private. Rufus says "yeah" twice and "the Summers warrant" once, then hangs up.\n\nHearing your own name come out of his mouth, filed next to a case number, drops your stomach into your shoes.\n\nThe third call is forty seconds of numbers. Dollar amounts, routing codes, a language with no nouns in it.\n\nHe sets the phone down.\n\n"Something like this normally runs twenty, twenty-five thousand." He lets the number sit in the room. "My contact at the DA\'s office won\'t get out of bed for less. He\'s got a pension to protect, a boat payment, and a wife who asks where the money comes from, with a practiced answer ready for when she does."\n\nHe leans forward, and his eyes hold yours with something that looks a lot like respect.\n\n"Five thousand. For you." He taps the counter once. "You walk into my lobby, and I don\'t have to explain what the world is to you. You\'re the real thing, Kelsie, and the real thing is rare. I look after rare things."\n\n"Is that a werewolf thing?" It comes out smaller than you meant it to. "Collecting strays?"\n\n"It\'s a me thing." He holds his hand out through the slot. "My guy reclassifies the warrant as an administrative error. It takes a week to propagate. During that week, patrol gets a \'do not detain\' override on your name, so your encounters drop to almost nothing. After seven days, it\'s gone from the database."\n\nHe pulls his hand back and lays it flat on the counter.\n\n"The charges get suspended. They go in a file under a case number nobody pulls up unless somebody pushes." You can see on his face he already knows the answer to the next part. "Is anybody pushing?"\n\nCruz.\n\nThe answer sits in your chest like a stone. Cruz is pushing, and she\'ll always push. A warrant vanishing from a database won\'t touch the folder on her desk, the photos on her evidence board, or the composite sketch she carries in her blazer pocket.\n\nRufus watches your face and breathes out through his nose.\n\n"Yeah. I figured." One shoulder lifts. "My guy handles the system. Your detective\'s something you\'ll have to handle yourself."\n\n"Five thousand. We have a deal?"';
 
                     return desc;
                 },
@@ -148686,15 +148595,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     var desc = '';
 
-                    desc += 'You count the bills. Five thousand dollars across the counter through the slot. He takes them without counting. Folds them once. Puts them in his breast pocket.\n\n';
-
-                    desc += '"Seven days," he says. "You\'ll feel it before you see it. Fewer cruisers slowing down. Fewer officers looking twice. The system backing off you like a tide going out."\n\n';
-
-                    desc += 'He picks up his book. Finds his page.\n\n';
-
-                    desc += '"Stay out of trouble for the week. Don\'t give them a reason to flag the override. My guy\'s good but he\'s not bulletproof." He glances at you over the top of the page. "Neither are you."\n\n';
-
-                    desc += 'He goes back to reading. The conversation is over. The machine is already turning.';
+                    desc += 'You count five thousand dollars through the slot. He takes it without counting, folds it once, and tucks it into his breast pocket.\n\n"Seven days," he says. "You\'ll feel it before you see it. Fewer cruisers slowing down, fewer officers looking twice. The system backing off you like a tide going out."\n\nHe picks up his book and finds his page.\n\n"Stay out of trouble for the week. Don\'t give them a reason to flag the override. My guy\'s good, but he\'s not bulletproof." He glances at you over the top of the page. "Neither are you. Even with the fangs."\n\n"Thanks, Rufus." You mean it more than you expected to.\n\nHe turns a page. "Go on. Get out of my lobby."';
 
                     return desc;
                 },
@@ -148718,85 +148619,13 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     if (firstTime) {
                         // ── First time: Mask lore reveal + Mothers pitch ──
-                        desc += '"Before we get into this." Rufus sets his book down. He doesn\'t do that often. "That mask of yours. It\'s something special."\n\n';
-
-                        desc += 'You wait.\n\n';
-
-                        desc += '"You\'d have gotten caught way earlier without it. Way earlier." He folds his arms. "That thing\'s been keeping you alive in ways you don\'t understand yet. Keep going with it. Keep wearing it."\n\n';
-
-                        desc += '"What the hell are you talking about?"\n\n';
-
-                        desc += 'He looks at you. Those malachite eyes. Something in them you haven\'t seen before. Weight. Intention.\n\n';
-
-                        desc += '"I\'ve had eyes on you since the moment you first stepped into the slums." He says it flat. Simple. "I could tell immediately. Something different. Something I\'ve been waiting for."\n\n';
-
-                        desc += 'Your stomach drops.\n\n';
-
-                        desc += '"I gave Juzman the mask," he says. "Specifically. Solely to sell to you."\n\n';
-
-                        desc += 'The lobby shrinks. The plexiglass. The sandalwood. Everything narrows to the distance between his eyes and yours.\n\n';
-
-                        desc += '"Juzman told me the mask had supernatural properties."\n\n';
-
-                        desc += '"He was telling the truth."\n\n';
-
-                        desc += 'The words land and keep landing. You think about the first time you held it. Fifteen hundred dollars. It never once occurred to you to find something cheaper. A balaclava. A bandana. Anything. The thought simply wasn\'t there. Something kept it from forming.\n\n';
-
-                        desc += '"The mask never stole your soul when you put it on," Rufus says. Quieter now. "That\'s what it does to most people. Takes them. Hollows them out. Turns them into something that serves the mask instead of wearing it." His mouth twitches. "But you put it on and nothing happened. Because the mask chose you. Called to you. And you answered. And it recognized what you are."\n\n';
-
-                        desc += 'Your hands are cold. You look at your bag. The mask inside it. The red demon girl emblem on the forehead.\n\n';
-
-                        desc += '"What is it, Rufus? What\'s up with the mask?"\n\n';
-
-                        desc += 'He doesn\'t hesitate.\n\n';
-
-                        desc += '"It\'s from Hell."\n\n';
-
-                        desc += 'The words go through you like voltage. Hell. Not a figure of speech. The place. The real one.\n\n';
-
-                        desc += '"How did you—"\n\n';
-
-                        desc += '"All your questions will be answered in time." His voice hasn\'t changed. Same low register. Same patience. "The demon in the mask will talk to you when she feels like it."\n\n';
-
-                        desc += 'The demon in the mask.\n\n';
-
-                        desc += '<em>She.</em>\n\n';
-
-                        desc += 'Your eyes go to the bag. The emblem. The red devil girl, stitched in profile. Sitting, legs crossed, tail curling up behind her.\n\n';
-
-                        desc += 'She\'s alive.\n\n';
-
-                        desc += 'You\'re a vampire sitting in a motel lobby talking to a man who knew what you were before you did, and the mask that cost fifteen hundred dollars never once felt like a purchase. It felt like a reunion. You think about how warm it felt the first time. How the world looked different through the eye holes. How you never questioned the price.\n\n';
-
-                        desc += 'You look at Rufus. Look at the bag. Look at Rufus.\n\n';
-
-                        desc += '"Okay."\n\n';
-
-                        desc += 'It\'s all you\'ve got.\n\n';
-
-                        desc += 'Rufus smiles. Soft. Genuine. The first smile you\'ve seen from him with nothing behind it.\n\n';
-
-                        desc += '"Lovely."\n\n';
-
-                        desc += 'He lets the word sit for a moment. Then his face settles back to business.\n\n';
+                        desc += '"Before we get into this." Rufus sets his book down, which he almost never does. "That mask of yours. It\'s something special."\n\nYou wait. His heart\'s still steady, but it\'s picked up a little, and you\'ve never heard it do that before.\n\n"You\'d have been caught a long time ago without it." He folds his arms. "That thing\'s been keeping you alive in ways you don\'t understand yet. Keep wearing it."\n\n"What the hell are you talking about?"\n\nHe looks at you, and there\'s a weight in the green you haven\'t seen before.\n\n"I\'ve had eyes on you since the moment you first stepped into the slums," he says, flat and simple. "I smelled you three blocks away. A vampire, new and strong, walking around like she had no idea what she was worth. I could tell right away you were different, and I\'d been waiting on different for a long time."\n\nYour stomach drops.\n\n"I gave Juzman the mask," he says. "Specifically. To sell to you and nobody else."\n\nThe lobby shrinks down to the plexiglass and the sandalwood and the distance between his eyes and yours.\n\n"Juzman told me it had supernatural properties," you manage.\n\n"He was telling the truth."\n\nYou think about the first time you held it. Fifteen hundred dollars, and it never once crossed your mind to buy something cheaper, a balaclava, a bandana, anything. The thought just never showed up, like something had kept it from forming.\n\n"Most people who put that mask on lose their soul to it," Rufus says, quieter now. "It hollows them out and turns them into something that serves the mask instead of wearing it." His mouth twitches. "You put it on, and nothing happened. The mask chose you. It called, you answered, and it recognized what you are."\n\nYour hands have gone cold. You look at your bag, at the mask inside it and the red demon girl emblem on its forehead.\n\n"What is it, Rufus?" Your voice cracks on his name, and you hate that it does. "What\'s up with the mask?"\n\nHe doesn\'t hesitate. "It\'s from Hell."\n\nThe word goes through you like voltage. He means the place. The real one.\n\n"How did you—"\n\n"All your questions will get answered in time." His voice hasn\'t changed; same low register, same patience. "The demon in the mask will talk to you when she feels like it."\n\nThe demon in the mask.\n\n<em>She.</em>\n\nYour eyes go back to the bag. The emblem\'s a red devil girl stitched in profile, sitting with her legs crossed and her tail curling up behind her.\n\nShe\'s alive.\n\nYou\'re a vampire in a motel lobby, talking to a werewolf who picked out your mask before you ever set foot in his building, and it never once felt like a purchase. It felt like a reunion. You remember how warm it was the first time, how the world looked different through the eyeholes, how you never questioned the price.\n\nYou look at Rufus, then the bag, then Rufus again.\n\n"Okay," you say, because it\'s all you\'ve got. "Okay. Sure. Hell. Why not."\n\nRufus smiles, soft and warm, and it\'s the first smile you\'ve seen from him with nothing hiding behind it.\n\n"Lovely."\n\nHe lets the word sit for a moment. Then his face settles back into business.\n\n';
 
                         // ── Mothers pitch ──
-                        desc += '"Now. About clearing that mask signature from the system." He leans back. "I can\'t fix that with a phone call. My filing clerk can\'t lose this. My camera guy can\'t scrub it. It\'s already built into the case. Woven through." He pauses. "For this, I need the Mothers."\n\n';
-
-                        desc += '"All-female. Most powerful organization in this city. They don\'t like men." The corner of his mouth lifts. "I\'m the exception. We have a very good relationship."\n\n';
-
-                        desc += '"They\'ll handle it. Database entries corrupted. Case files misfiled into oblivion. Digital records gone." He taps the counter once. "And the part you won\'t understand when it happens: the officers who worked the mask case, who saw the emblem at booking, who cross-referenced the evidence. They\'ll forget. The connection between the demon girl and Kelsie Summers. It fades out of their heads like a dream they can\'t hold onto."\n\n';
-
-                        desc += '"$' + maskPrice.toLocaleString() + '. Five days. Then your mask works again."\n\n';
-
-                        desc += 'He holds out his hand through the slot.';
+                        desc += '"Now. About clearing that mask signature out of the system." He leans back. "I can\'t fix this with a phone call. My filing clerk can\'t lose it, and my camera guy can\'t scrub it. It\'s already built into the case, woven all the way through." He taps the counter. "For this, I need the Mothers."\n\n"All women. The most powerful organization in this city, and they don\'t like men." The corner of his mouth lifts. "I\'m the exception. We have a very good relationship."\n\n"They\'ll handle it. Database entries corrupted, case files misfiled into oblivion, digital records gone."\n\n"And here\'s the part you won\'t understand when it happens: the officers who worked the mask case, who saw the emblem at booking, who cross-referenced the evidence, they\'ll forget. The link between the demon girl and Kelsie Summers fades out of their heads like a dream they can\'t hold onto."\n\n"$' + maskPrice.toLocaleString() + '. Five days. Then your mask works again."\n\nHe holds his hand out through the slot.';
                     } else {
                         // ── Repeat clearing: quick business ──
-                        desc += '"Same job," Rufus says. He doesn\'t reach for the burner. Doesn\'t elaborate. "Same people. Same result."\n\n';
-
-                        desc += 'He holds out his hand through the slot.\n\n';
-
-                        desc += '"$' + maskPrice.toLocaleString() + '. Five days."';
+                        desc += '"Same job," Rufus says. He doesn\'t reach for the burner or bother explaining. "Same people, same result."\n\nHe holds his hand out through the slot. "$' + maskPrice.toLocaleString() + '. Five days."';
                     }
 
                     return desc;
@@ -148837,15 +148666,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var maskUses = gameState.flags.rufusMaskClearingUses || 0;
                     var maskPrice = Math.floor(maskBasePrice * Math.pow(1.20, maskUses));
 
-                    desc += '"Who are the Mothers?"\n\n';
-
-                    desc += 'Rufus looks at you. The look lasts two seconds longer than it needs to.\n\n';
-
-                    desc += '"You don\'t need the details." His voice hasn\'t changed. Same low register. Same unhurried cadence. But something behind it has shifted, and the shift says: this is where the conversation stops going in that direction. "You need results. The Mothers deliver results."\n\n';
-
-                    desc += 'He holds out his hand through the slot again.\n\n';
-
-                    desc += '"$' + maskPrice.toLocaleString() + '. Five days. Your mask works again. That\'s the only detail that matters."';
+                    desc += '"Who are the Mothers?"\n\nRufus looks at you a couple of seconds longer than he needs to.\n\n"You don\'t need the details." His voice is the same low, unhurried thing it always is, but something behind it has closed, a door swinging shut on that line of questions. "You need results. The Mothers deliver results."\n\n"That\'s not creepy at all," you mutter.\n\nHis mouth twitches. He holds his hand out through the slot again.\n\n"$' + maskPrice.toLocaleString() + '. Five days. Your mask works again. That\'s the only detail that matters."';
 
                     return desc;
                 },
@@ -148878,26 +148699,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     if (uses <= 1) {
                         // First clearing
-                        desc += 'You count the bills across the counter through the slot. He takes them without counting. Folds them once. Puts them in his breast pocket.\n\n';
-
-                        desc += '"Five days," he says. "You won\'t see them. You won\'t hear them. You won\'t know they\'ve started until it\'s done."\n\n';
-
-                        desc += 'He picks up his book. Finds his page.\n\n';
-
-                        desc += '"Don\'t wear the mask until I tell you it\'s clear. If you get picked up with it before the job\'s done, their work unravels and I can\'t put it back together."\n\n';
-
-                        desc += 'He goes back to reading. The conversation is over.\n\n';
-
-                        desc += 'You stand at the counter for a few seconds longer. Wondering, briefly, what kind of organization can make a police department forget. What kind of power operates at the level of memory itself.\n\n';
-
-                        desc += 'The wondering doesn\'t last. It fades as you walk out of the lobby. Like a thought you can\'t hold onto. Like a dream.';
+                        desc += 'You count the bills through the slot. He takes them without counting, folds them once, and slips them into his breast pocket.\n\n"Five days," he says. "You won\'t see them or hear them. You won\'t even know they\'ve started until it\'s done."\n\nHe picks up his book and finds his page.\n\n"Don\'t wear the mask until I tell you it\'s clear. If you get picked up in it before they finish, their work unravels, and I can\'t stitch it back together."\n\nHe goes back to reading. The conversation\'s over.\n\nYou linger at the counter a few seconds longer, wondering what sort of organization can make a whole police department forget, what sort of power reaches all the way down into memory.\n\nThe wondering doesn\'t last. It fades by the time you reach the door, slipping away like a dream you can\'t keep hold of.';
                     } else {
                         // Repeat clearing
-                        desc += 'You count the bills. He folds them once. Breast pocket.\n\n';
-
-                        desc += '"Five days," he says. "Don\'t wear it until it\'s clear."\n\n';
-
-                        desc += 'He picks up his book. You leave.';
+                        desc += 'You count the bills. He folds them once into his breast pocket.\n\n"Five days," he says. "Don\'t wear it until it\'s clear."\n\nHe picks up his book, and you let yourself out.';
                     }
 
                     return desc;
@@ -148930,17 +148735,17 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             const corruptionR = gameState.corruption || 0;
                             let renewMsg;
                             if (rufusRapeCountR === 0) {
-                                renewMsg = 'You stop at the front desk on your way in.\n\nRufus doesn\'t need to ask. He looks at you for exactly one second, then slides a new invoice through the slot without breaking eye contact.\n\n"Another night," he says. Like he already had it written up.\n\nYou slide forty dollars through. He doesn\'t count it.\n\n"You\'ll sleep," he says simply. His attention drops back to his book like a door quietly closing.\n\n<em>He said it like a fact. Like he knew.</em>';
+                                renewMsg = 'You stop at the front desk on your way in.\n\nRufus doesn\'t need to ask. He looks at you for exactly one second, then slides a fresh invoice through the slot like he had it written up before you parked.\n\n"Another night," he says.\n\nYou slide forty dollars through. He doesn\'t count it.\n\n"You\'ll sleep," he says, and his attention drops back into his book.\n\n<em>He keeps saying that. Like it\'s a promise. Or a warning.</em>';
                             } else if (corruptionR < 2000) {
-                                renewMsg = 'You stop at the counter.\n\nRufus already has the invoice out. He doesn\'t look up until you\'ve slid the forty through, and then he does, and his eyes hold yours through the plexiglass with that unbroken patience.\n\n"Another night," he says.\n\nYou don\'t say anything. You take the receipt and head upstairs.\n\n<em>You\'re shaking a little. You don\'t know if it\'s fear.</em>';
+                                renewMsg = 'You stop at the counter. Rufus already has the invoice out.\n\nHe doesn\'t look up until you\'ve slid the forty through, and then his eyes hold yours with that unbroken patience.\n\n"Another night," he says.\n\nYou take the receipt and head upstairs without a word. Your hands are shaking a little, and you can\'t tell anymore if it\'s fear.';
                             } else if (corruptionR < 4000) {
-                                renewMsg = 'The forty dollars is already in your hand before you reach the counter.\n\nHe takes it. Doesn\'t count it. Produces the room stamp for the invoice.\n\nHis eyes find yours. "Another night," he says, and the two words carry the full weight of what another night here means.\n\nYou nod once and go upstairs.';
+                                renewMsg = 'The forty\'s already in your hand before you reach the counter. He takes it without counting and stamps the invoice.\n\n"Another night," he says, and those two words carry all the weight of what another night here means.\n\nYou nod once and go upstairs.';
                             } else if (corruptionR < 6000) {
-                                renewMsg = 'You slide the forty through and he takes it with two fingers.\n\n"Another night," you say before he can.\n\nA small lift at the corner of his mouth. "Another night," he agrees.';
+                                renewMsg = 'You slide the forty through, and he takes it with two fingers.\n\n"Another night," you say before he can.\n\nA small lift at the corner of his mouth. "Another night," he agrees.';
                             } else if (corruptionR < 8000) {
-                                renewMsg = 'You put the money through the slot.\n\nHe looks up from his book. Those green eyes run over your face with that unhurried thoroughness.\n\n"Staying again?"\n\n"Yeah," you say.\n\nHe stamps the invoice and slides it back. When you take it his fingers brush yours and neither of you pull away immediately.';
+                                renewMsg = 'You push the money through the slot. He looks up from his book, and his eyes move over your face with that unhurried thoroughness.\n\n"Staying again?"\n\n"Yeah."\n\nHe stamps the invoice and slides it back. When you take it, his fingers brush yours, and neither of you pulls away right away.';
                             } else {
-                                renewMsg = 'You slide the forty through and lean on the counter while he processes it.\n\n"Miss me?" you ask.\n\nHis eyes come up. That mouth. "I knew you\'d be back," he says. "Doesn\'t require missing."\n\nYou smile at him through the plexiglass. "That\'s almost sweet, Rufus."';
+                                renewMsg = 'You slide the forty through and lean on the counter while he processes it.\n\n"Miss me?"\n\nHis eyes come up. "I heard you coming from the corner. Doesn\'t take missing."\n\nYou grin at him through the plexiglass. "That\'s almost sweet, Rufus."\n\n"Don\'t spread it around. I\'ve got a reputation."';
                             }
                             showMessage(renewMsg, () => {});
                         } else {
@@ -148955,21 +148760,21 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                             const corruptionEV = gameState.corruption || 0;
                             let message;
                             if (rufusRapeCountEV === 0) {
-                                message = 'You don\'t have $40 for another night.\n\nThe key stopped working sometime before you got here. Rufus is at the counter, not looking up. He doesn\'t need to. The lock on room ' + (gameState.cheapMotelRoomNumber || '7') + ' already made the announcement for him.\n\n<em>He knew before you did. Somehow that\'s worse.</em>';
+                                message = 'You don\'t have forty dollars for another night.\n\nThe key\'s already dead in the lock upstairs. Downstairs, Rufus doesn\'t even look up. He doesn\'t need to; the lock made the announcement for him.\n\n<em>He knew before you did. Somehow that\'s worse.</em>';
                             } else if (corruptionEV < 2000) {
-                                message = 'The key doesn\'t work.\n\nYou stand in the hall for a moment before you understand. Without money or a room.\n\nDownstairs, Rufus is at the counter. He looks at you when you come back down. No apology in those green eyes, no particular cruelty either. Just that patient stillness.\n\n"No room tonight," he says.\n\n<em>He knew this too. He always knows.</em>';
+                                message = 'The key doesn\'t work.\n\nYou stand in the hall for a long moment before it sinks in. You\'re out of money, so you\'re out of a room.\n\nRufus looks up when you come back down. His green eyes hold the same patient stillness as always, without a flicker of apology or cruelty in them.\n\n"No room tonight," he says.\n\n<em>He knew this too. He always knows.</em>';
                             } else if (corruptionEV < 4000) {
-                                message = 'The key stops working overnight.\n\nYou come back down to the lobby and Rufus sets his book down before you\'ve even reached the counter.\n\n"You\'re short," he says. Quiet. Not unkind.\n\nYou don\'t argue. You just nod.\n\nHe looks at you for a moment. "Come back when you have it," he says, and something in the way he says it makes it sound less like an instruction and more like a certainty.';
+                                message = 'The key quits on you overnight.\n\nYou come back down to the lobby, and Rufus sets his book aside before you\'ve reached the counter.\n\n"You\'re short," he says quietly, without any meanness in it.\n\nYou just nod.\n\n"Come back when you have it." He says it like something he\'s already sure of.';
                             } else if (corruptionEV < 6000) {
-                                message = 'The key gives out overnight. You\'re out.\n\nRufus doesn\'t make it a thing when you come down. He just takes the useless key when you set it on the counter and says, "Short?"\n\n"Yeah," you say.\n\n"Come back when you\'ve got it." His eyes hold yours. "Room\'ll be here."';
+                                message = 'The key gives out overnight. You\'re out.\n\nRufus doesn\'t make a thing of it when you come down. He takes the useless key when you set it on the counter. "Short?"\n\n"Yeah."\n\n"Come back when you\'ve got it." His eyes hold yours. "Room\'ll be here."';
                             } else if (corruptionEV < 8000) {
-                                message = 'The lock cuts you out overnight.\n\nRufus is already looking at the door when you come downstairs. Like he heard you in the hall.\n\n"Couldn\'t make it work today," you say.\n\n"Happens," he says. He takes the key when you slide it across. "You know the way back."';
+                                message = 'The lock shuts you out overnight.\n\nRufus is already watching the door when you come downstairs. He heard you in the hall, obviously.\n\n"Couldn\'t swing it today," you say.\n\n"Happens." He takes the key when you slide it across. "You know the way back."';
                             } else {
-                                message = 'The key stops working and you sigh and go downstairs.\n\nRufus has his chin in his hand, watching the door. He smiles when he sees you. Small. Real.\n\n"Broke?" he asks.\n\n"Temporarily," you say.\n\n"I\'ll hold the room," he says. Like it\'s nothing. Like he\'d do it for anyone.\n\nYou both know he wouldn\'t.';
+                                message = 'The key stops working, so you sigh and head downstairs.\n\nRufus has his chin in his hand, watching the door, and he smiles when he sees you, small and real.\n\n"Broke?"\n\n"Temporarily."\n\n"I\'ll hold the room," he says, like it\'s nothing, like he\'d do it for anyone.\n\nYou both know he wouldn\'t.';
                             }
 
                             if (checkoutResult.itemsInStorage > 0) {
-                                message += '\n\nYour ' + (checkoutResult.itemsInStorage) + ' item' + (checkoutResult.itemsInStorage === 1 ? '' : 's') + ' from the room.\n\nRufus doesn\'t look up. "Office," he says. One word. "When you\'re ready."\n\n<em>Your clothes are in his office. He\'ll hold them. You don\'t know why that certainty just arrived fully formed, but it did.</em>';
+                                message += '\n\nYou left ' + (checkoutResult.itemsInStorage) + ' item' + (checkoutResult.itemsInStorage === 1 ? '' : 's') + ' up in the room.\n\nRufus doesn\'t look up. "Office," he says. "Whenever you\'re ready."\n\n<em>Your clothes are in a werewolf\'s office, and he\'ll keep them safe. You don\'t know where that certainty came from, but it\'s there.</em>';
                             } else if (checkoutResult.itemsReturned > 0) {
                                 message += '\n\nAt least you managed to grab your ' + (checkoutResult.itemsReturned) + ' item' + (checkoutResult.itemsReturned === 1 ? '' : 's') + '.';
                             }
@@ -208778,13 +208583,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     const possessive = captive.gender === 'male' ? 'his' : 'her';
                     const object = captive.gender === 'male' ? 'him' : 'her';
 
-                    let desc = 'You call Rufus. He picks up on the second ring.\n\n';
-                    desc += '"One of mine got picked up," you say. "Name\'s ' + name + '."\n\n';
-                    desc += 'Rufus exhales through his nose. "What precinct?"\n\n';
-                    desc += '"Does it matter?"\n\n';
-                    desc += '"It matters for the price. Fifteen hundred, and ' + pronoun + '\'ll be out by tomorrow morning. Evidence goes missing, arresting officer gets reassigned to traffic duty for a month. Clean."\n\n';
-                    desc += 'You wire the money.\n\n';
-                    desc += '"Two days," Rufus says. "Give me two days before you send ' + object + ' back out. My guy at the precinct needs the heat to die down."';
+                    let desc = 'You call Rufus. He picks up on the second ring.\n\n"Vampire," he says, by way of hello.\n\n"One of mine got picked up. Name\'s ' + name + '."\n\nRufus exhales through his nose. "What precinct?"\n\n"Does it matter?"\n\n"It matters for the price. Fifteen hundred, and ' + pronoun + '\'ll be out by tomorrow morning. Evidence goes missing, the arresting officer gets a month of traffic duty. Clean."\n\nYou wire the money.\n\n"Two days," Rufus says. "Give me two days before you send ' + object + ' back out. My guy at the precinct needs the heat to die down."\n\n"Thanks, Rufus."\n\n"You paid. That\'s thanks enough." The line goes dead.';
 
                     return desc;
                 },
@@ -212630,17 +212429,25 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         
                         let rufusText = '';
                         
+                        // Never met him: skip the pre-message; the first-meeting lobby text covers it
+                        if (rufusRapeCount === 0 && !gameState.flags.rufusMet && !gameState.flags.hasCheapMotelRoom && !gameState.flags.rufusUnderworldUnlocked) {
+                            gameState.flags._rufusMeetNaked = true;
+                            gameState.flags._nakedRufusShown = false;
+                            showSceneInternal(sceneId, part);
+                            return;
+                        }
+
                         if (rufusRapeCount === 0) {
-                            // First visit, hasn\'t met the beast yet
-                            rufusText = 'The office door swings heavy behind you. The air is warm. Industrial cleaner and old carpet and that faint undercurrent of sandalwood.\n\nBehind the plexiglass, Rufus looks up from his book.\n\nHis eyes find yours. Then they travel.\n\nSlow. Deliberate. Starting at your collarbones and moving down with the unhurried attention of someone reading a paragraph he intends to remember. Your bare breasts. The dip of your waist. The juncture of your thighs. Your legs. Then back up, retracing the same path at the same speed, until those malachite eyes are on yours again.\n\nHe doesn\'t blink. His expression doesn\'t change. He sets his book down with one hand.\n\n"Rough night." His voice fills the small room as it always does, low and unhurried, like time bends for him and not the other way around.\n\nHe reaches under the counter. Brings up a folded blanket. Worn flannel, faded red. Sets it in the pass-through tray without breaking eye contact.\n\n"Put that around yourself. Then we\'ll talk about a room."\n\nHis mouth pulls at the corner. That look. Like your arrival was something he already factored in.\n\n<em>He didn\'t look away. He looked at every inch of me and he didn\'t look away once.</em>';
+                            // Met him, hasn\'t spent a night upstairs yet
+                            rufusText = 'The office door swings heavy behind you. The air\'s warm: cleaner, old carpet, sandalwood, and under all of it the musk you know to listen for now.\n\nBehind the plexiglass, Rufus looks up from his book.\n\nHis eyes find yours, and then they travel. He takes his time, down from your collarbones, over your bare breasts and the dip of your waist and the space between your thighs, then back up at the same speed until that malachite green\'s on your face again.\n\nHis expression doesn\'t change. He sets his book down one-handed.\n\n"Rough night, vampire?"\n\nHe reaches under the counter and brings up a folded flannel blanket, faded red, and sets it in the tray without looking away. "Put that on. Then we\'ll talk about a room."\n\nYour cheeks burn. Your arms come up across your chest a second too late.\n\n<em>He looked at every inch of me, and he didn\'t even pretend he wasn\'t.</em>';
                         } else {
                             // Has been raped by Rufus; the dynamic is different
                             if (corruption < 2001) {
-                                rufusText = 'The office door swings shut behind you. The sandalwood hits you first. Then the tube hum.\n\nThen his eyes.\n\nRufus looks up from behind the plexiglass. Those malachite eyes travel down your bare body with the same measured patience he brings to everything. The same measured patience he brings to everything.\n\nHe\'s seen you naked before. Under different circumstances.\n\nYour throat tightens. Your arms come up across your chest, too late to matter. He\'s already seen everything. He always has.\n\n"You\'re cold." A statement. He reaches beneath the counter and produces a folded blanket. Faded flannel. Sets it in the tray.\n\nHis eyes stay on yours.\n\n"Take it. Then come talk to me."\n\n<em>Why does he sound like he was expecting this? Why does he always sound like he was expecting this?</em>';
+                                rufusText = 'The office door swings shut behind you. The sandalwood hits first, then the musk, then his eyes.\n\nRufus looks up from behind the plexiglass, and those malachite eyes move down your bare body with the same patience he brings to everything.\n\nHe\'s seen you naked before. Upstairs, in the dark, when he was something else entirely.\n\nYour throat tightens. Your arms come up across your chest, too late to matter.\n\n"You\'re cold," he says. He produces a folded flannel blanket from under the counter and sets it in the tray, his eyes on yours. "Take it. Then come talk to me."\n\n<em>Why does he always sound like he was expecting this?</em>';
                             } else if (corruption < 6001) {
-                                rufusText = 'The door swings shut. Sandalwood. The counter. Him.\n\nRufus\'s eyes come up from his book and travel the length of you with that particular unhurriedness that makes your skin prickle. All of you. Shoulders, stomach, everything between. He catalogs all of it at his own pace.\n\nHis mouth pulls at the corner.\n\n"Decided to skip the small talk tonight."\n\nHe reaches under the counter. A blanket appears in the tray. Worn flannel.\n\nYou take it but don\'t wrap it around yourself immediately. Something in you wants to hold his gaze a second longer while he can still see everything.\n\nHis eyes stay level. Green and patient.\n\n"Whenever you\'re ready," he says, and means more than one thing.';
+                                rufusText = 'The door swings shut. Sandalwood, the counter, him.\n\nRufus\'s eyes come up from his book and travel the length of you, slow enough to make your skin prickle, taking in everything at his own pace.\n\nHis mouth pulls at the corner. "Decided to skip the small talk tonight."\n\nA blanket appears in the tray, worn flannel. You take it and leave it hanging from your hand for a moment, because some part of you wants him to keep looking.\n\nHis eyes stay level and green.\n\n"Whenever you\'re ready," he says, and he means more than one thing.';
                             } else {
-                                rufusText = 'You push through the office door, bare skin and all.\n\nRufus is behind the counter. Book open. He looks up.\n\nHis eyes move down your body and back up with the same deliberate thoroughness he\'d give a page of text. Unhurried. Appreciative in that measured way of his that never tips into anything as simple as lust.\n\nYou stand there and let him look. Shoulders back. Nothing hidden.\n\nThe corner of his mouth lifts.\n\n"You know," he says, his voice low and warm in the small room, "most people bring luggage."\n\n"I travel light."\n\nA blanket appears in the tray. You pick it up, run the flannel through your fingers, and drape it over one shoulder like a toga. Leave the rest of you bare.\n\nHis eyes hold yours through the plexiglass. Something behind the green shifts, just barely.\n\n"Room?" he says.\n\n"Room."';
+                                rufusText = 'You push through the office door bare, and you don\'t bother covering up.\n\nRufus looks up from his book. His eyes move down your body and back up with the thoroughness he\'d give a page he likes.\n\nYou stand there and let him look, shoulders back.\n\nThe corner of his mouth lifts. "Most people bring luggage."\n\n"I travel light."\n\nA blanket appears in the tray. You run the flannel through your fingers and drape it over one shoulder like a toga, leaving the rest of you bare.\n\nSomething behind the green shifts, just barely.\n\n"Room?" he says.\n\n"Room."';
                             }
                         }
                         
