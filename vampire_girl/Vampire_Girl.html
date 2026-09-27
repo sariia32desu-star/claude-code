@@ -13405,6 +13405,7 @@
                 _bpeActionMinutes: {},           // per-verb cooldowns (Step 12)
                 seenFirstBraExposedWalk: false,  // one-time beats (Step 4D)
                 seenFirstPantiesExposedWalk: false,
+                _wetBraNoticeDay: 0,             // wet-bra notice, once per day (Step 2D)
                 // ── Mesh & Sheer overhaul flags (Step 21) ──
                 _passiveAccum: {},
                 _lastSheerExposureAmbientTime: 0,
@@ -17112,6 +17113,7 @@
                 if (gameState.flags._bpeActionMinutes === undefined) gameState.flags._bpeActionMinutes = {};
                 if (gameState.flags.seenFirstBraExposedWalk === undefined) gameState.flags.seenFirstBraExposedWalk = false;
                 if (gameState.flags.seenFirstPantiesExposedWalk === undefined) gameState.flags.seenFirstPantiesExposedWalk = false;
+                if (gameState.flags._wetBraNoticeDay === undefined) gameState.flags._wetBraNoticeDay = 0; // Step 2D
                 if (gameState.flags._jaewonMeshTopReactionDay === undefined) gameState.flags._jaewonMeshTopReactionDay = 0;
                 if (gameState.flags._jaewonMeshTopReactionMin === undefined) gameState.flags._jaewonMeshTopReactionMin = 0;
                 if (gameState.flags._jaewonMeshTopFromRoom === undefined) gameState.flags._jaewonMeshTopFromRoom = null;
@@ -22655,12 +22657,194 @@ audioSystem.playSFX('buttonClick');
             });
         }
 
+        // ── Bra/Panties Exposed Overhaul Step 2H: the indecency clock ──
+        // Decision 3: Panties Exposed and Underwear Only share one four-hour clock. To the law
+        // they're the same offense: panties on show in public. Moving between the two keeps the
+        // clock running. It resets once she's in neither (dressed, Bra Exposed, naked). The full
+        // sheer lingerie set keeps its own three-hour clock and isn't counted here.
+        // Runs on district street entry. Returns true when the police arrive.
+        function tickIndecencyPolice() {
+            var lvl = getVisibleExposureLevel();
+            var eligible = (lvl === 'panties_exposed' || lvl === 'underwear_only') &&
+                !gameState.isNaked && getSheerState().state !== 'sheer_lingerie' &&
+                ((gameState.corruption || 0) >= getExposureLeaveGate() || gameState.flags.clothesDestroyedInCombat);
+            if (!eligible) {
+                gameState.indecencyClockStartTime = null;
+                return false;
+            }
+            var t = gameState.time;
+            var nowMin = (t.day * 24 * 60) + (t.hour * 60) + (t.minute || 0);
+            if (!gameState.indecencyClockStartTime) {
+                gameState.indecencyClockStartTime = { day: t.day, hour: t.hour, minute: t.minute || 0 };
+                return false;
+            }
+            var s = gameState.indecencyClockStartTime;
+            var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
+            if (nowMin - startMin < 240) return false;
+            handleIndecencyPoliceArrive(lvl);
+            return true;
+        }
+
+        // Minutes left on the indecency clock, or null when it isn't running (Step 16B reads this).
+        function getIndecencyClockRemaining() {
+            var s = gameState.indecencyClockStartTime;
+            if (!s) return null;
+            var t = gameState.time;
+            var nowMin = (t.day * 24 * 60) + (t.hour * 60) + (t.minute || 0);
+            var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
+            return Math.max(0, 240 - (nowMin - startMin));
+        }
+
+        function handleIndecencyPoliceArrive(state) {
+            var corruption = gameState.corruption || 0;
+            var cv = getSceneClothingVars();
+            var ba = gameState.bodyAppearance || {};
+            var bs = ba.breastSize || 'average';
+            var butt = ba.buttSize || 'average';
+            var cut = cv.pantiesCut;
+            var top = cv.topName, bra = cv.braName, pan = cv.pantiesName;
+            // What the view from behind gets: buttSize x pantiesCut
+            var ass = cut === 'thong'
+                ? (butt === 'large' ? 'your full ass, bare on both sides of the thong' : butt === 'small' ? 'your tight little ass, bare around the thong' : 'your bare ass with the thong between your cheeks')
+                : cut === 'cheeky'
+                ? (butt === 'large' ? 'your full ass spilling out of the cheeky cut' : butt === 'small' ? 'your tight little ass, half out of your ' + pan : 'the bottom half of your ass hanging out of your ' + pan)
+                : cut === 'boyshort'
+                ? (butt === 'large' ? 'your full ass stretching your ' + pan + ' tight' : butt === 'small' ? 'your tight little ass in snug ' + pan : 'your ass snug in your ' + pan)
+                : (butt === 'large' ? 'your full ass straining your ' + pan : butt === 'small' ? 'your tight little ass in your ' + pan : 'your ass in your ' + pan);
+            var tits = bs === 'large' ? 'your heavy tits swelling over the cups of your ' + bra
+                : bs === 'small' ? 'your small tits and the stiff points of your nipples through your ' + bra
+                : 'your tits pushed up in your ' + bra;
+            var chest = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your chest';
+            var text = '';
+            if (state === 'panties_exposed') {
+                if (corruption >= 6001) {
+                    text = 'The cruiser\'s been rolling along behind you for a block. You know exactly what they\'ve been looking at: ' + ass + ', under the hem of your ' + top + '.\n\n' +
+                        'It pulls ahead and stops. The officer gets out, looks at your ' + top + ', then lower, and stays there.\n\n' +
+                        '"Ma\'am. Where are your pants?"\n\n' +
+                        'You shift your weight onto one hip so he gets a better look at the damp crotch of your ' + pan + '. "I\'m wearing a shirt."\n\n' +
+                        'His partner laughs into his radio. Your clit throbs. Four hours on the street, and he\'s the first one who\'s asked.\n\n' +
+                        '"Indecent exposure. Turn around, hands behind your back."\n\n"You\'ve already seen the back."\n\nYou wink at his partner, and then you\'re not there anymore.';
+                } else if (corruption >= 2001) {
+                    text = 'A squad car slows beside you and matches your pace. You keep your eyes forward and tug at the hem of your ' + top + '. It doesn\'t reach.\n\n' +
+                        'The passenger window comes down. The officer\'s eyes drop below your hem and follow ' + ass + ' as you step past the car.\n\n' +
+                        '"Miss. You can\'t walk around without pants."\n\n"It\'s... it\'s a long shirt."\n\n"It isn\'t."\n\n' +
+                        'Heat floods your face. Your pussy clenches, and the crotch of your ' + pan + ' is damp enough that you\'re sure he can see it.\n\nHis door opens. You\'re already moving.';
+                } else {
+                    text = 'Blue and red light washes over the sidewalk in front of you. It\'s coming from behind, where it\'s been lighting up ' + ass + ' for who knows how long.\n\n' +
+                        'An officer steps out. "Ma\'am. Stop right there."\n\n' +
+                        'You stop. Both hands go to the hem of your ' + top + ' and pull it down as far as it goes, which isn\'t far. Below the hem, your ' + pan + ' and your bare thighs are right there for him and everyone on the block.\n\n' +
+                        '"I... my clothes got..."\n\n"Indecent exposure. Hands where I can see them."\n\n' +
+                        'Your eyes sting. Your pussy clenches, and you can feel the damp spot spreading in your ' + pan + '. You run.';
+                }
+            } else {
+                if (corruption >= 6001) {
+                    text = 'The cruiser takes its time pulling up. The officer behind the wheel has been driving at walking speed for half a block, looking at ' + tits + '.\n\n' +
+                        'He gets out. His eyes go from your ' + bra + ' to your ' + pan + ' and back up, slow.\n\n' +
+                        '"Ma\'am. You\'re in your underwear."\n\n"You noticed."\n\n' +
+                        'You turn a slow circle for him so he gets ' + ass + ' too. Your nipples are stiff against the cups, and the crotch of your ' + pan + ' is soaked.\n\n' +
+                        '"Indecent exposure," his partner says, still looking. "You need to come with us."\n\nYou blow him a kiss, and then you\'re a blur at the end of the block.';
+                } else if (corruption >= 2001) {
+                    text = 'A squad car pulls to the curb ahead of you, and the officer leans out the window before you can turn around.\n\n' +
+                        'His eyes go from ' + tits + ' down to your ' + pan + ' and back up. "Miss. What happened to your clothes?"\n\n"Nothing. It\'s... it\'s a look."\n\n"It\'s your underwear."\n\n' +
+                        'Your cheeks burn. Your nipples tighten in the cups while he stares, and your pussy clenches hard.\n\nWhen he reaches for the door handle, you bolt, and the whole block gets ' + ass + ' on your way out.';
+                } else {
+                    text = 'The cruiser pulls to the curb beside you and the window comes down. The officer\'s eyes go from your ' + bra + ' to your ' + pan + ' and back up.\n\n' +
+                        '"Miss, you can\'t be out here in your underwear."\n\n' +
+                        'Your arms come up over ' + chest + '. Your face is on fire, and your pussy clenches anyway, hard enough that you\'re sure he can tell.\n\n' +
+                        '"I know. I know, I\'m sorry, my clothes..."\n\n"Stay right there."\n\n' +
+                        'He opens his door, and you run. The whole block gets ' + ass + ' as you go.';
+                }
+            }
+            gameState.indecencyClockStartTime = null;
+            showMessage(text, function() {
+                handleNakedEscape();
+            });
+        }
+
         // 4C: venue policy for sheer states that getExposureLevel() calls 'clothed'.
         // framed: allowed everywhere. braless: blocked at the hospital, library, blood bank and dojang.
         // commando / bare: blocked everywhere restricted except Lucius' Lounge, the Hardy Bar,
         // Urban Edge (it sells the mesh) and the diner (she changes into the uniform).
         // lingerie top / bottom: blocked everywhere restricted, like visible underwear.
         var SHEER_BRALESS_BLOCKED_VENUES = ['outside_hospital', 'outside_library', 'outside_blood_bank', 'outside_dojang'];
+
+        // ── Bra/Panties Exposed Overhaul Step 2C: Bra Exposed venue policy ──
+        // Keyed by the restriction's redirect. bra: an opaque bra; sporty: a sports bra.
+        // 'allowed', 'blocked', or 'evening' (allowed from 6 PM). reason picks the refusal line.
+        // A soaked-through bra is blocked everywhere restricted. A mesh bra uses the sheer messages.
+        // Panties Exposed is blocked everywhere restricted (getExposureBlockMessage), like Underwear Only.
+        var BRA_EXPOSED_VENUE_POLICY = {
+            outside_diner:             { bra: 'blocked', sporty: 'blocked', reason: 'shirts' },
+            outside_convenience_store: { bra: 'blocked', sporty: 'blocked', reason: 'shirts' },
+            outside_library:           { bra: 'blocked', sporty: 'blocked', reason: 'institution' },
+            outside_hospital:          { bra: 'blocked', sporty: 'blocked', reason: 'institution' },
+            outside_blood_bank:        { bra: 'blocked', sporty: 'blocked', reason: 'institution' },
+            outside_luxury_hotel:      { bra: 'blocked', sporty: 'blocked', reason: 'dress_code' },
+            outside_casino:            { bra: 'blocked', sporty: 'blocked', reason: 'dress_code' },
+            outside_noir_boutique:     { bra: 'blocked', sporty: 'blocked', reason: 'dress_code' },
+            outside_vajaros_realty:    { bra: 'blocked', sporty: 'blocked', reason: 'dress_code' },
+            outside_bargain_threads:   { bra: 'allowed', sporty: 'allowed' },
+            outside_urban_edge:        { bra: 'allowed', sporty: 'allowed' },
+            outside_laundromat:        { bra: 'allowed', sporty: 'allowed' },
+            outside_dry_cleaners:      { bra: 'allowed', sporty: 'allowed' },
+            outside_hardy_bar:         { bra: 'allowed', sporty: 'allowed' },
+            outside_lucius_lounge:     { bra: 'evening', sporty: 'blocked', reason: 'lounge' },
+            outside_dojang:            { bra: 'blocked', sporty: 'allowed', reason: 'workout' },
+            outside_gymnasium:         { bra: 'blocked', sporty: 'allowed', reason: 'workout' },
+            outside_stadium:           { bra: 'blocked', sporty: 'allowed', reason: 'workout' }
+        };
+
+        // Returns a refusal for Bra Exposed at a restricted venue, or null when she's let in.
+        function getBraExposedVenueBlockMessage(restriction) {
+            var cv = getSceneClothingVars();
+            var bs = (gameState.bodyAppearance || {}).breastSize || 'average';
+            var b = restriction.name;
+            var B = capFirst(b);
+            var bra = cv.braName;
+            var sporty = cv.braStyle === 'sporty';
+            var wet = isWetBraThrough();
+            var pol = BRA_EXPOSED_VENUE_POLICY[restriction.redirect];
+            if (!wet) {
+                if (!pol) return null;
+                var rule = sporty ? pol.sporty : pol.bra;
+                if (rule === 'allowed') return null;
+                if (rule === 'evening') {
+                    var h = (gameState.time && gameState.time.hour) || 0;
+                    if (h >= 18 || h < 6) return null;
+                }
+            }
+            var tits = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your tits';
+            var reason;
+            if (wet) reason = 'Your ' + bra + '\'s soaked through, and your nipples show dark under the wet fabric. ' + B + ' isn\'t letting that through the door.';
+            else if (pol.reason === 'shirts') reason = 'A sign\'s taped inside the glass: SHIRTS AND SHOES REQUIRED. Your ' + bra + ' doesn\'t count as a shirt.';
+            else if (pol.reason === 'institution') reason = B + ' has a dress code, and a bra isn\'t a top. Someone at the front desk would stop you before you got three steps inside.';
+            else if (pol.reason === 'dress_code') reason = B + ' has a dress code, and your ' + bra + ' with ' + tits + ' on show isn\'t on it.';
+            else if (pol.reason === 'workout') reason = 'Your ' + bra + ' isn\'t gym wear, and everyone inside ' + b + ' would know it the second you walked in.';
+            else if (sporty) reason = 'A sports bra at Lucius\' Lounge. The doorman would laugh you back to the curb.';
+            else reason = 'Before six, Lucius\' Lounge is a quiet cocktail room, and the host at the door would turn you around. It\'s a different room once the evening crowd shows up.';
+
+            var corruption = gameState.corruption || 0;
+            if (corruption >= 6001) {
+                return 'You glance down at yourself and smirk. ' + reason + '\n\nYour nipples stiffen in the cups anyway. Find a top first.';
+            } else if (corruption >= 2001) {
+                return 'You catch yourself reaching for the door and stop.\n\n' + reason + '\n\nYour cheeks warm, and your nipples tighten in the cups while you back away from the entrance. You need a top.';
+            }
+            return 'You look at the entrance to ' + b + ' and your stomach drops.\n\n' + reason + '\n\nYou fold your arms over ' + tits + ' and back away, and your pussy clenches the whole time.';
+        }
+
+        // Step 2C: venue check for the two partial states, run from showScene before the sheer check.
+        // Mesh pieces route to the sheer venue messages.
+        function getPartialExposureVenueBlockMessage(restriction) {
+            var vis = getVisibleExposureLevel();
+            if (vis === 'panties_exposed') {
+                return getSheerVenueBlockMessage(restriction) || getExposureBlockMessage(restriction.name);
+            }
+            if (vis === 'bra_exposed') {
+                if (getSheerState().state === 'sheer_lingerie_top') return getSheerVenueBlockMessage(restriction);
+                return getBraExposedVenueBlockMessage(restriction);
+            }
+            return null;
+        }
         var SHEER_BARE_ALLOWED_VENUES = ['outside_lucius_lounge', 'outside_hardy_bar', 'outside_urban_edge', 'outside_diner'];
 
         function getSheerVenueBlockMessage(restriction) {
@@ -22773,6 +22957,46 @@ audioSystem.playSFX('buttonClick');
             return { refuse: false, text: s === 'sheer_bare'
                 ? 'Your driver does a long double take in the rearview mirror. "Uh. Nice ' + (st.chestGarment && st.chestGarment === st.hipsGarment ? 'dress' : 'outfit') + '," he says, and spends the ride looking at your tits through it. Your nipples stay stiff the whole way.'
                 : 'Your driver\'s eyes flick to the mirror when you slide into the back seat. He says nothing for three blocks. Then: "You know that\'s see-through, right?"\n\nYour clit throbs. "I know."' };
+        }
+
+        // ── Bra/Panties Exposed Overhaul Step 2E: driver lines for Bra Exposed ──
+        // Decision 1: the bus and Uber take her. Three driver beats per method, and Kelsie's
+        // reaction in three voices. A sports bra, a jacket over the bra, or a soaked or mesh
+        // bra (refused before this runs) returns ''.
+        function getBraExposedTransitLine(method) {
+            if (getVisibleExposureLevel() !== 'bra_exposed') return '';
+            var cv = getSceneClothingVars();
+            if (cv.braStyle === 'sporty' || cv.braSheer || isWetBraThrough()) return '';
+            var bra = cv.braName;
+            var bs = (gameState.bodyAppearance || {}).breastSize || 'average';
+            var tits = bs === 'large' ? 'your heavy tits swelling over the cups' : bs === 'small' ? 'your small tits in the cups' : 'your tits pushed up in the cups';
+            var c = gameState.corruption || 0;
+            var v = c >= 6001 ? 2 : c >= 2001 ? 1 : 0;
+            var openers, voices;
+            if (method === 'bus') {
+                openers = [
+                    'The driver\'s eyes go to your ' + bra + ' and stay there while your card beeps. He waves you back.',
+                    'The driver looks up from his route sheet, sees ' + tits + ', and forgets to check your fare. A man in the front row moves his bag off the seat beside him.',
+                    'The driver does a double take and keeps looking, one hand on the door lever. "Nice day for it," he says, to your ' + bra + '.'
+                ];
+                voices = [
+                    'You ride with your arms folded over your chest, and your nipples stiffen against the cups every time the bus hits a pothole.',
+                    'You take a seat by the window and leave your arms at your sides. Half the bus finds a reason to look, and your pussy clenches at every stop.',
+                    'You stand in the aisle and hold the rail over your head so your tits lift in the cups. Every lurch sways them, and the men around you stop pretending to read their phones. Your clit throbs the whole ride.'
+                ];
+            } else {
+                openers = [
+                    'Your driver\'s eyes flick to the mirror when you slide into the back seat, then drop to your ' + bra + ' and stay there.',
+                    'Your driver twists around to confirm your name and doesn\'t get as far as your face. "Kelsie?" he says, to ' + tits + '.',
+                    'Your driver takes the long way. You catch him in the mirror at every red light, looking at your ' + bra + ' instead of the road.'
+                ];
+                voices = [
+                    'You cross your arms over your chest and stare out the window. Your nipples are stiff in the cups, and your pussy won\'t stop clenching.',
+                    'You pretend you don\'t notice. Your cheeks burn, and your nipples press hard against the cups the whole ride.',
+                    'You lean back and let your knees fall open a little, and you catch his eyes in the mirror and hold them. Your clit throbs every time he looks down again.'
+                ];
+            }
+            return openers[Math.floor(Math.random() * openers.length)] + '\n\n' + voices[v];
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -23152,8 +23376,22 @@ audioSystem.playSFX('buttonClick');
                 } else {
                     _blockDesc = 'Your panties are showing. No bottoms, no dress.';
                 }
+                // Bra/Panties Exposed Step 2B: the opaque partial states get their own refusal.
+                // Mesh pieces keep the lines above (they're see-through first).
+                var _blkCv = getSceneClothingVars();
+                var _blkBody = _blockDesc + '\n\nYou\'re not walking out there like this. You\'d rather die.';
+                var _blkFix = 'Put on real clothes first.';
+                if (!_isTopless && !_isBottomless && type === 'bra_only' && !_blkCv.braSheer) {
+                    _blkBody = 'Your ' + _blkCv.braName + ' and your ' + _blkCv.bottomName + ', and nothing else over your chest.' + (_blkCv.commando ? ' There\'s nothing under your ' + _blkCv.bottomName + ' either.' : '') +
+                        '\n\nIt\'s legal. You know it\'s legal. You still can\'t make your feet go out the door, and your nipples are already stiff in the cups at the thought.';
+                    _blkFix = 'Put a top on first.';
+                } else if (!_isTopless && !_isBottomless && type === 'panties_only' && !_blkCv.pantiesSheer) {
+                    _blkBody = 'Your ' + _blkCv.topName + ' stops at your hips, and below that it\'s your ' + _blkCv.pantiesName + ' and your bare legs.' + (_blkCv.braless ? ' There\'s no bra under your ' + _blkCv.topName + ' either, and your nipples show it.' : '') +
+                        '\n\nYou\'re not walking out there like this. Your pussy clenches anyway.';
+                    _blkFix = 'Put on a bottom or a dress first.';
+                }
                 showMessage(
-                    '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> No Way</strong>\n\nYou look down at yourself. ' + _blockDesc + '\n\nYou\'re not walking out there like this. You\'d rather die.\n\nPut on real clothes first.\n\n<span style="color:#888;">At <strong>' + (getVisibleUnderwearGate() || 6001) + ' Corruption</strong>, you\'d be willing. You\'re at ' + _blockCorruption + '.</span>',
+                    '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> No Way</strong>\n\nYou look down at yourself. ' + _blkBody + '\n\n' + _blkFix + '\n\n<span style="color:#888;">At <strong>' + getExposureLeaveGate() + ' Corruption</strong>, you\'d be willing. You\'re at ' + _blockCorruption + '.</span>',
                     function() {
                         var returnScene = gameState.previousScene || 'apartment_bedroom';
                         showScene(returnScene);
@@ -23216,8 +23454,11 @@ audioSystem.playSFX('buttonClick');
 
             } else {
                 // ── Original underwear handling ──
-                suspicionIncrease = 2;
-                modifyCitySuspicion(suspicionIncrease);
+                // Bra/Panties Exposed Step 2G: an opaque bra over a bottom is legal (0); soaked
+                // through it's indecent (+2). Panties Exposed and Underwear Only stay at +2.
+                suspicionIncrease = (type === 'bra_only' && !isWetBraThrough()) ? 0 : 2;
+                if (suspicionIncrease) modifyCitySuspicion(suspicionIncrease);
+                var _uwSuspTxt = suspicionIncrease ? '  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>' : '';
                 npcScene = getUnderwearNPCVignette(type);
                 kelsieResponse = '';
                 statText = '';
@@ -23239,7 +23480,7 @@ audioSystem.playSFX('buttonClick');
                         '\n\nYou feel their eyes and your cunt answers, slow and hot. The underwear was a choice.\n\n' + (type === 'both' ? 'Stiff nipples in the cups, a wet spot spreading on your panties. Everyone gets to see both.' : type === 'bra_only' ? 'Your nipples stiffen in the cups for everyone who looks. Your clit throbs every time one of them does.' : 'A wet spot spreads on your panties for everyone who looks. Your clit throbs every time one of them does.')
                     ];
                     kelsieResponse = highResponses[Math.floor(Math.random() * highResponses.length)];
-                    statText = '\n\n<span style="color: #ff69b4;">Arousal +10</span>  · <span style="color: #88ff88;">Mental Health +2</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
+                    statText = '\n\n<span style="color: #ff69b4;">Arousal +10</span>  · <span style="color: #88ff88;">Mental Health +2</span>' + _uwSuspTxt;
                     
                 } else if (corruption >= 2001) {
                     gameState.arousal = Math.min(100, gameState.arousal + 7);
@@ -23250,7 +23491,7 @@ audioSystem.playSFX('buttonClick');
                         '\n\nYour jaw clenches. You keep your arms at your sides, because covering up would only draw more eyes.\n\n<em>Just get through this block. One more block.</em>\n\nYour pussy clenches on every step. ' + (_uwPan ? 'Your panties are soaked through at the crotch' : 'You\'re soaked under your ' + _uwBottom) + ' and your clit aches like it wants to be looked at.'
                     ];
                     kelsieResponse = midResponses[Math.floor(Math.random() * midResponses.length)];
-                    statText = '\n\n<span style="color: #ff69b4;">Arousal +7</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
+                    statText = '\n\n<span style="color: #ff69b4;">Arousal +7</span>' + _uwSuspTxt;
                     
                 } else {
                     gameState.arousal = Math.min(100, gameState.arousal + 3);
@@ -23262,7 +23503,7 @@ audioSystem.playSFX('buttonClick');
                         '\n\nEvery step is agony. You can feel your ' + (type === 'both' ? 'bra and panties' : type === 'bra_only' ? 'bra' : 'panties') + ' on your skin, and the air everywhere else.\n\nYour clit throbs under the stares. ' + (_uwBra ? 'Your nipples push stiff against the cups.' : 'Your nipples scrape your ' + _uwTop + ' with every breath.') + ' Your body won\'t stop answering them.\n\n<em>Please don\'t let anyone I know see me like this.</em>'
                     ];
                     kelsieResponse = lowResponses[Math.floor(Math.random() * lowResponses.length)];
-                    statText = '\n\n<span style="color: #4488ff;">Mental Health -3</span>  · <span style="color: #ff69b4;">Arousal +3</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
+                    statText = '\n\n<span style="color: #4488ff;">Mental Health -3</span>  · <span style="color: #ff69b4;">Arousal +3</span>' + _uwSuspTxt;
                 }
             }
             
@@ -25144,7 +25385,7 @@ audioSystem.playSFX('buttonClick');
                         setTimeout(() => {
                         if (nowExposed && !checkVisibleUnderwearCorruption()) {
                             var _ueCorruption = gameState.corruption || 0;
-                            showMessage('✓ ' + result.message + '\n\n<strong style="color:#ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> You\'re not fully dressed.</strong>\n\nYou can\'t leave like this. Put on proper clothes before going outside.\n\n<span style="color:#888;">Requires <strong>' + (getVisibleUnderwearGate() || 6001) + ' Corruption</strong> to go out exposed willingly. You\'re at ' + _ueCorruption + '.</span>', () => {});
+                            showMessage('✓ ' + result.message + '\n\n<strong style="color:#ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> You\'re not fully dressed.</strong>\n\nYou can\'t leave like this. Put on proper clothes before going outside.\n\n<span style="color:#888;">Requires <strong>' + getExposureLeaveGate() + ' Corruption</strong> to go out exposed willingly. You\'re at ' + _ueCorruption + '.</span>', () => {});
                         } else {
                             showMessage('✓ ' + result.message, () => {});
                         }
@@ -25303,8 +25544,20 @@ audioSystem.playSFX('buttonClick');
                     if (!nowSafe && isWearingVisibleUnderwear() && !checkVisibleUnderwearCorruption()) {
                         const corruption = gameState.corruption || 0;
                         
+                        // Bra/Panties Exposed Step 2A: title, description and fix per state
+                        var _ewType = getUnderwearExposureType();
+                        var _ewCv = getSceneClothingVars();
+                        var _ewTitle = _ewType === 'bra_only' ? 'Bra Exposed' : _ewType === 'panties_only' ? 'Panties Exposed' : 'Underwear Only';
+                        var _ewDesc = _ewType === 'panties_only'
+                            ? 'Your ' + _ewCv.topName + ' stops at your hips, and below that it\'s your ' + _ewCv.pantiesName + '.'
+                            : 'You\'re ' + getUnderwearVisibilityDesc() + '.';
+                        var _ewFix = _ewType === 'bra_only' ? 'Put a top on before leaving.'
+                            : _ewType === 'panties_only' ? 'Put on a bottom or a dress before leaving.'
+                            : 'Put on a top, bottom, or dress before leaving.';
+                        var _ewTail = _ewType === 'bra_only' ? ''
+                            : '\n\nThe only way you\'d end up outside ' + (_ewType === 'panties_only' ? 'like this' : 'in your underwear') + ' is if your clothes got destroyed in a fight.';
                         showMessage(
-                            '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> Underwear Only</strong>\n\nYou\'re ' + (getUnderwearVisibilityDesc()) + '.\n\nYou can\'t go outside like this. Put on a top, bottom, or dress before leaving.\n\nThe only way you\'d end up outside in your underwear is if your clothes got destroyed in a fight.\n\n<span style="color:#888;">At <strong>' + (getVisibleUnderwearGate() || 6001) + ' Corruption</strong>, you can walk out like this willingly. You\'re at ' + corruption + '.</span>',
+                            '<strong style="color: #ffaa00;"><img src="Images/icons/warning.png" class="icon" alt="warning"> ' + _ewTitle + '</strong>\n\n' + _ewDesc + '\n\nYou can\'t go outside like this. ' + _ewFix + _ewTail + '\n\n<span style="color:#888;">At <strong>' + getExposureLeaveGate() + ' Corruption</strong>, you can walk out like this willingly. You\'re at ' + corruption + '.</span>',
                             () => {}
                         );
                     }
@@ -29689,7 +29942,9 @@ audioSystem.playSFX('buttonClick');
             // Mesh Overhaul Step 4D: sheer states the slot check calls 'clothed'
             var _sheerTransit = (method === 'bus' || method === 'uber') ? getSheerTransitReaction(method) : null;
             var _sheerTransitLine = '';
-            if (_sheerTransit && _sheerTransit.refuse && _bpeShim(getExposureLevel()) === 'clothed') { // BPE shim: Step 2E
+            // Bra/Panties Exposed Step 2E: the partial states are dressed as far as this check goes
+            var _slotLvl = getExposureLevel();
+            if (_sheerTransit && _sheerTransit.refuse && (_slotLvl === 'clothed' || _slotLvl === 'bra_exposed' || _slotLvl === 'panties_exposed')) {
                 if (method === 'bus') {
                     showMessage('<strong>Boarding Refused</strong>\n\n' + _sheerTransit.text + '\n\n<em>Find something to wear over it, or walk.</em>', () => {});
                 } else {
@@ -29702,10 +29957,14 @@ audioSystem.playSFX('buttonClick');
             }
 
             // Block bus in any exhibitionism state
+            // Bra/Panties Exposed Step 2E (Decision 1): Bra Exposed rides unless the bra's soaked through
             if (method === 'bus') {
-                const exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 2E
-                if (exposure !== 'clothed' || isWearingVisibleUnderwear()) {
-                    const reason = exposure === 'clothed'
+                const exposure = getExposureLevel();
+                const _braRides = exposure === 'bra_exposed' && !isWetBraThrough();
+                if (!_braRides && (exposure !== 'clothed' || isWearingVisibleUnderwear())) {
+                    const reason = exposure === 'bra_exposed'
+                        ? 'The driver takes one look at your nipples through your soaked ' + proseItemName(gameState.currentOutfit.bra) + ' and shakes his head.'
+                        : (exposure === 'panties_exposed' || exposure === 'clothed')
                         ? (isBraVisible() ? 'The driver takes one look at your bra and shakes his head.' : 'Your panties are on full display. The driver\'s not letting you on like that.')
                         : exposure === 'naked'
                         ? 'You\'re not getting on a city bus like that.'
@@ -29721,9 +29980,12 @@ audioSystem.playSFX('buttonClick');
             
             // Uber: exhibitionism check (driver-arrival framing)
             if (method === 'uber') {
-                const exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 2E
-                if (exposure !== 'clothed' || isWearingVisibleUnderwear()) {
-                    const reason = exposure === 'clothed'
+                const exposure = getExposureLevel();
+                const _braRides = exposure === 'bra_exposed' && !isWetBraThrough();
+                if (!_braRides && (exposure !== 'clothed' || isWearingVisibleUnderwear())) {
+                    const reason = exposure === 'bra_exposed'
+                        ? 'Your driver pulls up, sees your nipples straight through your soaked ' + proseItemName(gameState.currentOutfit.bra) + ', and cancels.'
+                        : (exposure === 'panties_exposed' || exposure === 'clothed')
                         ? (isBraVisible() ? 'Your driver pulls up, sees you standing there in your bra, and cancels.' : 'Your driver sees your panties before you reach the door and cancels.')
                         : exposure === 'naked'
                         ? 'Your driver pulls up, takes one look, and cancels the trip.'
@@ -29736,6 +29998,12 @@ audioSystem.playSFX('buttonClick');
                     showMessage('Trip Canceled\n\n' + reason + '\n\nUber rating: ' + (gameState.uberRating + 0.2).toFixed(2) + ' → ' + gameState.uberRating.toFixed(2) + '\n\nFind something to wear, or walk.', () => {});
                     return;
                 }
+            }
+
+            // Bra/Panties Exposed Step 2E: the driver's reaction to Bra Exposed (a sports bra rides silently)
+            if (method === 'bus' || method === 'uber') {
+                var _braRideLine = getBraExposedTransitLine(method);
+                if (_braRideLine) _sheerTransitLine = _sheerTransitLine ? _sheerTransitLine + '\n\n' + _braRideLine : _braRideLine;
             }
             
             // Close modals
@@ -39523,7 +39791,12 @@ audioSystem.playSFX('buttonClick');
             if (!_config) return;
 
             // Check visible exposure (outerwear concealment applies)
-            var _exposure = _bpeShim((typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel()); // BPE shim: Step 2F
+            var _visExposure = (typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel();
+            // Bra/Panties Exposed Step 2F: Panties Exposed and a soaked-through bra make an entry.
+            // An opaque, dry bra is legal and makes none. Mesh versions go through the sheer path.
+            var _partialState = _visExposure === 'panties_exposed' ? 'panties_exposed'
+                : (_visExposure === 'bra_exposed' && isWetBraThrough()) ? 'bra_wet_through' : '';
+            var _exposure = (_visExposure === 'bra_exposed' || _visExposure === 'panties_exposed') ? 'clothed' : _visExposure;
 
             // Mesh Step 12A: clothed or in underwear, the mesh can still put her on camera.
             // Framed makes no entry. getSheerState() already applies outerwear concealment.
@@ -39532,7 +39805,8 @@ audioSystem.playSFX('buttonClick');
                 var _sst = getSheerState();
                 if (isSheerExposureState(_sst.state)) _sheer = _sst;
             }
-            if (_exposure === 'clothed' && !_sheer) return;
+            if (_sheer) _partialState = '';
+            if (_exposure === 'clothed' && !_sheer && !_partialState) return;
 
             // Daily cooldown per district
             var _today = gameState.time.day || 0;
@@ -39571,6 +39845,15 @@ audioSystem.playSFX('buttonClick');
                     : _sheer.chestGarment ? 'top' : 'skirt';
                 _desc = _isCamera ? 'Street cam footage, subject in see-through clothing. Exposure visible in frame.'
                     : 'Civilian witness report, subject in see-through clothing. Exposure visible to the naked eye.';
+            } else if (_partialState) {
+                // Step 2F: minor, and a night camera's one level worse
+                _exposureState = _partialState;
+                _severity = (_isCamera && isNight()) ? 'moderate' : 'minor';
+                _desc = _partialState === 'panties_exposed'
+                    ? (_isCamera ? 'Street cam footage, subject in a top and underwear, no pants or skirt. Exposure visible in frame.'
+                        : 'Civilian witness report, subject in a top and underwear, no pants or skirt.')
+                    : (_isCamera ? 'Street cam footage, subject in a bra soaked see-through. Exposure visible in frame.'
+                        : 'Civilian witness report, subject in a wet see-through bra.');
             }
             createLedgerEntry({
                 type: 'indecent_exposure',
@@ -39583,7 +39866,10 @@ audioSystem.playSFX('buttonClick');
                 fingerprintsLeft: false,
                 cameraType: _isCamera ? 'street_cam' : '',
                 cameraQuality: _isCamera ? 'partial' : 'none',
-                witnesses: _isCamera ? [] : [{ type: 'civilian', faceSeen: Math.random() < 0.40, description: _sheer ? 'Civilian witness to public indecency, subject in see-through clothing' : 'Civilian witness to public indecency' }],
+                witnesses: _isCamera ? [] : [{ type: 'civilian', faceSeen: Math.random() < 0.40, description: _sheer ? 'Civilian witness to public indecency, subject in see-through clothing'
+                    : _partialState === 'panties_exposed' ? 'Civilian witness to public indecency, subject in a top and underwear, no pants or skirt'
+                    : _partialState === 'bra_wet_through' ? 'Civilian witness to public indecency, subject in a wet see-through bra'
+                    : 'Civilian witness to public indecency' }],
                 exposureSeverity: _severity,
                 exposureState: _exposureState,
                 sheerLook: _sheerLook,
@@ -41978,9 +42264,26 @@ audioSystem.playSFX('buttonClick');
             return isSheerExposureState(getSheerState().state);
         }
 
-        // Step 2D owns this: an opaque bra soaked see-through in Bra Exposed. Stubbed for Step 1.
+        // Step 2D: an opaque cotton, satin, or lace bra in Bra Exposed goes see-through at
+        // clothesWetness 60+. A sports bra and a mesh bra never count (mesh was see-through
+        // first). For the law it counts as sheer_lingerie_top: evidence, venues, transit, harassment.
+        var WET_THROUGH_BRA_FABRICS = ['cotton', 'satin', 'lace'];
         function isWetBraThrough() {
-            return false;
+            var o = gameState.currentOutfit || {};
+            if (!o.bra || getMeshProfile(o.bra)) return false;
+            if (getBraStyle(o.bra) === 'sporty') return false;
+            if (WET_THROUGH_BRA_FABRICS.indexOf(getFabricNoun(o.bra)) === -1) return false;
+            if (getVisibleExposureLevel() !== 'bra_exposed') return false;
+            return ((gameState.weather && gameState.weather.clothesWetness) || 0) >= 60;
+        }
+
+        // Step 2D: one-line notice the first time per day the rain soaks her bra through.
+        function checkWetBraThroughNotice() {
+            if (!isWetBraThrough()) return;
+            var day = (gameState.time && gameState.time.day) || 0;
+            if (gameState.flags._wetBraNoticeDay === day) return;
+            gameState.flags._wetBraNoticeDay = day;
+            showNotification('The rain\'s soaked your ' + proseItemName(gameState.currentOutfit.bra) + ' through. Your nipples show dark and stiff under the wet fabric, and now anyone looking can see them.');
         }
 
         // True when the law sees her as dressed: clothed, or an opaque bra on show.
@@ -42870,30 +43173,36 @@ audioSystem.playSFX('buttonClick');
          */
         // Mesh Overhaul Step 4A: visible underwear needs 6001. When every visible piece is
         // sheer (the mesh set with nothing over it), it's naked with a technicality: 8001.
+        // Bra/Panties Exposed Overhaul Step 2A: the partial states split by legality.
+        // Bra Exposed (opaque bra over a bottom) is a look: 2001. A sports bra is workout
+        // clothing: no gate. A mesh bra (sheer_lingerie_top) stays at 6001. Panties Exposed
+        // is indecent: 6001, opaque or mesh.
         function getVisibleUnderwearGate() {
             var o = gameState.currentOutfit || {};
             var braVisible = isBraVisible();
             var pantiesVisible = arePantiesVisible();
             if (!braVisible && !pantiesVisible) return 0;
-            var allSheer = (!braVisible || !!getMeshProfile(o.bra)) && (!pantiesVisible || !!getMeshProfile(o.panties));
-            return (braVisible && pantiesVisible && allSheer) ? 8001 : 6001;
+            if (braVisible && pantiesVisible) {
+                return (!!getMeshProfile(o.bra) && !!getMeshProfile(o.panties)) ? 8001 : 6001;
+            }
+            if (pantiesVisible) return 6001;
+            if (getMeshProfile(o.bra)) return 6001;
+            if (getBraStyle(o.bra) === 'sporty') return 0;
+            return 2001;
+        }
+
+        // Step 2A: the corruption she needs to walk out in the whole outfit. The visible
+        // underwear gate, raised to 6001 when she's also topless or bottomless.
+        function getExposureLeaveGate() {
+            var gate = getVisibleUnderwearGate();
+            if ((isEffectivelyTopless() || isEffectivelyBottomless()) && gate < 6001) gate = 6001;
+            return gate;
         }
 
         function checkVisibleUnderwearCorruption() {
-            const corruption = gameState.corruption || 0;
-            const gate = getVisibleUnderwearGate();
-            
-            // Any visible underwear requires Corrupted tier (6001+); the sheer set alone needs 8001
-            if (gate > 0) {
-                return corruption >= gate;
-            }
-
-            // Topless or bottomless with no underwear showing still needs Corrupted tier
-            if (isEffectivelyTopless() || isEffectivelyBottomless()) {
-                return corruption >= 6001;
-            }
-            
-            return true; // Not in an exposed state
+            // Visible underwear uses its per-state gate; topless or bottomless with nothing
+            // showing still needs Corrupted tier. getExposureLeaveGate() covers both.
+            return (gameState.corruption || 0) >= getExposureLeaveGate();
         }
         
         /**
@@ -44048,6 +44357,8 @@ audioSystem.playSFX('buttonClick');
                         showWetnessThresholdProse(_thresholdVals[_ti]);
                     }
                 }
+                // Bra/Panties Exposed Step 2D: a soaked opaque bra with nothing over it goes see-through
+                checkWetBraThroughNotice();
                 
                 if (!gameState.weather.wetnessStartTime) {
                     gameState.weather.wetnessStartTime = {
@@ -47406,9 +47717,13 @@ audioSystem.playSFX('buttonClick');
                 if (!_simNoTop && _simNoBottom && !_simNoPanties && !(_curNoBottom && !_curNoTop)) {
                     return { success: false, message: 'You can\'t take that off. You\'d be walking around in a top and panties.\n\nPut on bottoms or a dress first.\n\n<span style="color:#888;">Requires <strong>6001 Corruption</strong>. You\'re at ' + _corruption + '.</span>' };
                 }
-                // Bottom without top (indecent — like wearing pants and a bra)
+                // Bottom without top (Bra/Panties Exposed Step 2A: a look, gated at 2001;
+                // a sports bra has no gate, a mesh bra keeps 6001)
                 if (_simNoTop && !_simNoBra && !_simNoBottom && !(_curNoTop && !_curNoBottom)) {
-                    return { success: false, message: 'You can\'t take that off. You\'d be walking around in your bra and bottoms.\n\nPut on a top or dress first.\n\n<span style="color:#888;">Requires <strong>6001 Corruption</strong>. You\'re at ' + _corruption + '.</span>' };
+                    var _simBraGate = getMeshProfile(_simOutfit.bra) ? 6001 : getBraStyle(_simOutfit.bra) === 'sporty' ? 0 : 2001;
+                    if (_corruption < _simBraGate) {
+                        return { success: false, message: 'You can\'t take that off. You\'d be walking around in your bra and bottoms.\n\nPut on a top or dress first.\n\n<span style="color:#888;">Requires <strong>' + _simBraGate + ' Corruption</strong>. You\'re at ' + _corruption + '.</span>' };
+                    }
                 }
             }
             
@@ -58831,7 +59146,8 @@ audioSystem.playSFX('buttonClick');
 
             // PERCENTAGE PENALTIES; scale with base so a high-CC Kelsie suffers proportionally
             // Suppressed when player is in exhibition/undress state (naked, topless, bottomless, or visible underwear)
-            const _undressedForPenalty = gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless() || isWearingVisibleUnderwear();
+            // Bra/Panties Exposed Step 2I: Bra Exposed is a look, so a filthy bra still costs appeal
+            const _undressedForPenalty = gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless() || (isWearingVisibleUnderwear() && getExposureLevel() !== 'bra_exposed');
             if (!_undressedForPenalty) total -= getAppealPenalties(baseAppeal).total;
 
             // FATIGUE: now a first-class imperfection (Step 4.5), so it flows through
@@ -108000,6 +108316,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('commercial')) return;
                     if (tickSheerLingeriePolice()) return;
+                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('commercial')) return;
@@ -108171,6 +108488,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('residential')) return;
                     if (tickSheerLingeriePolice()) return;
+                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('residential')) return;
@@ -108361,6 +108679,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('slums')) return;
                     if (tickSheerLingeriePolice()) return;
+                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
                     
                     // Check for harassment event (once per day)
                     const lastHarassmentDay = gameState.flags.lastSlumsHarassmentDay || 0;
@@ -114090,6 +114409,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('medical')) return;
                     if (tickSheerLingeriePolice()) return;
+                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('medical')) return;
@@ -114187,6 +114507,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('downtown')) return;
                     if (tickSheerLingeriePolice()) return;
+                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('downtown')) return;
@@ -114335,6 +114656,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('wendale')) return;
                     if (tickSheerLingeriePolice()) return;
+                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('wendale')) return;
@@ -186104,6 +186426,7 @@ wet_car_slowdown: {
                     // Mesh Overhaul Step 4A/4B: sheer gates, then the sheer lingerie police clock
                     if (handleSheerDistrictEntry('fitness')) return;
                     if (tickSheerLingeriePolice()) return;
+                    if (tickIndecencyPolice()) return; // Bra/Panties Exposed Step 2H
                     
                     const isNight = isDark();
                     if (checkDistrictHarassment('fitness', isNight)) {
@@ -207109,10 +207432,22 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
         };
         
         function getExposureBlockMessage(buildingName) {
-            const exposure = _bpeShim(getExposureLevel()); // BPE shim: Step 2C
+            const exposure = getExposureLevel();
             const corruption = gameState.corruption || 0;
             
-            if (exposure === 'clothed') return null;
+            // Bra/Panties Exposed Step 2C: Bra Exposed follows BRA_EXPOSED_VENUE_POLICY instead
+            if (exposure === 'clothed' || exposure === 'bra_exposed') return null;
+
+            // Step 2C: Panties Exposed is blocked everywhere restricted, like Underwear Only
+            if (exposure === 'panties_exposed') {
+                var _pcv = getSceneClothingVars();
+                if (corruption >= 6001) {
+                    return 'You glance down at yourself and smirk. Tempting as it\'d be to walk into ' + buildingName + ' with your ' + _pcv.pantiesName + ' on show under your ' + _pcv.topName + ', they\'re not letting you through the door like this.\n\nYour pussy clenches at the thought anyway. Find something to wear below the waist.';
+                } else if (corruption >= 2001) {
+                    return 'You catch yourself reaching for the door and stop.\n\n<em>I can\'t walk into ' + buildingName + ' in my panties.</em>\n\nYour cheeks warm. The crotch of your ' + _pcv.pantiesName + ' is damp, and you back away from the entrance before anyone inside sees that too.';
+                }
+                return 'You look at the entrance to ' + buildingName + ' and your stomach drops.\n\n<em>Everyone in there would see my panties.</em>\n\nYou tug the hem of your ' + _pcv.topName + ' down with both hands. It doesn\'t reach. Your pussy clenches anyway, and you back away from the door.';
+            }
             
             let stateDesc = '';
             if (exposure === 'naked') stateDesc = 'completely naked';
@@ -207191,7 +207526,21 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 }
 
                 // ── EXPOSURE BUILDING CHECK ──
-                const exposureLevel = _bpeShim(getExposureLevel()); // BPE shim: Step 2C
+                // Bra/Panties Exposed Step 2C: the two partial states keep a top or a bottom on, so the
+                // bare-body beats below (apartment sneak, Rufus at the motel) don't apply to them.
+                // They get their own venue check first; the sheer check still runs after it.
+                const _rawExposureLevel = getExposureLevel();
+                const exposureLevel = (_rawExposureLevel === 'bra_exposed' || _rawExposureLevel === 'panties_exposed') ? 'clothed' : _rawExposureLevel;
+                if (exposureLevel === 'clothed' && exposureRestrictedBuildings[sceneId]) {
+                    const _bpeRestriction = exposureRestrictedBuildings[sceneId];
+                    const _bpeBlockMsg = getPartialExposureVenueBlockMessage(_bpeRestriction);
+                    if (_bpeBlockMsg) {
+                        showMessage(_bpeBlockMsg, () => {
+                            showScene(_bpeRestriction.redirect);
+                        });
+                        return;
+                    }
+                }
                 // Mesh Overhaul Step 4C: sheer states read as 'clothed' by slot, so check them separately
                 if (exposureLevel === 'clothed' && exposureRestrictedBuildings[sceneId]) {
                     const _sheerRestriction = exposureRestrictedBuildings[sceneId];
