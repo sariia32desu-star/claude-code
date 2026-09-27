@@ -22767,14 +22767,8 @@ audioSystem.playSFX('buttonClick');
             var butt = ba.buttSize || 'average';
             var cut = cv.pantiesCut;
             var top = cv.topName, bra = cv.braName, pan = cv.pantiesName;
-            // What the view from behind gets: buttSize x pantiesCut
-            var ass = cut === 'thong'
-                ? (butt === 'large' ? 'your full ass, bare on both sides of the thong' : butt === 'small' ? 'your tight little ass, bare around the thong' : 'your bare ass with the thong between your cheeks')
-                : cut === 'cheeky'
-                ? (butt === 'large' ? 'your full ass spilling out of the cheeky cut' : butt === 'small' ? 'your tight little ass, half out of your ' + pan : 'the bottom half of your ass hanging out of your ' + pan)
-                : cut === 'boyshort'
-                ? (butt === 'large' ? 'your full ass stretching your ' + pan + ' tight' : butt === 'small' ? 'your tight little ass in snug ' + pan : 'your ass snug in your ' + pan)
-                : (butt === 'large' ? 'your full ass straining your ' + pan : butt === 'small' ? 'your tight little ass in your ' + pan : 'your ass in your ' + pan);
+            // What the view from behind gets: buttSize x pantiesCut (shared with Step 4)
+            var ass = getPantiesExposedAssView();
             var tits = bs === 'large' ? 'your heavy tits swelling over the cups of your ' + bra
                 : bs === 'small' ? 'your small tits and the stiff points of your nipples through your ' + bra
                 : 'your tits pushed up in your ' + bra;
@@ -22790,11 +22784,11 @@ audioSystem.playSFX('buttonClick');
                         '"Indecent exposure. Turn around, hands behind your back."\n\n"You\'ve already seen the back."\n\nYou wink at his partner, and then you\'re not there anymore.';
                 } else if (corruption >= 2001) {
                     text = 'A squad car slows beside you and matches your pace. You keep your eyes forward and tug at the hem of your ' + top + '. It doesn\'t reach.\n\n' +
-                        'The passenger window comes down. The officer\'s eyes drop below your hem and follow ' + ass + ' as you step past the car.\n\n' +
+                        'The passenger window comes down. As you step past the car, the officer\'s eyes drop below your hem to ' + ass + '.\n\n' +
                         '"Miss. You can\'t walk around without pants."\n\n"It\'s... it\'s a long shirt."\n\n"It isn\'t."\n\n' +
                         'Heat floods your face. Your pussy clenches, and the crotch of your ' + pan + ' is damp enough that you\'re sure he can see it.\n\nHis door opens. You\'re already moving.';
                 } else {
-                    text = 'Blue and red light washes over the sidewalk in front of you. It\'s coming from behind, where it\'s been lighting up ' + ass + ' for who knows how long.\n\n' +
+                    text = 'Blue and red light washes over the sidewalk in front of you. It\'s coming from behind, where it\'s been lighting you up for who knows how long, right on ' + ass + '.\n\n' +
                         'An officer steps out. "Ma\'am. Stop right there."\n\n' +
                         'You stop. Both hands go to the hem of your ' + top + ' and pull it down as far as it goes, which isn\'t far. Below the hem, your ' + pan + ' and your bare thighs are right there for him and everyone on the block.\n\n' +
                         '"I... my clothes got..."\n\n"Indecent exposure. Hands where I can see them."\n\n' +
@@ -22805,18 +22799,18 @@ audioSystem.playSFX('buttonClick');
                     text = 'The cruiser takes its time pulling up. The officer behind the wheel has been driving at walking speed for half a block, looking at ' + tits + '.\n\n' +
                         'He gets out. His eyes go from your ' + bra + ' to your ' + pan + ' and back up, slow.\n\n' +
                         '"Ma\'am. You\'re in your underwear."\n\n"You noticed."\n\n' +
-                        'You turn a slow circle for him so he gets ' + ass + ' too. Your nipples are stiff against the cups, and the crotch of your ' + pan + ' is soaked.\n\n' +
+                        'You turn a slow circle so he gets the back too: ' + ass + '. Your nipples are stiff against the cups, and the crotch of your ' + pan + ' is soaked.\n\n' +
                         '"Indecent exposure," his partner says, still looking. "You need to come with us."\n\nYou blow him a kiss, and then you\'re a blur at the end of the block.';
                 } else if (corruption >= 2001) {
                     text = 'A squad car pulls to the curb ahead of you, and the officer leans out the window before you can turn around.\n\n' +
                         'His eyes go from ' + tits + ' down to your ' + pan + ' and back up. "Miss. What happened to your clothes?"\n\n"Nothing. It\'s... it\'s a look."\n\n"It\'s your underwear."\n\n' +
-                        'Your cheeks burn. Your nipples tighten in the cups while he stares, and your pussy clenches hard.\n\nWhen he reaches for the door handle, you bolt, and the whole block gets ' + ass + ' on your way out.';
+                        'Your cheeks burn. Your nipples tighten in the cups while he stares, and your pussy clenches hard.\n\nWhen he reaches for the door handle, you bolt, and the whole block gets a view on your way out: ' + ass + '.';
                 } else {
                     text = 'The cruiser pulls to the curb beside you and the window comes down. The officer\'s eyes go from your ' + bra + ' to your ' + pan + ' and back up.\n\n' +
                         '"Miss, you can\'t be out here in your underwear."\n\n' +
                         'Your arms come up over ' + chest + '. Your face is on fire, and your pussy clenches anyway, hard enough that you\'re sure he can tell.\n\n' +
                         '"I know. I know, I\'m sorry, my clothes..."\n\n"Stay right there."\n\n' +
-                        'He opens his door, and you run. The whole block gets ' + ass + ' as you go.';
+                        'He opens his door, and you run. As you go, the whole block gets ' + ass + '.';
                 }
             }
             gameState.indecencyClockStartTime = null;
@@ -23412,6 +23406,405 @@ audioSystem.playSFX('buttonClick');
             return '\n\n' + d[t];
         }
 
+        // ══════════════════════════════════════════════════════════════
+        // ── Bra Exposed & Panties Exposed Overhaul, Step 4: district entry ──
+        // Bra Exposed is shot from the front: a look people clock, approve of, disapprove
+        // of, and stare at. Panties Exposed is shot from behind: full scandal.
+        // Vignettes return text with no leading break; responses start with '\n\n'.
+        // ══════════════════════════════════════════════════════════════
+
+        // What the view from behind gets in Panties Exposed: buttSize x pantiesCut.
+        // Lowercase noun phrase, no terminal punctuation.
+        function getPantiesExposedAssView() {
+            var cv = getSceneClothingVars();
+            var butt = (gameState.bodyAppearance || {}).buttSize || 'average';
+            var cut = cv.pantiesCut, pan = cv.pantiesName;
+            if (cut === 'thong') {
+                return butt === 'large' ? 'your full ass, bare on both sides of the thong'
+                    : butt === 'small' ? 'your tight little ass, bare around the thong'
+                    : 'your bare ass with the thong between your cheeks';
+            }
+            if (cut === 'cheeky') {
+                return butt === 'large' ? 'your full ass spilling out of your ' + pan
+                    : butt === 'small' ? 'your tight little ass, half out of your ' + pan
+                    : 'the bottom half of your ass hanging out of your ' + pan;
+            }
+            if (cut === 'boyshort') {
+                return butt === 'large' ? 'your full ass stretching your ' + pan + ' tight'
+                    : butt === 'small' ? 'your tight little ass in snug ' + pan
+                    : 'your ass snug in your ' + pan;
+            }
+            return butt === 'large' ? 'your full ass straining your ' + pan
+                : butt === 'small' ? 'your tight little ass in your ' + pan
+                : 'your ass in your ' + pan;
+        }
+
+        // Picks an unseen index from the eligible list; resets once all have been shown.
+        function _bpePickVignette(flagKey, eligible) {
+            if (!Array.isArray(gameState.flags[flagKey])) gameState.flags[flagKey] = [];
+            var seen = gameState.flags[flagKey];
+            var fresh = eligible.filter(function(i) { return seen.indexOf(i) === -1; });
+            if (!fresh.length) {
+                gameState.flags[flagKey] = [];
+                seen = gameState.flags[flagKey];
+                fresh = eligible.slice();
+            }
+            var idx = fresh[Math.floor(Math.random() * fresh.length)];
+            seen.push(idx);
+            return idx;
+        }
+
+        // ── 4B: Bra Exposed vignettes ──
+        // Attention, not scandal. Each names the bra and branches on breastSize or braStyle.
+        // The jogger (index 6) only fires in a sports bra.
+        function getBraExposedNPCVignette() {
+            var _ba = gameState.bodyAppearance || {};
+            var _bs = _ba.breastSize || 'average';
+            var cv = getSceneClothingVars();
+            var bra = cv.braName, bottom = cv.bottomName, style = cv.braStyle;
+            var pool = [
+                // 1. A woman who likes the look
+                function() {
+                    return 'A woman locking her bike up outside a boutique looks up as you pass. Her eyes go to your ' + bra + ', then to your face, and she grins.\n\n' +
+                        '"Okay, I love that," she says. ' + (style === 'bralette' ? '"A bralette as a top. I keep telling myself I\'ll try it."'
+                            : style === 'corset' ? '"The corset with the ' + bottom + '? That\'s a whole look."'
+                            : style === 'sporty' ? '"Very post-workout. Very casual about it."'
+                            : '"I\'d never have the nerve, and I\'m so jealous."') + '\n\n' +
+                        'The man waiting for her on the bench hasn\'t looked at his phone since you turned the corner.';
+                },
+                // 2. A man who walks into something
+                function() {
+                    return 'A man in a suit is walking toward you with a coffee, talking into his earbuds. He sees your ' + bra + ' and stops talking mid-sentence.\n\n' +
+                        (_bs === 'large' ? 'His eyes stay on your heavy tits, full and swelling over the cups,' : _bs === 'small' ? 'His eyes stay on your small tits and the stiff little points your nipples make in the cups,' : 'His eyes stay on your tits, pushed up in the cups,') +
+                        ' and he walks straight into the sandwich board outside the deli.\n\nThe sign clatters flat. His coffee doesn\'t survive. "Sorry," he tells the sign.';
+                },
+                // 3. A teenager with a phone
+                function() {
+                    return 'A teenage boy on the steps of a bank looks up from his phone, and then his phone comes up with him.\n\n' +
+                        'He makes zero effort to hide it. The camera tracks your ' + bra + ' the whole way down the block, ' +
+                        (_bs === 'large' ? 'zoomed in on the bounce of your heavy tits with every step.' : _bs === 'small' ? 'zoomed in on your small tits and your stiff nipples.' : 'zoomed in on your tits.') +
+                        '\n\n"Bro," he says to someone on the other end. "Bro, look at this."';
+                },
+                // 4. An older woman who disapproves
+                function() {
+                    return 'An older woman with a shopping cart stops dead in front of you. She looks at your ' + bra + ' like it owes her money.\n\n' +
+                        (style === 'sporty' ? '"The gym\'s that way, dear. That\'s workout clothing."'
+                            : (style === 'lace' || style === 'pushup') ? '"That\'s underwear. I own that. I wear it under things."'
+                            : '"In my day, a girl put a blouse on over that."') + '\n\n' +
+                        'She pushes her cart around you before you can answer, muttering, and turns back twice to make sure she\'s still disapproving.';
+                },
+                // 5. A guy who says something crude
+                function() {
+                    return 'A guy leaning on a parked car pushes off it as you pass and falls into step beside you for a few feet.\n\n' +
+                        '"Damn, girl. ' + (_bs === 'large' ? 'Those tits are trying to climb out of that thing.' : _bs === 'small' ? 'Cute little tits. You don\'t even need that bra.' : 'Nice tits. You forget your shirt, or is that for me?') + '"\n\n' +
+                        'His buddy laughs from the car. He gives up after half a block and goes back to lean on the hood, and you can feel both of them watching you the rest of the way.';
+                },
+                // 6. A barista who comps her drink
+                function() {
+                    return 'You stop at a coffee cart on the corner. The barista takes your order without looking up, and then he looks up.\n\n' +
+                        'His eyes go to your ' + bra + ' and stay there while he makes the drink. ' +
+                        (style === 'pushup' ? 'He pours the milk like he\'s thinking about something else entirely, and he is.' : style === 'sporty' ? '"Good run?" he asks. You haven\'t been running.' : 'He overfills the cup and doesn\'t notice.') +
+                        '\n\nWhen you hold out your card, he waves it off. "On me," he says, to your tits.';
+                },
+                // 7. A jogger who nods (sports bra only)
+                function() {
+                    return 'A woman jogging the other way sees your ' + bra + ' and gives you the little nod runners give each other.\n\n' +
+                        'The man jogging behind her skips the nod. ' +
+                        (_bs === 'large' ? 'His eyes are on your heavy tits, bound tight in the sports bra and still swaying,' : _bs === 'small' ? 'His eyes are on your small tits, your nipples showing stiff through the sports bra,' : 'His eyes are on your tits in the sports bra,') +
+                        ' and he loses his stride so badly he has to sprint to catch up with her.';
+                },
+                // 8. A construction crew
+                function() {
+                    return 'Scaffolding runs the length of the block, and the crew on it stops working one man at a time as you walk under it.\n\n' +
+                        'Somebody whistles. Somebody else shushes him. The foreman leans over the rail to get a better look at your ' + bra + ' and ' +
+                        (_bs === 'large' ? 'the heavy swell of your tits over the cups.' : _bs === 'small' ? 'your small tits, nipples stiff in the cups.' : 'your tits, pushed up in the cups.') +
+                        '\n\n"Take your time, sweetheart," he calls down. Nobody on the scaffold picks up a tool until you\'re past the corner.';
+                }
+            ];
+            var eligible = style === 'sporty' ? [0, 1, 2, 3, 4, 5, 6, 7] : [0, 1, 2, 3, 4, 5, 7];
+            return pool[_bpePickVignette('_braExposedReactionIdx', eligible)]();
+        }
+
+        // ── 4C: Panties Exposed vignettes ──
+        // Full scandal, camera behind her. Each branches on pantiesCut and buttSize.
+        function getPantiesExposedNPCVignette() {
+            var _ba = gameState.bodyAppearance || {};
+            var _butt = _ba.buttSize || 'average';
+            var cv = getSceneClothingVars();
+            var top = cv.topName, pan = cv.pantiesName, cut = cv.pantiesCut;
+            var ass = getPantiesExposedAssView();
+            var pool = [
+                // 1. Two women at a bus shelter
+                function() {
+                    return 'Two women at a bus shelter go quiet when you pass. You hear it start behind you.\n\n' +
+                        '"Is she... wearing pants?"\n\n' +
+                        (cut === 'thong' ? '"She\'s wearing a thong."' : cut === 'boyshort' ? '"Those are boyshorts. That\'s underwear."' : '"Those are her panties."') +
+                        '\n\n"That\'s what I said."\n\nYou can feel both of them staring the whole length of the block, right at ' + ass + '.';
+                },
+                // 2. A cyclist who won't pass
+                function() {
+                    return 'A cyclist coasting up behind you brakes so hard his back tire skids.\n\n' +
+                        'He rides at walking pace three feet behind you instead of passing, eyes level with ' + ass + ', until a car horn finally makes him go around.\n\n' +
+                        (_butt === 'large' ? '"Jesus," he says on the way past, and it\'s aimed at your ass.' : _butt === 'small' ? '"Cute," he says on the way past, and he means your ass.' : '"Nice view," he says on the way past.') +
+                        (cut === 'thong' ? ' The thong\'s the only thing he didn\'t get to see.' : '');
+                },
+                // 3. A mother with a stroller
+                function() {
+                    return 'A mother pushing a stroller comes up behind you, and you hear her stop.\n\n' +
+                        '"Excuse me. Excuse me!" You turn. Her face is red. "There are children on this street. Where are your pants?"\n\n' +
+                        (cut === 'thong' ? '"Is that a thong? Is your whole ass out, in front of my son?"' : '"You\'re in your underwear. In front of my son."') + '\n\n' +
+                        'She wheels the stroller off the curb to get around you. When you glance back from the corner, she\'s still watching from across the street, her eyes on ' + ass + '.';
+                },
+                // 4. An old man on a bench
+                function() {
+                    return 'An old man on a bench lowers his newspaper as you pass, then lowers it more.\n\n' +
+                        'You hear it rustle behind you. When you glance back, he\'s turned all the way around on the bench to watch you go, eyes on ' + ass + '.\n\n' +
+                        (_butt === 'large' ? '"Now that\'s an ass," he tells the pigeons.' : _butt === 'small' ? '"Well," he tells the pigeons. "Well, well."' : '"Didn\'t see that in the paper," he tells the pigeons.');
+                },
+                // 5. A shoe store window
+                function() {
+                    return 'You pass a shoe store with a big front window. Every clerk inside turns to follow you, and one of them walks right up to the glass.\n\n' +
+                        'In the reflection you can see what they see: your ' + top + ' ending at your hips, and below it, ' + ass + '.\n\n' +
+                        (cut === 'thong' ? 'The clerk at the glass mimes a string with two fingers.' : 'The clerk at the glass says something to the others.') + ' All three of them laugh, and none of them look away.';
+                },
+                // 6. College guys with phones
+                function() {
+                    return 'Three college guys on the other side of the street stop walking. One of them cups his hands around his mouth.\n\n' +
+                        '"' + (cut === 'thong' ? 'Nice thong!' : cut === 'boyshort' ? 'Cute undies!' : 'Forget something?') + '"\n\n' +
+                        'The other two already have their phones out. They cross the street and fall in behind you, filming from ten feet back, every lens on ' + ass + '.\n\n' +
+                        (_butt === 'large' ? '"Look at it bounce," one of them says.' : _butt === 'small' ? '"Look at that little ass," one of them says.' : '"Get closer," one of them says.');
+                },
+                // 7. A woman who offers her cardigan
+                function() {
+                    return 'A woman your age falls into step beside you and pulls off her cardigan without a word.\n\n' +
+                        '"Here. Tie it around your waist." She glances behind you and winces. ' +
+                        (cut === 'thong' ? '"Honey, that thong isn\'t covering anything."' : cut === 'cheeky' ? '"Your ass is hanging out of those. Everybody back there can see."' : '"Everybody back there can see your underwear."') + '\n\n' +
+                        '"I\'m fine," you say. She takes one more look at ' + ass + '. Then she shakes her head and pulls the cardigan back on.';
+                },
+                // 8. A delivery driver
+                function() {
+                    return 'A delivery van slows beside you, and the driver leans across the passenger seat to get a better look out the window.\n\n' +
+                        'He lets the van roll ahead, brakes, and waits, so you have to walk past him again. His eyes go straight to your ' + pan + ' ' +
+                        (cut === 'thong' ? 'and the thin strip disappearing between your cheeks.' : 'and the crotch of them.') + '\n\n' +
+                        'He honks twice. In his side mirror you watch him watching you all the way to the corner, his eyes on ' + ass + '.';
+                }
+            ];
+            return pool[_bpePickVignette('_pantiesExposedReactionIdx', [0, 1, 2, 3, 4, 5, 6, 7])]();
+        }
+
+        // ── 4D: Kelsie's responses ──
+        // Four voices: Innocent (0-2000), Curious/Experienced (2001-6000), Corrupted (6001-8000),
+        // Deeply Corrupted (8001+). Three variants each. breastSize in every Bra Exposed variant;
+        // bodyType in one variant per voice; commando (under the bottom) layered into the third.
+        function getBraExposedKelsieResponse(corruption) {
+            var _ba = gameState.bodyAppearance || {};
+            var _bs = _ba.breastSize || 'average';
+            var _bt = _ba.bodyType || 'ordinary';
+            var cv = getSceneClothingVars();
+            var _commando = cv.commando;
+            var bra = cv.braName, bottom = cv.bottomName;
+            var pool;
+            if (corruption >= 8001) {
+                pool = [
+                    '\n\nYou walk with your shoulders back and ' + (_bs === 'large' ? 'your heavy tits pushed up and swelling over the cups' : _bs === 'small' ? 'your small tits pushed up in the cups, nipples jutting' : 'your tits pushed up in the cups') + ', and you let them look.\n\nA man at the crosswalk forgets the light changed. Your clit throbs, slow and pleased with itself.',
+                    '\n\nYou stop at the corner and stretch, arms over your head, and let the whole block look. ' +
+                        (_bt === 'petite' ? 'Your slight little body pulls long and bare' : _bt === 'athletic' ? 'Your stomach pulls flat and hard' : _bt === 'curvy' ? 'Your curves pull long and bare' : _bt === 'thick' ? 'Your soft belly pulls tight' : 'Your bare stomach pulls long') + ', and ' +
+                        (_bs === 'large' ? 'your heavy tits lift in the cups until they nearly spill out.' : _bs === 'small' ? 'your small tits lift in the cups, nipples straining.' : 'your tits lift in the cups.') +
+                        '\n\nSomebody whistles. You smile at nobody in particular, and your pussy clenches, wet and pleased.',
+                    '\n\nYou hook a thumb under one strap and adjust it slowly while a man across the street stares. ' +
+                        (_bs === 'large' ? 'The cup shifts on your heavy tit and a crescent of areola shows over the edge.' : _bs === 'small' ? 'The cup shifts and your small tit nearly slips out of it.' : 'The cup shifts, and he gets a flash of the edge of your nipple.') + '\n\n' +
+                        (_commando ? (cv.liftable ? 'You\'re bare under your ' + bottom + ' too. You think about showing him that next, and your cunt clenches around nothing.' : 'You\'re bare under your ' + bottom + ' too, soaking the seam. You think about telling him, and your cunt clenches around nothing.') : 'Your cunt clenches around nothing. You leave the strap where it is.')
+                ];
+            } else if (corruption >= 6001) {
+                pool = [
+                    '\n\nYou roll your shoulders back and let the cups do their work. ' +
+                        (_bs === 'large' ? 'Your heavy tits sit up high and full, and the whole street notices.' : _bs === 'small' ? 'Your small tits sit high and perky, nipples stiff through the cups.' : 'Your tits push up in the cups, and the whole street notices.') +
+                        '\n\nEvery stare is a little tug between your legs. Your pussy\'s wet and getting wetter.',
+                    '\n\nYou slow down past a shop window and check yourself out in it. ' +
+                        (_bt === 'petite' ? 'Small and bare-shouldered, your ' + bra + ' the brightest thing on the block.' : _bt === 'athletic' ? 'Hard stomach, bare shoulders, your ' + bra + ' finishing the look.' : _bt === 'curvy' ? 'Every curve on show, your ' + bra + ' holding the best of them up.' : _bt === 'thick' ? 'Soft and full and on show, your ' + bra + ' straining a little.' : 'Your ' + bra + ', your ' + bottom + ', and bare skin in between.') + ' ' +
+                        (_bs === 'large' ? 'Your heavy tits swell over the cups.' : _bs === 'small' ? 'Your nipples make stiff little points in the cups.' : 'Your nipples show stiff through the cups.') +
+                        '\n\nBehind you in the glass, two men have stopped to look too. Your clit throbs.',
+                    '\n\nA guy on a bench tracks your chest the whole way past, and you slow down for him. ' +
+                        (_bs === 'large' ? 'Your heavy tits sway in the cups for him.' : _bs === 'small' ? 'Your small tits barely move, and your stiff nipples do all the work.' : 'Your tits bounce a little in the cups for him.') + '\n\n' +
+                        (_commando ? (cv.liftable ? 'If he looked lower he\'d find out you\'re bare under your ' + bottom + ', and the thought has your pussy dripping.' : 'Your ' + bottom + ' are tight over your bare pussy, and you\'re wet enough to leave a mark on them.') : 'Your pussy clenches, slow and hungry, and you let him keep looking.')
+                ];
+            } else if (corruption >= 2001) {
+                pool = [
+                    '\n\nYou leave your arms at your sides. It takes everything you have. ' +
+                        (_bs === 'large' ? 'Your heavy tits sway in the cups with every step, and people watch them do it.' : _bs === 'small' ? 'Your small tits sit high in the cups, nipples stiff enough to show.' : 'Your tits shift in the cups with every step, and people watch.') +
+                        '\n\n<em>It\'s just a bra. It\'s a look.</em> Your pussy clenches like it knows better.',
+                    '\n\nA woman looks you over, head to toe, and you feel every inch of it. ' +
+                        (_bt === 'petite' ? 'Your slight little frame, bare from your collarbone to your waistband.' : _bt === 'athletic' ? 'The lean muscle of your stomach, bare down to your waistband.' : _bt === 'curvy' ? 'Your curves, bare from your collarbone to the flare of your hips.' : _bt === 'thick' ? 'Your soft belly and full waist, bare down to your waistband.' : 'All that bare skin between your ' + bra + ' and your ' + bottom + '.') + '\n\n' +
+                        (_bs === 'large' ? 'Your heavy tits rise in the cups on your next breath, nipples tight.' : _bs === 'small' ? 'Your nipples tighten into hard little points in the cups.' : 'Your nipples tighten in the cups.') + ' You\'re wet, and she didn\'t even say anything.',
+                    '\n\nA man at a crosswalk stares at your chest, and you stare back until he looks away. Your cheeks are pink. ' +
+                        (_bs === 'large' ? 'Your heavy tits are still heaving in the cups.' : _bs === 'small' ? 'Your nipples are still stiff little points in the cups.' : 'Your nipples are still stiff in the cups.') + '\n\n' +
+                        (_commando ? (cv.liftable ? 'Under your ' + bottom + ' you\'re bare, and your pussy\'s slick enough that you feel it every time your thighs brush.' : 'Under your ' + bottom + ' you\'re bare, and the seam rubs your clit with every step.') : 'Your clit throbs. You liked that more than you should have.')
+                ];
+            } else {
+                pool = [
+                    '\n\nYou keep your arms folded over your ' + bra + ' and your eyes on the pavement. It\'s allowed. You keep telling yourself it\'s allowed.\n\n' +
+                        (_bs === 'large' ? 'Your heavy tits push against your forearms, and your nipples press hard into the cups.' : _bs === 'small' ? 'Your arms cover almost all of it, and your nipples still press hard into the cups.' : 'Your nipples press hard into the cups under your arms.') +
+                        ' Your pussy clenches every time someone looks twice.',
+                    '\n\nYou catch your reflection in a bus shelter and your face goes hot. ' +
+                        (_bt === 'petite' ? 'A slight little thing in a bra and a ' + bottom + ', like you walked out of the fitting room by mistake.' : _bt === 'athletic' ? 'Flat stomach, bare shoulders, a bra where your top should be.' : _bt === 'curvy' ? 'All curves, and the only thing on top of them is a bra.' : _bt === 'thick' ? 'Soft belly, full hips, and nothing between the street and your chest but a bra.' : 'A girl in a bra and a ' + bottom + ', out on a public street.') + '\n\n' +
+                        (_bs === 'large' ? 'Your heavy tits fill the cups, nipples stiff while you look.' : _bs === 'small' ? 'Your small tits sit in the cups, nipples stiff while you look.' : 'Your nipples stiffen in the cups while you look.') +
+                        ' You look away first. Your pussy\'s damp, and that\'s the part you can\'t explain.',
+                    '\n\nEvery stare lands on your chest, ' +
+                        (_bs === 'large' ? 'on the heavy swell of your tits over the cups.' : _bs === 'small' ? 'on your small tits and the stiff little points your nipples make in the cups.' : 'on your tits in the cups.') + ' Your face burns.\n\n' +
+                        (_commando ? (cv.liftable ? 'And there\'s nothing under your ' + bottom + '. Every breeze reminds you, and your bare pussy clenches around nothing.' : 'And there\'s nothing under your ' + bottom + '. The seam presses right against your bare slit with every step.') : 'Your clit throbs, small and stubborn, and you wish it would stop.')
+                ];
+            }
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // buttSize and pantiesCut in every Panties Exposed variant; bodyType in one per voice;
+        // braless (under the top) layered into the third.
+        function getPantiesExposedKelsieResponse(corruption) {
+            var _ba = gameState.bodyAppearance || {};
+            var _butt = _ba.buttSize || 'average';
+            var _bt = _ba.bodyType || 'ordinary';
+            var cv = getSceneClothingVars();
+            var _braless = cv.braless;
+            var top = cv.topName, pan = cv.pantiesName, cut = cv.pantiesCut;
+            var pool;
+            if (corruption >= 8001) {
+                pool = [
+                    '\n\nYou slow down so the man behind you can take his time with ' +
+                        (_butt === 'large' ? 'your full ass' : _butt === 'small' ? 'your tight little ass' : 'your ass') +
+                        (cut === 'thong' ? ' and the thong buried between your cheeks.' : cut === 'cheeky' ? ', half of it hanging out of your ' + pan + '.' : ' in your ' + pan + '.') +
+                        '\n\nThe crotch of your ' + pan + ' is soaked through, and you know he can see the dark patch. Your cunt clenches around nothing, and you smile at the next person who stares.',
+                    '\n\nAt the crosswalk you reach behind you and tug your ' + (cut === 'thong' ? 'thong up tighter between your cheeks' : pan + ' up into a wedge') + ', slow, while the whole corner watches. ' +
+                        (_bt === 'petite' ? 'Your slight little body arches with it.' : _bt === 'athletic' ? 'The muscle in your thighs flexes with it.' : _bt === 'curvy' ? 'Your hips roll with it.' : _bt === 'thick' ? 'Your thick thighs press together with it.' : 'Your back arches with it.') + ' ' +
+                        (_butt === 'large' ? 'Your full ass is all but bare now.' : _butt === 'small' ? 'Your tight little ass is all but bare now.' : 'Your ass is all but bare now.') +
+                        '\n\nThe light changes. Nobody crosses. Your clit throbs, fat and slick.',
+                    '\n\nYou tug the back of your ' + top + ' up an inch so the people behind you get more. ' +
+                        (_butt === 'large' ? 'Your full ass rolls bare' : _butt === 'small' ? 'Your tight little ass flexes' : 'Your ass sways') +
+                        (cut === 'thong' ? ' around the string of your thong.' : cut === 'cheeky' ? ', half out of your ' + pan + '.' : ' in your ' + pan + '.') + '\n\n' +
+                        (_braless ? 'Up front, your nipples are poking through your ' + top + ', and you roll your shoulders so they rub. You\'re dripping, and you want the whole street to know.' : 'You\'re dripping into your ' + pan + ', and you want the whole street to know.')
+                ];
+            } else if (corruption >= 6001) {
+                pool = [
+                    '\n\nYou stop caring about the hem. ' +
+                        (_butt === 'large' ? 'Your full ass is out' : _butt === 'small' ? 'Your tight little ass is out' : 'Your ass is out') + ', ' +
+                        (cut === 'thong' ? 'the thong buried between your cheeks' : cut === 'cheeky' ? 'your cheeks spilling out of the cheeky cut' : cut === 'boyshort' ? 'your ' + pan + ' stretched tight' : 'your ' + pan + ' pulled snug') +
+                        ', and you walk like that\'s the plan.\n\nEvery stare behind you is a hot little lick between your legs. Your pussy\'s wet, and you don\'t mind if it shows.',
+                    '\n\nYou bend to fix a shoe that doesn\'t need fixing. ' +
+                        (_bt === 'petite' ? 'Your slight little body folds easily' : _bt === 'athletic' ? 'Your hamstrings pull tight' : _bt === 'curvy' ? 'Your hips tip up' : _bt === 'thick' ? 'Your thick thighs spread a little for balance' : 'Your hips tip back') + ', and ' +
+                        (_butt === 'large' ? 'your full ass rises into the air' : _butt === 'small' ? 'your tight little ass rises into the air' : 'your ass rises into the air') + ', ' +
+                        (cut === 'thong' ? 'the thong a thin dark line between your cheeks.' : 'the crotch of your ' + pan + ' pulled tight over your pussy.') +
+                        '\n\nSomeone behind you says "oh my god." Your clit throbs, and you take your time standing up.',
+                    '\n\nA man follows you for a block, and you let him. ' +
+                        (_butt === 'large' ? 'Your full ass sways for him' : _butt === 'small' ? 'Your tight little ass sways for him' : 'Your ass sways for him') +
+                        (cut === 'thong' ? ' around the string of your thong.' : ' in your ' + pan + '.') + '\n\n' +
+                        (_braless ? 'When you glance back, he\'s looking at your nipples through your ' + top + ' instead. Your pussy clenches, and you smile at him.' : 'The crotch of your ' + pan + ' is soaked through, and you hope he can see that too. Your pussy clenches.')
+                ];
+            } else if (corruption >= 2001) {
+                pool = [
+                    '\n\nYou stop tugging at your ' + top + '. It doesn\'t help, and every tug shows more. ' +
+                        (_butt === 'large' ? 'Your full ass sways' : _butt === 'small' ? 'Your tight little ass flexes' : 'Your ass sways') + ' behind you with every step, ' +
+                        (cut === 'thong' ? 'bare on both sides of the thong' : cut === 'cheeky' ? 'spilling out of the cheeky cut' : cut === 'boyshort' ? 'snug in your ' + pan : 'in nothing but your ' + pan) +
+                        '.\n\n<em>Everyone back there is looking at my ass.</em> Your pussy clenches at the thought, and you\'re soaking your ' + pan + '.',
+                    '\n\nA woman passes you and turns to look, and you feel her eyes go down the backs of your legs. ' +
+                        (_bt === 'petite' ? 'Your slight little frame, bare from your hem to your shoes.' : _bt === 'athletic' ? 'Your lean, hard thighs, bare from your hem to your shoes.' : _bt === 'curvy' ? 'The full curve of your hips and your bare thighs.' : _bt === 'thick' ? 'Your thick thighs, bare and pressed together as you walk.' : 'Your bare legs, all the way up.') + '\n\n' +
+                        (cut === 'thong' ? 'The thong\'s wedged between your cheeks and you don\'t dare fix it.' : cut === 'cheeky' ? 'Your ' + pan + ' have ridden up again, and you don\'t dare fix them.' : 'Your ' + pan + ' cling to every curve.') + ' ' +
+                        (_butt === 'large' ? 'Your full ass is right there for her.' : _butt === 'small' ? 'Your tight little ass is right there for her.' : 'Your ass is right there for her.') + ' The crotch of your ' + pan + ' goes damp.',
+                    '\n\nYou catch yourself walking slower, and you know why. ' +
+                        (_butt === 'large' ? 'Your full ass rolls with every step' : _butt === 'small' ? 'Your tight little ass bounces with every step' : 'Your ass moves with every step') + ', and ' +
+                        (cut === 'thong' ? 'the thong hides none of it.' : cut === 'cheeky' ? 'the cheeky cut hides half of it.' : cut === 'boyshort' ? 'your ' + pan + ' hug every inch of it.' : 'your ' + pan + ' show off the whole shape.') + '\n\n' +
+                        (_braless ? 'Your nipples are hard under your ' + top + ' too, poking through where anyone in front of you can see them.' : 'Your nipples are hard in your bra.') + ' Your clit throbs. You like this more than you should.'
+                ];
+            } else {
+                pool = [
+                    '\n\nYou tug the hem of your ' + top + ' down with both hands and it doesn\'t reach. ' +
+                        (cut === 'thong' ? 'The thong leaves your cheeks bare' : cut === 'cheeky' ? 'Your ' + pan + ' ride up with every step' : 'Your ' + pan + ' are right there') + ', and everyone behind you gets ' +
+                        (_butt === 'large' ? 'your full ass.' : _butt === 'small' ? 'your tight little ass.' : 'your ass.') +
+                        '\n\nYour face burns, and the crotch of your ' + pan + ' is damp by the end of the block.',
+                    '\n\nYou walk with one hand pressed flat over the back of your ' + pan + ', like that helps. ' +
+                        (_butt === 'large' ? 'Your palm covers almost none of your full ass.' : _butt === 'small' ? 'Your palm covers most of your tight little ass and none of your dignity.' : 'Your palm covers a sliver of your ass.') + ' ' +
+                        (cut === 'thong' ? 'Under your fingers there\'s only the string of your thong and bare skin.' : 'Under your fingers the fabric\'s thin and warm.') + '\n\n' +
+                        (_bt === 'petite' ? 'You\'re small and bare from the hips down, and it makes you feel even smaller.' : _bt === 'athletic' ? 'Your bare thighs flex with every step, and you can feel eyes on every one.' : _bt === 'curvy' ? 'Your hips sway no matter how stiffly you walk.' : _bt === 'thick' ? 'Your bare thighs rub together with every step, and the whole street can see them.' : 'Your bare legs feel a mile long.') + ' Your pussy clenches anyway.',
+                    '\n\nA breeze comes down the block and slides right up between your bare thighs. ' +
+                        (cut === 'thong' ? 'The thong does nothing to stop it.' : 'It finds the thin crotch of your ' + pan + '.') + ' ' +
+                        (_butt === 'large' ? 'Goosebumps run over your full ass.' : _butt === 'small' ? 'Goosebumps run over your tight little ass.' : 'Goosebumps run over your bare cheeks.') + '\n\n' +
+                        (_braless ? 'Your nipples stiffen under your ' + top + ', and there\'s no bra to hide them. Now there\'s something to see from the front too.' : 'Your nipples stiffen in your bra.') + ' Your clit throbs, and you want to cry.'
+                ];
+            }
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // ── 4D: one-time first-walk beats ──
+        // The first district entry in each state, in her current voice. Replaces that entry's
+        // vignette and response; the entry's stats still apply.
+        function getBraExposedFirstWalk(corruption) {
+            var _ba = gameState.bodyAppearance || {};
+            var _bs = _ba.breastSize || 'average';
+            var cv = getSceneClothingVars();
+            var bra = cv.braName, bottom = cv.bottomName;
+            var tits = _bs === 'large' ? 'your heavy tits' : _bs === 'small' ? 'your small tits' : 'your tits';
+            if (corruption >= 8001) {
+                return 'You step out in your ' + bra + ' and your ' + bottom + ', and you stand on the step a moment so the street can see you.\n\n' +
+                    (_bs === 'large' ? 'Your heavy tits sit high and full in the cups,' : _bs === 'small' ? 'Your small tits sit high in the cups, nipples jutting,' : 'Your tits sit high in the cups,') +
+                    ' and there\'s nothing else above your waist but skin. It\'s perfectly legal. That\'s the best part.\n\n' +
+                    'You walk slow. A delivery driver misses his turn. Two girls at a bus shelter stop talking to watch you pass, and one of them says, "Okay, she\'s hot."\n\n' +
+                    'You run a finger under a strap, lazy, and feel a dozen eyes follow it.' + (cv.commando ? ' Nobody knows you\'re bare under your ' + bottom + ' too.' : '') + '\n\n' +
+                    'Your pussy\'s dripping. Your nipples ache in the cups. The whole city\'s looking at your tits, and nobody\'s allowed to do a thing about it.';
+            } else if (corruption >= 6001) {
+                return 'You walk out in your ' + bra + ' and your ' + bottom + ' like it\'s nothing. It\'s legal. It\'s a look.\n\n' +
+                    'The street doesn\'t agree. Heads turn before you\'ve gone ten steps. ' +
+                    (_bs === 'large' ? 'Eyes land on your heavy tits and stay, on the full swell of them pushed up over the cups.' : _bs === 'small' ? 'Eyes land on your small tits and the stiff little points of your nipples in the cups.' : 'Eyes land on your tits, pushed up in the cups, and stay.') + '\n\n' +
+                    'You roll your shoulders back and give them more.\n\n' +
+                    'A man at a bus stop lets two buses go by. A woman on her phone stops talking and doesn\'t start again.\n\n' +
+                    'Your clit throbs with every step. You\'re wet, and it\'s only the first block.';
+            } else if (corruption >= 2001) {
+                return 'You step out onto the sidewalk in your ' + bra + ' and your ' + bottom + ', and the first thing you notice is the air.\n\n' +
+                    'It\'s everywhere a top should be. Across your stomach, over your shoulders, along the tops of ' + tits + ' where they press up out of the cups.\n\n' +
+                    '<em>It\'s a look. People do this.</em> You decided that in the mirror. Out here, with a whole street between you and your front door, it feels different.\n\n' +
+                    'A woman glances at you, then glances again. A man just looks, and keeps looking, and your nipples stiffen in the cups under it.\n\n' +
+                    'You keep your arms at your sides. It takes everything you have.\n\n' +
+                    'By the end of the block your pussy\'s slick, and you know exactly why.';
+            }
+            return 'The door closes behind you, and you\'re outside in your ' + bra + ' and your ' + bottom + '.\n\n' +
+                'For a second you stand there with your hand still on the handle. The air\'s on your stomach, your shoulders, the tops of ' + tits + '. Skin that\'s only ever been bare at home.\n\n' +
+                (cv.braStyle === 'sporty' ? 'People wear sports bras outside all the time. Runners. Girls on their way to the gym. You\'re one more.' : 'It\'s legal. Girls wear less than this at the beach.') + ' You tell yourself that the whole first block.\n\n' +
+                'A man coming the other way looks at your chest, and your arms fold over it before you can stop them. ' +
+                (_bs === 'large' ? 'Your heavy tits squeeze together under your forearms.' : _bs === 'small' ? 'Your small tits all but vanish under your forearms, nipples stiff against them.' : 'Your nipples press hard into the cups under your arms.') + '\n\n' +
+                'By the corner your face is on fire, and your pussy\'s damp. You don\'t know what to do with either.';
+        }
+
+        function getPantiesExposedFirstWalk(corruption) {
+            var _ba = gameState.bodyAppearance || {};
+            var _bt = _ba.bodyType || 'ordinary';
+            var cv = getSceneClothingVars();
+            var top = cv.topName, pan = cv.pantiesName, cut = cv.pantiesCut;
+            var ass = getPantiesExposedAssView();
+            if (corruption >= 8001) {
+                return 'You step out and stop on the sidewalk, and you let the street get a good long look from behind.\n\n' +
+                    capFirst(ass) + ', under the hem of your ' + top + '. That\'s the outfit.\n\n' +
+                    'A man walking behind you stops dead. Someone across the street raises a phone, and you turn so they get a better angle.\n\n' +
+                    (cv.braless ? 'There\'s no bra under your ' + top + ' either, and your nipples are stiff enough to show through it. ' : '') +
+                    'You walk slow, hips loose. ' + (cut === 'thong' ? 'The thong slides between your cheeks with every step' : 'Your ' + pan + ' cling tighter with every step') + ', and your clit throbs along with it.\n\n' +
+                    'The crotch of your ' + pan + ' is soaked through. You want every one of them to see.';
+            } else if (corruption >= 6001) {
+                return 'You walk out in your ' + top + ' and your ' + pan + ', and the city notices from behind first.\n\n' +
+                    'You hear it: a low whistle, a phone camera, a woman saying "oh my god" to nobody. Every sound is aimed at ' + ass + '.\n\n' +
+                    'You leave your hem alone and let it ride where it rides.\n\n' +
+                    (_bt === 'petite' ? 'Your slight little body looks even smaller like this, all bare legs and underwear.' : _bt === 'athletic' ? 'Your lean legs flex bare with every step, all the way up to your ' + pan + '.' : _bt === 'curvy' ? 'Your hips sway, and every sway pulls your ' + pan + ' a little tighter.' : _bt === 'thick' ? 'Your thick thighs brush with every step, bare right up to your ' + pan + '.' : 'Your bare legs carry you down the block, all the way up to your ' + pan + '.') + '\n\n' +
+                    'Your pussy\'s wet, and the crotch of your ' + pan + ' is going dark. You hope somebody back there notices.';
+            } else if (corruption >= 2001) {
+                return 'The door shuts behind you, and you\'re out on the sidewalk in your ' + top + ' and your ' + pan + '.\n\n' +
+                    'Below the hem, it\'s your bare legs and ' + ass + ', and a whole street full of people who can see it.\n\n' +
+                    '<em>This is indecent. This is actually illegal.</em>\n\n' +
+                    'A car slows beside you, then speeds up. Behind you, someone laughs, and you know exactly what at.\n\n' +
+                    'You keep walking. ' + (cut === 'thong' ? 'Your thong rides up between your cheeks' : 'Your ' + pan + ' ride up') + ' with every step, and your pussy clenches with it.\n\n' +
+                    'By the corner you\'re soaked, and you haven\'t even decided where you\'re going.';
+            }
+            return 'You step outside, and the air finds your bare legs before anything else.\n\n' +
+                'Your ' + top + ' stops at your hips. Below it there\'s only your ' + pan + ', and then bare skin all the way down to your shoes.\n\n' +
+                'You pull the hem down with both hands. It doesn\'t reach. Everyone behind you can see ' + ass + '.\n\n' +
+                'Someone gasps. You don\'t turn around to see who.\n\n' +
+                'Your face burns so hot your eyes water. Between your legs, the crotch of your ' + pan + ' has gone damp, and you can\'t make it stop.';
+        }
+
         function handleUnderwearDistrictEntry(districtId) {
             const type = getUnderwearExposureType();
             var _isTopless = isEffectivelyTopless();
@@ -23468,9 +23861,14 @@ audioSystem.playSFX('buttonClick');
             // handleSheerDistrictEntry(), which runs right after this in every district.
             if (!_isTopless && !_isBottomless && typeof getSheerState === 'function' && getSheerState().state.indexOf('sheer_lingerie') === 0) return false;
 
+            // Bra/Panties Exposed Step 4D: the first walk in each partial state skips the cooldown
+            var _bpeFirstWalk = !_isTopless && !_isBottomless &&
+                ((type === 'bra_only' && !gameState.flags.seenFirstBraExposedWalk) ||
+                 (type === 'panties_only' && !gameState.flags.seenFirstPantiesExposedWalk));
+
             // Global cooldown: 20 game-minutes between any undress-state district reactions
             var _nowMin = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
-            if ((_nowMin - (gameState.flags.lastExhibStateEventMinute || 0)) < 20) return false;
+            if (!_bpeFirstWalk && (_nowMin - (gameState.flags.lastExhibStateEventMinute || 0)) < 20) return false;
             gameState.flags.lastExhibStateEventMinute = _nowMin;
 
             const corruption = gameState.corruption || 0;
@@ -23523,7 +23921,10 @@ audioSystem.playSFX('buttonClick');
                 suspicionIncrease = (type === 'bra_only' && !isWetBraThrough()) ? 0 : 2;
                 if (suspicionIncrease) modifyCitySuspicion(suspicionIncrease);
                 var _uwSuspTxt = suspicionIncrease ? '  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>' : '';
-                npcScene = getUnderwearNPCVignette(type);
+                // Bra/Panties Exposed Step 4A: the partial states get their own vignettes and responses
+                // (set after the tier block below). Underwear Only keeps this block as written.
+                npcScene = _bpeFirstWalk ? '' : type === 'bra_only' ? getBraExposedNPCVignette()
+                    : type === 'panties_only' ? getPantiesExposedNPCVignette() : getUnderwearNPCVignette(type);
                 kelsieResponse = '';
                 statText = '';
 
@@ -23580,6 +23981,23 @@ audioSystem.playSFX('buttonClick');
                 }
             }
             
+            // Bra/Panties Exposed Step 4A/4D: per-state responses, or the one-time first walk
+            if (!_isTopless && !_isBottomless) {
+                if (_bpeFirstWalk && type === 'bra_only') {
+                    gameState.flags.seenFirstBraExposedWalk = true;
+                    npcScene = getBraExposedFirstWalk(corruption);
+                    kelsieResponse = '';
+                } else if (_bpeFirstWalk && type === 'panties_only') {
+                    gameState.flags.seenFirstPantiesExposedWalk = true;
+                    npcScene = getPantiesExposedFirstWalk(corruption);
+                    kelsieResponse = '';
+                } else if (type === 'bra_only') {
+                    kelsieResponse = getBraExposedKelsieResponse(corruption);
+                } else if (type === 'panties_only') {
+                    kelsieResponse = getPantiesExposedKelsieResponse(corruption);
+                }
+            }
+
             const fullReaction = npcScene + kelsieResponse + statText;
 
             // Step 4D: Lifetime stat tracking
