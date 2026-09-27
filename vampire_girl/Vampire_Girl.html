@@ -7377,7 +7377,7 @@
                             <strong style="color: #dd8899; font-size: 13px;"><img src="Images/icons/crime-suspicion.png" class="icon" alt="evidence"> Arrest &amp; Evidence</strong>
                             <ul style="margin: 4px 0 0 15px; padding: 0;">
                                 <li style="margin: 3px 0;"><strong style="color: #ff3377;">Police Stops:</strong> every indecent state is on a police clock. Naked: 2 hours. Topless, bottomless, the full sheer set, a sheer bra with nothing over it, or bare behind mesh: 3 hours. Panties Exposed, Underwear Only, braless or commando behind mesh, or a bra soaked through: 4 hours. A dry bra over a bottom is legal and never on the clock. The clock checks when you enter a district street and pauses at home or at Jaewon's. When the officers arrive you choose: <strong>Surrender</strong>, <strong>Run</strong> at vampire speed (you get dressed from your backpack, run home, or steal clothes), or <strong>Compel them</strong> to forget (+15 thirst; the clock starts over and you stay as you are).</li>
-                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Exhibition Arrest:</strong> surrender and you're cuffed, driven to Central Booking, and booked for indecent exposure in whatever you were wearing. Officer Pruitt at the property desk writes it all down, and she remembers you next time. You change into a jumpsuit, get your mugshot and prints, and wait four hours in holding (five on a repeat) while your thirst climbs. Then you're released with a citation and a fine: $200 naked; $150 topless, bottomless, in the full sheer set or bare behind mesh; $100 for the rest. Each earlier exhibition arrest adds half again, up to triple. If you can't cover it, they take what you have. You get your things back, and if you came in naked, topless or bottomless, Pruitt hands you a donated white dress on the way out. The day's exposure evidence is settled by the citation and never becomes a warrant charge. If you already have a warrant, booking finds it, and it becomes a real arrest.</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Exhibition Arrest:</strong> surrender and you're cuffed, driven to Central Booking, and booked for indecent exposure in whatever you were wearing. Officer Pruitt at the property desk writes it all down, and she remembers you next time. You change into a jumpsuit, get your mugshot and prints, and wait four hours in holding (five on a repeat) while your thirst climbs. It stops five short of your body type's overflow point, so you won't black out in custody, but you'll walk out starving. Then you're released with a citation and a fine: $200 naked; $150 topless, bottomless, in the full sheer set or bare behind mesh; $100 for the rest. Each earlier exhibition arrest adds half again, up to triple. If you can't cover it, they take what you have. You get your things back, and if you came in naked, topless or bottomless, Pruitt hands you a donated white dress on the way out. The day's exposure evidence is settled by the citation and never becomes a warrant charge. If you already have a warrant, booking finds it, and it becomes a real arrest.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ff8899;">Indecent Exposure Evidence:</strong> Walking around exposed in public can generate Evidence Ledger entries. Commercial and downtown districts have a 30% chance per visit (camera evidence, street cams). Residential and park districts have a 15% chance (civilian witnesses). Max one entry per district per day.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Severity Scaling:</strong> Underwear or Panties Exposed = Minor (+1 warrant severity). A dry bra over a bottom leaves no record; soaked through it's Minor, Moderate on a night camera. Topless or Bottomless = Moderate (+2). Naked = Major (+3). Low weight compared to violent crimes, so indecent exposure alone won't drive a warrant, but it adds up. Sheer: framed leaves no record, braless or commando behind mesh is Minor, and bare or any sheer lingerie is Moderate. A night camera after 8 PM bumps a sheer entry up one level, so sheer lingerie can reach Major. Fishnet raises the odds of an entry and semi-sheer lowers them.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #88ccff;">Cruz Awareness:</strong> After 3+ indecent exposure entries, Detective Cruz flags the pattern in her behavioral profile of you. She'll reference it during encounters: blurred camera stills, incident report numbers. It doesn't trigger arrest on its own but it adds a data point to a detective who's already watching you. Sheer entries count toward the pattern, and when most of your file is sheer she says so: "Most of it's technically clothed."</li>
@@ -13501,6 +13501,7 @@
                 _exhibStop: null,
                 _exhibArrest: null,
                 _exhibArrestWarrant: false,
+                _exhibCustody: false,
                 _exhibSavedOutfit: null,
                 _exhibReleaseResult: null,
                 _lastExhibArrestState: null,
@@ -17225,6 +17226,7 @@
                 if (gameState.flags._jaewonBpeFriendDay === undefined) gameState.flags._jaewonBpeFriendDay = 0;
                 ['_exhibStop', '_exhibArrest', '_exhibSavedOutfit', '_exhibReleaseResult', '_lastExhibArrestState'].forEach(function(k) { if (gameState.flags[k] === undefined) gameState.flags[k] = null; });
                 if (gameState.flags._exhibArrestWarrant === undefined) gameState.flags._exhibArrestWarrant = false;
+                if (gameState.flags._exhibCustody === undefined) gameState.flags._exhibCustody = false;
                 // BPE Step 17: the starting Basic White Bra had no fabric, so rain never soaked it through
                 (function() {
                     var _fixBra = function(it) { if (it && it.id === 'basic_white_bra' && !(it.tags || []).some(function(t) { return /^material:/.test(t); })) it.tags = (it.tags || []).concat(['material:cotton']); };
@@ -23057,6 +23059,8 @@ audioSystem.playSFX('buttonClick');
 
         function doExhibPoliceSurrender(clock, state) {
             _exhibArrestSnapshot(clock, state);
+            gameState.flags._exhibCustody = true;
+            applyExhibCustodyThirstFreeze();
             gameState.flags._exhibStop = null;
             if (clock === 'naked') gameState.nakedStartTime = null;
             else if (clock === 'sheer') gameState.sheerLingerieStartTime = null;
@@ -33157,6 +33161,11 @@ audioSystem.playSFX('buttonClick');
 
         // Thirst Overflow System
         function triggerThirstOverflow() {
+            // Never during an exhibition arrest: thirst is frozen short of the cap until release
+            if (gameState.flags && gameState.flags._exhibCustody) {
+                applyExhibCustodyThirstFreeze();
+                return;
+            }
             // NEVER trigger during combat — combat has its own feral system
             if (typeof combatState !== 'undefined' && combatState.active) {
                 console.log('[THIRST OVERFLOW] Blocked - in active combat');
@@ -50860,6 +50869,16 @@ audioSystem.playSFX('buttonClick');
             return 100;
         }
 
+        // Exhibition arrest: thirst freezes five points short of her body type's overflow
+        // (petite 85, ordinary/athletic 95, curvy 100, thick 110) from the surrender to the release,
+        // so the overflow can never cut into the arrest scenes.
+        function getExhibCustodyThirstFreeze() { return getThirstCap() - 5; }
+        function applyExhibCustodyThirstFreeze() {
+            if (!gameState.flags || !gameState.flags._exhibCustody) return;
+            var f = getExhibCustodyThirstFreeze();
+            if ((gameState.thirst || 0) > f) gameState.thirst = f;
+        }
+
         // Adds (or with a negative amount, removes) thirst, clamped to 0..cap.
         // The fatigue passout scenes called this before it existed, so every passout
         // onEnter crashed partway and left fatiguePassoutInProgress stuck on.
@@ -51112,6 +51131,7 @@ audioSystem.playSFX('buttonClick');
             // Check for thirst overflow (must be LAST)
             // NEVER trigger during combat — combat has its own feral/ascension system
             // NEVER trigger during a Lazy Sunday — Kelsie feeds gently from Jaewon through the day (Step 10C)
+            applyExhibCustodyThirstFreeze();
             const blackoutThreshold = (typeof getThirstCap === 'function') ? getThirstCap() : 100;
             const inCombat = typeof combatState !== 'undefined' && combatState.active;
             // STEP 7B: overflow defers while thirst is intentionally frozen or suppressed.
@@ -51124,6 +51144,7 @@ audioSystem.playSFX('buttonClick');
                 && !gameState.flags._lazySundayActive
                 && !gameState.flags.freezeThirstForFirstShift
                 && !gameState.flags._cheatTimeAdvancing
+                && !gameState.flags._exhibCustody
                 && !gameState.flags.overflowInProgress) {
                 triggerThirstOverflow();
             }
@@ -137797,6 +137818,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         gameState.flags.custodyInterrogated = false;
                         gameState.flags.arrestCount = (gameState.flags.arrestCount || 0) + 1;
                         gameState.flags._exhibArrest = null;
+                        gameState.flags._exhibCustody = false; // the warrant arrest has its own thirst escape
                         advanceTime(20);
                         updateStatus();
                         return;
@@ -137918,7 +137940,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.exhibitionStats.exhibitionArrestCount = prior + 1;
                     gameState.flags._lastExhibArrestState = s.state;
                     gameState.flags._exhibReleaseResult = { fine: fine, paid: paid, dress: needDress };
-                    advanceTime(20);
+                    advanceTime(20); // the walk out of the building still counts as custody
+                    applyExhibCustodyThirstFreeze();
+                    gameState.flags._exhibCustody = false;
                     updateStatus();
                     showNotification('Released with a citation (-$' + paid + ', Mental Health ' + (mh > 0 ? '+' : '') + mh + ')');
                 },
