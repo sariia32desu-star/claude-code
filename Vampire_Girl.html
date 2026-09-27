@@ -35331,13 +35331,37 @@ audioSystem.playSFX('buttonClick');
             if (params.sheerLook) entry.sheerLook = params.sheerLook;
             if (params.description) entry.description = params.description;
 
+            // MO signature (Trigrave PD Step 3G): time-of-day band plus approach. Only crimes
+            // with a casing context carry one.
+            var _moTypes = { assault: true, murder: true, mugging: true, burglary: true, pickpocketing: true, blood_theft: true };
+            if (_moTypes[entry.type]) {
+                var _moTod = (typeof getTimeOfDay === 'function') ? getTimeOfDay() : entry.timeOfDay;
+                var _moApproach = params.approach || ((entry.type === 'assault' || entry.type === 'murder') && gameState.flags._huntEnvironment ? getHuntApproachKey() : '');
+                entry.moKey = _moTod + '|' + _moApproach;
+            }
+
+            // Case file (Trigrave PD Step 3A)
+            entry.investigation = {
+                unit: assignInvestigatingUnit(entry),   // 'patrol' | 'property' | 'detective' | 'homicide' | 'cruz'
+                progress: 0,                             // 0-100. 100 = identified.
+                leads: [],                               // { type, strength, developDay, developed, pointsAtKelsie, coverUp }
+                status: 'open',                          // 'open' | 'cold' | 'identified'
+                lastLeadDay: entry.day,
+                poiRaised: false,
+                tipRolled: false,
+                seriesBonus: 0
+            };
+            seedCaseLeads(entry, params);
+            if (entry.linkedToKelsie) markCaseIdentified(entry);
+
             gameState.evidenceLedger.push(entry);
             return id;
         }
 
         // ── Ledger: Link Crime to Suspect ──
         // Links a ledger entry to Kelsie via a specific evidence method.
-        // Methods: 'caught_in_act', 'fingerprint', 'facial_recognition', 'witness_id', 'pattern', 'mask_match'
+        // Methods: 'caught_in_act', 'fingerprint', 'facial_recognition', 'witness_id', 'pattern', 'mask_match',
+        // 'investigation' (a case file reached 100, Trigrave PD Step 3), 'dna' (Profile Zero match, Step 8)
         function linkCrimeToSuspect(crimeId, method) {
             if (!gameState.evidenceLedger) return false;
 
@@ -35350,6 +35374,7 @@ audioSystem.playSFX('buttonClick');
                     entry.linkedBy = method;
                     entry.linkDay = gameState.time.day || 0;
                     entry.chargeStatus = 'charged';
+                    markCaseIdentified(entry);
                     linked = true;
                     break;
                 }
@@ -35382,6 +35407,7 @@ audioSystem.playSFX('buttonClick');
                     entry.linkedBy = 'mask_match';
                     entry.linkDay = gameState.time.day || 0;
                     entry.chargeStatus = 'charged';
+                    markCaseIdentified(entry);
                     count++;
                 }
             }
@@ -35405,6 +35431,15 @@ audioSystem.playSFX('buttonClick');
                 if (entry.maskSignature && entry.linkedToKelsie) {
                     entry.linkedToKelsie = false;
                     entry.chargeStatus = 'unsolved';
+                    // Trigrave PD Step 3: nobody at TPD remembers working it. Every lead's spent,
+                    // so nothing redevelops. (Step 12E: Cruz rebuilds her own cases from paper.)
+                    if (entry.investigation) {
+                        entry.investigation.progress = 0;
+                        entry.investigation.status = 'cold';
+                        entry.investigation.tipRolled = true;
+                        entry.investigation.lastLeadDay = gameState.time.day || 0;
+                        entry.investigation.leads.forEach(function(L) { L.developed = true; });
+                    }
                     count++;
                 }
             }
@@ -35689,6 +35724,443 @@ audioSystem.playSFX('buttonClick');
                     }
                 }
             }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ── TPD INVESTIGATION ENGINE (Trigrave PD Step 3) ────────
+        // ══════════════════════════════════════════════════════════
+        // Every ledger entry gets a case file, and TPD works it every day until it's
+        // solved or goes cold. A case always identifies Kelsie at progress 100, because
+        // she's the one who did it. The engine models how fast TPD closes the gap.
+        // Suspicion is the city's temperature; the case file is TPD's distance to Kelsie.
+        // They stay separate: nothing here feeds suspicion.
+
+        // Triage: petty crime gets a report, murder gets everything.
+        var TPD_UNIT_MULT = { patrol: 0.5, property: 0.8, detective: 1.0, homicide: 1.4, cruz: 1.8 };
+        var TPD_COLD_DAYS = { patrol: 5, property: 10, detective: 14, homicide: 30, cruz: Infinity };
+        var TPD_UNIT_LABELS = {
+            patrol: 'Patrol', property: 'Property & Robbery', detective: 'Detective Bureau',
+            homicide: 'Homicide', cruz: 'Detective Cruz'
+        };
+        var TPD_SERIOUS_UNITS = { detective: true, homicide: true, cruz: true };
+
+        // Lead catalog. Strength is added to progress (times the unit multiplier, times the
+        // cover-up modifier where coverUp is true) on the day it develops. Develop days count
+        // from the crime, or from body discovery for murders. points = names a specific person.
+        var TPD_LEAD_CATALOG = {
+            witness_face:     { strength: 25, developDay: 0, coverUp: false, points: true  },
+            witness_face_cop: { strength: 45, developDay: 0, coverUp: false, points: true  },
+            witness_desc:     { strength: 8,  developDay: 0, coverUp: true,  points: false },
+            victim_statement: { strength: 20, developDay: 1, coverUp: false, points: true  },
+            canvass:          { strength: 10, developDay: 1, coverUp: true,  points: false },
+            camera_clear:     { strength: 30, developDay: 1, coverUp: false, points: true  },
+            camera_partial:   { strength: 15, developDay: 1, coverUp: false, points: false },
+            camera_blur:      { strength: 4,  developDay: 1, coverUp: false, points: false },
+            camera_trace:     { strength: 25, developDay: 2, coverUp: true,  points: false },   // Step 6
+            trace_residence:  { strength: 25, developDay: 2, coverUp: true,  points: true  },   // Step 6E
+            k9_track:         { strength: 15, developDay: 0, coverUp: true,  points: false },   // Step 10D
+            k9_residence:     { strength: 20, developDay: 0, coverUp: true,  points: true  },   // Step 6E / 10D
+            air_track:        { strength: 10, developDay: 0, coverUp: false, points: false },   // Step 10B
+            prints_unmatched: { strength: 8,  developDay: 2, coverUp: false, points: false },   // converts in Step 8
+            profile_zero:     { strength: 8,  developDay: 3, coverUp: false, points: false },   // converts in Step 8
+            trace_evidence:   { strength: 6,  developDay: 3, coverUp: true,  points: false },   // Step 5
+            outfit_match:     { strength: 12, developDay: 0, coverUp: false, points: true  },   // Step 9
+            tip_line:         { strength: 20, developDay: 0, coverUp: false, points: true  },
+            series_bonus:     { strength: 0,  developDay: 0, coverUp: false, points: false }
+        };
+
+        // Scenes CSU processes for trace evidence (hair, fiber, footwear)
+        var TPD_CSU_TYPES = { burglary: true, mugging: true, assault: true, murder: true, police_assault: true, blood_theft: true };
+
+        // Canvass odds follow foot traffic (same baselines the hunt system uses)
+        var TPD_CANVASS_TRAFFIC = {
+            downtown: 70, commercial: 55, medical: 40, fitness: 35, residential: 25,
+            wendale: 22, park: 20, slums: 15, dockyard: 10
+        };
+
+        // Prose names for case beats
+        var TPD_DISTRICT_NAMES = {
+            downtown: 'Downtown', commercial: 'Commercial District', medical: 'Medical District',
+            fitness: 'Fitness District', residential: 'Residential District', wendale: 'Wendale',
+            park: 'Riverside Park', dockyard: 'Dockyard', slums: 'Slums'
+        };
+        var TPD_CASE_NOUNS = {
+            murder: 'homicide', burglary: 'burglary', pickpocketing: 'pickpocketing', mugging: 'robbery',
+            blood_theft: 'hospital theft', fleeing: 'pursuit', escape: 'escape', police_assault: 'officer assault',
+            police_killing: 'officer killing', assault: 'assault', indecent_exposure: 'indecency'
+        };
+        function getTPDCaseName(entry) {
+            var d = TPD_DISTRICT_NAMES[entry.district] || 'city';
+            return 'the ' + d + ' ' + (TPD_CASE_NOUNS[entry.type] || 'case');
+        }
+
+        // Hunt approaches, read from the approach modifier the hunt scenes set (MO series)
+        function getHuntApproachKey() {
+            var m = gameState.flags._approachMod;
+            if (m === -20) return 'rooftop';
+            if (m === -15) return 'lure';
+            if (m === -10 || m === 5) return 'follow';
+            return 'direct';
+        }
+
+        // 3B: who works the case
+        function assignInvestigatingUnit(entry) {
+            var t = entry.type;
+            var bite = !!(entry.forensic && entry.forensic.biteMarks);
+            if (t === 'police_assault' || t === 'police_killing' || t === 'escape') return 'cruz';
+            if ((t === 'murder' || t === 'assault') && bite) return 'cruz';
+            if (t === 'murder') return 'homicide';
+            if (t === 'mugging' || t === 'assault') return 'detective';
+            if (t === 'burglary' || t === 'blood_theft' || t === 'fleeing') return 'property';
+            if (t === 'pickpocketing' || t === 'indecent_exposure') return 'patrol';
+            return 'detective';
+        }
+
+        // Adds a lead to a case file. opts: strength, developDay, pointsAtKelsie, developed.
+        // Cover-up applicable leads snapshot the cover-up modifier (Step 4) at the moment they're seeded.
+        function addCaseLead(entry, type, opts) {
+            if (!entry || !entry.investigation) return null;
+            var def = TPD_LEAD_CATALOG[type] || { strength: 0, developDay: 0, coverUp: false, points: false };
+            opts = opts || {};
+            var lead = {
+                type: type,
+                strength: opts.strength != null ? opts.strength : def.strength,
+                developDay: opts.developDay != null ? opts.developDay : def.developDay,
+                developed: !!opts.developed,
+                pointsAtKelsie: opts.pointsAtKelsie != null ? !!opts.pointsAtKelsie : def.points
+            };
+            if (def.coverUp) lead.coverUp = (typeof getCoverUpMult === 'function') ? getCoverUpMult() : 1;
+            entry.investigation.leads.push(lead);
+            return lead;
+        }
+
+        function caseHasLead(entry, type) {
+            var inv = entry && entry.investigation;
+            if (!inv) return false;
+            for (var i = 0; i < inv.leads.length; i++) if (inv.leads[i].type === type) return true;
+            return false;
+        }
+
+        function caseHasDevelopedLead(entry, type) {
+            var inv = entry && entry.investigation;
+            if (!inv) return false;
+            for (var i = 0; i < inv.leads.length; i++) if (inv.leads[i].type === type && inv.leads[i].developed) return true;
+            return false;
+        }
+
+        // 3C: seeds the leads a crime leaves behind, from what the call site recorded
+        function seedCaseLeads(entry, params) {
+            params = params || {};
+            var masked = !!entry.masked;
+
+            // Witnesses: one lead of each kind at most
+            var ws = entry.witnesses || [];
+            for (var i = 0; i < ws.length; i++) {
+                var w = ws[i];
+                if (!w || w.compelled) continue;
+                var face = !!w.faceSeen && !masked;
+                if (w.type === 'victim') {
+                    if (face) { if (!caseHasLead(entry, 'victim_statement')) addCaseLead(entry, 'victim_statement'); }
+                    else if (!caseHasLead(entry, 'witness_desc')) addCaseLead(entry, 'witness_desc');
+                } else if (w.type === 'cop') {
+                    if (face) { if (!caseHasLead(entry, 'witness_face_cop')) addCaseLead(entry, 'witness_face_cop'); }
+                    else if (!caseHasLead(entry, 'witness_desc')) addCaseLead(entry, 'witness_desc');
+                } else {
+                    if (face) { if (!caseHasLead(entry, 'witness_face')) addCaseLead(entry, 'witness_face'); }
+                    else if (!caseHasLead(entry, 'witness_desc')) addCaseLead(entry, 'witness_desc');
+                }
+            }
+
+            // Camera: the best footage across every camera on the scene
+            var rank = { none: 0, blur: 1, partial: 2, clear: 3 };
+            var best = 'none', bestMasked = masked;
+            if (entry.evidence.cameraFootage && entry.camera) {
+                best = entry.camera.cameraQuality || 'none';
+            }
+            (entry.additionalCameras || []).forEach(function(c) {
+                var q = c.cameraQuality || 'none';
+                var m = masked || !!c.masked;
+                if (rank[q] > rank[best] || (rank[q] === rank[best] && bestMasked && !m)) { best = q; bestMasked = m; }
+            });
+            if (best === 'clear' && !bestMasked) addCaseLead(entry, 'camera_clear');
+            else if (best === 'clear' || best === 'partial') addCaseLead(entry, 'camera_partial');
+            else if (best === 'blur') addCaseLead(entry, 'camera_blur');
+
+            // Canvass: officers knock on doors. Busy streets remember more.
+            if (entry.type !== 'escape' && entry.type !== 'fleeing') {
+                var traffic = TPD_CANVASS_TRAFFIC[entry.district];
+                if (traffic == null) traffic = 30;
+                var tod = (typeof getTimeOfDay === 'function') ? getTimeOfDay() : 'night';
+                traffic += (tod === 'night' ? -30 : tod === 'evening' ? -10 : tod === 'morning' ? -15 : 0);
+                if (Math.random() < Math.max(5, traffic) / 100) addCaseLead(entry, 'canvass');
+            }
+
+            // Forensics: prints lifted off an ungloved scene, and the bite
+            if (entry.forensic.fingerprintsLeft) addCaseLead(entry, 'prints_unmatched');
+            if (entry.forensic.biteMarks) addCaseLead(entry, 'profile_zero');
+
+            // Trace evidence on every CSU scene she didn't sweep or clean
+            if (TPD_CSU_TYPES[entry.type] && !params.sceneSwept && !params.sceneCleaned) addCaseLead(entry, 'trace_evidence');
+        }
+
+        // Marks a case solved (any link method)
+        function markCaseIdentified(entry) {
+            if (!entry || !entry.investigation) return;
+            entry.investigation.status = 'identified';
+            entry.investigation.progress = 100;
+        }
+
+        // Reopens a cold case when something new touches it
+        function reopenCase(entry) {
+            if (!entry || !entry.investigation || entry.investigation.status !== 'cold') return;
+            entry.investigation.status = 'open';
+            entry.investigation.lastLeadDay = gameState.time.day || 0;
+        }
+
+        // Open cases in a district (presence reads this). level 'serious' = detective, homicide, Cruz.
+        // A murder isn't a case anybody's working until the body's found.
+        function countOpenCasesInDistrict(district, level) {
+            var ledger = gameState.evidenceLedger || [];
+            var n = 0;
+            for (var i = 0; i < ledger.length; i++) {
+                var e = ledger[i];
+                var inv = e.investigation;
+                if (!inv || inv.status !== 'open' || e.linkedToKelsie || e.district !== district) continue;
+                if (e.type === 'murder' && !e.bodyDiscovered) continue;
+                if (level === 'serious' && !TPD_SERIOUS_UNITS[inv.unit]) continue;
+                n++;
+            }
+            return n;
+        }
+
+        // Whether TPD can release a still for the tip line: a usable, unmasked face on camera
+        function caseHasReleasableStill(entry) {
+            if (!entry.investigation || entry.investigation.unit === 'patrol') return false;
+            if (entry.masked) return false;
+            if (entry.evidence.cameraFootage && entry.camera &&
+                (entry.camera.cameraQuality === 'clear' || entry.camera.cameraQuality === 'partial')) return true;
+            var cams = entry.additionalCameras || [];
+            for (var i = 0; i < cams.length; i++) {
+                if (!cams[i].masked && (cams[i].cameraQuality === 'clear' || cams[i].cameraQuality === 'partial')) return true;
+            }
+            return false;
+        }
+
+        // Whether a district has an active series of a crime type (Step 11 reads this)
+        function districtHasActiveSeries(district, crimeType) {
+            var ledger = gameState.evidenceLedger || [];
+            for (var i = 0; i < ledger.length; i++) {
+                var e = ledger[i];
+                if (e.district !== district || e.linkedToKelsie) continue;
+                if (crimeType && e.type !== crimeType && !(crimeType === 'violent_hunt' && (e.type === 'assault' || e.type === 'murder'))) continue;
+                if (e.seriesKeys && e.seriesKeys.length && e.investigation && e.investigation.status === 'open') return true;
+            }
+            return false;
+        }
+
+        // 3G: signature series. Bite (Profile Zero) and mask series ignore district. MO series
+        // link 3+ crimes of one type within 10 days sharing a time-of-day band and approach.
+        // The existing same-district series (processPendingForensics) counts too.
+        // Each case gets +6 per other case it's linked with (cap +30), times its unit multiplier.
+        // A series can't identify Kelsie on its own. When any case in a bite or MO series is
+        // tied to her, the rest close with it. The mask series keeps its booking-bomb rules.
+        function linkSignatureSeries() {
+            var ledger = gameState.evidenceLedger || [];
+            var today = gameState.time.day || 0;
+            var groups = {};
+            var add = function(key, e) { (groups[key] = groups[key] || []).push(e); };
+
+            var moBuckets = {};
+            for (var i = 0; i < ledger.length; i++) {
+                var e = ledger[i];
+                if (!e.investigation) continue;
+                if (e.type === 'murder' && !e.bodyDiscovered) continue;
+                if (caseHasDevelopedLead(e, 'profile_zero')) add('bite', e);
+                if (e.maskSignature && e.forensicProcessed) add('mask', e);
+                if (e.seriesId) add('district:' + e.seriesId, e);
+                if (e.moKey) (moBuckets[e.type + '|' + e.moKey] = moBuckets[e.type + '|' + e.moKey] || []).push(e);
+            }
+            for (var mk in moBuckets) {
+                if (!moBuckets.hasOwnProperty(mk)) continue;
+                var list = moBuckets[mk].slice().sort(function(a, b) { return a.day - b.day; });
+                var marked = {};
+                for (var a = 0; a < list.length; a++) {
+                    var win = [];
+                    for (var b = a; b < list.length && list[b].day - list[a].day <= 10; b++) win.push(list[b]);
+                    if (win.length >= 3) win.forEach(function(x) { marked[x.id] = x; });
+                }
+                for (var id in marked) if (marked.hasOwnProperty(id)) add('mo:' + mk, marked[id]);
+            }
+
+            var membership = {};   // id -> { entry, keys: {}, others: {} }
+            for (var key in groups) {
+                if (!groups.hasOwnProperty(key)) continue;
+                var g = groups[key];
+                var min = (key === 'bite' || key === 'mask') ? 2 : 3;
+                if (g.length < min) continue;
+                for (var j = 0; j < g.length; j++) {
+                    var m = membership[g[j].id] || (membership[g[j].id] = { entry: g[j], keys: {}, others: {} });
+                    m.keys[key] = true;
+                    for (var k = 0; k < g.length; k++) if (g[k].id !== g[j].id) m.others[g[k].id] = true;
+                }
+                // One identified case closes a bite or MO series
+                if (key === 'bite' || key.indexOf('mo:') === 0) {
+                    var anchor = null;
+                    for (var q = 0; q < g.length; q++) {
+                        if (g[q].linkedToKelsie && g[q].linkedBy !== 'pattern') { anchor = g[q]; break; }
+                    }
+                    if (anchor) {
+                        for (var r = 0; r < g.length; r++) {
+                            if (!g[r].linkedToKelsie && g[r].chargeStatus !== 'unsolved') linkCrimeToSuspect(g[r].id, 'pattern');
+                        }
+                    }
+                }
+            }
+
+            for (var mid in membership) {
+                if (!membership.hasOwnProperty(mid)) continue;
+                var mm = membership[mid];
+                var ent = mm.entry;
+                ent.seriesKeys = Object.keys(mm.keys);
+                var inv = ent.investigation;
+                if (ent.linkedToKelsie || inv.status === 'identified') continue;
+                var target = Math.min(30, 6 * Object.keys(mm.others).length);
+                var delta = target - (inv.seriesBonus || 0);
+                if (delta <= 0) continue;
+                inv.seriesBonus = target;
+                inv.progress += delta * (TPD_UNIT_MULT[inv.unit] || 1.0);
+                inv.leads.push({ type: 'series_bonus', strength: delta, developDay: 0, developed: true, pointsAtKelsie: false });
+                reopenCase(ent);
+                inv.lastLeadDay = today;
+                if (ent.chargeStatus === 'unknown') ent.chargeStatus = 'suspected';
+            }
+        }
+
+        // 3D: the daily case tick. Runs after processPendingForensics(), before checkWarrantConditions().
+        function advanceInvestigations() {
+            var ledger = gameState.evidenceLedger || [];
+            var today = gameState.time.day || 0;
+
+            linkSignatureSeries();
+
+            for (var i = 0; i < ledger.length; i++) {
+                var e = ledger[i];
+                var inv = e.investigation;
+                if (!inv) continue;
+                if (e.linkedToKelsie) { if (inv.status !== 'identified') markCaseIdentified(e); continue; }
+                if (inv.status === 'identified') continue;
+                // Murders don't get worked until somebody finds the body
+                if (e.type === 'murder' && !e.bodyDiscovered) continue;
+
+                var anchor = (e.type === 'murder') ? (e.bodyDiscoveryDay || e.day) : e.day;
+                var mult = TPD_UNIT_MULT[inv.unit] || 1.0;
+                var developedToday = false;
+
+                if (inv.status !== 'cold') {
+                    for (var j = 0; j < inv.leads.length; j++) {
+                        var L = inv.leads[j];
+                        if (L.developed || today < anchor + L.developDay) continue;
+                        L.developed = true;
+                        developedToday = true;
+                        inv.progress += L.strength * mult * (L.coverUp != null ? L.coverUp : 1);
+                    }
+
+                    // Tip line: released stills bring calls from people who know her face
+                    if (!inv.tipRolled && today >= anchor + 3 && caseHasReleasableStill(e)) {
+                        inv.tipRolled = true;
+                        var tipChance = 0.25 + ((gameState.socialMediaHeat || 0) / 200) +
+                                        (((gameState.suspicionData || {}).facialRecognition || 0) / 200);
+                        if (Math.random() < tipChance) {
+                            inv.leads.push({ type: 'tip_line', strength: 20, developDay: 0, developed: true, pointsAtKelsie: true });
+                            inv.progress += 20 * mult;
+                            developedToday = true;
+                        }
+                    }
+                }
+
+                if (developedToday) inv.lastLeadDay = today;
+                inv.progress = Math.min(100, inv.progress);
+
+                if (inv.progress >= 100) {
+                    inv.status = 'identified';
+                    linkCrimeToSuspect(e.id, 'investigation');
+                    fireIdentificationBeat(e);
+                } else if (inv.status === 'open' && inv.unit !== 'cruz' && today - inv.lastLeadDay > TPD_COLD_DAYS[inv.unit]) {
+                    // Cruz's cases never go cold. They stall on her desk until something new touches them.
+                    inv.status = 'cold';
+                }
+                if (typeof checkPersonOfInterest === 'function') checkPersonOfInterest(e);   // Step 8
+            }
+        }
+
+        // 3E: when a case closes on Kelsie, the lead that tipped it decides the flavor.
+        // Every case gets a notification. Serious cases also queue a street beat (news) or a
+        // line for Cruz's next conversation.
+        function getStrongestPointingLead(entry) {
+            var inv = entry.investigation;
+            var best = null;
+            for (var i = 0; i < inv.leads.length; i++) {
+                var L = inv.leads[i];
+                if (!L.developed || !L.pointsAtKelsie) continue;
+                if (!best || L.strength > best.strength) best = L;
+            }
+            return best;
+        }
+
+        function queueTPDStreetBeat(text) {
+            var q = gameState.flags.tpdStreetBeats || (gameState.flags.tpdStreetBeats = []);
+            if (q.length < 3) q.push(text);
+        }
+
+        function queueCruzIdMention(text) {
+            var q = gameState.flags.cruzIdMentions || (gameState.flags.cruzIdMentions = []);
+            if (q.length < 3) q.push(text);
+        }
+
+        function fireIdentificationBeat(entry) {
+            var lead = getStrongestPointingLead(entry);
+            var method = lead ? lead.type : '';
+            var caseName = getTPDCaseName(entry);
+            var CaseName = caseName.charAt(0).toUpperCase() + caseName.slice(1);
+            var how = {
+                witness_face: 'A witness picked you out.',
+                witness_face_cop: 'An officer identified you.',
+                victim_statement: 'The victim\'s statement named you.',
+                camera_clear: 'The cameras got your face.',
+                tip_line: 'Somebody called the tip line.',
+                outfit_match: 'Your clothes matched the description.',
+                trace_residence: 'The cameras followed you home.',
+                k9_residence: 'A K9 track led to your door.'
+            }[method] || 'The investigation closed the gap.';
+            showNotification('<img src="Images/icons/suspicion-icon.png" class="icon" alt="case"> ' + CaseName + ' case closed on you. ' + how);
+
+            if (!TPD_SERIOUS_UNITS[entry.investigation.unit]) return;
+            var dName = TPD_DISTRICT_NAMES[entry.district] || 'city';
+            var noun = TPD_CASE_NOUNS[entry.type] || 'case';
+
+            if (method === 'tip_line') {
+                queueTPDStreetBeat('A TV above the counter in a corner store is running the local news with the sound off. The crawl along the bottom reads: POLICE CREDIT TIP LINE CALL FOR BREAK IN ' +
+                    dName.toUpperCase() + ' ' + noun.toUpperCase() + ' INVESTIGATION.\n\nSomebody who knows your face made a phone call.');
+            } else if (method === 'camera_clear') {
+                queueTPDStreetBeat('The news screen above the bank is cycling through headlines. One of them is a street camera still from ' + caseName + '. It\'s grainy, and it\'s you.\n\nThe headline under it says police have a name.');
+            } else if (method === 'witness_face') {
+                var who = entry.investigation.unit === 'homicide' ? 'Sergeant Osei had a witness from ' + caseName + ' look at a photo array yesterday.'
+                    : 'I had a witness from ' + caseName + ' look at six photographs yesterday.';
+                queueCruzIdMention('"' + who + '" She takes a sip of her coffee. "She picked yours in about two seconds. People usually hesitate."');
+            } else if (method === 'witness_face_cop') {
+                queueCruzIdMention('"One of my officers got a good look at you on ' + caseName + '." She sips her coffee. "He picked you out of a photo array before I finished laying it down."');
+            } else if (method === 'victim_statement') {
+                queueCruzIdMention('"The victim from ' + caseName + ' came in and gave a statement." She sips her coffee. "Very detailed. Your height, your hair, the exact words you used." She glances at you. "People remember a lot about the worst night of their lives."');
+            } else if (method === 'outfit_match') {
+                queueCruzIdMention('Her eyes drop to what you\'re wearing, then come back up. "Same thing you had on for ' + caseName + '." She sips her coffee. "That\'s what did it."');
+            }
+        }
+
+        // Pulls the next queued identification beat into a district street scene
+        function getTPDIdentificationBeat() {
+            var q = gameState.flags.tpdStreetBeats;
+            if (!q || !q.length) return '';
+            return '\n\n' + q.shift();
         }
 
         // ── Ledger: Count Linked Crimes by Type ──
@@ -48591,6 +49063,7 @@ audioSystem.playSFX('buttonClick');
 
             // ── Warrant System Daily Processing ──
             processPendingForensics();  // Evidence ledger: daily forensic matching
+            advanceInvestigations();    // Trigrave PD Step 3: TPD works every open case
             checkWarrantConditions();
             checkForNewCharges();  // Refresh warrant charges from ledger
             enforceSuspicionCap();  // New or heavier charges move the ceiling and floor
@@ -112049,7 +112522,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const distHeat = getDistrictHeat('commercial');
                     
                     // Trigrave PD Step 2E: the presence band sets the police weather
-                    desc += getTPDAmbientLine('commercial');
+                    desc += getTPDAmbientLine('commercial') + getTPDIdentificationBeat();
                     if (tier >= 2 && tier < 3 && distHeat < 60) {
                         desc += '\n\nYou notice a plain sedan parked at the corner. Engine off. Someone in the driver\'s seat who isn\'t eating, isn\'t on their phone, isn\'t doing anything at all.';
                     }
@@ -112220,7 +112693,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const distHeatRes = getDistrictHeat('residential');
                     
                     // Trigrave PD Step 2E: the presence band sets the police weather
-                    desc += getTPDAmbientLine('residential');
+                    desc += getTPDAmbientLine('residential') + getTPDIdentificationBeat();
                     if (tierRes >= 4 || distHeatRes >= 60) {
                         desc += '\n\nA neighborhood watch sign you\'ve never noticed before hangs from a lamppost. Fresh zip ties. Someone printed new ones.';
                     }
@@ -112513,7 +112986,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         }
                     }
                     
-                    desc += getTPDAmbientLine('slums'); // Trigrave PD Step 2E
+                    desc += getTPDAmbientLine('slums') + getTPDIdentificationBeat(); // Trigrave PD Step 2E
                     desc += getWetDistrictAwareness('slums');
                     desc += getSheerDistrictAwareness('slums'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('slums');
@@ -118481,7 +118954,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     
                     
-                    desc += getTPDAmbientLine('medical'); // Trigrave PD Step 2E
+                    desc += getTPDAmbientLine('medical') + getTPDIdentificationBeat(); // Trigrave PD Step 2E
                     desc += getSheerDistrictAwareness('medical'); // Mesh Overhaul Step 8C
                     desc += getFugitiveFlavor('medical');
                     desc += "\n\nWhat do you want to do?";
@@ -118590,7 +119063,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const distHeatDT = getDistrictHeat('downtown');
                     
                     // Trigrave PD Step 2E: the presence band sets the police weather
-                    desc += getTPDAmbientLine('downtown');
+                    desc += getTPDAmbientLine('downtown') + getTPDIdentificationBeat();
                     if (tierDT >= 2 && tierDT < 3 && distHeatDT < 60) {
                         desc += '\n\nA dark sedan sits at the curb with its parking lights on. The silhouette inside hasn\'t moved in ten minutes.';
                     }
@@ -118726,7 +119199,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += "Wendale sleeps early. This is your mother's world, the one you left behind.";
                     }
                     
-                    desc += getTPDAmbientLine('wendale'); // Trigrave PD Step 2E
+                    desc += getTPDAmbientLine('wendale') + getTPDIdentificationBeat(); // Trigrave PD Step 2E
                     desc += "\n\nWhat do you want to do?";
                     return desc;
                 },
@@ -119926,6 +120399,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // ── Ledger: murder entry (victim) ──
                     createLedgerEntry({
                         type: 'murder',
+                        approach: 'mugging',
                         district: location,
                         masked: isMasked,
                         maskSignature: isMasked && hasSkiMask(),
@@ -142632,6 +143106,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     }
 
+                    // Trigrave PD Step 3E: a case closed on you, and she wants you to know how
+                    var _cruzIdMention = (gameState.flags.cruzIdMentions || []).shift();
+                    if (_cruzIdMention) desc += _cruzIdMention + '\n\n';
+
                     desc += 'A patrol car rolls past. The officer inside raises a hand to her. She waves back without looking.\n\n';
 
                     desc += '"So," she says. "Anything you\'d like to tell me? Take your time. I\'m very patient, and you\'re very bad at this."';
@@ -146940,7 +147418,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         desc += "\n\n<em>The park benches look inviting. You could sleep here if you needed to...</em>";
                     }
                     
-                    desc += getTPDAmbientLine('park'); // Trigrave PD Step 2E
+                    desc += getTPDAmbientLine('park') + getTPDIdentificationBeat(); // Trigrave PD Step 2E
                     desc += getWetDistrictAwareness('park');
                     desc += getSheerDistrictAwareness('park'); // Mesh Overhaul Step 8C
                     
@@ -153140,7 +153618,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         desc += 'Floodlights carve white circles into the dark. Beyond them, the water is black and flat.';
                     }
 
-                    desc += getTPDAmbientLine('dockyard'); // Trigrave PD Step 2E
+                    desc += getTPDAmbientLine('dockyard') + getTPDIdentificationBeat(); // Trigrave PD Step 2E
 
                     // Post-takeover flavor
                     if (gameState.flags.vajarosTakeoverComplete) {
@@ -191044,7 +191522,7 @@ wet_car_slowdown: {
                         desc += "The after-work rush fills the district. Every gym and studio is packed.";
                     }
                     
-                    desc += getTPDAmbientLine('fitness'); // Trigrave PD Step 2E
+                    desc += getTPDAmbientLine('fitness') + getTPDIdentificationBeat(); // Trigrave PD Step 2E
                     desc += getFugitiveFlavor('fitness');
                     return desc;
                 },
