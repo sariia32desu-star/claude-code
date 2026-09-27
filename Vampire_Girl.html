@@ -35359,6 +35359,11 @@ audioSystem.playSFX('buttonClick');
             seedCaseLeads(entry, params);
             if (entry.linkedToKelsie) markCaseIdentified(entry);
 
+            // K9 (Trigrave PD Step 10D, pulled forward by Step 7B): occupied-home burglaries
+            // and any assault on an officer get a dog while the scent's fresh
+            if (entry.type === 'police_assault' || entry.type === 'police_killing') entry.k9Fresh = true;
+            if (entry.type === 'burglary' && (entry.witnesses || []).some(function(w) { return w && w.type === 'occupant'; })) entry.k9Fresh = true;
+
             // Exit choice (Trigrave PD Step 6B): scene crimes wait to see how she leaves
             entry.createdAt = tpdNowMinutes();
             entry.exitPending = !entry.linkedToKelsie && !TPD_NO_EXIT_TYPES[entry.type];
@@ -35743,6 +35748,21 @@ audioSystem.playSFX('buttonClick');
         // she's the one who did it. The engine models how fast TPD closes the gap.
         // Suspicion is the city's temperature; the case file is TPD's distance to Kelsie.
         // They stay separate: nothing here feeds suspicion.
+
+        // THE HOMICIDE RULE (Trigrave PD Step 7). Getting away with murder should be very hard
+        // without high stealth and gloves. Reference cases, Cruz unit (x1.8), cover-up per Step 4:
+        //   1 Slums, stealth 5, no gloves, partial detection, body left, walks home, dry:
+        //     desc 8 + K9 track/home 35 + prints 8 + Profile Zero 8 + trace 6 = 65 -> 117, identified
+        //   2 Same with gloves: 57 -> 102, identified. Gloves alone don't save a clumsy killer.
+        //   3 Same in rain: no K9, 22 -> 39, stalls with Profile Zero on file
+        //   4 Slums, stealth 30, gloves, clean, well hidden, cleanup: Profile Zero 8 -> 14, stalls
+        //   5 Commercial, stealth 30, gloves, partial, walks home: identified if the trace rolls
+        //   6 Same over the rooftops: no trace or K9, stalls with no identity lead
+        //   7 Downtown, stealth 60, gloves, clean, vampire-speed disposal: stalls if found
+        //   8 Commercial, stealth 45, no gloves, clean, hidden, cleanup, rooftops: 16 -> 28,
+        //     stalls, and closes the day her prints go on file
+        //   9 Any stalled case + five more kills: series cap +30 (x1.8) tops out near 68
+        // Suspicion stays the city's temperature and is left alone here.
 
         // Triage: petty crime gets a report, murder gets everything.
         var TPD_UNIT_MULT = { patrol: 0.5, property: 0.8, detective: 1.0, homicide: 1.4, cruz: 1.8 };
@@ -36211,7 +36231,12 @@ audioSystem.playSFX('buttonClick');
             var dName = TPD_DISTRICT_NAMES[entry.district] || 'city';
             var noun = TPD_CASE_NOUNS[entry.type] || 'case';
 
-            if ((method === 'trace_residence' || method === 'k9_residence') && lead.residence && lead.residence !== 'lurasi') {
+            if (method === 'k9_residence' && lead.residence && lead.residence !== 'lurasi') {
+                var _k9Place = { varhall: 'Varhall', timeless: 'the Timeless', oracle: 'Oracle Inn' }[lead.residence] || 'your building';
+                queueTPDHomeBeat(lead.residence, 'There\'s a TPD K9 van parked across from ' + _k9Place + ' when you come back. A handler\'s walking a Belgian Malinois along the sidewalk with his eyes on the doors.\n\n'
+                    + 'The dog stops ten feet from the entrance you use. Her hackles go up, and she sits down hard and won\'t take another step.\n\n'
+                    + 'The handler crouches beside her with a hand on her ribs. Then he looks up at the building for a long time, and he writes something down.');
+            } else if (method === 'trace_residence' && lead.residence && lead.residence !== 'lurasi') {
                 queueTPDHomeBeat(lead.residence, buildTraceNewsBeat(entry, lead.residence));
             } else if (method === 'tip_line') {
                 queueTPDStreetBeat('A TV above the counter in a corner store is running the local news with the sound off. The crawl along the bottom reads: POLICE CREDIT TIP LINE CALL FOR BREAK IN ' +
@@ -36487,13 +36512,31 @@ audioSystem.playSFX('buttonClick');
             for (var i = 0; i < ledger.length; i++) {
                 var e = ledger[i];
                 if (!e.exitPending) continue;
-                if (e.linkedToKelsie || now - (e.createdAt || 0) > 240) { e.exitPending = false; continue; }
+                if (e.linkedToKelsie || now - (e.createdAt || 0) > 240) { e.exitPending = false; seedK9Leads(e, null); continue; }
                 out.push(e);
             }
             return out;
         }
         function clearExitPending() {
             (gameState.evidenceLedger || []).forEach(function(e) { e.exitPending = false; });
+        }
+
+        // K9 at the scene (Step 10D): Officer Brenner and Juno follow the scent from a fresh
+        // scene. Rooftops and vampire speed leave no track, and rain wipes it. A straight walk
+        // home ends at her door (at the Lurasi, a door they won't name). The cover-up
+        // modifier applies. exit may be null when she never chose one.
+        function seedK9Leads(entry, exit) {
+            if (!entry || !entry.k9Fresh || entry.k9Seeded || !entry.investigation || entry.linkedToKelsie) return;
+            entry.k9Seeded = true;
+            if (gameState.weather && gameState.weather.isRaining) return;
+            if (exit === 'rooftops' || exit === 'vampspeed') return;
+            addCaseLead(entry, 'k9_track');
+            if (exit === 'walk_home') {
+                var res = getKelsieResidence();
+                if (res.homeless) return;   // the track just ends wherever she bedded down
+                if (res.sanctuary) addCaseLead(entry, 'k9_residence', { strength: 8, pointsAtKelsie: false, residence: 'lurasi' });
+                else addCaseLead(entry, 'k9_residence', { residence: res.id });
+            }
         }
 
         // Applies an exit to every crime waiting on one. opts.silent skips time costs (the calling
@@ -36506,7 +36549,7 @@ audioSystem.playSFX('buttonClick');
             var district = primary.district;
             var res = getKelsieResidence();
 
-            pend.forEach(function(e) { e.exit = exit; e.exitPending = false; });
+            pend.forEach(function(e) { e.exit = exit; e.exitPending = false; seedK9Leads(e, exit); });
 
             if (exit === 'vampspeed') {
                 var hasCams = (DISTRICT_CAMERA_DENSITY[district] || 0) > 0.10;
@@ -225272,6 +225315,30 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             gameState.flags._bodyDisposalMethod = method;
             gameState.flags._killWoreGloves = woreGloves;
 
+            // Trigrave PD Step 7: a detected hunt that ends in a kill is one crime, so the
+            // murder case inherits what the assault entry recorded (witnesses, footage) and
+            // the assault entry folds into it.
+            var _carryWitnesses = [];
+            var _carryCamera = 'none';
+            var _asEntry = gameState.flags._huntAssaultLedgerId ? getLedgerEntry(gameState.flags._huntAssaultLedgerId) : null;
+            gameState.flags._huntAssaultLedgerId = null;
+            if (_asEntry && !_asEntry.linkedToKelsie) {
+                _carryWitnesses = _asEntry.witnesses || [];
+                if (_asEntry.evidence && _asEntry.evidence.cameraFootage) _carryCamera = _asEntry.camera.cameraQuality || 'none';
+                gameState.evidenceLedger = (gameState.evidenceLedger || []).filter(function(e) { return e.id !== _asEntry.id; });
+            }
+            // The scene's own cameras: a partial image of whoever did it, or a blur if she
+            // moved the body at vampire speed
+            var _camRank = { none: 0, blur: 1, partial: 2, clear: 3 };
+            // (a clean hunt already beat the cameras, so only a detected one leaves footage)
+            var _huntDetOutcome = (gameState.flags._huntDetection || {}).outcome || 'clean';
+            var _sceneCam = (hasCams && _huntDetOutcome !== 'clean') ? (method === 'vampspeed' ? 'blur' : 'partial') : 'none';
+            var _murderCam = _camRank[_carryCamera] > _camRank[_sceneCam] ? _carryCamera : _sceneCam;
+            // K9 (Step 7B / 10D): only a fresh scene holds a scent. A body in the open is found
+            // within hours; a poor hide in a busy district is found fast half the time.
+            var _busyDistrict = { downtown: true, commercial: true, medical: true };
+            var _k9Fresh = (method === 'left');
+
             // ── Evidence Ledger: murder entry ──
             // Created at kill time. Body discovery state depends on disposal method.
             var bodyFound = (method === 'left');
@@ -225280,16 +225347,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 district: district,
                 masked: isMasked,
                 maskSignature: isMasked,
-                witnessEvidence: false,
-                cameraEvidence: hasCams,
+                witnessEvidence: _carryWitnesses.length > 0,
+                witnesses: _carryWitnesses,
+                cameraEvidence: _murderCam !== 'none',
                 forensicEvidence: !woreGloves,
                 fingerprintsLeft: !woreGloves,
                 biteMarks: true,
                 profileZeroChance: 0,   // rolled below, once disposal is known (Trigrave PD Step 5C)
                 bodyDiscovered: bodyFound,
                 bodyDiscoveryDay: bodyFound ? (gameState.time.day || 0) : 0,
-                cameraType: hasCams ? 'street_cam' : '',
-                cameraQuality: hasCams ? (isMasked ? 'partial' : 'blur') : 'none'
+                cameraType: _murderCam !== 'none' ? 'street_cam' : '',
+                cameraQuality: _murderCam
             });
 
             // Store entry ID for body discovery system to update later
@@ -225311,6 +225379,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 var hideThreshold = 30 + (stealthLvl * 0.8);
                 var isGood = hideRoll < hideThreshold;
                 gameState.flags._bodyHideQuality = isGood ? 'good' : 'poor';
+                if (!isGood && _busyDistrict[district] && Math.random() < 0.5) _k9Fresh = true;
 
                 // Suspicion applied on discovery, not now (Step 7C)
                 var reduction = isGood ? 0.60 : 0.50;
@@ -225392,6 +225461,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             // tissue. How much saliva the lab recovers depends on what happened to the body.
             gameState.flags._woundWashed = false;
             var _pzEntry = getLedgerEntry(entryId);
+            if (_pzEntry && _k9Fresh) _pzEntry.k9Fresh = true;
             if (_pzEntry) {
                 var _pzRecover = 1.0;                                      // left, or poorly hidden
                 if (method === 'hidden' && gameState.flags._bodyHideQuality === 'good') _pzRecover = 0.9;
