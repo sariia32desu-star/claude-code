@@ -34995,6 +34995,7 @@ audioSystem.playSFX('buttonClick');
                 cameraEvidence: !!opts.camera,
                 supernaturalEvidence: !!opts.supernatural,
                 witnesses: opts.witness ? [{ type: opts.witness, faceSeen: !!opts.faceSeen, description: 'Saw her inside the building' }] : [],
+                fingerprintsLeft: !((typeof hasLeatherGloves === 'function') && hasLeatherGloves()),   // Trigrave PD Step 5A: CSU lifts the fridge handles
                 cameraType: opts.camera ? 'interior_cam' : '',
                 cameraQuality: opts.camera || 'none'
             });
@@ -35036,6 +35037,7 @@ audioSystem.playSFX('buttonClick');
                 bags = takeBloodBags(site.maxBags, site.source + '_caught_knockout');
                 logBloodTheft(siteKey, { camera: 'clear', witness: watcher, faceSeen: true });
                 createLedgerEntry({ type: site.police ? 'police_assault' : 'assault', district: site.district, witnessEvidence: true, cameraEvidence: true,
+                    fingerprintsLeft: !((typeof hasLeatherGloves === 'function') && hasLeatherGloves()),
                     witnesses: [{ type: watcher, faceSeen: true, description: site.police ? 'Hospital patrol officer, knocked unconscious' : 'Security guard, knocked unconscious' }],
                     cameraType: 'interior_cam', cameraQuality: 'clear' });
                 sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 6);
@@ -35150,6 +35152,7 @@ audioSystem.playSFX('buttonClick');
                     cameraEvidence: true,
                     supernaturalEvidence: true,
                     witnesses: type === 'police_killing' ? [] : [{ type: 'cop', faceSeen: !masked, description: 'Officer on scene' }],
+                    fingerprintsLeft: !((typeof hasLeatherGloves === 'function') && hasLeatherGloves()),   // Trigrave PD Step 5A
                     cameraType: 'bodycam',
                     cameraQuality: masked ? 'none' : 'clear'
                 });
@@ -35770,7 +35773,7 @@ audioSystem.playSFX('buttonClick');
         };
 
         // Scenes CSU processes for trace evidence (hair, fiber, footwear)
-        var TPD_CSU_TYPES = { burglary: true, mugging: true, assault: true, murder: true, police_assault: true, blood_theft: true };
+        var TPD_CSU_TYPES = { burglary: true, mugging: true, assault: true, murder: true, police_assault: true, police_killing: true, blood_theft: true };
 
         // Canvass odds follow foot traffic (same baselines the hunt system uses)
         var TPD_CANVASS_TRAFFIC = {
@@ -35897,7 +35900,12 @@ audioSystem.playSFX('buttonClick');
 
             // Forensics: prints lifted off an ungloved scene, and the bite
             if (entry.forensic.fingerprintsLeft) addCaseLead(entry, 'prints_unmatched');
-            if (entry.forensic.biteMarks) addCaseLead(entry, 'profile_zero');
+            // Profile Zero (Step 5): an open wound carries her saliva. profileZeroChance is the odds
+            // the lab recovers it (processBodyDisposal passes 0 and rolls once disposal's known).
+            if (entry.forensic.biteMarks) {
+                var _pzChance = params.profileZeroChance != null ? params.profileZeroChance : 1;
+                if (_pzChance > 0 && Math.random() < _pzChance) addCaseLead(entry, 'profile_zero');
+            }
 
             // Trace evidence on every CSU scene she didn't clean (Step 4: stealth 10+ sweeps it to half)
             if (TPD_CSU_TYPES[entry.type] && !params.sceneCleaned) {
@@ -35905,6 +35913,43 @@ audioSystem.playSFX('buttonClick');
                 addCaseLead(entry, 'trace_evidence', _swept ? { strength: TPD_LEAD_CATALOG.trace_evidence.strength * 0.5 } : null);
                 if (_swept && !entry.linkedToKelsie) noteStealthSweep();
             }
+        }
+
+        // ── Profile Zero (Trigrave PD Step 5B) ──
+        // Vampire saliva seals punctures on living tissue. A completed feed leaves nothing to
+        // swab. An interrupted feed leaves an open wound: the victim goes to the ER, the ER
+        // swabs it, and CSU recovers Kelsie's saliva 80% of the time.
+        function markHuntFeedInterrupted() {
+            var e = getLedgerEntry(gameState.flags._huntAssaultLedgerId);
+            gameState.flags._huntAssaultLedgerId = null;
+            if (!e || e.forensic.biteMarks) return;
+            e.forensic.biteMarks = true;
+            e.evidence.forensic = true;
+            if (e.investigation) {
+                e.investigation.unit = 'cruz';   // two punctures in a throat are exactly what she collects
+                if (Math.random() < 0.8) addCaseLead(e, 'profile_zero');
+            }
+        }
+
+        // The lab runs a Profile Zero sample: the markers don't match any human reference.
+        // +5 supernatural evidence and +10 to Cruz's profile the first time each one's processed.
+        function onProfileZeroProcessed(entry) {
+            var sd = gameState.suspicionData || (gameState.suspicionData = {});
+            sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 5);
+            modifyCruzProfile(10, 'Profile Zero sample');
+            gameState.flags.profileZeroSamples = (gameState.flags.profileZeroSamples || 0) + 1;
+            if (!gameState.flags.profileZeroLabSeen) {
+                gameState.flags.profileZeroLabSeen = true;
+                showNotification('<em>Somewhere in the TPD lab, a technician runs the same swab three times and gets the same result every time. Unclassifiable. Cruz signs for the file herself.</em>');
+            }
+        }
+
+        // Cruz's profile (Step 12 builds on this): how well she understands how Kelsie
+        // operates. It never decays.
+        function modifyCruzProfile(amount, reason) {
+            var cur = gameState.flags.cruzProfile || 0;
+            gameState.flags.cruzProfile = Math.max(0, Math.min(100, cur + amount));
+            return gameState.flags.cruzProfile;
         }
 
         // Marks a case solved (any link method)
@@ -36067,6 +36112,7 @@ audioSystem.playSFX('buttonClick');
                         L.developed = true;
                         developedToday = true;
                         inv.progress += L.strength * mult * (L.coverUp != null ? L.coverUp : 1);
+                        if (L.type === 'profile_zero') onProfileZeroProcessed(e);
                     }
 
                     // Tip line: released stills bring calls from people who know her face
@@ -74184,7 +74230,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     } else {
                         // Demonic karma: hungry, predatory
                         const demonicOpeners = [
-                            'The crowd moves around you like water around a stone. They don\'t know what you are. They don\'t know what\'s about to happen.\n\nTheir pockets are full. Yours aren\'t. Simple math.',
+                            'The crowd moves around you like water around a stone. They have no idea what you are, or what\'s about to happen.\n\nTheir pockets are full. Yours aren\'t. Simple math.',
                             'You move through them like a shark through a school of fish. Every pocket is an invitation. Every wallet is a gift they haven\'t given you yet.',
                             'All these people carrying things that belong to you. They just don\'t know it yet.'
                         ];
@@ -74302,7 +74348,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // ── Cop warning (subtle, if target is a cop) ──
                     if (target.isCop) {
-                        desc += '\n\nSomething about this one. The way he stands. The way his eyes move. Could be military, could be law enforcement. Could be nothing.\n\nBut your gut says walk away.';
+                        desc += '\n\nSomething about this one. He stands too square for a guy killing time, and his eyes sweep the crowd in a pattern. Could be military, could be law enforcement. Could be nothing.\n\nBut your gut says walk away.';
                     }
 
                     // ── Livestreamer warning ──
@@ -120234,6 +120280,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         cameraEvidence: true,
                         forensicEvidence: false,
                         supernaturalEvidence: true,
+                        fingerprintsLeft: !((typeof hasLeatherGloves === 'function') && hasLeatherGloves()),   // Trigrave PD Step 5A
                         witnesses: [
                             { type: 'victim', faceSeen: !isMasked, description: isMasked ? 'Masked robber, red emblem' : 'Female, face described' },
                             { type: 'cop', faceSeen: !isMasked, description: isMasked ? 'Masked suspect fled at inhuman speed' : 'Female suspect fled at inhuman speed, face on bodycam' }
@@ -138116,6 +138163,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         + '<em>They\'ve got your face. Whatever you do next, they know what you look like.</em>';
                 },
                 onEnter: function() {
+                    markHuntFeedInterrupted();   // Trigrave PD Step 5B: pulled off mid-feed, the wound stays open
                     advanceTime(1);
                     var masked = gameState.flags._huntWearingMask;
                     if (!gameState.suspicionData) gameState.suspicionData = {};
@@ -138203,6 +138251,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         cameraEvidence: true,
                         supernaturalEvidence: false,
                         biteMarks: true,
+                        profileZeroChance: 0.8,   // Trigrave PD Step 5C: interrupted feed, the ER swabs it
+                        fingerprintsLeft: !((typeof hasLeatherGloves === 'function') && hasLeatherGloves()),
                         witnesses: [{ type: 'cop', faceSeen: true, description: 'Arresting officers' }],
                         cameraType: 'bodycam',
                         cameraQuality: 'clear'
@@ -144088,7 +144138,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     choices.push({ text: 'Flee', action: function() {
                         modifyCitySuspicion(10); advanceTime(1); updateStatus();
-                        showMessage('You\'re gone. Vampire speed. The victim left behind.\n\nBehind you, the screaming starts.\n\nThe hunt\'s over.', function() { showScene('hunting_options'); });
+                        showMessage('You\'re gone. Vampire speed. The victim left behind.\n\nBehind you, the screaming starts.\n\nThe hunt\'s over.', function() { markHuntFeedInterrupted(); showScene('hunting_options'); });
                     }});
 
                     return choices;
@@ -144202,17 +144252,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         modifyCitySuspicion(_htSus, 'assault', _htEnv.district || null);
                     }
                     // A feed someone saw is an assault on the books
+                    gameState.flags._huntAssaultLedgerId = null;
                     if (_htDetection.outcome === 'partial' || _htDetection.outcome === 'full') {
                         var _htMaskedLedger = !!gameState.flags._huntWearingMask;
                         var _htCamHit = !!_htEnv.hasCameras && Math.random() < (_htEnv.cameraDensity || 0);
-                        createLedgerEntry({
+                        // Trigrave PD Step 5B: a completed feed seals the punctures. The bite only
+                        // goes on the books if the feed gets interrupted (markHuntFeedInterrupted).
+                        gameState.flags._huntAssaultLedgerId = createLedgerEntry({
                             type: 'assault',
                             district: _htEnv.district || gameState.currentDistrictId || 'commercial',
                             masked: _htMaskedLedger,
                             maskSignature: _htMaskedLedger,
                             witnessEvidence: true,
                             cameraEvidence: _htCamHit,
-                            biteMarks: true,
+                            biteMarks: false,
+                            fingerprintsLeft: !((typeof hasLeatherGloves === 'function') && hasLeatherGloves()),
                             witnesses: [{ type: 'civilian', faceSeen: !_htMaskedLedger && _htDetection.outcome === 'full', description: 'Saw the attack' }],
                             cameraType: _htCamHit ? 'street_cam' : '',
                             cameraQuality: _htCamHit ? (_htMaskedLedger ? 'none' : (_htDetection.outcome === 'full' ? 'clear' : 'partial')) : 'none'
@@ -144429,13 +144483,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                 showMessage('The patrol car rolls past. The officer glances toward the alley.\n\nVampire stillness. You don\'t breathe. Your heart\'s already still.\n\nThe cruiser keeps moving. Taillights fade around the corner.', function() { showScene('hunt_feed_choice'); });
                             } else {
                                 modifyCitySuspicion(10); advanceTime(1); updateStatus();
-                                showMessage('The patrol car stops. The door opens.\n\n"Hey! What\'s going on back there?"\n\nYou\'re gone before the flashlight hits the wall. Vampire speed. The victim left behind.\n\nThe hunt\'s over.', function() { showScene('hunting_options'); });
+                                showMessage('The patrol car stops. The door opens.\n\n"Hey! What\'s going on back there?"\n\nYou\'re gone before the flashlight hits the wall. Vampire speed. The victim left behind.\n\nThe hunt\'s over.', function() { markHuntFeedInterrupted(); showScene('hunting_options'); });
                             }
                         }});
                         choices.push({ text: 'Flee now.', action: function() {
                             modifyCitySuspicion(10); advanceTime(1); updateStatus();
                             gameState.flags._tensionResolved = true;
-                            showScene('hunting_options');
+                            markHuntFeedInterrupted(); showScene('hunting_options');
                         }});
 
                     } else if (ev === 'companion') {
@@ -144454,7 +144508,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                 showMessage('You drag the body behind the dumpster. Press flat against the wall.\n\nThe footsteps get closer. Stop.\n\n"...guess they already left."\n\nThe footsteps retreat.', function() { showScene('hunt_feed_choice'); });
                             } else {
                                 updateStatus();
-                                // Found — but don't auto-flee, give player options
+                                // Found, but don't auto-flee: give player options
                                 gameState.flags._companionFoundYou = true;
                                 showMessage('You drag the body behind the dumpster. Press flat.\n\nThe footsteps get closer. A face peers around the corner.\n\n"What the— oh my god!"\n\nThey\'ve seen you. They\'ve seen the body.', function() { showScene('hunt_companion_found'); });
                             }
@@ -144462,7 +144516,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         choices.push({ text: 'Flee.', action: function() {
                             modifyCitySuspicion(5); advanceTime(1); updateStatus();
                             gameState.flags._tensionResolved = true;
-                            showScene('hunting_options');
+                            markHuntFeedInterrupted(); showScene('hunting_options');
                         }});
 
                     } else {
@@ -145890,6 +145944,39 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var isDemonic = karma <= -1000;
                     var killCount = gameState.flags.violentKillsCount || 1;
                     var choices = [];
+
+                    // Wash the wound (Trigrave PD Step 5C): stealth 50+, the body's still here
+                    var _washDisposal = gameState.flags._bodyDisposalMethod || 'left';
+                    if ((gameState.stealth || 1) >= 50 && !gameState.flags._woundWashed &&
+                        (_washDisposal === 'left' || _washDisposal === 'hidden')) {
+                        choices.push({
+                            text: 'Wash the wound <span style="opacity:0.5;font-size:0.85em">(+5 min)</span>',
+                            action: function() {
+                                gameState.flags._woundWashed = true;
+                                advanceTime(5);
+                                updateStatus();
+                                // Saliva recovery x0.6
+                                var _we = getLedgerEntry(gameState.flags._lastMurderLedgerId);
+                                if (_we && _we.investigation && Math.random() < 0.4) {
+                                    _we.investigation.leads = _we.investigation.leads.filter(function(L) {
+                                        return L.type !== 'profile_zero' || L.developed;
+                                    });
+                                }
+                                var _wt = gameState.flags._huntTarget || {};
+                                var _wPos = ((_wt.gender || gameState.flags.ambushVictimGender) === 'male') ? 'his' : 'her';
+                                var _wMsg;
+                                if (!gameState.flags.woundWashFelt) {
+                                    gameState.flags.woundWashFelt = true;
+                                    _wMsg = 'You crouch and tip the last of ' + _wPos + ' water bottle over the punctures, then work it in with your thumb like you\'re scrubbing a stain out of a shirt. Then again, with the cuff of ' + _wPos + ' own sleeve.\n\n'
+                                        + 'A good lab\'ll still find something. They\'ll have to work for it.';
+                                } else {
+                                    _wMsg = 'Water over the punctures, your thumb working in small circles, the cuff of ' + _wPos + ' sleeve to finish. Five minutes, start to end.\n\n'
+                                        + 'You\'ve gotten good at this. The lab\'s going to hate you.';
+                                }
+                                showMessage(_wMsg, function() { showScene('kill_site_cleanup'); });
+                            }
+                        });
+                    }
 
                     // Clean the scene
                     choices.push({
@@ -224772,6 +224859,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 forensicEvidence: !woreGloves,
                 fingerprintsLeft: !woreGloves,
                 biteMarks: true,
+                profileZeroChance: 0,   // rolled below, once disposal is known (Trigrave PD Step 5C)
                 bodyDiscovered: bodyFound,
                 bodyDiscoveryDay: bodyFound ? (gameState.time.day || 0) : 0,
                 cameraType: hasCams ? 'street_cam' : '',
@@ -224872,6 +224960,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
                 advanceTime(3 + Math.floor(Math.random() * 3));
                 updateStatus();
+            }
+
+            // Trigrave PD Step 5C: a kill leaves open punctures, because sealing needs living
+            // tissue. How much saliva the lab recovers depends on what happened to the body.
+            gameState.flags._woundWashed = false;
+            var _pzEntry = getLedgerEntry(entryId);
+            if (_pzEntry) {
+                var _pzRecover = 1.0;                                      // left, or poorly hidden
+                if (method === 'hidden' && gameState.flags._bodyHideQuality === 'good') _pzRecover = 0.9;
+                else if (method === 'water') _pzRecover = 0.3;             // if it surfaces
+                if (Math.random() < _pzRecover) addCaseLead(_pzEntry, 'profile_zero');
             }
         }
 
