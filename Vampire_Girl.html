@@ -21295,6 +21295,11 @@ audioSystem.playSFX('buttonClick');
 
         
         function handleNakedEscape() {
+            // Trigrave PD Step 10: indecency is minor, but the drones still look
+            if (typeof resolveSilentPursuit === 'function') {
+                var _nakedHasClothes = (gameState.inventory && gameState.inventory.clothing && gameState.inventory.clothing.length > 0);
+                resolveSilentPursuit({ district: gameState.currentDistrictId || 'commercial', severity: 'minor', exit: _nakedHasClothes ? 'go_to_ground' : 'walk_home' });
+            }
             // Bodycam check — supernatural escape speed on camera
             const bodycamChanceEsc = 0.3 + ((gameState.suspicionData?.wantedTier || 0) * 0.15);
             if (Math.random() < bodycamChanceEsc) {
@@ -36615,7 +36620,7 @@ audioSystem.playSFX('buttonClick');
 
         // showScene hook: crime exits and home beats. Returns true when it took over navigation.
         function tpdSceneIntercept(sceneId) {
-            if (sceneId === 'crime_exit_choice') return false;
+            if (sceneId === 'crime_exit_choice' || sceneId === 'tpd_warrant_service' || sceneId === 'tpd_warrant_service_not_home') return false;
             var pend = getExitPendingEntries();
             if (pend.length) {
                 if (gameState.flags.currentlyInCustody) {
@@ -36627,6 +36632,15 @@ audioSystem.playSFX('buttonClick');
                     showScene('crime_exit_choice');
                     return true;
                 }
+            }
+            // Trigrave PD Step 10E: warrant service where she sleeps
+            var _ws = getWarrantServiceState(sceneId);
+            if (_ws) {
+                gameState.flags.warrantServicePending = false;
+                gameState.flags.warrantServiceCooldownUntil = (gameState.time.day || 0) + 3;
+                gameState.flags._warrantServiceReturn = sceneId;
+                showScene(_ws === 'home' ? 'tpd_warrant_service' : 'tpd_warrant_service_not_home');
+                return true;
             }
             var beats = gameState.flags.tpdHomeBeats;
             if (beats && beats.length && TPD_HOME_SCENES[sceneId]) {
@@ -36855,6 +36869,199 @@ audioSystem.playSFX('buttonClick');
             if (F.cruzEchoPatternSeen || !F.gabriellaCruzAssigned || (F.compulsionEchoes || 0) < 3 || F.currentlyInCustody) return false;
             triggerRandomDistrictEvent('cruz_echo_pattern', getDistrictReturnScene(district));
             return true;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ── PURSUIT: MOTORS, AIR SUPPORT, AND K9 (Step 10) ───────
+        // ══════════════════════════════════════════════════════════
+        // Vampire speed wins every footrace in Trigrave. TPD has everything that doesn't need
+        // to win one: Kestrel drones, Raptor One with its thermal camera, and Juno's nose.
+
+        // Starts a pursuit after a flee. ctx: { district, severity: 'minor'|'serious'|'violent',
+        // next: scene to continue to, droneLocked: a drone was already on her, headStart: compelled a gap }
+        function startPursuit(ctx) {
+            gameState.flags._pursuit = ctx;
+        }
+
+        // 10A: the ground chase always breaks. Then the air decides.
+        function resolvePursuit(ctx) {
+            var presence = getTPDPresence(ctx.district) / 100;
+            var tier = (gameState.suspicionData || {}).wantedTier || 0;
+            var st = gameState.stealth || 1;
+
+            // Drones everywhere presence is 30+, Raptor One for serious crimes or Tier 2+
+            var heli = (ctx.severity !== 'minor') || tier >= 2;
+            var air = presence * (heli ? 0.9 : 0.5);
+            if (ctx.droneLocked) air = Math.max(air, 0.9);      // the drone was already on her
+
+            // Thermal: a vampire runs as warm as her last meal
+            var thirst = gameState.thirst || 0;
+            var thermal = thirst <= 40 ? 1.0 : thirst <= 70 ? 0.6 : 0.25;
+            air *= thermal;
+
+            var rain = !!(gameState.weather && gameState.weather.isRaining);
+            if (rain) air *= 0.5;                               // drones ground in rain
+            air *= (1 - getStealthBonus() * (st >= 75 ? 2 : 1));
+            if (ctx.headStart) air *= 0.5;
+            if (ctx.exit === 'rooftops') air *= 1.2;           // exposed to the sky
+            if (ctx.exit === 'go_to_ground') air *= 0.5;       // under concrete
+            if (ctx.exit === 'break_trail') air *= 0.7;
+
+            var result = { heli: heli, rain: rain, cold: thirst > 70, outcome: 'lost' };
+            if (Math.random() >= Math.max(0, air)) return result;
+            if (ctx.exit === 'walk_home') {
+                var res = getKelsieResidence();
+                result.outcome = res.homeless ? 'tracked_district' : res.sanctuary ? 'tracked_lurasi' : 'tracked_home';
+                return result;
+            }
+            // Tracked to where she stopped. K9 decides the rest.
+            result.outcome = rollK9Corner(ctx) ? 'cornered' : 'tracked_district';
+            return result;
+        }
+
+        // 10D: Brenner and Juno work the last stretch on foot
+        function rollK9Corner(ctx) {
+            if (ctx.severity === 'minor') return false;
+            if (gameState.weather && gameState.weather.isRaining) return false;
+            var c = 0.5 * (1 - getStealthBonus());
+            if (ctx.exit === 'go_to_ground') c *= 0.5;
+            return Math.random() < c;
+        }
+
+        // The open cases from today (what a pursuit can add to)
+        function getTodaysOpenCases() {
+            var today = gameState.time.day || 0;
+            return (gameState.evidenceLedger || []).filter(function(e) {
+                return e.day === today && !e.linkedToKelsie && e.investigation && e.investigation.status !== 'identified';
+            });
+        }
+
+        // 10E: TPD serves the warrant where she sleeps (never the Lurasi)
+        function queueWarrantService(resId, sameDay) {
+            var F = gameState.flags;
+            if (!F.warrantIssued || !resId || resId === 'lurasi' || resId === 'street') return;
+            if ((F.warrantServiceCooldownUntil || 0) > (gameState.time.day || 0)) return;
+            F.warrantServicePending = true;
+            F.warrantServiceLocation = resId;
+            F.warrantServiceDay = gameState.time.day || 0;
+            F.warrantServiceImmediate = !!sameDay;
+        }
+
+        // 10B: what the pursuit costs her
+        function applyPursuitOutcome(result, ctx) {
+            var F = gameState.flags;
+            var cases = getTodaysOpenCases();
+            if (result.outcome === 'tracked_district') {
+                var sd = gameState.suspicionData || (gameState.suspicionData = {});
+                if (!sd.districtHeat) sd.districtHeat = {};
+                sd.districtHeat[ctx.district] = Math.min(100, (sd.districtHeat[ctx.district] || 0) + 15);
+                cases.forEach(function(e) { addCaseLead(e, 'air_track', { developed: true }); e.investigation.progress = Math.min(100, e.investigation.progress + 10); });
+            } else if (result.outcome === 'tracked_home') {
+                var res = getKelsieResidence();
+                cases.forEach(function(e) { addCaseLead(e, 'trace_residence', { residence: res.id }); });
+                F.tpdKnownResidence = res.id;
+                var tier = (gameState.suspicionData || {}).wantedTier || 0;
+                queueWarrantService(res.id, tier >= 4);
+            } else if (result.outcome === 'tracked_lurasi') {
+                cases.forEach(function(e) { addCaseLead(e, 'air_track', { developed: true, pointsAtKelsie: false }); e.investigation.progress = Math.min(100, e.investigation.progress + 10); });
+            } else if (result.outcome === 'cornered') {
+                var sd2 = gameState.suspicionData || (gameState.suspicionData = {});
+                sd2.supernaturalEvidence = Math.min(100, (sd2.supernaturalEvidence || 0) + 3);   // "K9 refused final approach"
+                F.k9CornersTotal = (F.k9CornersTotal || 0) + 1;
+            }
+        }
+
+        // 10C: the air search, warm or cold
+        function getPursuitProse(result, ctx) {
+            var dName = TPD_DISTRICT_NAMES[ctx.district] || 'city';
+            var res = getKelsieResidence();
+            var air = result.heli ? 'Raptor One' : 'A Kestrel drone';
+            var t = '';
+            if (result.outcome === 'lost') {
+                if (result.rain) {
+                    t = 'The rain comes down hard enough to ground the drones. Somewhere above the clouds, Raptor One makes one slow pass over the ' + dName + ' and gives up.';
+                } else if (result.cold) {
+                    t = result.heli
+                        ? 'Raptor One sweeps the block twice with its searchlight off. You stand in the mouth of a parking garage with the rotor wash tugging at your hair and watch it hunt.\n\nThe thirst is a raw ache behind your ribs, and there isn\'t anything warm left in you to give away. On that camera, you\'re the same temperature as the brick.\n\nIt banks away toward the river.'
+                        : 'A Kestrel drone drifts over the block, red light blinking, turning slowly. You stand in a doorway and let it look.\n\nThe thirst is a raw ache behind your ribs, and there isn\'t anything warm left in you to give away. On its camera, you\'re the same temperature as the wall.\n\nIt moves on.';
+                } else {
+                    t = 'You keep to the dark and go still whenever the sound gets close. ' + (result.heli ? 'Raptor One\'s rotors' : 'The drone\'s whine') + ' drift over the ' + dName + ' for a long ten minutes, and then drift somewhere else.';
+                }
+                return t;
+            }
+            if (result.cold) {
+                t = air + ' finds you anyway. You\'re a faint gray smudge on its screen, cold as the street, but you\'re the only smudge that moves.';
+            } else if (result.heli) {
+                t = 'You\'re six blocks out before the first siren finishes winding up. Nobody on the ground\'s catching that.\n\n'
+                    + 'Then the air over the rooftops starts to throb.\n\n'
+                    + 'Raptor One comes in low over the ' + dName + ' with its spotlight dark. It doesn\'t need the light. Somewhere in its belly, a thermal camera\'s painting the city in grays, and you\'re the warmest thing moving on it. There\'s blood in you, and it runs warm.';
+            } else {
+                t = 'You\'re blocks away before anyone on the ground has turned around.\n\n'
+                    + 'Then a Kestrel drone drops out of the dark and settles above the rooftops behind you, red light steady, and it doesn\'t lose you again.';
+            }
+            if (result.outcome === 'tracked_district') {
+                t += '\n\nIt follows you until you stop, then hangs there, patient, while cruisers roll into the district below. They don\'t find you, and they don\'t need to. Now they know which blocks to watch.';
+            } else if (result.outcome === 'tracked_home') {
+                t += '\n\nIt follows you home to ' + res.label + '. You\'re inside before you think to look up, and when you do, the light\'s still up there, holding perfectly still.\n\nTPD knows where you sleep now.';
+            } else if (result.outcome === 'tracked_lurasi') {
+                t += '\n\nIt follows you right up to the Lurasi\'s lot. Then it stops at the edge of the block, hangs there a long moment, and peels away. TPD doesn\'t come any closer to the Lurasi than that. They never do.';
+            } else if (result.outcome === 'cornered') {
+                t += '\n\nIt follows you until you stop. Then, on the ground below it, a van pulls up with its lights off, and a man gets out with a dog.';
+            }
+            return t;
+        }
+
+        // Runs the pursuit for a chosen exit, applies it, and shows the result
+        function runPursuit(exit) {
+            var F = gameState.flags;
+            var ctx = F._pursuit || { district: gameState.currentDistrictId || 'commercial', severity: 'serious', next: 'city_exploration' };
+            ctx.exit = exit;
+            var mins = exit === 'go_to_ground' ? 30 + Math.floor(Math.random() * 31) : exit === 'break_trail' ? 15 : exit === 'rooftops' ? 10 : 15;
+            advanceTime(mins);
+            if (exit === 'go_to_ground') gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 3);
+            applyCrimeExit(exit, { silent: true });
+            var result = resolvePursuit(ctx);
+            applyPursuitOutcome(result, ctx);
+            F._pursuitResult = result;
+            updateStatus();
+            var prose = getPursuitProse(result, ctx);
+            if (result.outcome === 'cornered') {
+                showMessage(prose, function() { showScene('tpd_k9_corner'); });
+            } else {
+                F._pursuit = null;
+                showMessage(prose, function() { showScene(ctx.next || 'city_exploration'); });
+            }
+        }
+
+        // A pursuit with no scene (the naked escape): roll it and leave a quiet notice
+        function resolveSilentPursuit(ctx) {
+            var result = resolvePursuit(ctx);
+            applyPursuitOutcome(result, ctx);
+            if (result.outcome === 'tracked_home') showNotification('<em>A drone followed you home. You didn\'t see it until you were already inside.</em>');
+            else if (result.outcome === 'tracked_district') showNotification('<em>A drone stayed on you for six blocks before you lost it.</em>');
+            return result;
+        }
+
+        // 10E: each morning, TPD serves the warrant where it thinks she sleeps
+        function checkWarrantServiceMorning() {
+            var F = gameState.flags;
+            if (!F.warrantIssued || F.currentlyInCustody || F.warrantServicePending) return;
+            var res = getKelsieResidence();
+            if (res.homeless || res.sanctuary || F.tpdKnownResidence !== res.id) return;
+            queueWarrantService(res.id, false);
+        }
+
+        // Whether a warrant service is waiting at this residence scene; returns 'home', 'away', or ''
+        function getWarrantServiceState(sceneId) {
+            var F = gameState.flags;
+            if (!F.warrantServicePending || !TPD_HOME_SCENES[sceneId]) return '';
+            if (TPD_HOME_SCENES[sceneId] !== F.warrantServiceLocation) return '';
+            var res = getKelsieResidence();
+            if (res.id !== F.warrantServiceLocation) { F.warrantServicePending = false; return ''; }   // she moved; the address went stale
+            var today = gameState.time.day || 0;
+            if (F.warrantServiceImmediate && today === F.warrantServiceDay) return 'home';
+            if (today === F.warrantServiceDay && (gameState.time.hour || 0) < 10 && F.lastRestLocation === res.id) return 'home';
+            return 'away';
         }
 
         // ── Ledger: Count Linked Crimes by Type ──
@@ -49765,6 +49972,7 @@ audioSystem.playSFX('buttonClick');
             rollEliminationSample();    // Trigrave PD Step 8B: what a POI throws away
             enforceSuspicionCap();  // New or heavier charges move the ceiling and floor
             rollHotelDeskRecognition();   // Trigrave PD Step 6E
+            checkWarrantServiceMorning(); // Trigrave PD Step 10E
             gameState.flags.streetTakedownToday = false;
             gameState.flags.fieldInterviewToday = false;   // Trigrave PD Step 9A
             
@@ -120767,6 +120975,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     return desc;
                 },
                 onEnter: function() {
+                    startPursuit({ district: gameState.flags.muggingLocation || 'commercial', severity: 'serious', next: 'city_exploration' });   // Trigrave PD Step 10
                     unequipCrimeMask();
 
                     var location = gameState.flags.muggingLocation || 'commercial';
@@ -120863,7 +121072,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: [
-                    { text: 'Keep moving.', nextScene: 'city_exploration' }
+                    { text: 'Keep moving.', nextScene: 'tpd_pursuit' }
                 ]
             },
 
@@ -138876,6 +139085,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 onEnter: function() {
                     var masked = gameState.flags._huntWearingMask;
+                    startPursuit({ district: gameState.currentDistrictId || 'commercial', severity: 'serious', next: 'police_flee_aftermath' });   // Trigrave PD Step 10
                     gameState.flags.policeWitnessSupernatural = true;
                     gameState.flags.violentHuntsBlocked = true;
                     gameState.flags.policeEscaped = true;
@@ -138911,7 +139121,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: [
-                    { text: "Read the consequences", nextScene: "police_flee_aftermath" }
+                    { text: "Keep moving", nextScene: "tpd_pursuit" }
                 ]
             },
 
@@ -138990,6 +139200,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 onEnter: function() {
                     var masked = gameState.flags._huntWearingMask;
+                    startPursuit({ district: gameState.currentDistrictId || 'commercial', severity: 'violent', next: 'police_assault_aftermath' });   // Trigrave PD Step 10
                     gameState.flags.policeWitnessSupernatural = true;
                     gameState.flags.policeAssaulted = true;
                     logHuntPoliceCrime('police_assault', 1);
@@ -139023,7 +139234,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: [
-                    { text: "Assess the damage", nextScene: "police_assault_aftermath" }
+                    { text: "Run", nextScene: "tpd_pursuit" }
                 ]
             },
 
@@ -139082,6 +139293,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                 },
                 onEnter: () => {
+                    startPursuit({ district: gameState.currentDistrictId || 'commercial', severity: 'violent', next: 'police_kill_aftermath' });   // Trigrave PD Step 10
                     gameState.flags.policeKilled = true;
                     gameState.flags.copKiller = true;
                     gameState.flags.cityLockdown = true; // New flag for extreme response
@@ -139118,7 +139330,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: [
-                    { text: "Face what you\'ve done", nextScene: "police_kill_aftermath" }
+                    { text: "Run", nextScene: "tpd_pursuit" }
                 ]
             },
 
@@ -139382,6 +139594,270 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 }
             },
 
+            // ── Trigrave PD Step 10A: the ground chase breaks; now the air ──
+            tpd_pursuit: {
+                text: function() {
+                    var ctx = gameState.flags._pursuit || {};
+                    var tier = (gameState.suspicionData || {}).wantedTier || 0;
+                    var heli = (ctx.severity !== 'minor') || tier >= 2;
+                    var desc = 'The ground chase is already over. Nobody on foot is catching you, and nobody in a car can follow where you went.\n\n';
+                    desc += heli
+                        ? 'But the city\'s still looking. Sirens are closing on the blocks behind you, and somewhere above the rooftops, something with rotors is spinning up.'
+                        : 'But the city\'s still looking. A Kestrel drone\'s red light is climbing over the block behind you, turning slowly.';
+                    if (ctx.droneLocked) desc += '\n\nThe drone that found you at the crosswalk never lost you. It\'s still up there, a small steady light, keeping pace.';
+                    desc += '\n\nYou have to decide where you stop running.';
+                    return desc;
+                },
+                choices: function() {
+                    var ctx = gameState.flags._pursuit || {};
+                    var st = gameState.stealth || 1;
+                    var res = getKelsieResidence();
+                    var choices = [];
+                    choices.push({ text: res.homeless ? 'Keep running into the city' : 'Run for ' + res.short, action: function() { runPursuit('walk_home'); } });
+                    choices.push({ text: 'Go to ground <span style="opacity:0.5;font-size:0.85em">(+30-60 min, +3 thirst)</span>', action: function() { runPursuit('go_to_ground'); } });
+                    if (st >= 30) choices.push({ text: 'Break the trail <span style="opacity:0.5;font-size:0.85em">(+15 min)</span>', action: function() { runPursuit('break_trail'); } });
+                    if (st >= 35 && ctx.district !== 'park') choices.push({ text: 'Take the rooftops <span style="opacity:0.5;font-size:0.85em">(+10 min)</span>', action: function() { runPursuit('rooftops'); } });
+                    return choices;
+                }
+            },
+
+            // ── Trigrave PD Step 10D: Juno finds the hiding spot ──
+            tpd_k9_corner: {
+                text: function() {
+                    return 'Juno works the alley with her nose an inch off the asphalt, never lifting it, pulling Officer Brenner along at the end of the lead.\n\n'
+                        + 'She stops ten feet from the dumpster you\'re crouched behind. Her hackles go up. She sits down hard and won\'t take another step.\n\n'
+                        + 'Brenner crouches beside her with a hand on her ribs. "What\'ve you got, girl?"\n\n'
+                        + 'She whines, low, and doesn\'t take her eyes off the dark behind the dumpster.\n\n'
+                        + 'Brenner looks where she\'s looking. His other hand goes to his shoulder mic. "K9 One. I\'ve got something in the alley off the ' + (TPD_DISTRICT_NAMES[(gameState.flags._pursuit || {}).district] || 'block') + '. Dog won\'t approach."';
+                },
+                choices: function() {
+                    var ctx = gameState.flags._pursuit || {};
+                    var next = ctx.next || 'city_exploration';
+                    var choices = [];
+                    choices.push({ text: 'Run again <span style="opacity:0.5;font-size:0.85em">(+8 thirst)</span>', action: function() {
+                        gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 8);
+                        ctx.exit = 'break_trail';
+                        var again = resolvePursuit(ctx);
+                        if (again.outcome === 'cornered') again.outcome = 'tracked_district';
+                        applyPursuitOutcome(again, ctx);
+                        gameState.flags._pursuit = null;
+                        updateStatus();
+                        showMessage('You\'re out of the alley before Brenner stands up. Juno barks once behind you, sharp, and doesn\'t follow.\n\n'
+                            + (again.outcome === 'lost' ? 'The rotors overhead lose you somewhere between one roofline and the next.' : 'The light overhead swings after you and stays with you for another six blocks before you finally shake it.'), function() { showScene(next); });
+                    }});
+                    if (gameState.flags.illusionUnlocked) {
+                        choices.push({ text: 'Compel the handler.', action: function() {
+                            gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 10);
+                            recordCompulsionEcho(ctx.district);
+                            gameState.flags._pursuit = null;
+                            updateStatus();
+                            showMessage('You step out of the dark and catch Brenner\'s eyes before he can raise the light. "The dog\'s spooked by a rat. There\'s nothing back here. Call it clear."\n\n'
+                                + 'He keys his mic and calls it clear. Juno doesn\'t believe him. She keeps her eyes on you until she\'s back in the van, and she\'s still watching through the rear window when it pulls away.', function() { showScene(next); });
+                        }});
+                    }
+                    choices.push({ text: 'Step out. Surrender.', action: function() {
+                        gameState.flags._pursuit = null;
+                        showScene('arrest_surrender');
+                    }});
+                    return choices;
+                }
+            },
+
+            // ── Trigrave PD Step 10E: warrant service where she sleeps ──
+            tpd_warrant_service: {
+                text: function() {
+                    var F = gameState.flags;
+                    var loc = F.warrantServiceLocation || 'varhall';
+                    var res = getKelsieResidence();
+                    var cruzLeads = (F.cruzTacticalCaptureCount || 0) > 0;
+                    var gf = !!F.officialGirlfriends;
+                    var knows = !!F.jaewonKnowsYoureVampire;
+                    var desc = '';
+
+                    if (loc === 'varhall' && res.withJaewon) {
+                        desc += 'Jaewon\'s in the kitchen when it happens. You can hear the morning through the wall: the mug from the cabinet, the fridge door, the click of the burner turning off.\n\n';
+                        desc += 'Then three heavy knocks, and a voice on the other side of the door that doesn\'t need to shout.\n\n';
+                        desc += '"TPD. We have a warrant. Open the door."\n\n';
+                        desc += 'Jaewon sets the mug down. She doesn\'t look at the door. She looks at you.\n\n';
+                        if (gf) {
+                            desc += 'She crosses the kitchen in four steps and takes your hand, and her grip is warm and very steady.\n\n';
+                            desc += '"I told you," she says quietly. "I don\'t care who comes to that door."\n\n';
+                        } else {
+                            desc += 'She comes and stands next to you, close enough that her shoulder touches yours.\n\n';
+                            desc += '"Hey," she says, quiet and even, like it\'s any other morning. "I\'m right here."\n\n';
+                        }
+                        desc += 'The second knock doesn\'t wait for an answer. The frame splits, and the apartment fills with officers in gray tactical gear, rifles low, calling out each room as they clear it. Through the window, you can see an armored truck idling in the courtyard, and the thud of rotors is sitting right on top of the building.\n\n';
+                        desc += '"Kelsie Summers. On the floor, hands where we can see them." The lead officer turns to Jaewon, just as calm. "Ma\'am, step away from her, please. Nobody\'s here for you."\n\n';
+                        if (gf) {
+                            desc += 'Jaewon doesn\'t step away. She moves in front of you instead, one hand behind her, still holding yours.\n\n';
+                            desc += '"She lives here," she says. Her voice shakes once, and then it stops shaking. "This is her home."\n\n';
+                        } else {
+                            desc += 'Jaewon doesn\'t step away. She stays exactly where she is, her shoulder against yours.\n\n';
+                            desc += '"She lives here," she says, and her voice is steady. "Whatever you think she did, she lives here."\n\n';
+                        }
+                        desc += '"I understand, ma\'am." The officer\'s voice doesn\'t change. "Step aside, please."\n\n';
+                        desc += knows
+                            ? 'Jaewon squeezes your hand once. She knows exactly what you could do to every person in this room, and she\'s telling you it\'s okay, whatever you decide.'
+                            : 'Jaewon has no idea what you are, or what you could do to every person in this room. She\'s standing next to you anyway.';
+                        return desc;
+                    }
+
+                    if (loc === 'varhall') {
+                        desc += 'The knock comes at ten past six: three heavy blows and a voice through the door that doesn\'t need to shout.\n\n';
+                        desc += '"TPD. We have a warrant. Open the door."\n\n';
+                        desc += 'You\'re still reaching for the lock when the frame splits. Officers in gray tactical gear pour into the apartment, rifles low, calling out every room as they clear it. Through the window, an armored truck idles in the courtyard, and the thud of rotors sits right on top of the building.\n\n';
+                        if (cruzLeads) {
+                            desc += 'Cruz walks in behind them, unhurried, a black device the size of a paperback in her left hand. You\'ve felt what it does. She holds it low, where you can see it.\n\n';
+                            desc += '"Morning, Kelsie," she says. "Let\'s not make this interesting."\n\n';
+                        } else {
+                            desc += '"Kelsie Summers. On the floor, hands where we can see them."\n\n';
+                        }
+                        if (gameState.relationships && gameState.relationships.jaewon && gameState.relationships.jaewon.discovered) {
+                            desc += 'Somewhere down the hall, a door opens, and you hear Jaewon\'s voice asking an officer what\'s going on. The officer tells her to go back inside, please, ma\'am. She doesn\'t.';
+                        }
+                        return desc;
+                    }
+
+                    if (loc === 'timeless') {
+                        desc += 'There\'s no battering ram at the Timeless. The first thing you hear is the lock on your door clicking green.\n\n';
+                        desc += 'The door swings in on a hotel security manager with a master key card, and behind him, officers in tactical gear fill the hallway from wall to wall. Two more are coming out of the service elevator at the end of the corridor.\n\n';
+                        desc += '"Kelsie Summers. TPD. We have a warrant. On the floor, please."\n\n';
+                        desc += 'Past them, through the window, the city\'s a long way down. Something with rotors is holding position at the height of your floor.';
+                        return desc;
+                    }
+
+                    // Oracle Inn
+                    desc += 'Two cruisers are in the lot when you look out the window, and a motor unit\'s parked across the exit.\n\n';
+                    desc += 'The knock comes from an officer standing to the side of the door frame, out of the line of fire, exactly as the Academy teaches it. "TPD. We have a warrant for Kelsie Summers. Open the door, please."\n\n';
+                    desc += 'When you don\'t, a key card clicks the lock, and the room fills with uniforms.';
+                    return desc;
+                },
+                onEnter: function() {
+                    var F = gameState.flags;
+                    F.policeEncounterToday = true;
+                    F.lastPoliceEncounterDay = gameState.time.day;
+                    F.policeEncountersTotal = (F.policeEncountersTotal || 0) + 1;
+                    F.warrantServicesTotal = (F.warrantServicesTotal || 0) + 1;
+                    var res = getKelsieResidence();
+                    if (F.warrantServiceLocation === 'varhall' && res.withJaewon) {
+                        F.jaewonWitnessedRaid = true;
+                        F.jaewonRaidDay = gameState.time.day;
+                    }
+                    advanceTime(5);
+                    updateStatus();
+                },
+                choices: function() {
+                    var F = gameState.flags;
+                    var loc = F.warrantServiceLocation || 'varhall';
+                    var res = getKelsieResidence();
+                    var withJaewon = loc === 'varhall' && res.withJaewon;
+                    var gf = !!F.officialGirlfriends;
+                    var loseRoom = function() {
+                        if (loc === 'timeless') F.hasHotelRoom = false;
+                        if (loc === 'oracle') F.hasParkSideRoom = false;
+                        if (loc === 'timeless' || loc === 'oracle') { F.lastRestLocation = ''; F.tpdKnownResidence = ''; }
+                    };
+                    var flee = function(extraThirst, headStart, prelude) {
+                        gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + extraThirst);
+                        loseRoom();
+                        var sd = gameState.suspicionData || (gameState.suspicionData = {});
+                        sd.bodycamIncidents = (sd.bodycamIncidents || 0) + 1;
+                        sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 12);
+                        F.wantedFugitive = true;
+                        F.fugitiveDay = F.fugitiveDay || gameState.time.day;
+                        startPursuit({ district: loc === 'oracle' ? 'park' : loc === 'timeless' ? 'downtown' : 'residential', severity: 'violent', next: 'city_exploration', droneLocked: !headStart, headStart: !!headStart });
+                        updateStatus();
+                        showMessage(prelude, function() { showScene('tpd_pursuit'); });
+                    };
+                    var choices = [];
+                    choices.push({ text: 'Surrender.', action: function() {
+                        loseRoom();
+                        var m = withJaewon
+                            ? 'You get down on the floor with your hands where they can see them.\n\nThe last thing you see before they walk you out is Jaewon on the couch, where two officers gently sat her down. ' + (gf ? 'She says your name, just once, and you can hear everything in it.' : 'She doesn\'t look away from you once, the whole time.')
+                            : 'You get down on the floor with your hands where they can see them.';
+                        showMessage(m, function() { showScene('arrest_surrender'); });
+                    }});
+                    choices.push({ text: 'Go through the window. Vampire speed.', action: function() {
+                        var m;
+                        if (loc === 'timeless') m = 'You go through the glass. The fall\'s long enough to think in, and you land on the roof of a delivery van three stories down, crumpling it like foil.';
+                        else m = 'You go through the window, and the glass goes with you. You land on the pavement in a crouch that cracks it.';
+                        if (withJaewon) m += '\n\nThe last thing you see before the glass is Jaewon\'s face. ' + (gf ? 'She\'s mouthing one word at you: go.' : 'She gives you the smallest nod: go.');
+                        m += '\n\nAbove you, the rotors tilt toward the sound.';
+                        flee(20, false, m);
+                    }});
+                    if ((gameState.karma || 0) < 1000) {
+                        choices.push({ text: 'Fight your way out.', action: function() {
+                            loseRoom();
+                            showScene('arrest_fight');
+                        }});
+                    }
+                    if (F.illusionUnlocked) {
+                        choices.push({ text: 'Compel the nearest ones. Buy a head start.', action: function() {
+                            recordCompulsionEcho(loc === 'oracle' ? 'park' : loc === 'timeless' ? 'downtown' : 'residential');
+                            flee(25, true, 'You catch the nearest eyes, then the next, and push until your head rings: "She\'s not here. The room\'s clear." There are too many of them to hold, and the ones in the hallway are already reaching for their radios.\n\nBut it buys you eight seconds, and eight seconds is a lifetime.');
+                        }});
+                    }
+                    return choices;
+                }
+            },
+
+            tpd_warrant_service_not_home: {
+                text: function() {
+                    var F = gameState.flags;
+                    var loc = F.warrantServiceLocation || 'varhall';
+                    var res = getKelsieResidence();
+                    var gf = !!F.officialGirlfriends;
+                    var desc = '';
+                    if (loc === 'varhall' && res.withJaewon) {
+                        desc += 'The door frame\'s splintered where the ram hit it, and someone\'s taped a copy of a search warrant to the wall beside it.\n\n';
+                        desc += 'Jaewon\'s sitting on the arm of the couch in the clothes she slept in. She stands up when you come in.\n\n';
+                        desc += '"They came at six," she says. "Eight of them, and a truck in the courtyard. They went through everything. They took some of your stuff in bags."\n\n';
+                        desc += '"They asked me where you were. I told them I didn\'t know." She sets her jaw. "That was even true."\n\n';
+                        if (gf) {
+                            desc += 'She crosses the room and puts her arms around you, and holds on hard.\n\n';
+                            desc += '"I kept thinking you were going to walk in while they were still here," she says into your shoulder. Her voice cracks on the last word, and she lets it. "I\'m really glad you didn\'t."\n\n';
+                        } else {
+                            desc += 'She looks at you for a long moment, and then she hugs you, quick and fierce.\n\n';
+                        }
+                        desc += '"You still live here," she says. "Nothing about that changed."';
+                        return desc;
+                    }
+                    if (loc === 'varhall') {
+                        desc += 'Your door frame\'s splintered where the ram hit it. Inside, drawers hang open and the mattress is off its frame, and your things are gone in labeled evidence bags.\n\n';
+                        desc += 'A copy of the search warrant is sitting on the kitchen counter, squared neatly with the edge. Somebody left a TPD business card on top of it.';
+                        return desc;
+                    }
+                    if (loc === 'timeless') {
+                        desc += 'The concierge at the Timeless sees you before you reach the elevators, and his face goes very polite.\n\n';
+                        desc += '"Ms. Summers. I\'m afraid your room\'s no longer available. The police were here this morning with a warrant." He keeps his voice low. "Your belongings have been moved to storage. The detectives asked us to let them know if you came back."\n\n';
+                        desc += 'His hand hasn\'t moved toward the phone yet. You decide not to wait around for it.';
+                        return desc;
+                    }
+                    desc += 'There\'s a strip of police tape across your door at Oracle Inn, and a cruiser\'s still parked at the far end of the lot.\n\n';
+                    desc += 'The woman at the desk won\'t quite meet your eyes. "The police came this morning," she says. "Your room\'s been closed out. Your things are being held here for them."';
+                    return desc;
+                },
+                onEnter: function() {
+                    var F = gameState.flags;
+                    var loc = F.warrantServiceLocation || 'varhall';
+                    if (loc === 'timeless') { F.hasHotelRoom = false; F.lastRestLocation = ''; F.tpdKnownResidence = ''; }
+                    if (loc === 'oracle') { F.hasParkSideRoom = false; F.lastRestLocation = ''; F.tpdKnownResidence = ''; }
+                    var res = getKelsieResidence();
+                    if (loc === 'varhall' && res.withJaewon) F.jaewonWitnessedRaid = true;
+                    modifyMentalHealth(-6);
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: function() {
+                    var F = gameState.flags;
+                    var loc = F.warrantServiceLocation || 'varhall';
+                    var res = getKelsieResidence();
+                    if (loc === 'varhall' && res.withJaewon) return [{ text: 'Stay with her.', nextScene: 'jaewon_apartment_main' }];
+                    if (loc === 'varhall') return [{ text: 'Leave before they come back.', nextScene: 'residential_district_street' }];
+                    return [{ text: 'Leave.', nextScene: 'city_exploration' }];
+                }
+            },
+
             // ── Trigrave PD Step 9C: the field interview ──
             tpd_field_interview: {
                 text: function() {
@@ -139505,7 +139981,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         }
                         calculateWantedTier();
                         updateStatus();
-                        showMessage('You go. The sidewalk smears around you, and Calloway\'s voice snaps out behind you, flat and clear, calling it in before you\'ve reached the corner.\n\nShe didn\'t get your name. She got your face, your clothes, and eight seconds of bodycam that nobody at Fourth Street is going to be able to explain.', back);
+                        startPursuit({ district: F._fieldInterviewDistrict, severity: 'minor', next: gameState.flags.randEventReturn || 'city_exploration' });   // Trigrave PD Step 10
+                        showMessage('You go. The sidewalk smears around you, and Calloway\'s voice snaps out behind you, flat and clear, calling it in before you\'ve reached the corner.\n\nShe didn\'t get your name. She got your face, your clothes, and eight seconds of bodycam that nobody at Fourth Street is going to be able to explain.', function() { showScene('tpd_pursuit'); });
                     }});
 
                     if (!F._fiBribed && (gameState.money || 0) >= 20) {
@@ -140107,11 +140584,15 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     calculateWantedTier();
                     advanceTime(10);
                     updateStatus();
+                    // Trigrave PD Step 10: the ground chase breaks; the air doesn't. A takedown's drone starts locked.
+                    var _wc = getWarrantClass();
+                    startPursuit({ district: gameState.currentDistrictId || 'downtown', severity: _wc === 'violent' ? 'violent' : _wc === 'minor' ? 'minor' : 'serious',
+                        next: getDistrictReturnScene(gameState.currentDistrictId), droneLocked: !!gameState.flags.streetTakedownToday && gameState.flags._takedownDistrict === gameState.currentDistrictId });
                 },
                 choices: function() {
                     var returnScene = getDistrictReturnScene(gameState.currentDistrictId);
                     return [
-                        { text: 'Disappear into the city.', nextScene: returnScene }
+                        { text: 'Disappear into the city.', nextScene: 'tpd_pursuit' }
                     ];
                 }
             },
@@ -142223,7 +142704,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     desc += '"So," she says. Sips her coffee. Sets it down with both hands. "The news says assault. Multiple counts."\n\n';
 
-                    desc += 'She looks at you. How she always looks at you. Steady. Present. Her face isn\'t performing anything. She didn\'t rehearse this in the bathroom mirror. She looks like she does when she\'s waiting for you to tell her something true.\n\n';
+                    desc += 'She looks at you like she always looks at you, steady and present. Nothing on her face is rehearsed. She looks like she does when she\'s waiting for you to tell her something true.\n\n';
 
                     desc += '"They say you hurt people."\n\n';
 
@@ -142317,9 +142798,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     } else if (motive === 'honest') {
                         desc += '"I was hungry. I didn\'t think about what they were."\n\n';
 
-                        desc += 'Jaewon doesn\'t look away. She processes it. You can see it happening behind her eyes, in the shift of her jaw, in her breathing through her nose. She\'s not performing an emotion. She\'s having one. Privately. In front of you.\n\n';
+                        desc += 'Jaewon doesn\'t look away. She processes it. You can see it happening behind her eyes, in the shift of her jaw, in her breathing through her nose. She\'s having a feeling, privately, right in front of you, and she isn\'t hiding it.\n\n';
 
-                        desc += '"You hurt people because you needed to." A statement. She\'s not asking. She\'s confirming what she heard. "And you\'re telling me you didn\'t always check if they were good or bad first."\n\n';
+                        desc += '"You hurt people because you needed to." There\'s no question in it. She\'s confirming what she heard. "And you\'re telling me you didn\'t always check if they were good or bad first."\n\n';
 
                         desc += '"No. I didn\'t always check."\n\n';
 
@@ -142336,7 +142817,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                         desc += '"That\'s honest," she says. Quiet. "That might be the most honest thing you\'ve ever said to me."\n\n';
 
-                        desc += 'She stands. Comes around the counter. Doesn\'t sit across from you. Sits on the stool beside you. Close enough that your shoulders touch. Close enough that you can feel the warmth of her through two layers of cotton.\n\n';
+                        desc += 'She stands, comes around the counter, and sits on the stool beside you instead of across from you. Close enough that your shoulders touch. Close enough that you can feel the warmth of her through two layers of cotton.\n\n';
 
                         desc += '"The fact that you can say that. That you know you lost the line." Her hand finds yours. Laces her fingers through. "That means you\'re still looking for it."\n\n';
 
@@ -142349,7 +142830,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                         desc += 'Jaewon goes still. Her fingers stop around her coffee cup. The steam keeps rising. The fridge keeps humming. Everything in the apartment keeps doing what it was doing except Jaewon, who has stopped.\n\n';
 
-                        desc += 'She looks at you for a long time. You can hear her heartbeat. It doesn\'t spike. It doesn\'t stutter. It stays steady, and that\'s the thing that frightens you more than anything, the fact that her body isn\'t afraid even though her face is working through something that should make it afraid.\n\n';
+                        desc += 'She looks at you for a long time. You can hear her heartbeat. It stays steady, without a spike or a stutter, and that\'s the thing that frightens you more than anything, the fact that her body isn\'t afraid even though her face is working through something that should make it afraid.\n\n';
 
                         desc += '"Okay," she says. Her voice is level. You can hear what it costs her to keep it level. The effort is in her throat, in the slight tightness at the back of each syllable. "Okay. I hear you."\n\n';
 
@@ -142359,7 +142840,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                         desc += 'She turns around.\n\n';
 
-                        desc += '"I\'m not going to pretend that doesn\'t scare me." Flat. Honest. No decoration. "But I\'m not going anywhere. You told me the truth. That matters more than what the truth is."\n\n';
+                        desc += '"I\'m not going to pretend that doesn\'t scare me." She says it flat and honest, without any decoration. "But I\'m not going anywhere. You told me the truth. That matters more than what the truth is."\n\n';
 
                         if (gf) {
                             desc += 'She walks back to the counter. Sits down. Picks up her coffee. Her hands are shaking. She sees you seeing them shake. She doesn\'t hide it.\n\n';
@@ -142414,7 +142895,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     desc += '"Yeah."\n\n';
 
-                    desc += 'She sets the fork down. Turns on her stool to face you. Her knee touches yours. Her eyes are clear. She\'s not tired. She\'s not upset. She\'s fully present, the same presence she gives when something matters enough to deserve her whole attention, the same look she gets when she\'s listening to someone tell her something they\'ve never told anyone.\n\n';
+                    desc += 'She sets the fork down. Turns on her stool to face you. Her knee touches yours. Her eyes are clear, and her attention\'s complete. She\'s fully present, the same presence she gives when something matters enough to deserve her whole attention, the same look she gets when she\'s listening to someone tell her something they\'ve never told anyone.\n\n';
 
                     desc += '"The things you\'ve done. The ones on the warrant and the ones that aren\'t." She folds her hands in her lap. "If you could go back. If you could undo all of it. Every bit."\n\n';
 
