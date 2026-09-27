@@ -26232,6 +26232,201 @@ audioSystem.playSFX('buttonClick');
             return desc;
         }
 
+        // ── BPE Step 12B: deliberate acts in Bra Exposed and Panties Exposed ──
+        // Offered on the district streets beside the Mesh verbs. Visible, opaque pieces only.
+        // Per-verb cooldowns live in gameState.flags._bpeActionMinutes.
+        function _bpeNow() {
+            return (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+        }
+
+        function _bpeVerbReady(key, minutes) {
+            var m = gameState.flags._bpeActionMinutes || (gameState.flags._bpeActionMinutes = {});
+            return (_bpeNow() - (m[key] === undefined ? -99999 : m[key])) >= minutes;
+        }
+
+        function _bpeVerbGains(key, thrill, arousal, corruption, susp) {
+            if (!gameState.flags._bpeActionMinutes) gameState.flags._bpeActionMinutes = {};
+            gameState.flags._bpeActionMinutes[key] = _bpeNow();
+            if (thrill) applyExhibitionThrillGain(thrill);
+            var ar = arousal ? applyArousal(arousal) : 0;
+            if (corruption) {
+                gameState.corruption = (gameState.corruption || 0) + corruption;
+                gameState.flags.corruptionChangedPassively = true;
+            }
+            if (susp) modifyCitySuspicion(susp);
+            if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+            gameState.exhibitionStats.exhibitionEventsCompleted = (gameState.exhibitionStats.exhibitionEventsCompleted || 0) + 1;
+            var _ct = gameState.exhibitionismThrill || 0;
+            if (_ct > (gameState.exhibitionStats.peakThrill || 0)) gameState.exhibitionStats.peakThrill = _ct;
+            var stat = '';
+            if (ar) stat += '<span style="color: #ff69b4;">Arousal +' + ar + '</span>';
+            if (thrill) stat += (stat ? '  · ' : '') + '<span style="color: #ffaacc;">Exhibition Thrill +' + thrill + '</span>';
+            if (susp) stat += (stat ? '  · ' : '') + '<span style="color: #8b0000;">Suspicion +' + susp + '</span>';
+            return stat ? '\n\n' + stat : '';
+        }
+
+        function _bpeBt5(bt, petite, athletic, curvy, thick, ordinary) {
+            return bt === 'petite' ? petite : bt === 'athletic' ? athletic : bt === 'curvy' ? curvy : bt === 'thick' ? thick : ordinary;
+        }
+
+        // Roll your shoulders back (Bra Exposed, 2001+, thrill 20, 30 min)
+        function doBpeRollShoulders() {
+            if (!_bpeVerbReady('roll', 30)) return;
+            var x = _bpeMastBraCtx();
+            var c = gameState.corruption || 0;
+            var lining = x.sporty ? 'fabric' : 'cups';
+            var lift = (x.bs === 'large' ? 'Your heavy tits lift and push forward' : x.bs === 'small' ? 'Your small tits lift' : 'Your tits lift and push forward') + ', ' +
+                (x.sporty ? 'the band stretching tight across your chest.'
+                : x.style === 'pushup' ? 'the padding pushing them higher and pressing them together.'
+                : x.style === 'bralette' ? 'the thin lace pulling taut over them and hiding nothing about their shape.'
+                : x.style === 'corset' ? 'the boning pushing them up over the stiff edge.'
+                : x.style === 'lace' ? 'your nipples pressing through the pattern of the lace.'
+                : 'the cups rising with them.');
+            var frame = _bpeBt5(x.bt, 'On your slight frame, your chest is all anyone can look at.', 'Your stomach pulls flat and hard under them.',
+                'Your waist pinches in under them.', 'Your soft stomach pulls in under them.', 'Your stomach pulls flat under them.');
+            var t;
+            if (c >= 8001) {
+                t = 'You roll your shoulders back, arch a little, and take the sidewalk like it\'s a runway.\n\n' + lift + ' ' + frame +
+                    '\n\nA woman at a café table lowers her sunglasses to look. Her husband doesn\'t bother pretending he isn\'t.' +
+                    '\n\nYou meet his eyes and wet your lips. Your nipples are stiff enough to show through the ' + lining + ', and your pussy\'s slick under your ' + x.bottom + (x.commando ? ' with nothing between it and the fabric' : '') + '.';
+            } else if (c >= 6001) {
+                t = 'You roll your shoulders back and let your chest do the talking.\n\n' + lift + ' ' + frame +
+                    '\n\nTwo guys at a bus stop stop talking in the middle of a sentence. One says something low to the other, and they both keep looking.' +
+                    '\n\nYou slow down as you pass them. Your nipples are hard against the ' + lining + ', and your clit throbs with every step you let them watch.';
+            } else {
+                t = 'You catch yourself hunching, arms half folded and shoulders rounded, like standing small could make your ' + x.bra + ' smaller.\n\nSo you stop. You drop your arms, pull your shoulders back, and lift your chin.\n\n' + lift + ' ' + frame +
+                    '\n\nA man coming out of the pharmacy slows down, and his eyes go straight to your chest. He nearly walks into the door frame.' +
+                    '\n\nYour face heats. You keep your shoulders back for another half block anyway, nipples stiffening against the ' + lining + ' and a warm ache building in your pussy with every step.';
+            }
+            var stat = _bpeVerbGains('roll', 6, 4, 1, 0);
+            advanceTime(5);
+            showMessage(t + stat, function() { updateStatus(); });
+        }
+
+        // Unhook it (Bra Exposed, 6001+, thrill 50, 60 min). The bra goes in the backpack and
+        // the topless district-entry vignette fires straight after, skipping its cooldown once.
+        function doBpeUnhook(districtId) {
+            if (!gameState.currentOutfit.bra || !_bpeVerbReady('unhook', 60)) return;
+            var x = _bpeMastBraCtx();
+            var c = gameState.corruption || 0;
+            var off = x.sporty ? 'You cross your arms, grab the hem of your ' + x.bra + ', and peel it up and off over your head.'
+                : x.style === 'corset' ? 'You reach back and work the hooks of your ' + x.bra + ' open one by one, and the stiff front falls away from your chest.'
+                : 'You reach behind you, find the clasp of your ' + x.bra + ', and pinch it open. The band springs loose. You slide the straps down your arms and pull it away.';
+            var bare = x.bs === 'large' ? 'Your heavy tits drop free and swing once, bare, nipples tightening in the open air.'
+                : x.bs === 'small' ? 'Your small tits come bare, nipples drawing up stiff in the open air.'
+                : 'Your tits come bare, nipples pulling tight the second the air finds them.';
+            var waist = _bpeBt5(x.bt, 'your slight body bare to the waist', 'bare to the waist, your stomach tight', 'bare to the waist, every curve on show',
+                'bare to the waist, your soft belly and full chest on show', 'bare to the waist');
+            var t = (c >= 8001 ? 'You don\'t duck anywhere to do it.' : 'Right here, on the sidewalk, with people everywhere.') + ' ' + off +
+                '\n\n' + bare + '\n\nYou fold the ' + x.bra + ' and push it into your backpack. There\'s nothing on you above your ' + x.bottom + ' now, ' + waist + '.' +
+                (c >= 8001 ? '\n\nYou let your arms hang at your sides and keep walking. Somebody gasps behind you, and your clit throbs at the sound.'
+                    : '\n\nYour heart\'s pounding. Your nipples ache in the air, and your pussy clenches hard at the first gasp from somewhere behind you.');
+            var bra = gameState.currentOutfit.bra;
+            if (bra) {
+                bra.category = getCategoryFromSlot('bra');
+                bra.owned = true;
+                gameState.inventory.clothing.push(bra);
+                gameState.currentOutfit.bra = null;
+                if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
+            }
+            gameState.flags.hasBeenSeenTopless = true;
+            checkAndSetExposureState();
+            var stat = _bpeVerbGains('unhook', 0, 0, 0, 0);
+            advanceTime(3);
+            // Re-entering the street lets its own entry check fire the topless vignette (cooldown
+            // cleared for this once) and rebuilds the choice list for the new state.
+            showMessage(t + stat, function() {
+                updateStatus();
+                gameState.flags.lastExhibStateEventMinute = -99999;
+                showScene(currentScene);
+            });
+        }
+
+        // Tug a cup down (Bra Exposed, 8001+, thrill 70, 45 min)
+        function doBpeTugCup() {
+            if (!_bpeVerbReady('tug', 45)) return;
+            var x = _bpeMastBraCtx();
+            var tug = x.sporty ? 'hook your thumb under the band of your ' + x.bra + ' and drag it up over your left tit'
+                : x.style === 'corset' ? 'work a finger into the stiff edge of your ' + x.bra + ' and pull it down on the left'
+                : x.style === 'bralette' ? 'push the thin left cup of your ' + x.bra + ' aside'
+                : 'hook a finger in the left cup of your ' + x.bra + ' and tug it down';
+            var bare = x.bs === 'large' ? 'Your heavy tit spills out over the fabric, nipple dark and stiff.'
+                : x.bs === 'small' ? 'Your small tit pops out bare, the nipple drawn up tight.'
+                : 'Your tit comes out bare, the nipple tightening in the air.';
+            var bounce = x.bs === 'large' ? 'bouncing heavy' : x.bs === 'small' ? 'jiggling' : 'bouncing';
+            var hips = _bpeBt5(x.bt, 'your narrow hips swinging', 'your stride long and loose', 'your hips rolling', 'your hips swaying heavy', 'your hips swaying');
+            var t = 'A man on a bench up ahead is watching you walk toward him. You hold his eyes while you ' + tug + '.\n\n' + bare +
+                '\n\nYou walk past him like that, your bare tit ' + bounce + ' with every step and ' + hips + ', and you don\'t fix it.' +
+                '\n\nHe half stands up off the bench. Behind you somebody says, "Oh my God," and a phone camera clicks.' +
+                '\n\nHalf a block later you tuck it back in, your nipple aching against the ' + (x.sporty ? 'fabric' : 'cup') + ' and your pussy slick under your ' + x.bottom + '.';
+            var stat = _bpeVerbGains('tug', 12, 10, 3, 1);
+            advanceTime(5);
+            showMessage(t + stat, function() { updateStatus(); });
+        }
+
+        // Bend over (Panties Exposed, 6001+, thrill 40, 30 min). Shot from behind.
+        function doBpeBendOver() {
+            if (!_bpeVerbReady('bend', 30)) return;
+            var x = _bpeMastPanCtx();
+            var c = gameState.corruption || 0;
+            var cut = x.thong ? 'The string is all that\'s between your cheeks, and the strip under it is soaked dark.'
+                : x.cut === 'cheeky' ? 'The bend drags your ' + x.pan + ' higher, until there\'s almost nothing to them.'
+                : 'The fabric stretches tight, and the crotch between your thighs is dark and damp.';
+            var fold = _bpeBt5(x.bt, 'Your slight body folds nearly in half.', 'Your hamstrings pull taut, your legs straight and long.',
+                'Your hips tip back wide.', 'Your thick thighs press together under it.', 'Your legs stay straight, your hips tipped high.');
+            var t;
+            if (c >= 8001) {
+                t = 'You don\'t bother dropping anything. You stop in the middle of the sidewalk, plant your feet apart, and bend over like you\'re stretching.' +
+                    '\n\nThe hem of your ' + x.top + ' slides up your back, and the sidewalk behind you gets ' + getPantiesExposedAssView() + '.\n\n' + fold + ' ' + cut +
+                    '\n\nBehind you a car horn blares, and somebody whistles long and low.' +
+                    '\n\nYou hold it, looking back at them between your legs, and give your ass a slow wiggle before you straighten up. Your clit throbs with every step after.';
+            } else {
+                t = 'You "drop" your keys on the sidewalk. Then you bend at the waist to get them, legs straight, and take your time.' +
+                    '\n\nThe hem of your ' + x.top + ' slides up your back, and the sidewalk behind you gets ' + getPantiesExposedAssView() + '.\n\n' + fold + ' ' + cut +
+                    '\n\nA man waiting at the crosswalk behind you forgets to cross when the light changes.' +
+                    '\n\nYou straighten up slowly and don\'t look back. Your face is hot, and your pussy clenches in the damp crotch as you walk on.';
+            }
+            var stat = _bpeVerbGains('bend', 10, 8, 2, 1);
+            advanceTime(5);
+            showMessage(t + stat, function() { updateStatus(); });
+        }
+
+        // Pull them aside (Panties Exposed, 8001+, thrill 70, 45 min). Shot from behind.
+        function doBpePullAside() {
+            if (!_bpeVerbReady('aside', 45)) return;
+            var x = _bpeMastPanCtx();
+            var ass = x.butt === 'large' ? 'Your full ass tips back at them' : x.butt === 'small' ? 'Your tight little ass tips back at them' : 'Your ass tips back at them';
+            var hips = _bpeBt5(x.bt, 'your slight body bent just enough', 'your thighs braced wide', 'your hips cocked', 'your thick thighs parted', 'your feet apart');
+            var t = 'At the corner you stop with your back to the crowd waiting for the light. You reach down behind you and hook the ' + (x.thong ? 'string of your ' + x.pan : 'crotch of your ' + x.pan) + ' aside with two fingers.' +
+                '\n\n' + ass + ', ' + hips + ', and you bend a little at the waist so they can see. Your bare pussy\'s out to the whole crosswalk, lips swollen and shining wet.' +
+                '\n\nThe crowd goes quiet. A woman grabs her kid\'s shoulder and turns him away. Two men don\'t turn anywhere.' +
+                '\n\nYou hold it until the light changes, then let the ' + (x.thong ? 'string' : 'crotch') + ' snap back, wet against you, and walk across with all of them behind you. Your clit\'s throbbing so hard your thighs shake.';
+            var stat = _bpeVerbGains('aside', 15, 14, 4, 2);
+            advanceTime(5);
+            showMessage(t + stat, function() { updateStatus(); });
+        }
+
+        // District choice list entries, beside the Mesh verbs.
+        function getExposedUnderwearChoices(districtId) {
+            var state = getVisibleExposureLevel();
+            if (state !== 'bra_exposed' && state !== 'panties_exposed') return null;
+            var cv = getSceneClothingVars();
+            if (state === 'bra_exposed' ? cv.braSheer : cv.pantiesSheer) return null;
+            var c = gameState.corruption || 0;
+            var thrill = gameState.exhibitionismThrill || 0;
+            var fire = '<img src="Images/icons/fire.png" class="icon" alt="fire"> ';
+            var out = [];
+            if (state === 'bra_exposed') {
+                if (c >= 2001 && thrill >= 20 && _bpeVerbReady('roll', 30)) out.push({ text: fire + 'Roll your shoulders back.', action: doBpeRollShoulders });
+                if (c >= 6001 && thrill >= 50 && _bpeVerbReady('unhook', 60)) out.push({ text: fire + (cv.braStyle === 'sporty' ? 'Take it off.' : 'Unhook it.'), action: function() { doBpeUnhook(districtId); } });
+                if (c >= 8001 && thrill >= 70 && _bpeVerbReady('tug', 45)) out.push({ text: fire + (cv.braStyle === 'sporty' ? 'Tug it up.' : 'Tug a cup down.'), action: doBpeTugCup });
+            } else {
+                if (c >= 6001 && thrill >= 40 && _bpeVerbReady('bend', 30)) out.push({ text: fire + 'Bend over.', action: doBpeBendOver });
+                if (c >= 8001 && thrill >= 70 && _bpeVerbReady('aside', 45)) out.push({ text: fire + 'Pull ' + (cv.pantiesCut === 'thong' ? 'it' : 'them') + ' aside.', action: doBpePullAside });
+            }
+            return out.length ? out : null;
+        }
+
         function checkAccidentalExposure(districtId) {
             // Only fires when clothed (not in any exhibition state)
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless()) return false;
@@ -110661,6 +110856,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var _poseChoice = getPoseExhibitionChoice('commercial'); if (_poseChoice) choices.push(_poseChoice);
                     var _wetExhibChoices = getWetExhibitionChoices(); if (_wetExhibChoices) _wetExhibChoices.forEach(function(c) { choices.push(c); });
                     var _sheerExhibChoices = getSheerExhibitionChoices(); if (_sheerExhibChoices) _sheerExhibChoices.forEach(function(c) { choices.push(c); }); // Mesh Step 14
+                    var _bpeExhibChoices = getExposedUnderwearChoices('commercial'); if (_bpeExhibChoices) _bpeExhibChoices.forEach(function(c) { choices.push(c); }); // Bra/Panties Exposed Step 12B
                     var _exhibMastChoice = getExhibitionMasturbationChoice('commercial'); if (_exhibMastChoice) choices.push(_exhibMastChoice);
                     var _bralessAlleyChoice = getBralessCommandoAlleyChoice('commercial_district_street'); if (_bralessAlleyChoice) choices.push(_bralessAlleyChoice);
                     choices.push({ text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Open map to travel elsewhere', action: () => openMap() });
@@ -110842,6 +111038,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var _poseChoice = getPoseExhibitionChoice('residential'); if (_poseChoice) choices.push(_poseChoice);
                     var _wetExhibChoices = getWetExhibitionChoices(); if (_wetExhibChoices) _wetExhibChoices.forEach(function(c) { choices.push(c); });
                     var _sheerExhibChoices = getSheerExhibitionChoices(); if (_sheerExhibChoices) _sheerExhibChoices.forEach(function(c) { choices.push(c); }); // Mesh Step 14
+                    var _bpeExhibChoices = getExposedUnderwearChoices('residential'); if (_bpeExhibChoices) _bpeExhibChoices.forEach(function(c) { choices.push(c); }); // Bra/Panties Exposed Step 12B
                     var _exhibMastChoice = getExhibitionMasturbationChoice('residential'); if (_exhibMastChoice) choices.push(_exhibMastChoice);
                     var _bralessAlleyChoice = getBralessCommandoAlleyChoice('residential_district_street'); if (_bralessAlleyChoice) choices.push(_bralessAlleyChoice);
                     choices.push({ text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Open map to travel elsewhere', action: () => openMap() });
@@ -117182,6 +117379,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var _poseChoice = getPoseExhibitionChoice('downtown'); if (_poseChoice) choices.push(_poseChoice);
                     var _wetExhibChoices = getWetExhibitionChoices(); if (_wetExhibChoices) _wetExhibChoices.forEach(function(c) { choices.push(c); });
                     var _sheerExhibChoices = getSheerExhibitionChoices(); if (_sheerExhibChoices) _sheerExhibChoices.forEach(function(c) { choices.push(c); }); // Mesh Step 14
+                    var _bpeExhibChoices = getExposedUnderwearChoices('downtown'); if (_bpeExhibChoices) _bpeExhibChoices.forEach(function(c) { choices.push(c); }); // Bra/Panties Exposed Step 12B
                     var _exhibMastChoice = getExhibitionMasturbationChoice('downtown'); if (_exhibMastChoice) choices.push(_exhibMastChoice);
                     var _bralessAlleyChoice = getBralessCommandoAlleyChoice('downtown_district_street'); if (_bralessAlleyChoice) choices.push(_bralessAlleyChoice);
                     choices.push({ text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Open map to travel elsewhere', action: () => openMap() });
