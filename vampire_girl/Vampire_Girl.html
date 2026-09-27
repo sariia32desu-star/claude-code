@@ -25125,7 +25125,9 @@ audioSystem.playSFX('buttonClick');
         // it out, and the peel before the first touch, and swap the lines that say otherwise.
         var SHEER_SEDUCTION_BRANCH = {
             sheer_braless: 'top', sheer_lingerie_top: 'top',
-            sheer_commando: 'btm', sheer_lingerie_bottom: 'btm',
+            // BPE Step 13A: mesh panties with nothing over them take Branch E (hunt_seduction
+            // sends them to Branch C instead when there's no top either, i.e. Underwear Only)
+            sheer_commando: 'btm', sheer_lingerie_bottom: 'pan',
             sheer_bare: 'nkd', sheer_lingerie: 'bra'
         };
 
@@ -25193,6 +25195,38 @@ audioSystem.playSFX('buttonClick');
             return chestPeel + ' ' + bare + ' Then ' + he + ' hikes your ' + bottom + ' up to your waist.';
         }
 
+        // BPE Step 13A: Branch E under mesh panties. Branch E is shot from behind and runs its own
+        // undressing (rub through the crotch, pull it aside, then off), so the mesh gets its own
+        // look from behind at the approach and a look-first beat in the sex scene instead of the peel.
+        function getPanSheerSeductionOverlay(stage, gender) {
+            if (_activeSeductionSheer() !== 'sheer_lingerie_bottom') return '';
+            var b = _sheerBodyCtx();
+            var n = b.noun;
+            var He = gender === 'f' ? 'She' : 'He', his = gender === 'f' ? 'her' : 'his';
+            var thong = getSceneClothingVars().pantiesCut === 'thong';
+            if (stage === 'approach') {
+                var back = thong ? 'Your ass is bare on both sides of the string, and the ' + n + ' strip between your cheeks hides nothing either.'
+                    : b.butt === 'large' ? 'Your full ass shows straight through it, round and bare behind the grid.'
+                    : b.butt === 'small' ? 'Your tight little ass shows straight through it, bare behind the grid.'
+                    : 'Your bare ass shows straight through it.';
+                return 'The ' + n + ' hides nothing back there. ' + back + ' Lower down, where your thighs part, ' + his + ' eyes can find the dark line of your slit through the grid.';
+            }
+            if (stage === 'proposition') {
+                // Tier-aware, so the line doesn't stack a second "he says" or a second question
+                var cv = getSceneClothingVars(), pan = cv.pantiesName, those = thong ? 'that' : 'those', them = thong ? 'it' : 'them';
+                var r = gameState.flags._exhibSeduceResult || {};
+                if (r.tier === 'hard') return (gender === 'f' ? 'Her' : 'His') + ' eyes go straight back to the crotch of your ' + pan + '. "And I can see your pussy through ' + those + '."\n\n"I know." Your clit throbs behind the ' + n + ' while ' + (gender === 'f' ? 'she' : 'he') + ' looks.';
+                if (r.tier === 'soft') return gender === 'f'
+                    ? 'Then her eyes drop back to the crotch of your ' + pan + ', where your bare slit shows dark behind the grid, and her cheeks go pink.'
+                    : 'He can see straight through ' + them + '. Your bare slit shows dark behind the grid, and the back of his neck goes red.';
+                return '';
+            }
+            if (stage === 'sex') {
+                return He + ' can see all of it without moving a thing. Through the ' + n + ', your bare pussy\'s right there between your thighs, lips swollen behind the grid and the ' + (thong ? 'strip' : 'crotch') + ' stuck wet to your slit.';
+            }
+            return '';
+        }
+
         // Lines in the branch prose that put her bare in the open air before the peel.
         // [scene regex, text regex, replacement builder]
         var SHEER_SEDUCTION_FIXES = [
@@ -25222,13 +25256,19 @@ audioSystem.playSFX('buttonClick');
             [/_nkd_success_pivot_m$/, /moving up your bare sides/, function(b) { return 'moving up your sides through the ' + b.noun; }],
             [/_nkd_success_pivot_m$/, /He has you bare in his hands/, function(b) { return 'He has you bare under the ' + b.noun + ', in his hands,'; }],
             [/_nkd_soft_pivot_f$/, /against your bare sides/, function(b) { return 'against your sides through the ' + b.noun; }],
-            [/_nkd_success_pivot_f$/, /You walked out here bare and you\'re letting her touch you/, function(b) { return 'You walked out here in see-through ' + b.noun + ' and you\'re letting her touch you'; }]
+            [/_nkd_success_pivot_f$/, /You walked out here bare and you\'re letting her touch you/, function(b) { return 'You walked out here in see-through ' + b.noun + ' and you\'re letting her touch you'; }],
+            // BPE Step 13A: Branch E under mesh panties (the front of her, once she turns around)
+            [/_pan_approach_m$/, /below it, and you wait\./, function() { return 'below it, your bare slit showing dark through ' + (getSceneClothingVars().pantiesCut === 'thong' ? 'it' : 'them') + ', and you wait.'; }],
+            [/_pan_approach_f$/, /below it, and one corner of her mouth goes up\./, function() { return 'below it, your bare slit showing dark through ' + (getSceneClothingVars().pantiesCut === 'thong' ? 'it' : 'them') + '. One corner of her mouth goes up.'; }],
+            [/_pan_proposition_f$/, /"I know," you say\. "And there isn\'t a lot left to get out of\."/, function() { return '"There isn\'t a lot left to get out of," you say.'; }],
+            [/_pan_failure_dismissive_m$/, /He says it to your crotch\./, function(b) { return 'He says it to your pussy, right there behind the ' + b.noun + '.'; }],
+            [/_pan_failure_dismissive_f$/, /She says it to your crotch,/, function(b) { return 'She says it to your pussy, right there behind the ' + b.noun + ','; }]
         ];
 
         function installSheerSeductionOverlays() {
             if (typeof story === 'undefined') return;
             Object.keys(story).forEach(function(id) {
-                var m = /^exhibition_seduce_(bra|top|btm|nkd)_(.+)_([mf])$/.exec(id);
+                var m = /^exhibition_seduce_(bra|top|btm|nkd|pan)_(.+)_([mf])$/.exec(id);
                 if (!m) return;
                 var sc = story[id], stage = m[2], gender = m[3];
                 var baseText = sc.text;
@@ -25238,6 +25278,13 @@ audioSystem.playSFX('buttonClick');
                         if (!_activeSeductionSheer() || typeof t !== 'string') return t;
                         var b = _sheerBodyCtx();
                         SHEER_SEDUCTION_FIXES.forEach(function(fx) { if (fx[0].test(id)) t = t.replace(fx[1], function(all, g1) { return fx[2](b, g1); }); });
+                        if (m[1] === 'pan') {
+                            // Branch E: the look from behind, then the look first instead of the peel
+                            if (stage === 'approach') t = _insertSheerParagraph(t, getPanSheerSeductionOverlay('approach', gender), /You know (exactly )?what/);
+                            if (stage === 'proposition' && t.split('\n\n').length > 1) t = _insertSheerParagraph(t, getPanSheerSeductionOverlay('proposition', gender), /./);
+                            if (stage === 'sex') t = _insertSheerParagraph(t, getPanSheerSeductionOverlay('sex', gender), /ridden up to the small of your back/);
+                            return t;
+                        }
                         if (stage === 'approach') t = _insertSheerParagraph(t, getSheerSeductionOverlay('approach', gender), /gaze|eyes|looking|look/i);
                         if (stage === 'proposition' && t.split('\n\n').length > 1) t = _insertSheerParagraph(t, getSheerSeductionOverlay('proposition', gender), /./);
                         if (stage === 'sex') {
@@ -71308,16 +71355,23 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
 
                     // Exhibition Seduction — route to the correct branch when exposed
-                    var _hsExposure = _bpeShim(getExposureLevel()); // BPE shim: Step 13A
+                    // BPE Step 13A: the partial states count as what strangers can see (outerwear hides them)
+                    var _hsRaw = getExposureLevel();
+                    var _hsExposure = (_hsRaw === 'bra_exposed' || _hsRaw === 'panties_exposed') ? getVisibleExposureLevel() : _hsRaw;
                     const _hsCorruption = gameState.corruption || 0;
                     const _hsAppeal = calculateTotalAppeal();
                     // Mesh Step 15A: clothed or in underwear, a sheer state picks the branch
                     gameState.flags._seductionSheer = null;
-                    if ((_hsExposure === 'clothed' || _hsExposure === 'underwear_only') && _hsCorruption >= 6001 && _hsAppeal >= 80) {
+                    if (_hsExposure === 'panties_exposed' && _hsCorruption >= 6001 && _hsAppeal >= 80) {
+                        // Panties on show under a top always take Branch E; mesh panties bring the overlays
+                        var _hsPanSheer = getSheerSeductionBranch();
+                        if (_hsPanSheer && _hsPanSheer.branch === 'pan') gameState.flags._seductionSheer = _hsPanSheer.state;
+                    } else if ((_hsExposure === 'clothed' || _hsExposure === 'underwear_only' || _hsExposure === 'bra_exposed') && _hsCorruption >= 6001 && _hsAppeal >= 80) {
                         var _hsSheer = getSheerSeductionBranch();
                         if (_hsSheer) {
                             gameState.flags._seductionSheer = _hsSheer.state;
-                            _hsExposure = { bra: 'underwear_only', top: 'topless', btm: 'bottomless', nkd: 'naked' }[_hsSheer.branch];
+                            // Mesh panties with no top either (Underwear Only) stay on Branch C
+                            _hsExposure = { bra: 'underwear_only', top: 'topless', btm: 'bottomless', nkd: 'naked', pan: 'bottomless' }[_hsSheer.branch];
                         }
                     }
                     if (_hsCorruption >= 6001 && _hsAppeal >= 80) {
@@ -71340,6 +71394,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             return [
                                 { text: '<img src="Images/icons/kiss.png" class="icon" alt="seduce"> Approach him', nextScene: 'exhibition_seduce_nkd_approach_m' },
                                 { text: '<img src="Images/icons/kiss.png" class="icon" alt="seduce"> Approach her', nextScene: 'exhibition_seduce_nkd_approach_f' }
+                            ];
+                        } else if (_hsExposure === 'panties_exposed') {
+                            return [
+                                { text: '<img src="Images/icons/kiss.png" class="icon" alt="seduce"> Approach him', nextScene: 'exhibition_seduce_pan_approach_m' },
+                                { text: '<img src="Images/icons/kiss.png" class="icon" alt="seduce"> Approach her', nextScene: 'exhibition_seduce_pan_approach_f' }
                             ];
                         }
                     }
