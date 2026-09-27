@@ -8275,7 +8275,7 @@
 
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #cc66cc; font-size: 13px;">GETTING STARTED</strong></li>
                         <ul style="margin: 5px 0 0 15px; padding: 0;">
-                            <li style="margin: 3px 0;">Buy drugs from back alley dealers (night, slums) or from Tino at The Hole (Vajaros supplier).</li>
+                            <li style="margin: 3px 0;">Buy drugs from back alley dealers in the slums (any time of day), or from Tino at The Hole once you're working with the Vajaros.</li>
                             <li style="margin: 3px 0;">Sell with &quot;Look for buyers&quot; at any slums location when carrying product.</li>
                             <li style="margin: 3px 0;">Your first sale triggers a Vajaros scout who gives you a business card. Call it to unlock the dock-bar meeting.</li>
                             <li style="margin: 3px 0;">All drug earnings go to <strong style="color: #ff4444;">dirty money</strong>. You must launder it before spending or depositing.</li>
@@ -102821,14 +102821,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         { text: "Move quietly through", nextScene: "alley_stealth" }
                     ];
                     
-                    // Drug acquisition: back alley dealers (night only)
-                    var timeOfDay = getTimeOfDay();
-                    if (timeOfDay === 'evening' || timeOfDay === 'night') {
-                        choices.push({
-                            text: '<img src="Images/icons/drug-deal.png" class="icon" alt="deal"> Look for someone selling',
-                            nextScene: 'back_alley_drug_dealer'
-                        });
-                    }
+                    // Drug acquisition: back alley dealers (any time of day)
+                    choices.push({
+                        text: '<img src="Images/icons/drug-deal.png" class="icon" alt="deal"> Look for someone selling',
+                        nextScene: 'back_alley_drug_dealer'
+                    });
                     
                     if (!gameState.flags.stealthPracticedToday) {
                         choices.push({
