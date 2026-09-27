@@ -21047,7 +21047,7 @@ audioSystem.playSFX('buttonClick');
                 ,{ id: 'exhibition_bench_trigger', repeatable: true, chance: 0.22, districts: ['park'], condition: () => !isNight && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionBenchDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_puddle_trigger', repeatable: true, chance: 0.19, districts: ['park','commercial','residential','downtown'], condition: () => !isNight && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionPuddleDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_crowd_trigger', repeatable: true, chance: 0.18, districts: ['commercial','downtown'], condition: () => (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionCrowdDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
-                ,{ id: 'exhibition_fitting_trigger', repeatable: true, chance: 0.18, districts: ['commercial'], condition: () => !isNight && ['bargain_threads_entrance','bargain_threads_browse','noir_entrance','noir_browse','noir_recommend','noir_checkout','urban_edge_entrance','urban_edge_browse'].includes(currentScene) && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionFittingDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
+                ,{ id: 'exhibition_fitting_trigger', repeatable: true, chance: 0.18, districts: ['commercial'], condition: () => !isNight && ['bargain_threads_entrance','bargain_threads_browse','noir_entrance','noir_browse','noir_recommend','noir_checkout','urban_edge_entrance','urban_edge_browse'].includes(currentScene) && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionFittingDay || 0) < gameState.time.day && getExposureLevel() !== 'bra_exposed' && exhibitionGlobalCooldownClear() }
                 ,{ id: 'exhibition_escalator_trigger', repeatable: true, chance: 0.18, districts: ['commercial','downtown'], condition: () => (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionEscalatorDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
                 // exhibition_bus_trigger removed from random pool — fires exclusively via travelToLocation() when method === 'bus'
                 ,{ id: 'exhibition_barstool_trigger', repeatable: true, chance: 0.20, districts: ['downtown'], condition: () => gameState.time.hour >= 18 && (!!gameState.currentOutfit.dress || (!!gameState.currentOutfit.bottom && (gameState.currentOutfit.bottom.name.toLowerCase().includes('skirt') || gameState.currentOutfit.bottom.name.toLowerCase().includes('dress')))) && (gameState.flags.exhibitionBarDay || 0) < gameState.time.day && exhibitionGlobalCooldownClear() }
@@ -24927,6 +24927,195 @@ audioSystem.playSFX('buttonClick');
             for (var i = 0; i < parts.length; i++) { if (re.test(parts[i])) { at = i; break; } }
             parts.splice(at + 1, 0, para);
             return parts.join('\n\n');
+        }
+
+        // ── BPE Step 11B + 11D: layer lines on the exhibition events ──
+        // Skirt/dress events that fire in Bra Exposed get a line for the bra already on show;
+        // top events that fire in Panties Exposed get a line for the panties already on show.
+        // Five tiers each (<2001, <4001, <6001, <8001, 8001+), matching the events' own split.
+        // Each lands just before the event's closing paragraph, so it reads after the moment itself.
+        // The fitting room is kept out of Bra Exposed at registration (its prose strips a top).
+        // Opaque, visible pieces only; mesh belongs to the sheer overlays.
+        var BPE_EVENT_LAYERS = {
+            bra_exposed: {
+                wind: [
+                    'All through it your {bra}\'s on show above the {bottom} too, so the path gets both halves of you at once, and your nipples are hard against the cups.',
+                    'Your {bra} was doing enough on its own before the wind joined in, and your nipples are tight in the cups.',
+                    'Up top there\'s nothing but your {bra} between {tits} and the park, so he\'s had you from the cups to the hem, and your nipples are stiff against the fabric.',
+                    'Your {bra}\'s been giving the path {tits} the whole walk, and now the path\'s had the rest of you too. Your pussy clenches at being on show from both ends.',
+                    '{Tits} push at the cups of your {bra} with every breath, the hem\'s finished the picture, and your nipples ache while your pussy slicks up for him.'
+                ],
+                staircase: [
+                    'From below he\'s had the bottom curve of {tits} in your {bra} as well as the view up your {bottom}, and your nipples are tight in the cups.',
+                    'Every glance back shows him looking up at a girl in her {bra}, and the thought sets your nipples stiff against the cups.',
+                    'He\'s had the whole underside of you, your {bra} cupping {tits} above and the {bottom} riding up below, and your pussy clenches at being looked up at from both ends.',
+                    'You roll your shoulders back so the cups of your {bra} lift too, and give him both ends of you at once.',
+                    'You arch your back so {tits} push up in your {bra}, and the view he gets from the cups to the hem makes your clit throb.'
+                ],
+                bench: [
+                    'Sitting down put {tits} in your {bra} right at his eye level too, and your nipples are hard in the cups under his stare.',
+                    'In your {bra} and a {bottom} that won\'t stay down, you\'re giving him most of you from one park bench, and your nipples tighten in the cups.',
+                    'His eyes go from your lap up to your {bra} and back again, and your nipples stiffen in the cups each time they come up.',
+                    'You lean back on your hands so {tits} lift in your {bra}, and his eyes can\'t decide which half of you to stay on.',
+                    'You lean back on your hands and push your chest out, {tits} straining your {bra}, and your pussy\'s wet on the slats.'
+                ],
+                puddle: [
+                    'The splash reached your bare stomach too and ran up under the band of your {bra}, and your nipples are hard inside the cups from the cold.',
+                    'Cold water runs down your bare stomach from the band of your {bra}, and your nipples are stiff against the damp cups.',
+                    'Some of it caught your {bra} too, and your nipples are standing up hard through the damp cups.',
+                    'Water drips off the band of your {bra} and down your bare stomach into the {bottom}, and your nipples stiffen at the cold and the eyes at once.',
+                    'You push your wet hair back and let the drips run from your {bra} down your stomach, your nipples hard in the cups and your pussy clenching under the soaked {bottom}.'
+                ],
+                crowd: [
+                    'With nothing on above the {bottom} but your {bra}, you can feel strangers\' arms pressed against your bare sides, and your nipples are tight in the cups.',
+                    'Somebody\'s elbow drags across the cup of your {bra} in the crush, and your nipple stiffens under it.',
+                    'A shoulder presses into the cup of your {bra}, and in the crush you can\'t tell whose it is, only that your nipple\'s gone hard under it.',
+                    'A second hand finds the underside of your {bra} and cups it, and you let that one stay too.',
+                    'A second hand finds your {bra} and squeezes {tits} through the cups, and you push into it while your pussy gets wetter against the first.'
+                ],
+                escalator: [
+                    'Your {bra}\'s the only thing on you above the waist, and the rising stair has put {tits} on show to the whole floor below. Your nipples are tight in the cups.',
+                    'The same glass has given him your {bra} too, {tits} lifted in the cups right at his eye line, and your nipples harden at the thought.',
+                    'His eyes have taken their time over you, from the cups of your {bra} down to the hem, and your nipples are stiff in the cups.',
+                    'You square your shoulders so {tits} lift in your {bra} for him, and give him all of you from the cups down.',
+                    'You arch your back against the handrail so {tits} push up out of your {bra}, and his eyes have to choose between that and the hem.'
+                ],
+                barstool: [
+                    'Sitting at an outdoor bar with nothing on above the {bottom} but your {bra} had the tables around you looking before any of this, and your nipples are stiff in the cups.',
+                    'From his stool he\'s got your {bra} at arm\'s length as well, and your nipples tighten in the cups.',
+                    'His eyes keep going from your thighs up to your {bra} and back, and your nipples stiffen in the cups every time they come up.',
+                    'You lean on the counter so {tits} press together in your {bra}, and give him both views from the stool beside you.',
+                    'You lean on the counter and let {tits} spill forward in your {bra} toward him, and your pussy\'s slick on the stool.'
+                ],
+                photo: [
+                    'From down there his phone had your {bra} too, {tits} in the cups above your hem, and your nipples tighten at the thought of the picture.',
+                    'Whatever he shot has your {bra} in the top of the frame, and your nipples harden in the cups.',
+                    'His frame had all of you from underneath, the cups of your {bra} at the top and your hem below, and your nipples go stiff in the cups.',
+                    'You shift so {tits} sit higher in your {bra} for the lens, and let him have the whole of you in one shot.',
+                    'You arch so {tits} push up in your {bra} and give his lens the full length of you from the cups down, and your clit throbs.'
+                ],
+                // 11D: the bus gets a fuller paragraph for the crowded aisle
+                bus: [
+                    'In your {bra}, the crowded aisle\'s worse than the hem. On the next lurch somebody\'s hand brushes the cup and slides away like it never happened.\n\nThe man behind you has stepped in close enough that you can feel his breath on your bare shoulder. Your nipples are stiff in the cups and you can\'t make them stop.',
+                    'The aisle\'s packed and you\'re the only one on it in a {bra}. A knuckle drags across your cup on the next jolt, too slow to be an accident.\n\nThe man behind you shifts until his chest\'s against your bare back. Your nipple\'s hard where the knuckle went.',
+                    'Nobody on this bus is pretending about the {bra}. A hand brushes your cup on its way past and doesn\'t hurry.\n\nThe man behind you has settled in so close that his belt buckle presses the small of your back. Your nipples ache in the cups.',
+                    'The man behind you has been standing too close since you got on, and you haven\'t moved away. When the bus brakes his hand comes up and brushes the cup of your {bra}.\n\nYou lean back into him until his knuckles are resting on {tits}.',
+                    'You got on in your {bra} knowing the aisle would be packed. When a hand brushes your cup you arch into it.\n\nThe man behind you takes the hint, pressing up against your bare back while his fingers trace the edge of the cup over your stiff nipple.'
+                ]
+            },
+            panties_exposed: {
+                button: [
+                    'The whole time, the street\'s had your {panties} below the hem of your {top} too, and your pussy clenches in the crotch.',
+                    'With your {panties} on show under the hem, the gap up top left hardly anything covered, and your nipples are tight.',
+                    'Between the gap at your chest and your {panties} under the hem, your {top}\'s barely covering the middle of you, and your pussy clenches.',
+                    'With your {panties} on show below, the gap\'s given the street both ends of you, and your clit throbs.',
+                    'The whole time, the hem\'s leaving your {panties} on show below, and your pussy soaks the crotch while he looks.'
+                ],
+                wet: [
+                    'The splash ran off the hem of your {top} and down the front of your {panties}, and the cold wet fabric\'s stuck to your pussy.',
+                    'Water drips from the hem of your soaked {top} straight onto your {panties}, and the front has gone dark and clings to your pussy.',
+                    'Some of it ran down into your {panties}, the front plastered to your pussy lips, and your clit throbs under the wet fabric.',
+                    'The water\'s run down your stomach into your {panties}, and you let the street see the front of {panIt} stuck to your pussy lips as well.',
+                    'You wring out your hem right there, lifting it off your stomach so the street gets your wet {panties} stuck to your pussy lips too.'
+                ],
+                reach: [
+                    'With the hem up, the man in the aisle had all of your {panties} too, and your pussy clenches.',
+                    'With your {top} up at your ribs there was nothing between the aisle and your {panties} but air, and your pussy clenches under the fabric.',
+                    'Your {top} riding up left you in your {panties} from the ribs down in the middle of the shop, and your pussy\'s wetter in the crotch.',
+                    'The whole time, {ass} is on show to the aisle in your {panties}, and your clit throbs.',
+                    'You rise onto your toes so {ass} lifts in your {panties}, and your clit throbs at the stare from the aisle.'
+                ],
+                lean: [
+                    'Leaning forward stuck {ass} out behind you in your {panties}, so somebody behind you got that view while he got the other. Your pussy clenches.',
+                    'Bent forward like that, {ass} was pushed out behind you in your {panties} for the whole sidewalk, and your pussy clenches.',
+                    'The lean pushed {ass} out behind you in your {panties}, so whoever was back there got as much as he did, and your clit throbs.',
+                    'The whole time you were bent, {ass} was pushed out in your {panties} for the sidewalk behind you, and your pussy slicks up thinking about both angles.',
+                    'Bent over like this, {ass} pushes out in your {panties} for anyone behind you, and your pussy soaks the crotch.'
+                ],
+                fitslip: [
+                    'Every stride had {ass} bouncing in your {panties} behind you as well, and your pussy clenches at how much of you was out.',
+                    'Running in your {panties} and a {top} had people looking before the strap went, and {ass} bouncing behind you kept them looking. Your nipples tighten.',
+                    '{Ass} bounced in your {panties} with every stride, so the man on the bench got you front and back, and your clit throbs.',
+                    '{Ass} bounces in your {panties} behind you with every stride, and your pussy\'s wet in the crotch.',
+                    'He got to watch all of it, {ass} rolling in your {panties} with every stride, and your pussy soaks the crotch.'
+                ],
+                bra_wind: [
+                    'With the hem up there was nothing hanging over your {panties} at all, and your pussy clenches in the crotch.',
+                    'With your {top} flipped up there was nothing but your {panties} between the corner and your pussy, and your clit throbs.',
+                    'For those seconds you were in your {panties} from the chest down on a public corner, and your pussy\'s wetter in the crotch.',
+                    'With your {top} up you stood on the corner in your {panties}, {ass} out to the street behind you, and your clit throbs.',
+                    'You turn a little in the gust so the street behind you gets {ass} in your {panties} too, and your pussy\'s slick in the crotch.'
+                ],
+                mirror: [
+                    'The glass showed him your {panties} under the hem as well, and from behind he\'s had {ass} too. Your pussy clenches.',
+                    'From two feet back he\'s had {ass} in your {panties} the whole time too, and your pussy clenches at being seen from both sides.',
+                    'In the glass you watch his eyes drop from your neckline down to {ass} in your {panties}, and your clit throbs.',
+                    'You shift your weight so {ass} pushes back toward him in your {panties}, and his reflection swallows.',
+                    'You push {ass} back toward him in your {panties} while you hold the neckline open, and your pussy\'s slick in the crotch.'
+                ],
+                neckline: [
+                    'Standing on the step in your {panties} and a {top}, you know exactly what the people riding up behind you can see, and your pussy clenches.',
+                    'Somewhere behind you on the rising steps, somebody\'s had {ass} in your {panties} at eye level the whole ride, and your clit throbs.',
+                    'He\'s got your neckline and whoever\'s riding up behind you has {ass} in your {panties}, and your pussy clenches at being seen from both sides.',
+                    'You shift your weight onto one leg so {ass} tilts back in your {panties} for the steps behind you, and your clit throbs.',
+                    'You lean on the handrail and push {ass} back in your {panties} for whoever\'s riding up behind you, and your pussy\'s slick.'
+                ],
+                spill: [
+                    'The drink ran off the hem of your {top} onto the front of your {panties} too, and the cold makes your pussy clench.',
+                    'Some of the drink dripped down your stomach into your {panties}, the front gone dark and clinging to your pussy.',
+                    'Half of it ran into your {panties}, and the wet crotch stuck to your pussy lips has the whole bar looking lower as well.',
+                    'The drink ran down into your {panties}, and you let the bar see the front of {panIt} stuck to your pussy lips.',
+                    'You peel the wet hem off your stomach so the bar can see your {panties} soaked through and stuck to your pussy lips, and your clit throbs.'
+                ],
+                turnstile: [
+                    'With your {panties} already on show to the whole line behind you, having the front of you out too makes your pussy clench.',
+                    'The man behind you had {ass} in your {panties} the whole way up the line, and then he got the rest. Your clit throbs.',
+                    'Pushing through the gate tipped {ass} back toward him in your {panties}, so he got both views at point-blank range, and your pussy clenches.',
+                    'Behind you the line\'s still filing through the gate, and every one of them gets {ass} in your {panties} as they pass. Your clit throbs.',
+                    'You bend a little so {ass} pushes back in your {panties} for the line still coming through the gate, and your pussy soaks the crotch.'
+                ]
+            }
+        };
+
+        function getBpeEventLayer(ev) {
+            var state = getVisibleExposureLevel();
+            var set = BPE_EVENT_LAYERS[state];
+            if (!set || !set[ev]) return '';
+            var cv = getSceneClothingVars();
+            if (state === 'bra_exposed' && cv.braSheer) return '';
+            if (state === 'panties_exposed' && cv.pantiesSheer) return '';
+            var c = gameState.corruption || 0;
+            var line = set[ev][c < 2001 ? 0 : c < 4001 ? 1 : c < 6001 ? 2 : c < 8001 ? 3 : 4];
+            var _ba = gameState.bodyAppearance || {};
+            var bs = _ba.breastSize || 'average', butt = _ba.buttSize || 'average';
+            var tits = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your tits';
+            var ass = butt === 'large' ? 'your full ass' : butt === 'small' ? 'your tight little ass' : 'your ass';
+            return line.replace(/\{bra\}/g, cv.braName).replace(/\{bottom\}/g, cv.bottomName)
+                .replace(/\{top\}/g, cv.topName).replace(/\{panties\}/g, cv.pantiesName)
+                .replace(/\{panIt\}/g, cv.pantiesCut === 'thong' ? 'it' : 'them')
+                .replace(/\{tits\}/g, tits).replace(/\{Tits\}/g, capFirst(tits)).replace(/\{ass\}/g, ass).replace(/\{Ass\}/g, capFirst(ass));
+        }
+
+        function installBpeExhibitionLayers() {
+            if (typeof story === 'undefined') return;
+            ['bra_exposed', 'panties_exposed'].forEach(function(state) {
+                Object.keys(BPE_EVENT_LAYERS[state]).forEach(function(ev) {
+                    var sc = story['exhibition_' + ev + '_trigger'];
+                    if (!sc) return;
+                    var baseText = sc.text;
+                    sc.text = function() {
+                        var t = typeof baseText === 'function' ? baseText.apply(this, arguments) : baseText;
+                        var para = getBpeEventLayer(ev);
+                        if (!para || typeof t !== 'string') return t;
+                        // Just before the closing beat: after the moment, before she moves on
+                        var parts = t.split('\n\n');
+                        // (one earlier when the closer leans on the line before it: "But...", "It...")
+                        var at = parts.length - (/^(But|It)\b/.test(parts[parts.length - 1] || '') ? 2 : 1);
+                        parts.splice(Math.max(1, at), 0, para);
+                        return parts.join('\n\n');
+                    };
+                });
+            });
         }
 
         // ── Mesh & Sheer Overhaul, Step 15: Exhibition Seduction through the mesh ──
@@ -173273,7 +173462,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         } else if (corruption < 6001) {
                             return 'The hem goes up and stays up for a long moment. Bare cunt open to the afternoon park, warm air on wet, exposed skin.\n\nYou cover it.\n\nYour body\'s response arrived first: you\'re wet, flagrantly, and being seen bare lands as heat in your thighs before it registers as anything else.\n\nA man twenty feet away stopped walking. He got a full look. His breath catches audibly.\n\nYou roll one shoulder and keep walking, your thighs pressing together on every other step.';
                         } else if (corruption < 8001) {
-                            return 'The wind takes your hem and you\'re bare and on display and you don\'t move.\n\nYour cunt, your thighs, the full naked fact of you under that dress, open to the afternoon, to the man on the bench near the fountain who stopped scrolling his phone the moment the wind hit.\n\nYou press your thighs together. Let the hem sit. Hold his gaze until he\'s the one who looks away.\n\nYou smooth the fabric down slowly, never dropping his eyes, and walk.';
+                            return 'The wind takes your hem and you\'re bare and on display and you don\'t move.\n\nYour cunt, your thighs, the full naked fact of you under that ' + cv.bottomName + ', open to the afternoon, to the man on the bench near the fountain who stopped scrolling his phone the moment the wind hit.\n\nYou press your thighs together. Let the hem sit. Hold his gaze until he\'s the one who looks away.\n\nYou smooth the fabric down slowly, never dropping his eyes, and walk.';
                         } else {
                             return 'The hem lifts and the breeze hits your bare, slick cunt and it lands as relief.\n\nGood. Finally.\n\nA man walking toward you—business clothes, collar open, a coffee cup—breaks stride completely when he sees what the wind is showing him.\n\nYou hold the moment. Let him look. Your clit is throbbing. Your thighs are slick.\n\nYou smooth the hem down eventually, slowly, and walk past him close enough that he could reach out and touch your arm.';
                         }
@@ -209369,6 +209558,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
         installSheerExhibitionOverlays();
         // Mesh Step 15: sheer overlays and exits on the Exhibition Seduction chains
         installSheerSeductionOverlays();
+        // Bra/Panties Exposed Step 11B + 11D: layer lines on the exhibition events
+        installBpeExhibitionLayers();
         
 
 
