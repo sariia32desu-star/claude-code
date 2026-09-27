@@ -22493,6 +22493,70 @@ audioSystem.playSFX('buttonClick');
             return res;
         }
 
+        // ── Bra/Panties Exposed Overhaul Step 3E: Appearance tab sub-lines ──
+        // Bra Exposed branches on braStyle (and breastSize); Panties Exposed on pantiesCut and buttSize.
+        // Mesh pieces get the sheer lingerie box instead (getSheerLingerieBoxInfo).
+        function getBraExposedBoxSub() {
+            var cv = getSceneClothingVars();
+            var bs = (gameState.bodyAppearance || {}).breastSize || 'average';
+            var bra = cv.braName, bottom = cv.bottomName;
+            var Tits = bs === 'large' ? 'Your heavy tits' : bs === 'small' ? 'Your small tits' : 'Your tits';
+            var tits = Tits.charAt(0).toLowerCase() + Tits.slice(1);
+            if (isWetBraThrough()) {
+                return 'Your ' + bra + '\'s soaked through. Your nipples show dark and stiff under the wet fabric, and every stranger on the street can see them.';
+            }
+            var sub;
+            switch (cv.braStyle) {
+                case 'pushup':
+                    sub = 'Your ' + bra + ' and your ' + bottom + '. ' + Tits + ' sit high and pushed together in the cups, and every eye on the street lands there first.';
+                    break;
+                case 'sporty':
+                    sub = 'Your ' + bra + ' and your ' + bottom + '. Dressed for a run, and people still look, and your nipples still stiffen when they do.';
+                    break;
+                case 'bralette':
+                    sub = 'Your ' + bra + ' and your ' + bottom + ', worn like a top. The thin cups hide almost nothing, and your nipples press against them every time someone looks.';
+                    break;
+                case 'corset':
+                    sub = 'Your ' + bra + ' and your ' + bottom + '. It cinches your waist and lifts ' + tits + ' up and out, a look built for a club and worn on the sidewalk.';
+                    break;
+                case 'lace':
+                    sub = 'Your ' + bra + ' and your ' + bottom + '. The lace is pretty enough to pass for a top, until someone gets close enough to see your nipples through the pattern.';
+                    break;
+                default:
+                    sub = 'Your ' + bra + ' and your ' + bottom + '. It\'s a look. Everyone who passes gets a good one at ' + tits + ', and your nipples stiffen in the cups.';
+            }
+            if (cv.commando) sub += ' There\'s nothing under your ' + bottom + ', either.';
+            return sub;
+        }
+
+        function getPantiesExposedBoxSub() {
+            var cv = getSceneClothingVars();
+            var butt = (gameState.bodyAppearance || {}).buttSize || 'average';
+            var top = cv.topName, pan = cv.pantiesName;
+            var open = 'Your ' + top + ' ends at your hips. ';
+            var sub;
+            if (cv.pantiesCut === 'thong') {
+                sub = butt === 'large' ? open + 'Below it, your thong vanishes between your heavy cheeks and your whole ass is out.'
+                    : butt === 'small' ? open + 'Below it, your thong disappears between your tight little cheeks, and your ass is bare for the whole street.'
+                    : open + 'Below it, the thong splits your bare ass, and everyone behind you gets all of it.';
+            } else if (cv.pantiesCut === 'cheeky') {
+                sub = butt === 'large' ? open + 'Your ' + pan + ' cover half your full ass, and the rest spills out under the hem.'
+                    : butt === 'small' ? open + 'Your ' + pan + ' ride high on your tight little ass, the bottoms of your cheeks bare.'
+                    : open + 'The bottom of your ass hangs out of your ' + pan + ' with every step.';
+            } else if (cv.pantiesCut === 'boyshort') {
+                sub = butt === 'large' ? open + 'Your ' + pan + ' stretch tight over your full ass. They cover more than a thong would, and they\'re still underwear on a public street.'
+                    : butt === 'small' ? open + 'Below it, snug ' + pan + ' and your bare legs. From behind, it\'s your tight little ass in your underwear.'
+                    : open + 'Your ' + pan + ' hug your ass. From a block away they might pass for shorts, and up close they\'re underwear.';
+            } else {
+                sub = butt === 'large' ? open + 'Your ' + pan + ' strain over your full ass, and anyone behind you can see exactly what they are.'
+                    : butt === 'small' ? open + 'Below it, your ' + pan + ' and your bare legs. Your tight little ass is right there for anyone walking behind you.'
+                    : open + 'Below it, your ' + pan + ' and your bare legs, and everyone behind you knows it.';
+            }
+            sub += ' The crotch is damp, and you\'re sure it shows.';
+            if (cv.braless) sub += ' There\'s no bra under your ' + top + ', either, and your nipples show it.';
+            return sub;
+        }
+
         // 6B: the lingerie variant of the visible-underwear box. Returns null when the
         // visible underwear isn't sheer, so the regular pink box renders instead.
         function getSheerLingerieBoxInfo(braVisible, pantiesVisible) {
@@ -23420,14 +23484,14 @@ audioSystem.playSFX('buttonClick');
                 kelsieResponse = getToplessKelsieResponse(corruption);
 
                 if (corruption >= 6001) {
-                    gameState.arousal = Math.min(100, gameState.arousal + 15);
+                    applyArousal(15); // Bra/Panties Exposed Step 3B
                     modifyMentalHealth(3);
                     statText = '\n\n<span style="color: #ff69b4;">Arousal +15</span>  · <span style="color: #88ff88;">Mental Health +3</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
                 } else if (corruption >= 2001) {
-                    gameState.arousal = Math.min(100, gameState.arousal + 10);
+                    applyArousal(10); // Bra/Panties Exposed Step 3B
                     statText = '\n\n<span style="color: #ff69b4;">Arousal +10</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
                 } else {
-                    gameState.arousal = Math.min(100, gameState.arousal + 5);
+                    applyArousal(5); // Bra/Panties Exposed Step 3B
                     modifyMentalHealth(-4);
                     statText = '\n\n<span style="color: #4488ff;">Mental Health -4</span>  · <span style="color: #ff69b4;">Arousal +5</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
                 }
@@ -23440,14 +23504,14 @@ audioSystem.playSFX('buttonClick');
                 kelsieResponse = getBottomlessKelsieResponse(corruption);
 
                 if (corruption >= 6001) {
-                    gameState.arousal = Math.min(100, gameState.arousal + 18);
+                    applyArousal(18); // Bra/Panties Exposed Step 3B
                     modifyMentalHealth(4);
                     statText = '\n\n<span style="color: #ff69b4;">Arousal +18</span>  · <span style="color: #88ff88;">Mental Health +4</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
                 } else if (corruption >= 2001) {
-                    gameState.arousal = Math.min(100, gameState.arousal + 12);
+                    applyArousal(12); // Bra/Panties Exposed Step 3B
                     statText = '\n\n<span style="color: #ff69b4;">Arousal +12</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
                 } else {
-                    gameState.arousal = Math.min(100, gameState.arousal + 6);
+                    applyArousal(6); // Bra/Panties Exposed Step 3B
                     modifyMentalHealth(-5);
                     statText = '\n\n<span style="color: #4488ff;">Mental Health -5</span>  · <span style="color: #ff69b4;">Arousal +6</span>  · <span style="color: #8b0000;">Suspicion +' + suspicionIncrease + '</span>';
                 }
@@ -23470,9 +23534,18 @@ audioSystem.playSFX('buttonClick');
                 var _uwTop = _uwCv.topName;
                 var _uwBottom = _uwCv.bottomName;
 
+                // Bra/Panties Exposed Step 3C: mental health per state. Bra Exposed -1/0/+1,
+                // Panties Exposed -3/0/+2 (plus 3 karma toward Demonic at Corrupted+), Underwear Only as before.
+                var _uwMhHigh = type === 'bra_only' ? 1 : 2;
+                var _uwMhLow = type === 'bra_only' ? -1 : -3;
                 if (corruption >= 6001) {
-                    gameState.arousal = Math.min(100, gameState.arousal + 10);
-                    modifyMentalHealth(2);
+                    applyArousal(10); // Step 3B
+                    modifyMentalHealth(_uwMhHigh);
+                    var _uwKarmaTxt = '';
+                    if (type === 'panties_only') {
+                        modifyKarma(-3);
+                        _uwKarmaTxt = '  · <span style="color: #ff6666;">Karma -3</span>';
+                    }
                     
                     const highResponses = [
                         '\n\nYou catch the looks and let them land. ' + (_uwBra ? 'Your nipples go stiff in the cups' : 'Your nipples go stiff under your ' + _uwTop) + ' and you roll your shoulders back so everyone gets a better view.\n\nYour stride doesn\'t change. Your pussy\'s dripping.',
@@ -23480,10 +23553,10 @@ audioSystem.playSFX('buttonClick');
                         '\n\nYou feel their eyes and your cunt answers, slow and hot. The underwear was a choice.\n\n' + (type === 'both' ? 'Stiff nipples in the cups, a wet spot spreading on your panties. Everyone gets to see both.' : type === 'bra_only' ? 'Your nipples stiffen in the cups for everyone who looks. Your clit throbs every time one of them does.' : 'A wet spot spreads on your panties for everyone who looks. Your clit throbs every time one of them does.')
                     ];
                     kelsieResponse = highResponses[Math.floor(Math.random() * highResponses.length)];
-                    statText = '\n\n<span style="color: #ff69b4;">Arousal +10</span>  · <span style="color: #88ff88;">Mental Health +2</span>' + _uwSuspTxt;
+                    statText = '\n\n<span style="color: #ff69b4;">Arousal +10</span>  · <span style="color: #88ff88;">Mental Health +' + _uwMhHigh + '</span>' + _uwKarmaTxt + _uwSuspTxt;
                     
                 } else if (corruption >= 2001) {
-                    gameState.arousal = Math.min(100, gameState.arousal + 7);
+                    applyArousal(7); // Step 3B
                     
                     const midResponses = [
                         '\n\nYour cheeks flush. You tug at your ' + (type === 'bra_only' ? 'bra strap' : type === 'panties_only' ? 'panties' : 'bra') + ' like it might turn into a full outfit.\n\n<em>Everyone can see. Everyone can see exactly what I\'m wearing.</em>\n\n' + (_uwPan ? 'Your pussy\'s slick against the panties, and the wet spot\'s spreading where anyone can see it.' : 'Your pussy\'s slick under your ' + _uwBottom + ', and it gets worse with every stare.'),
@@ -23494,8 +23567,8 @@ audioSystem.playSFX('buttonClick');
                     statText = '\n\n<span style="color: #ff69b4;">Arousal +7</span>' + _uwSuspTxt;
                     
                 } else {
-                    gameState.arousal = Math.min(100, gameState.arousal + 3);
-                    modifyMentalHealth(-3);
+                    applyArousal(3); // Step 3B
+                    modifyMentalHealth(_uwMhLow);
                     
                     const lowResponses = [
                         '\n\nYour face burns. You cross your arms over your ' + (type === 'panties_only' ? 'crotch' : 'chest') + ' and walk with your head down, and every stare feels like a hand on your skin.\n\n' + (_uwBra ? 'Your nipples are stiff against the cups and anyone looking can see it.' : 'Your nipples are stiff under your ' + _uwTop + ' and you can\'t make them stop.') + ' Your pussy clenches. You hate that it clenches.\n\n<em>I need to find real clothes. I can\'t keep walking around like this.</em>',
@@ -23503,7 +23576,7 @@ audioSystem.playSFX('buttonClick');
                         '\n\nEvery step is agony. You can feel your ' + (type === 'both' ? 'bra and panties' : type === 'bra_only' ? 'bra' : 'panties') + ' on your skin, and the air everywhere else.\n\nYour clit throbs under the stares. ' + (_uwBra ? 'Your nipples push stiff against the cups.' : 'Your nipples scrape your ' + _uwTop + ' with every breath.') + ' Your body won\'t stop answering them.\n\n<em>Please don\'t let anyone I know see me like this.</em>'
                     ];
                     kelsieResponse = lowResponses[Math.floor(Math.random() * lowResponses.length)];
-                    statText = '\n\n<span style="color: #4488ff;">Mental Health -3</span>  · <span style="color: #ff69b4;">Arousal +3</span>' + _uwSuspTxt;
+                    statText = '\n\n<span style="color: #4488ff;">Mental Health ' + _uwMhLow + '</span>  · <span style="color: #ff69b4;">Arousal +3</span>' + _uwSuspTxt;
                 }
             }
             
@@ -35592,6 +35665,9 @@ audioSystem.playSFX('buttonClick');
                 '\u2022 Time topless: ' + _toplessHrs + 'h ' + _toplessMin + 'm<br>' +
                 '\u2022 Time bottomless: ' + _bottomlessHrs + 'h ' + _bottomlessMin + 'm<br>' +
                 '\u2022 Time in underwear: ' + _underwearHrs + 'h ' + _underwearMin + 'm<br>' +
+                // Bra/Panties Exposed Overhaul Step 3D
+                '\u2022 Time bra exposed: ' + Math.floor((_es.braExposedMinutesTotal || 0) / 60) + 'h ' + ((_es.braExposedMinutesTotal || 0) % 60) + 'm<br>' +
+                '\u2022 Time panties exposed: ' + Math.floor((_es.pantiesExposedMinutesTotal || 0) / 60) + 'h ' + ((_es.pantiesExposedMinutesTotal || 0) % 60) + 'm<br>' +
                 // Mesh Overhaul Step 1E: braless/commando minutes were tracked but never shown.
                 '\u2022 Time braless: ' + Math.floor((_es.bralessMinutesTotal || 0) / 60) + 'h ' + ((_es.bralessMinutesTotal || 0) % 60) + 'm<br>' +
                 '\u2022 Time commando: ' + Math.floor((_es.commandoMinutesTotal || 0) / 60) + 'h ' + ((_es.commandoMinutesTotal || 0) % 60) + 'm<br>' +
@@ -36392,18 +36468,44 @@ audioSystem.playSFX('buttonClick');
             } else {
                 clearPassiveAccum('underwearThrill');
             }
-            // Bra Exposed / Panties Exposed in public, +2 thrill per hour. Visible check: a partial
-            // jacket hides the bra, a full coat hides both. Sheer lingerie replaces it rather than stacking.
-            var _uwPartialConceal = (typeof getOuterwearConcealment === 'function') ? getOuterwearConcealment() : 'none';
-            var _uwPartialPassive = !_privateExposure && _bpeShim(getExposureLevel()) === 'clothed' && // BPE shim: Step 3A
-                ((isBraVisible() && _uwPartialConceal === 'none') || (arePantiesVisible() && _uwPartialConceal !== 'full'));
-            if (_uwPartialPassive && !_sheerLingerieNow) {
-                var uwPartialThrill = accruePassive('underwearPartialThrill', 2, minutes);
-                if (uwPartialThrill > 0) {
-                    applyExhibitionThrillGain(uwPartialThrill);
+            // Bra/Panties Exposed Overhaul Step 3A (Decision 4): the partial states split.
+            // Bra Exposed +2/hr, a sports bra +1/hr, soaked through +4/hr (in place of the wet rate).
+            // Panties Exposed +3/hr. Braless and commando stack from the blocks above.
+            // Visible level (a partial jacket hides the bra, a full coat hides both), public only.
+            // Sheer lingerie (a mesh bra or mesh panties) replaces these rather than stacking.
+            var _bpeVisLvl = _privateExposure ? 'clothed' : getVisibleExposureLevel();
+            var _braWetThrough = _bpeVisLvl === 'bra_exposed' && isWetBraThrough();
+            var _braExposedPassive = _bpeVisLvl === 'bra_exposed' && !_sheerLingerieNow;
+            var _pantiesExposedPassive = _bpeVisLvl === 'panties_exposed' && !_sheerLingerieNow;
+            var _uwPartialPassive = _braExposedPassive || _pantiesExposedPassive;
+            clearPassiveAccum('underwearPartialThrill'); // retired: the pre-split shared accumulator
+            if (_braExposedPassive) {
+                var _braExposedRate = _braWetThrough ? 4 : (cv.braStyle === 'sporty' ? 1 : 2);
+                var braExposedThrill = accruePassive('braExposedThrill', _braExposedRate, minutes);
+                if (braExposedThrill > 0) {
+                    applyExhibitionThrillGain(braExposedThrill);
                 }
             } else {
-                clearPassiveAccum('underwearPartialThrill');
+                clearPassiveAccum('braExposedThrill');
+            }
+            if (_pantiesExposedPassive) {
+                var pantiesExposedThrill = accruePassive('pantiesExposedThrill', 3, minutes);
+                if (pantiesExposedThrill > 0) {
+                    applyExhibitionThrillGain(pantiesExposedThrill);
+                }
+            } else {
+                clearPassiveAccum('pantiesExposedThrill');
+            }
+            // Step 3B: a thong in Panties Exposed rides up between her cheeks with every step.
+            // +1 arousal per 30 minutes in public, through applyArousal() so the multipliers apply.
+            if (_pantiesExposedPassive && cv.pantiesCut === 'thong' && !_clarityActive) {
+                var thongRideArousal = accruePassive('thongRideArousal', 2, minutes);
+                if (thongRideArousal > 0) {
+                    gameState.flags.arousalChangedPassively = true;
+                    applyArousal(thongRideArousal);
+                }
+            } else {
+                clearPassiveAccum('thongRideArousal');
             }
             // Topless (chest exposed, bottom covered): +2 thrill per 20 min (6/hr)
             if (isToplessPassive && !isNakedPassive) {
@@ -36435,7 +36537,8 @@ audioSystem.playSFX('buttonClick');
 
             // Wet clothes (see-through): passive thrill scales with wetness, only while clothed
             // Mesh Overhaul Step 5B: when wet and mesh show the same skin, only the higher rate applies.
-            var _wetThrillActive = !!(gameState.weather && gameState.weather.wetClothes && !isNakedPassive && !isToplessPassive && !isBottomlessPassive);
+            // Bra/Panties Exposed Step 3A: a soaked-through bra's +4 replaces the wet rate
+            var _wetThrillActive = !!(gameState.weather && gameState.weather.wetClothes && !isNakedPassive && !isToplessPassive && !isBottomlessPassive) && !_braWetThrough;
             var _wetThrillRate = 0;
             if (_wetThrillActive) {
                 const _wetnessTick = gameState.weather.clothesWetness || 0;
@@ -36492,8 +36595,13 @@ audioSystem.playSFX('buttonClick');
                 _es.toplessMinutesTotal = (_es.toplessMinutesTotal || 0) + minutes;
             } else if (isBottomlessPassive) {
                 _es.bottomlessMinutesTotal = (_es.bottomlessMinutesTotal || 0) + minutes;
-            } else if (!hasCoveringTop || !hasCoveringBottom || cv.noBra || cv.noPanties) {
+            } else if (cv.exposureState === 'underwear_only') {
+                // Bra/Panties Exposed Step 3D: underwearMinutesTotal means Underwear Only again
                 _es.underwearMinutesTotal = (_es.underwearMinutesTotal || 0) + minutes;
+            } else if (cv.exposureState === 'bra_exposed') {
+                _es.braExposedMinutesTotal = (_es.braExposedMinutesTotal || 0) + minutes;
+            } else if (cv.exposureState === 'panties_exposed') {
+                _es.pantiesExposedMinutesTotal = (_es.pantiesExposedMinutesTotal || 0) + minutes;
             }
             // Braless/Commando Overhaul Step 9A: Cumulative minute tracking
             // These track independently of the exposure-state tracking above.
@@ -59526,17 +59634,25 @@ audioSystem.playSFX('buttonClick');
                     underwearSub = 'Just your bra and panties. You\'re walking around in your underwear.';
                 } else if (braVisible) {
                     underwearLabel = 'BRA EXPOSED';
-                    underwearSub = 'No top or dress. Your bra is fully visible.';
+                    underwearSub = getBraExposedBoxSub();
                 } else {
                     underwearLabel = 'PANTIES EXPOSED';
-                    underwearSub = 'No bottom or dress. Your panties are fully visible.';
+                    underwearSub = getPantiesExposedBoxSub();
                 }
+                // Bra/Panties Exposed Step 3E: a dry opaque bra is a look, so it gets a rose border and
+                // the sparkle icon. Soaked through (Step 2D) it's indecent again and keeps the warning.
+                const _braLook = braVisible && !pantiesVisible && !isWetBraThrough();
+                if (braVisible && !pantiesVisible && isWetBraThrough()) underwearLabel = 'BRA EXPOSED (SOAKED)';
+                const _uwBoxBorder = _braLook ? '#d9738f' : '#ff69b4';
+                const _uwBoxBg = _braLook ? 'rgba(217,115,143,0.1)' : 'rgba(255,105,180,0.1)';
+                const _uwBoxTitle = _braLook ? '#f09ab0' : '#ff69b4';
+                const _uwBoxIcon = _braLook ? '<img src="Images/icons/sparkle.png" class="icon" alt="sparkle">' : '<img src="Images/icons/warning.png" class="icon" alt="warning">';
                 const underwearImg = braVisible && pantiesVisible ? 'Images/body/panties-and-bra.png' : braVisible ? 'Images/body/bra-exposed.png' : 'Images/body/panties-exposed.png';
                 const underwearImgFallback = braVisible && pantiesVisible ? 'Images/body/panties-and-bra.png' : braVisible ? 'Images/body/bra-only.png' : 'Images/body/panties-only.png';
                 // Mesh Overhaul Step 6B: sheer lingerie gets its own box
                 const _sheerBox = getSheerLingerieBoxInfo(braVisible, pantiesVisible);
                 if (_sheerBox) outfitHTML = _sheerBox.html; else
-outfitHTML = '<div class="outfit-item" style="border:2px solid #ff69b4;background:rgba(255,105,180,0.1);padding:12px;text-align:center;"><span style="color:#ff69b4;font-size:1.1em;font-weight:bold;"><img src="Images/icons/warning.png" class="icon" alt="warning"> ' + underwearLabel + '</span><br><img src="' + underwearImg + '" onerror="this.onerror=null;this.src=\'' + underwearImgFallback + '\';" alt="exposure" style="max-width:140px;max-height:160px;width:auto;height:auto;border-radius:8px;margin:8px 0;"><br><span style="color:#ffaaaa;">' + underwearSub + '</span></div>';
+outfitHTML = '<div class="outfit-item" style="border:2px solid ' + _uwBoxBorder + ';background:' + _uwBoxBg + ';padding:12px;text-align:center;"><span style="color:' + _uwBoxTitle + ';font-size:1.1em;font-weight:bold;">' + _uwBoxIcon + ' ' + underwearLabel + '</span><br><img src="' + underwearImg + '" onerror="this.onerror=null;this.src=\'' + underwearImgFallback + '\';" alt="exposure" style="max-width:140px;max-height:160px;width:auto;height:auto;border-radius:8px;margin:8px 0;"><br><span style="color:#ffaaaa;">' + underwearSub + '</span></div>';
                 outfitHTML += getUnderClothesBannersHTML();
                 const uwSlots = ['bra','panties','dress','top','bottom','outerwear','footwear','headwear','neckwear','earrings','rings','eyewear','other'];
                 const uwLabels = { bra:'Bra', panties:'Panties', dress:'Dress', top:'Top', bottom:'Bottom', outerwear:'Outerwear', footwear:'Footwear', headwear:'Headwear', neckwear:'Neckwear', earrings:'Earrings', rings:'Rings', eyewear:'Eyewear', other:'Other' };
