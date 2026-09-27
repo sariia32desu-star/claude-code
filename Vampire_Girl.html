@@ -35165,6 +35165,8 @@ audioSystem.playSFX('buttonClick');
         function issueArrestWarrant() {
             gameState.flags.warrantIssued = true;
             openCaseOnKelsie(); // a warrant always means the case is on her
+            // Trigrave PD Step 6E: her own lease is in her name. The warrant finds it the day it issues.
+            if (gameState.flags.hasOwnApartment) gameState.flags.tpdKnownResidence = 'varhall';
             gameState.flags.warrantIssuedDay = gameState.time.day;
 
             // Primary: build charges from ledger
@@ -35356,6 +35358,10 @@ audioSystem.playSFX('buttonClick');
             };
             seedCaseLeads(entry, params);
             if (entry.linkedToKelsie) markCaseIdentified(entry);
+
+            // Exit choice (Trigrave PD Step 6B): scene crimes wait to see how she leaves
+            entry.createdAt = tpdNowMinutes();
+            entry.exitPending = !entry.linkedToKelsie && !TPD_NO_EXIT_TYPES[entry.type];
 
             gameState.evidenceLedger.push(entry);
             return id;
@@ -35832,6 +35838,7 @@ audioSystem.playSFX('buttonClick');
                 developed: !!opts.developed,
                 pointsAtKelsie: opts.pointsAtKelsie != null ? !!opts.pointsAtKelsie : def.points
             };
+            if (opts.residence) lead.residence = opts.residence;
             if (def.coverUp) lead.coverUp = (typeof getCoverUpMult === 'function') ? getCoverUpMult() : 1;
             entry.investigation.leads.push(lead);
             return lead;
@@ -36113,6 +36120,10 @@ audioSystem.playSFX('buttonClick');
                         developedToday = true;
                         inv.progress += L.strength * mult * (L.coverUp != null ? L.coverUp : 1);
                         if (L.type === 'profile_zero') onProfileZeroProcessed(e);
+                        // Step 6E: a trace or track that ends at her door gives TPD the address
+                        if ((L.type === 'trace_residence' || L.type === 'k9_residence') && L.residence && L.residence !== 'lurasi') {
+                            gameState.flags.tpdKnownResidence = L.residence;
+                        }
                     }
 
                     // Tip line: released stills bring calls from people who know her face
@@ -36200,7 +36211,9 @@ audioSystem.playSFX('buttonClick');
             var dName = TPD_DISTRICT_NAMES[entry.district] || 'city';
             var noun = TPD_CASE_NOUNS[entry.type] || 'case';
 
-            if (method === 'tip_line') {
+            if ((method === 'trace_residence' || method === 'k9_residence') && lead.residence && lead.residence !== 'lurasi') {
+                queueTPDHomeBeat(lead.residence, buildTraceNewsBeat(entry, lead.residence));
+            } else if (method === 'tip_line') {
                 queueTPDStreetBeat('A TV above the counter in a corner store is running the local news with the sound off. The crawl along the bottom reads: POLICE CREDIT TIP LINE CALL FOR BREAK IN ' +
                     dName.toUpperCase() + ' ' + noun.toUpperCase() + ' INVESTIGATION.\n\nSomebody who knows your face made a phone call.');
             } else if (method === 'camera_clear') {
@@ -36344,6 +36357,258 @@ audioSystem.playSFX('buttonClick');
 
         // 4C: getting away with it counts as practice
         var TPD_COLD_STEALTH_XP = { patrol: 2, property: 5, detective: 5, homicide: 10 };
+
+        // ══════════════════════════════════════════════════════════
+        // ── REAL-TIME CRIME CENTER & RESIDENCE (Trigrave PD Step 6) ──
+        // ══════════════════════════════════════════════════════════
+
+        // Street scene for a district (the arrest tree, takedowns, and field interviews return here)
+        function getDistrictReturnScene(district) {
+            if (!district) return 'city_exploration';
+            if (district === 'park') return 'riverside_park';
+            var known = { commercial: 1, residential: 1, slums: 1, medical: 1, downtown: 1, wendale: 1, fitness: 1, dockyard: 1 };
+            return known[district] ? district + '_district_street' : 'city_exploration';
+        }
+
+        // 6E: where Kelsie's sleeping right now: wherever she last rested, if she still holds
+        // it, otherwise the strongest claim she holds, otherwise the street.
+        function getKelsieResidence() {
+            var F = gameState.flags;
+            var R = {
+                varhall:  { id: 'varhall',  label: 'Varhall Apartments', short: 'Varhall',    holds: !!(F.hasOwnApartment || F.stayingWithJaewon), withJaewon: !!F.stayingWithJaewon && !F.hasOwnApartment,
+                            scene: (F.stayingWithJaewon && !F.hasOwnApartment) ? 'jaewon_apartment_main' : 'own_apartment_main' },
+                timeless: { id: 'timeless', label: 'the Timeless Hotel', short: 'the Timeless', holds: !!F.hasHotelRoom,      scene: 'luxury_hotel_lobby' },
+                oracle:   { id: 'oracle',   label: 'Oracle Inn',         short: 'Oracle Inn',   holds: !!F.hasParkSideRoom,   scene: 'parkside_inn_entrance' },
+                lurasi:   { id: 'lurasi',   label: 'the Lurasi Motel',   short: 'the Lurasi',   holds: !!F.hasCheapMotelRoom, scene: 'cheap_motel_entrance', sanctuary: true }
+            };
+            var last = F.lastRestLocation;
+            if (last && R[last] && R[last].holds) return R[last];
+            var order = ['varhall', 'timeless', 'oracle', 'lurasi'];
+            for (var i = 0; i < order.length; i++) if (R[order[i]].holds) return R[order[i]];
+            return { id: 'street', label: 'the street', short: 'the street', homeless: true };
+        }
+
+        // Every sleep runs through sleepAdvanceTime(); the scene she sleeps in says where she rested
+        function recordRestLocationFromScene(sceneId) {
+            sceneId = sceneId || '';
+            var F = gameState.flags;
+            var loc = '';
+            if (sceneId.indexOf('own_apartment') === 0 || sceneId.indexOf('jaewon_') === 0 || sceneId.indexOf('apartment_') === 0) {
+                if (F.hasOwnApartment || F.stayingWithJaewon) loc = 'varhall';
+            } else if (sceneId.indexOf('sleep_hotel_room') === 0 || sceneId.indexOf('hotel_room') === 0) loc = 'timeless';
+            else if (sceneId.indexOf('sleep_parkside_inn') === 0 || sceneId.indexOf('parkside_inn') === 0) loc = 'oracle';
+            else if (sceneId.indexOf('sleep_cheap_motel') === 0 || sceneId.indexOf('cheap_motel') === 0) loc = 'lurasi';
+            if (loc) F.lastRestLocation = loc;
+        }
+
+        // 6E: with a warrant out, a hotel desk may recognize her from the bulletin
+        function rollHotelDeskRecognition() {
+            var F = gameState.flags;
+            if (!F.warrantIssued || F.currentlyInCustody) return;
+            var res = getKelsieResidence();
+            var chance = res.id === 'timeless' ? 0.40 : res.id === 'oracle' ? 0.30 : 0;
+            if (!chance || F.tpdKnownResidence === res.id) return;
+            if ((gameState.stealth || 1) >= 50) chance *= 0.5;   // side entrance, face down
+            if (((gameState.suspicionData || {}).wantedTier || 0) >= 4) chance *= 1.5;
+            if (Math.random() < chance) {
+                F.tpdKnownResidence = res.id;
+                queueTPDHomeBeat(res.id, res.id === 'timeless'
+                    ? 'The night clerk at the Timeless looks up when you cross the lobby, and he keeps looking a second longer than he should. By the time you reach the elevator, he\'s picked up the desk phone.'
+                    : 'The woman at the Oracle Inn desk smiles at you like she always does. Then her eyes drop to something under the counter, and when they come back up, the smile\'s a little stiff.');
+            }
+        }
+
+        // Home beats: news and tells that play when she walks into where she's staying
+        var TPD_HOME_SCENES = {
+            own_apartment_main: 'varhall', jaewon_apartment_main: 'varhall',
+            luxury_hotel_lobby: 'timeless', hotel_room: 'timeless',
+            parkside_inn_entrance: 'oracle', parkside_inn_room: 'oracle',
+            cheap_motel_entrance: 'lurasi', cheap_motel_room: 'lurasi'
+        };
+        function queueTPDHomeBeat(residenceId, text) {
+            var q = gameState.flags.tpdHomeBeats || (gameState.flags.tpdHomeBeats = []);
+            if (q.length < 3) q.push({ res: residenceId, text: text });
+        }
+
+        // 6D: identification by camera trace, keyed to where she's staying
+        function buildTraceNewsBeat(entry, residenceId) {
+            var doors = {
+                varhall: 'the lobby door of Varhall Apartments',
+                timeless: 'the revolving door of the Timeless Hotel',
+                oracle: 'the side entrance of Oracle Inn'
+            };
+            var after = {
+                varhall: 'There\'s a cruiser parked across the street from Varhall. It\'s still there an hour later.',
+                timeless: 'Downstairs, there\'s a man in the lobby who isn\'t reading his newspaper.',
+                oracle: 'Outside, an unmarked sedan\'s backed into the space facing your window.'
+            };
+            var dName = TPD_DISTRICT_NAMES[entry.district] || 'city';
+            return 'The news runs it at eleven, between the weather and a story about a water main.\n\n'
+                + 'It\'s grainy stills, stitched together: a small figure walking away from the scene of ' + getTPDCaseName(entry) + ', then the same figure at a crosswalk in the ' + dName + ', a bus shelter, the corner of your street.\n\n'
+                + 'The last frame\'s ' + (doors[residenceId] || 'your front door') + '.\n\n'
+                + 'The anchor says police are "following up on a promising lead." You turn the TV off and sit in the dark and listen to your own pulse, which is quieter than it ought to be.'
+                + (after[residenceId] ? '\n\n' + after[residenceId] : '');
+        }
+
+        // 6A: the RTCC tries to rebuild her route out
+        // exit: 'walk_home' | 'go_to_ground' | 'break_trail' | 'rooftops' | 'vampspeed'
+        function rollCameraTrace(entry, exit) {
+            if (exit === 'rooftops') return null;                 // stealth 35+: cameras don't point up
+            var density = DISTRICT_CAMERA_DENSITY[entry.district] || 0.2;
+            var chance = density;
+            if (exit === 'break_trail') chance *= 0.4;            // stealth 30+: doubled back, changed streets
+            if (exit === 'go_to_ground') chance *= 0.6;           // the trail ends in a dead zone
+            if (exit === 'vampspeed') chance *= 0.3;              // too fast to follow...
+            var st = gameState.stealth || 1;
+            if (st >= 60) chance *= 0.25; else if (st >= 40) chance *= 0.5;
+            if (isDark()) chance *= 0.85;
+            if (Math.random() >= chance) return null;
+            // Only a straight walk back leads the cameras to where she sleeps. Homeless Kelsie
+            // has nowhere to lead them.
+            var res = getKelsieResidence();
+            var reachesHome = (exit === 'walk_home') && !res.homeless;
+            return { trace: true, residence: reachesHome ? res.id : null };
+        }
+
+        // 6B: crimes wait for an exit. createLedgerEntry marks scene crimes exitPending; the
+        // next time she heads for the street, the map, or the hunt menu, she chooses how she
+        // leaves. Walking into her own residence counts as walking home. Pending exits expire
+        // after four hours.
+        // Pickpocketing already ends with a walk into the crowd, and it's a patrol report either way
+        var TPD_NO_EXIT_TYPES = { fleeing: true, escape: true, indecent_exposure: true, bribery_attempt: true, pickpocketing: true };
+        function tpdNowMinutes() {
+            var t = gameState.time;
+            return (t.day || 0) * 1440 + (t.hour || 0) * 60 + (t.minute || 0);
+        }
+        function getExitPendingEntries() {
+            var ledger = gameState.evidenceLedger || [];
+            var now = tpdNowMinutes();
+            var out = [];
+            for (var i = 0; i < ledger.length; i++) {
+                var e = ledger[i];
+                if (!e.exitPending) continue;
+                if (e.linkedToKelsie || now - (e.createdAt || 0) > 240) { e.exitPending = false; continue; }
+                out.push(e);
+            }
+            return out;
+        }
+        function clearExitPending() {
+            (gameState.evidenceLedger || []).forEach(function(e) { e.exitPending = false; });
+        }
+
+        // Applies an exit to every crime waiting on one. opts.silent skips time costs (the calling
+        // scene already spent them). Returns the trace result, or null.
+        function applyCrimeExit(exit, opts) {
+            opts = opts || {};
+            var pend = getExitPendingEntries();
+            if (!pend.length) return null;
+            var primary = pend[0];
+            var district = primary.district;
+            var res = getKelsieResidence();
+
+            pend.forEach(function(e) { e.exit = exit; e.exitPending = false; });
+
+            if (exit === 'vampspeed') {
+                var hasCams = (DISTRICT_CAMERA_DENSITY[district] || 0) > 0.10;
+                applyVampireSpeedCrimeCosts({
+                    thirst: 6, suspicion: 0, district: district, hasCameras: hasCams,
+                    superEvidence: hasCams ? 4 : 2, cameraFootage: hasCams ? 3 : 0
+                });
+                if (hasCams) pend.forEach(function(e) { if (!caseHasLead(e, 'camera_blur')) addCaseLead(e, 'camera_blur'); });
+            }
+
+            // The RTCC only works the route if there's footage to start from, or the district's dense enough
+            var camLead = pend.some(function(e) {
+                return caseHasLead(e, 'camera_clear') || caseHasLead(e, 'camera_partial') || caseHasLead(e, 'camera_blur');
+            });
+            if (!camLead && (DISTRICT_CAMERA_DENSITY[district] || 0) < 0.40) return null;
+
+            var trace = rollCameraTrace(primary, exit);
+            if (!trace) return null;
+
+            if (exit === 'walk_home' && res.homeless) {
+                // No door at the end of it. The trace just pulls patrols into wherever she drifted.
+                var others = ['downtown', 'commercial', 'medical', 'residential', 'slums', 'fitness', 'wendale', 'park', 'dockyard']
+                    .filter(function(d) { return d !== district; });
+                var drift = others[Math.floor(Math.random() * others.length)];
+                var sd = gameState.suspicionData || (gameState.suspicionData = {});
+                if (!sd.districtHeat) sd.districtHeat = {};
+                sd.districtHeat[drift] = Math.min(100, (sd.districtHeat[drift] || 0) + 10);
+                return trace;
+            }
+
+            pend.forEach(function(e) {
+                if (e.linkedToKelsie || !e.investigation) return;
+                addCaseLead(e, 'camera_trace');
+                if (trace.residence) {
+                    if (trace.residence === 'lurasi') {
+                        // TPD stops at the Lurasi's lot. The trail ends somewhere they won't go.
+                        addCaseLead(e, 'trace_residence', { strength: 10, pointsAtKelsie: false, residence: 'lurasi' });
+                    } else {
+                        addCaseLead(e, 'trace_residence', { residence: trace.residence });
+                    }
+                }
+            });
+            return trace;
+        }
+
+        // Where the exit choice interrupts navigation
+        function isCrimeExitDestination(sceneId) {
+            if (!sceneId) return false;
+            if (sceneId === 'city_exploration' || sceneId === 'hunting_options' || sceneId === 'riverside_park') return true;
+            return /_district_street$/.test(sceneId);
+        }
+
+        // showScene hook: crime exits and home beats. Returns true when it took over navigation.
+        function tpdSceneIntercept(sceneId) {
+            if (sceneId === 'crime_exit_choice') return false;
+            var pend = getExitPendingEntries();
+            if (pend.length) {
+                if (gameState.flags.currentlyInCustody) {
+                    clearExitPending();
+                } else if (TPD_HOME_SCENES[sceneId] && TPD_HOME_SCENES[sceneId] === getKelsieResidence().id) {
+                    applyCrimeExit('walk_home', { silent: true });
+                } else if (isCrimeExitDestination(sceneId)) {
+                    gameState.flags._crimeExitDest = sceneId;
+                    showScene('crime_exit_choice');
+                    return true;
+                }
+            }
+            var beats = gameState.flags.tpdHomeBeats;
+            if (beats && beats.length && TPD_HOME_SCENES[sceneId]) {
+                for (var i = 0; i < beats.length; i++) {
+                    if (beats[i].res === TPD_HOME_SCENES[sceneId]) {
+                        var b = beats.splice(i, 1)[0];
+                        showMessage(b.text, function() { showScene(sceneId); });
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // 6F: homeless under a warrant. No door to knock on, so TPD uses the cameras.
+        function checkStreetTakedown(district) {
+            var F = gameState.flags;
+            if (!F.warrantIssued || F.currentlyInCustody || F.policeEncounterToday || F.streetTakedownToday) return false;
+            if (!getKelsieResidence().homeless) return false;
+            var density = DISTRICT_CAMERA_DENSITY[district] || 0.2;
+            // The RTCC runs her face against every live feed; units get vectored in.
+            var chance = density * 0.6 + getTPDPresence(district) / 200;
+            chance *= (1 - getStealthBonus());
+            var sd = gameState.suspicionData || {};
+            if ((sd.facialRecognition || 0) < 50) chance *= 0.6;   // no mugshot-grade face yet
+            if (Math.random() >= Math.min(0.80, chance)) return false;
+            F.streetTakedownToday = true;
+            F._takedownDistrict = district;
+            gameState.currentDistrictId = district;
+            if ((F.cruzTacticalCaptureCount || 0) > 0 && Math.random() < 0.25) {
+                triggerRandomDistrictEvent('cruz_tactical_encounter', getDistrictReturnScene(district));
+            } else {
+                triggerRandomDistrictEvent('tpd_street_takedown', getDistrictReturnScene(district));
+            }
+            return true;
+        }
 
         // ── Ledger: Count Linked Crimes by Type ──
         function countLinkedCrimes(crimeType) {
@@ -36580,6 +36845,8 @@ audioSystem.playSFX('buttonClick');
         }
         
         function sleepAdvanceTime(minutes) {
+            // Trigrave PD Step 6E: where she sleeps is where TPD comes for her
+            if (typeof recordRestLocationFromScene === 'function') recordRestLocationFromScene(currentScene);
             // Step 10C: Pre-sleep MH line (first sleep of the day only)
             if (typeof showPreSleepMHLine === 'function') showPreSleepMHLine();
             gameState.flags.isSleeping = true;
@@ -49249,6 +49516,8 @@ audioSystem.playSFX('buttonClick');
             checkWarrantConditions();
             checkForNewCharges();  // Refresh warrant charges from ledger
             enforceSuspicionCap();  // New or heavier charges move the ceiling and floor
+            rollHotelDeskRecognition();   // Trigrave PD Step 6E
+            gameState.flags.streetTakedownToday = false;
             
             if (gameState.flags.warrantIssued && !gameState.flags.currentlyInCustody) {
                 gameState.flags.policeEncounterToday = false;
@@ -112672,6 +112941,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('commercial_district_street')) return;
+                    if (checkStreetTakedown('commercial')) return;   // Trigrave PD Step 6F
                     const _rce_c = checkRandomDistrictEvent('commercial');
                     if (_rce_c) { triggerRandomDistrictEvent(_rce_c, 'commercial_district_street'); return; }
                     if (checkAndTriggerHeroEvent('commercial_district_street')) return;
@@ -112843,6 +113113,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('residential_district_street')) return;
+                    if (checkStreetTakedown('residential')) return;   // Trigrave PD Step 6F
                     const _rce_r = checkRandomDistrictEvent('residential');
                     if (_rce_r) { triggerRandomDistrictEvent(_rce_r, 'residential_district_street'); return; }
                     if (checkAndTriggerHeroEvent('residential_district_street')) return;
@@ -113037,6 +113308,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     updateStatus();
                     
+                    if (checkStreetTakedown('slums')) return;   // Trigrave PD Step 6F
+
                     // Territory confrontation: Vajaros enforcers contest a claimed corner
                     if (gameState.flags.territoryContestPending) {
                         setTimeout(function() { showScene('territory_confrontation'); }, 100);
@@ -119110,6 +119383,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('medical_district_street')) return;
+                    if (checkStreetTakedown('medical')) return;   // Trigrave PD Step 6F
                     const _rce_m = checkRandomDistrictEvent('medical');
                     if (_rce_m) { triggerRandomDistrictEvent(_rce_m, 'medical_district_street'); return; }
                     if (checkAndTriggerHeroEvent('medical_district_street')) return;
@@ -119212,6 +119486,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return;
                     }
                     if (checkCruzEncounters('downtown_district_street')) return;
+                    if (checkStreetTakedown('downtown')) return;   // Trigrave PD Step 6F
                     const _rce_d = checkRandomDistrictEvent('downtown');
                     if (_rce_d) { triggerRandomDistrictEvent(_rce_d, 'downtown_district_street'); return; }
                     if (checkAndTriggerHeroEvent('downtown_district_street')) return;
@@ -119349,6 +119624,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     // Accidental exposure check (Exhibition Overhaul, Step 5A)
                     if (checkAccidentalExposure('wendale')) return;
+                    if (checkStreetTakedown('wendale')) return;   // Trigrave PD Step 6F
                     
                     // Check for harassment event
                     const isNight = isDark();
@@ -137899,7 +138175,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                     advanceTime(8);
                                     modifyHygiene(25);
                                     updateStatus();
-                                    showMessage('You find a puddle. A spigot on the side of a building. You scrub your hands, wipe your face, turn your jacket inside out.\n\nIt won\'t pass a close inspection, but from across the street you look like anyone else.', function() { showScene('city_exploration'); });
+                                    showMessage('You find a spigot on the side of a building and scrub your hands under it, wipe your face, and turn your jacket inside out.\n\nIt won\'t pass a close inspection, but from across the street you look like anyone else.', function() { showScene('city_exploration'); });
                                 }
                             });
                         }
@@ -137912,8 +138188,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                 action: function() {
                                     advanceTime(15);
                                     modifyHygiene(60);
+                                    applyCrimeExit('walk_home', { silent: true });   // Trigrave PD Step 6B
                                     updateStatus();
-                                    showMessage('You cut through the back streets to your building. Inside, you strip the bloody clothes and shove them in a trash bag. Clean shirt. Clean jacket.\n\nYou look at yourself in the mirror. Normal. Clean. Nobody would guess.', function() { showScene('city_exploration'); });
+                                    showMessage('You cut through the back streets to your building. Inside, you strip off the bloody clothes, shove them in a trash bag, and pull on a clean shirt and a clean jacket.\n\nThe girl in the mirror looks normal. Nobody would guess.', function() { showScene('city_exploration'); });
                                 }
                             });
                         }
@@ -138120,6 +138397,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 onEnter: () => {
                     advanceTime(TIME_COSTS.WALK_LONG);
+                    applyCrimeExit('walk_home', { silent: true });   // Trigrave PD Step 6B: you walk home
                     // First kill MH (12C): always uses the "first 5" tier
                     var mhChange = calculateHuntMentalHealth(true);
                     gameState.mentalHealth = Math.max(0, Math.min(100, (gameState.mentalHealth || 50) + mhChange));
@@ -138751,44 +139029,44 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var fugitive = !!gameState.flags.wantedFugitive;
 
                     if (total <= 1 && !fugitive) {
-                        // First encounter — warrant active, not yet fugitive
-                        desc += 'The cruiser pulls to the curb ahead of you. Slow. Deliberate. An approach that says the driver knew where you\'d be before you did.\n\n';
+                        // First encounter: warrant active, not yet fugitive
+                        desc += 'The cruiser pulls to the curb ahead of you, slow and deliberate, like the driver knew where you\'d be before you did.\n\n';
 
                         desc += 'The officer in the passenger seat is already looking at you before the car stops. He\'s holding something. A printed card, your composite on card stock, the same sketch you saw at the bus stop. He\'s been carrying it. The corners are soft from handling.\n\n';
 
-                        desc += '"Ma\'am." His partner steps out of the driver\'s side. Hand on his belt, fingers resting near his radio. Professional. Measured. "Kelsie Summers?"\n\n';
+                        desc += '"Ma\'am." His partner steps out of the driver\'s side with one hand on his belt, fingers resting near his radio. His voice is professional and measured. "Kelsie Summers?"\n\n';
 
                         desc += 'Your name. Your full name. He already knew the answer before he asked.\n\n';
 
                         desc += '"We have a warrant for your arrest. I need you to turn around and place your hands behind your back."\n\n';
 
-                        desc += 'The second officer is out now. Both of them watching you with the specific alertness of people who\'ve read a file that told them to be careful around you. Their stance is wide. Weight forward. Hands ready. Whatever that file said, they believed it.\n\n';
+                        desc += 'The second officer is out now. Both of them watching you with the specific alertness of people who\'ve read a file that told them to be careful around you. Their stances are wide, weight forward, hands ready. Whatever that file said, they believed it.\n\n';
 
                         desc += 'Traffic slows. Someone across the street has stopped walking. The world is paying attention to the next three seconds of your life.';
                     } else if (total <= 3) {
-                        // Second or third encounter — fugitive, moderate response
+                        // Second or third encounter: fugitive, moderate response
                         desc += 'They found you again.\n\n';
 
-                        desc += 'Different cruiser. Different officers. Same look. That careful distance, that specific angle of approach that means someone in a briefing room showed them your bodycam footage and told them what the footage couldn\'t explain.\n\n';
+                        desc += 'It\'s a different cruiser and different officers, with the same look. That careful distance, that specific angle of approach that means someone in a briefing room showed them your bodycam footage and told them what the footage couldn\'t explain.\n\n';
 
-                        desc += 'Two cruisers this time. Four officers. They\'re fanning out before anyone says a word. Triangulating. Cutting off the alley to your left and the cross street to your right with the mechanical precision of people who rehearsed this.\n\n';
+                        desc += 'Two cruisers this time, four officers. They\'re fanning out before anyone says a word, cutting off the alley to your left and the cross street to your right with the mechanical precision of people who rehearsed this.\n\n';
 
                         desc += '"Kelsie Summers. You\'re wanted on multiple outstanding warrants. Hands where we can see them. Now."\n\n';
 
-                        desc += 'The one giving orders has his hand on his weapon. His partner\'s already drawn. Not aimed. Drawn. That\'s new. Someone upgraded the threat assessment since last time.';
+                        desc += 'The one giving orders has his hand on his weapon. His partner\'s already drawn, muzzle pointed at the pavement. That\'s new. Someone upgraded the threat assessment since last time.';
                     } else {
-                        // Fourth+ encounter — major response
-                        desc += 'Three cruisers. Six officers. They\'re learning.\n\n';
+                        // Fourth+ encounter: major response
+                        desc += 'Three cruisers and six officers. They\'re learning.\n\n';
 
-                        desc += 'The lead vehicle blocked the intersection before you rounded the corner. The other two pulled in from side streets at angles that left you exactly one direction to move: toward them. This wasn\'t a patrol running a plate check. This was a box. Planned. Coordinated. Someone drew it on a whiteboard.\n\n';
+                        desc += 'The lead vehicle had the intersection blocked before you rounded the corner. The other two pulled in from side streets at angles that leave you exactly one direction to move: toward them. It\'s a box, planned and coordinated. Someone drew it on a whiteboard.\n\n';
 
-                        desc += 'Every weapon is drawn. Every bodycam is recording. The officer in front has a megaphone, which is new, which means they\'ve decided that getting close to you is a mistake.\n\n';
+                        desc += 'Every weapon\'s drawn, and every bodycam\'s recording. The officer in front has a megaphone, which is new, which means they\'ve decided that getting close to you is a mistake.\n\n';
 
                         desc += '"KELSIE SUMMERS. GET ON THE GROUND. NOW."\n\n';
 
-                        desc += 'His voice cracks through the static. Behind him, one of the cruiser doors opens and a seventh figure steps out. Tactical vest. Shotgun. The department sent a specialist.\n\n';
+                        desc += 'His voice cracks through the static. Behind him, one of the cruiser doors opens and a seventh figure steps out in a tactical vest, carrying a shotgun. The department sent a specialist.\n\n';
 
-                        desc += 'They\'re terrified of you. They should be.';
+                        desc += 'Nobody\'s hands are shaking. Every one of them has read your file, and every one of them came anyway.';
                     }
 
                     return desc;
@@ -138830,6 +139108,133 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         });
                     }
 
+                    return choices;
+                }
+            },
+
+            // ── Trigrave PD Step 6B: leaving a crime ──
+            crime_exit_choice: {
+                text: function() {
+                    var st = gameState.stealth || 1;
+                    var res = getKelsieResidence();
+                    var desc = '';
+                    if (st >= 30) {
+                        desc = 'You map your route out before you take a step: which streets have lenses, which ones don\'t, and where a trail can die.';
+                    } else if (st >= 10) {
+                        desc = 'You make yourself stop and think before you move. Every camera between here and anywhere gets a look at whoever walks past it.';
+                    } else {
+                        desc = 'You need to get out of here. Your feet already want to take you home.';
+                    }
+                    if (res.homeless) desc += '\n\nThere\'s no door waiting for you anywhere. That cuts both ways.';
+                    else if (res.sanctuary) desc += '\n\nThe Lurasi\'s the one roof in the city TPD won\'t go under.';
+                    return desc;
+                },
+                choices: function() {
+                    var st = gameState.stealth || 1;
+                    var res = getKelsieResidence();
+                    var pend = getExitPendingEntries();
+                    var district = pend.length ? pend[0].district : (gameState.currentDistrictId || '');
+                    var dest = gameState.flags._crimeExitDest || 'city_exploration';
+                    var go = function(exit, minutes, thirst, msg, next) {
+                        if (minutes) advanceTime(minutes);
+                        if (thirst) gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + thirst);
+                        applyCrimeExit(exit);
+                        gameState.flags._crimeExitDest = null;
+                        updateStatus();
+                        showMessage(msg, function() { showScene(next || dest); });
+                    };
+                    var choices = [];
+
+                    if (res.homeless) {
+                        choices.push({ text: 'Walk off into the city', action: function() {
+                            go('walk_home', 10, 0, 'You pick a direction and walk. There\'s no door waiting at the end of it, which is the one upside of having nowhere to go.');
+                        }});
+                    } else {
+                        choices.push({ text: 'Head back to ' + res.short, action: function() {
+                            var m = st >= 10
+                                ? 'You head back to ' + res.short + ' by the fastest route. Every lens on the route gets a look at you, and you know it.'
+                                : 'You head back to ' + res.short + ' the straight way, head down, hands in your pockets. It\'s the fastest route there is.\n\nYou don\'t think about the cameras until you\'re already past them.';
+                            go('walk_home', 15, 0, m, res.scene);
+                        }});
+                    }
+
+                    choices.push({ text: 'Go to ground first <span style="opacity:0.5;font-size:0.85em">(+30-60 min, +3 thirst)</span>', action: function() {
+                        var mins = 30 + Math.floor(Math.random() * 31);
+                        go('go_to_ground', mins, 3, 'You find a dark doorway two blocks over and fold yourself into it. For the next ' + tpdNumberWord(mins) + ' minutes you don\'t move, while the street forgets what it saw.\n\nWhen you finally step out, any trail the cameras had ends in a dead zone.');
+                    }});
+
+                    if (st >= 30) {
+                        choices.push({ text: 'Break the trail <span style="opacity:0.5;font-size:0.85em">(+15 min)</span>', action: function() {
+                            var m;
+                            if (!gameState.flags.breakTrailFelt) {
+                                gameState.flags.breakTrailFelt = true;
+                                m = 'You leave in a zigzag. You double back a block, cut through an all-night laundromat and out its side door, and cross under the one stretch of avenue where the cameras don\'t overlap.\n\nIt takes fifteen minutes to cover four blocks. Anyone rebuilding your route is going to lose you at the laundromat.';
+                            } else {
+                                m = 'You double back, cut through a building, and cross where the cameras don\'t overlap. You could do it in your sleep by now.';
+                            }
+                            go('break_trail', 15, 0, m);
+                        }});
+                    }
+
+                    if (st >= 35 && district !== 'park') {
+                        choices.push({ text: 'Take the rooftops <span style="opacity:0.5;font-size:0.85em">(+10 min)</span>', action: function() {
+                            var m;
+                            if (!gameState.flags.rooftopExitFelt) {
+                                gameState.flags.rooftopExitFelt = true;
+                                m = 'You find a fire escape and go up it three rungs at a time. Up top, the city opens out, flat and dark and quiet, and you cross four roofs before you drop back down onto a street nobody\'s watching.\n\nCameras point down. They always have. It\'s taken you this long to notice.';
+                            } else {
+                                m = 'Fire escape, roofline, a long quiet run across tar and gravel, and then a drop onto a street none of the cameras saw you reach.';
+                            }
+                            go('rooftops', 10, 0, m);
+                        }});
+                    }
+
+                    choices.push({ text: 'Vampire speed', action: function() {
+                        go('vampspeed', 2, 0, 'You go, and the street smears around you. Six blocks later you slow to a walk like nothing happened.\n\nAnything that caught you caught a blur.');
+                    }});
+
+                    return choices;
+                }
+            },
+
+            // ── Trigrave PD Step 6F: homeless under a warrant, found by the cameras ──
+            tpd_street_takedown: {
+                text: function() {
+                    var d = gameState.flags._takedownDistrict || gameState.currentDistrictId || 'downtown';
+                    if (d === 'park') {
+                        return 'Two bike officers come around the bend in the path ahead of you and stop there, side by side, blocking it. When you glance back, two more are coasting up behind you.\n\n'
+                            + 'The Kestrel drone doesn\'t bother hiding. It hangs over the path at treetop height with its red light blinking, and somewhere past the trees a cruiser\'s siren chirps once and goes quiet.\n\n'
+                            + '"Kelsie Summers," one of the officers calls. "Hands where we can see them, please."';
+                    }
+                    if (d === 'dockyard') {
+                        return 'Two officers step out from between the stacked containers ahead of you, and two more close in from the gate side. A cruiser rolls onto the waterfront road behind them and stops across it.\n\n'
+                            + 'Overhead, a Kestrel drone swings in off the water and holds position above you, lens pointed down.\n\n'
+                            + '"Kelsie Summers. Hands where we can see them."';
+                    }
+                    if (Math.random() < 0.5) {
+                        return 'The light at the corner turns red and you stop with everybody else.\n\n'
+                            + 'A motor unit rolls up on your left and doesn\'t stop at the line. Another comes in from the right. Across the intersection, a cruiser noses into the crosswalk and parks there, blocking it.\n\n'
+                            + 'Something whirs overhead. You look up into the lens of a drone, twenty feet above you, holding perfectly still.\n\n'
+                            + '"Kelsie Summers." The motor officer\'s already off his bike. "Hands where I can see them."';
+                    }
+                    return 'You\'re halfway down the block when the people around you start stepping aside, one by one, without looking at each other. Somebody told them to.\n\n'
+                        + 'Two officers are walking toward you from the corner, unhurried, hands resting on their belts. When you turn around, there are two more behind you, and a cruiser\'s sliding to the curb between you and the street.\n\n'
+                        + 'A Kestrel drone drops out of the sky and hangs at rooftop height, its lens pointed straight down at you.\n\n'
+                        + '"Kelsie Summers." Sergeant Calloway stops ten feet away, exactly out of reach. "You\'re under arrest. Keep your hands where I can see them, please."';
+                },
+                onEnter: function() {
+                    gameState.flags.policeEncounterToday = true;
+                    gameState.flags.lastPoliceEncounterDay = gameState.time.day;
+                    gameState.flags.policeEncountersTotal = (gameState.flags.policeEncountersTotal || 0) + 1;
+                    advanceTime(3);
+                    updateStatus();
+                },
+                choices: function() {
+                    var choices = [];
+                    choices.push({ text: 'Surrender. Let them take you in.', nextScene: 'arrest_surrender' });
+                    choices.push({ text: 'Run. Vampire speed.', nextScene: 'arrest_flee' });
+                    if ((gameState.karma || 0) < 1000) choices.push({ text: 'They can\'t stop you. Show them.', nextScene: 'arrest_fight' });
+                    if (gameState.flags.illusionUnlocked) choices.push({ text: 'Compel the nearest officers. Buy a gap.', nextScene: 'arrest_compel' });
                     return choices;
                 }
             },
@@ -139209,8 +139614,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    var returnScene = gameState.currentDistrictId ?
-                        gameState.currentDistrictId + '_district_street' : 'city_exploration';
+                    var returnScene = getDistrictReturnScene(gameState.currentDistrictId);
                     return [
                         { text: 'Disappear into the city.', nextScene: returnScene }
                     ];
@@ -139321,8 +139725,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    var returnScene = gameState.currentDistrictId ?
-                        gameState.currentDistrictId + '_district_street' : 'city_exploration';
+                    var returnScene = getDistrictReturnScene(gameState.currentDistrictId);
                     return [
                         { text: 'Walk away.', nextScene: returnScene }
                     ];
@@ -139365,8 +139768,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    var returnScene = gameState.currentDistrictId ?
-                        gameState.currentDistrictId + '_district_street' : 'city_exploration';
+                    var returnScene = getDistrictReturnScene(gameState.currentDistrictId);
                     return [
                         { text: 'Keep moving before more come.', nextScene: returnScene }
                     ];
@@ -139556,7 +139958,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.mugshotTaken = true;
                     gameState.flags.fingerprintsInSystem = true; // Prints now in police database
 
-                    // 5A: Ledger-aware booking — fingerprints entering the system triggers
+                    // Trigrave PD Step 6E: the key card or keys in her personal effects give up the address
+                    var _bookRes = getKelsieResidence();
+                    if (!_bookRes.homeless && !_bookRes.sanctuary) gameState.flags.tpdKnownResidence = _bookRes.id;
+
+                    // 5A: Ledger-aware booking: fingerprints entering the system triggers
                     // an immediate forensic scan. Every crime where Kelsie left prints
                     // without gloves now has a match. Every clear camera image now has
                     // a mugshot to compare against. This is the moment dormant evidence wakes up.
@@ -141087,8 +141493,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    var returnScene = gameState.currentDistrictId ?
-                        gameState.currentDistrictId + '_district_street' : 'city_exploration';
+                    var returnScene = getDistrictReturnScene(gameState.currentDistrictId);
                     var choices = [
                         { text: 'Keep moving.', nextScene: returnScene }
                     ];
@@ -141157,8 +141562,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    var returnScene = gameState.currentDistrictId ?
-                        gameState.currentDistrictId + '_district_street' : 'city_exploration';
+                    var returnScene = getDistrictReturnScene(gameState.currentDistrictId);
                     return [
                         { text: 'Walk. Don\'t run.', nextScene: returnScene }
                     ];
@@ -141857,8 +142261,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     updateStatus();
                 },
                 choices: function() {
-                    var returnScene = gameState.currentDistrictId ?
-                        gameState.currentDistrictId + '_district_street' : 'city_exploration';
+                    var returnScene = getDistrictReturnScene(gameState.currentDistrictId);
                     return [
                         { text: 'Keep walking.', nextScene: returnScene }
                     ];
@@ -141944,7 +142347,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     choices.push({
                         text: 'Leave it for now.',
-                        action: () => showScene(gameState.currentDistrictId ? gameState.currentDistrictId + '_district_street' : 'city_exploration')
+                        action: () => showScene(getDistrictReturnScene(gameState.currentDistrictId))
                     });
 
                     return choices;
@@ -141959,13 +142362,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     let desc = 'The Trigrave Traffic Management Center. Three stories of beige concrete on the edge of downtown. A building nobody looks at twice, which is exactly why it houses thirty years of surveillance infrastructure behind a single security desk.\n\n';
 
-                    desc += 'You\'ve walked past it twice this week already. Counted the cameras. Watched the shift changes. One overnight guard. Coffee run at 1:40 AM.\n\n';
+                    desc += 'You\'ve walked past it twice this week already, counting cameras and watching the shift changes. There\'s one overnight guard, and he makes a coffee run at 1:40 AM.\n\n';
 
-                    desc += 'You wait. 1:38. 1:39. The guard stands, stretches, disappears toward the break room.\n\nYou move.\n\n';
+                    desc += 'You wait through 1:38 and 1:39. Then the guard stands, stretches, and disappears toward the break room.\n\nYou move.\n\n';
 
-                    desc += 'Vampire speed through the loading dock. The service door\'s lock snaps under your grip with a sound like cracking a knuckle. Stairwell. Second floor.\n\n';
+                    desc += 'You cross the loading dock at vampire speed. The service door\'s lock snaps under your grip with a sound like cracking a knuckle, and then you\'re in the stairwell, headed for the second floor.\n\n';
 
-                    desc += 'Server room. Keycard reader on the door. You pull the housing off the wall, find the relay behind it, short the connection with your thumbnail. The magnetic lock clicks open.\n\n';
+                    desc += 'The server room has a keycard reader on the door. You pull the housing off the wall, find the relay behind it, short the connection with your thumbnail. The magnetic lock clicks open.\n\n';
 
                     desc += 'Inside: rows of rack-mounted servers, status lights blinking green and amber, cooling fans pushing air that tastes like static. The terminal in the corner\'s logged in. Whoever left last didn\'t lock the screen.\n\n';
 
@@ -141980,7 +142383,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                         desc += 'You kill the screen and press flat against the server rack. The door opens. Flashlight beam sweeps the room.\n\n';
 
-                        desc += 'He checks the corners. Checks behind the terminal. The beam passes six inches from your shoes.\n\n';
+                        desc += 'He checks the corners and behind the terminal. The beam passes six inches from your shoes.\n\n';
 
                         if (tier >= 4) {
                             desc += 'He\'s thorough. Methodical. Someone told him to be extra careful, and he\'s taking it seriously. You can hear the radio on his belt cycling through dispatch calls. Your description is in the rotation.\n\n';
@@ -141992,10 +142395,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     } else {
                         desc += 'The guard\'s coffee run buys you eleven minutes. You use nine.\n\n';
 
-                        desc += 'Back through the stairwell. Loading dock. Three blocks at vampire speed before you slow to a walk.\n\n';
+                        desc += 'You go back down the stairwell and out through the loading dock, and you\'re three blocks away at vampire speed before you slow to a walk.\n\n';
 
                         desc += 'Behind you, the building sits dark and quiet. Nobody noticed. Tomorrow the overnight tech will find corrupted drives and a maintenance ticket that\'ll take weeks to resolve.';
                     }
+
+                    desc += '\n\nAcross downtown, on the top floor of TPD headquarters, a mirrored drive logs the gap in the feed and flags it for review.';
 
                     return desc;
                 },
@@ -142010,6 +142415,19 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // Footage reduction: 20-30 base, less if complication interrupted
                     const reduction = complication ? (12 + Math.floor(Math.random() * 8)) : (20 + Math.floor(Math.random() * 11));
                     gameState.suspicionData.cameraFootage = Math.max(0, (gameState.suspicionData.cameraFootage || 0) - reduction);
+
+                    // Trigrave PD Step 6C: the RTCC keeps a mirror at headquarters. Wiping the traffic
+                    // center kills any route trace that isn't built yet (last 48 hours). What the RTCC
+                    // already pulled stays pulled, and Cruz notices when the same hours keep going missing.
+                    var _hubToday = gameState.time.day || 0;
+                    (gameState.evidenceLedger || []).forEach(function(e) {
+                        if (!e.investigation || _hubToday - e.day > 2) return;
+                        e.investigation.leads = e.investigation.leads.filter(function(L) {
+                            return L.developed || (L.type !== 'camera_trace' && L.type !== 'trace_residence');
+                        });
+                    });
+                    gameState.flags.surveillanceTamperCount = (gameState.flags.surveillanceTamperCount || 0) + 1;
+                    modifyCruzProfile(5, 'surveillance tampering');
 
                     // Vandalism risk: 20% chance of suspicion bump
                     if (Math.random() < 0.20) {
@@ -142056,7 +142474,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         action: () => {
                             delete gameState.flags.cameraChainToOnline;
                             delete gameState.flags.cameraInfiltrateComplication;
-                            showScene(gameState.currentDistrictId ? gameState.currentDistrictId + '_district_street' : 'city_exploration');
+                            showScene(getDistrictReturnScene(gameState.currentDistrictId));
                         }
                     });
 
@@ -142142,7 +142560,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             if (hasApt) {
                                 showScene(gameState.flags.hasOwnApartment ? 'apartment' : 'jaewon_living_room');
                             } else {
-                                showScene(gameState.currentDistrictId ? gameState.currentDistrictId + '_district_street' : 'city_exploration');
+                                showScene(getDistrictReturnScene(gameState.currentDistrictId));
                             }
                         }
                     }];
@@ -147684,6 +148102,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         return;
                     }
                     if (checkCruzEncounters('riverside_park')) return;
+                    if (checkStreetTakedown('park')) return;   // Trigrave PD Step 6F
                     const _rce_p = checkRandomDistrictEvent('park');
                     if (_rce_p) { triggerRandomDistrictEvent(_rce_p, 'riverside_park'); return; }
                     tryStyleComment('park');
@@ -149287,6 +149706,11 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
                     if (hasRoom) {
                         desc += '\n\nYou already have a room here. Room ' + roomNo + '.';
+                    }
+
+                    // Trigrave PD Step 6E: the one roof TPD won't go under
+                    if (gameState.flags.warrantIssued && getKelsieResidence().id === 'lurasi') {
+                        desc += '\n\nA cruiser idles at the far corner of the block, as close to the Lurasi as TPD ever gets. It\'s been there since you checked in.';
                     }
 
                     return desc;
@@ -153849,6 +154273,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     advanceTime(2);
                     checkAndSetExposureState();
                     updateStatus();
+                    if (checkStreetTakedown('dockyard')) return;   // Trigrave PD Step 6F
                 },
                 text: function() {
                     var timeOfDay = getTimeOfDay();
@@ -191737,6 +192162,7 @@ wet_car_slowdown: {
                         return;
                     }
                     if (checkCruzEncounters('fitness_district_street')) return;
+                    if (checkStreetTakedown('fitness')) return;   // Trigrave PD Step 6F
                     const _rce_f = checkRandomDistrictEvent('fitness');
                     if (_rce_f) { triggerRandomDistrictEvent(_rce_f, 'fitness_district_street'); return; }
                     tryStyleComment('fitness');
@@ -213480,6 +213906,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
         }
         
         function showScene(sceneId, part = 0) {
+            // Trigrave PD Step 6B/6D: crime exits and home beats
+            if (part === 0 && !gameState.flags._galleryMode && typeof tpdSceneIntercept === 'function' && tpdSceneIntercept(sceneId)) return;
             // EMERGENCY FAILSAFE: Always ensure game container is visible
             const container = document.getElementById('game-container');
             if (container && container.style.display === 'none') {
