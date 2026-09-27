@@ -7725,7 +7725,7 @@
                             </div>
                             <ul style="margin: 5px 0 0 15px; padding: 0;">
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Masturbation:</strong> the alley and the park bench each have a Bra Exposed and a Panties Exposed version (Corrupted and DC), with a stranger who stays to watch.</li>
-                                <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Riverside Park:</strong> a dry bra counts as dressed, so the bench and the porta potty work as normal. A soaked or mesh bra, Panties Exposed, or Underwear Only sends you across the grass to the porta potty first.</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Riverside Park:</strong> a dry bra counts as dressed, so the bench and the porta potty work as normal, and you can sleep on a bench when you've got nowhere else to go. A soaked or mesh bra, Panties Exposed, or Underwear Only sends you across the grass to the porta potty first.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Exhibition Seduction:</strong> at 6001+ with 80+ appeal, Panties Exposed takes its own branch: a stranger has been walking behind you for a block. Man or woman, hard or soft success, four ways to be turned down. Mesh panties under a top play it with the mesh lines. Bra Exposed stays on regular seduction with its bonus.</li>
                             </ul>
                         </div>
@@ -27166,9 +27166,9 @@ audioSystem.playSFX('buttonClick');
                 }
             }
 
-            // Apply stats
+            // Apply stats (BPE Step 17E: arousal through applyArousal(), like the state accidents)
             applyExhibitionThrillGain(event.thrill);
-            gameState.arousal = Math.min(100, (gameState.arousal || 0) + event.arousal);
+            var _accArGain = applyArousal(event.arousal);
             if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
             gameState.exhibitionStats.exhibitionEventsCompleted = (gameState.exhibitionStats.exhibitionEventsCompleted || 0) + 1;
 
@@ -27176,7 +27176,7 @@ audioSystem.playSFX('buttonClick');
             var _ct = gameState.exhibitionismThrill || 0;
             if (_ct > (gameState.exhibitionStats.peakThrill || 0)) gameState.exhibitionStats.peakThrill = _ct;
 
-            var statText = '\n\n<span style="color: #ff69b4;">Arousal +' + event.arousal + '</span>  \u00b7 <span style="color: #ffaacc;">Exhibition Thrill +' + event.thrill + '</span>' + _extraStat;
+            var statText = '\n\n<span style="color: #ff69b4;">Arousal +' + (_accArGain || event.arousal) + '</span>  \u00b7 <span style="color: #ffaacc;">Exhibition Thrill +' + event.thrill + '</span>' + _extraStat;
 
             // Mesh Step 18: at 8001+ a Backlight, Flash or Snag stranger can follow her
             if (getSheerDiscoveryScene(event)) {
@@ -145944,8 +145944,8 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     
                     choices.push({ text: "Use the porta potty", nextScene: "park_porta_potty" });
                     
-                    // Homeless sleeping option (not when naked)
-                    if (exposure === 'clothed' && isHomeless && (fatigue > 60 || isNightTime())) {
+                    // Homeless sleeping option: dressed, or a dry opaque bra over a bottom (a legal look)
+                    if ((exposure === 'clothed' || (exposure === 'bra_exposed' && !isParkIndecent())) && isHomeless && (fatigue > 60 || isNightTime())) {
                         choices.push({ 
                             text: '<img src="Images/icons/sleeping-face.png" class="icon" alt="sleep"> Sleep on a park bench', 
                             nextScene: "park_bench_sleep_choice" 
@@ -146189,7 +146189,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                         } else if (corruption < 8001) {
                             // Medium corruption - conflicted
                             if (isFirst) {
-                                return 'Dawn comes up grey over the treeline while you sit on the edge of the bench.\n\nYour pussy aches, stretched and used, and his cum keeps seeping out of you into your underwear. You can still feel the exact shape of him inside you.\n\nPart of you feels filthy. The rest of you keeps replaying the moment his thumb found your clit and you told him to go harder.\n\n<em>I came so hard.</em> You shake your head like that\'ll knock the thought loose. He took you without asking, and your body lit up for him anyway.\n\nYou pull your jacket tight and try to decide what that makes you.';
+                                return 'Dawn comes up grey over the treeline while you sit on the edge of the bench.\n\nYour pussy aches, stretched and used, and his cum keeps seeping out of you into your underwear. You can still feel the exact shape of him inside you.\n\nPart of you feels filthy. The rest of you keeps replaying the moment his thumb found your clit and you told him to go harder.\n\n<em>I came so hard.</em> You shake your head like that\'ll knock the thought loose. He took you without asking, and your body lit up for him anyway.\n\nYou wrap your arms around yourself and try to decide what that makes you.';
                             }
                             return 'Dawn comes up grey over the treeline. You stay on the bench longer than you need to.\n\nHe was waiting for you again, and you came harder than last time, your cunt clenching around him while you told him not to stop.\n\nPart of you is horrified. Another part is already counting how many nights you can sleep somewhere else before you end up right back here.\n\nHis cum is still warm between your thighs. You press your knees together and watch the sky lighten until the first jogger comes down the path.';
                         }
@@ -146299,7 +146299,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     var desc = '';
 
                     if (corruption < 4001) {
-                        desc += 'The bench wood has soaked up another night of damp, cold through your jacket when your eyes open. The park smells like cut grass and wet stone, and underneath it, something warm and faintly sharp that your body recognizes before your brain does.\n\nHim.\n\n';
+                        desc += 'The bench wood has soaked up another night of damp, cold ' + (gameState.currentOutfit.outerwear ? 'through your ' + proseItemName(gameState.currentOutfit.outerwear) : (gameState.currentOutfit.top || gameState.currentOutfit.dress) ? 'through your ' + cv.topName : 'against your bare back') + ' when your eyes open. The park smells like cut grass and wet stone, and underneath it, something warm and faintly sharp that your body recognizes before your brain does.\n\nHim.\n\n';
 
                         desc += 'Your stomach drops at the same moment his weight settles between your thighs. His hands are already at your waist, ' + (_commando ? '' + (cv.liftable ? 'shoving your ' + cv.bottomName + ' up.' : 'working your ' + cv.bottomName + ' down.') + ' Nothing underneath. His knuckles drag bare skin and the cold air follows.' : '' + (cv.liftable ? 'shoving your ' + cv.bottomName + ' up' : 'working your ' + cv.bottomName + ' down') + ' with the ease of someone who\'s done this once and learned the layout.') + '\n\n';
 
@@ -208866,6 +208866,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 30);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(25);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -208878,7 +208880,10 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_bra_exit_soft_m: {
                 text: function() {
-                    return 'The alley lets you back out onto the street.\n\nYou stop for a moment. Pull a breath of cold air in through your nose.\n\nThe ache is still there, warm and low, but it\'s different now. Closer to satisfied than not.\n\nYou smooth nothing, there\'s nothing to smooth, and keep walking.';
+                    var cv = getSceneClothingVars(); var pan = cv.pantiesName, thong = cv.pantiesCut === 'thong';
+                    return 'The alley lets you back out onto the street, and the cold finds every inch of skin your ' + cv.braName + ' and ' + pan + ' leave bare.\n\n' +
+                        'You stop at the mouth of it and pull a breath in through your nose. Your ' + pan + (thong ? ' is' : ' are') + ' back on and soaked through at the crotch, and your pussy\'s still slick and swollen under ' + (thong ? 'it' : 'them') + '.\n\n' +
+                        'The ache between your legs has gone warm and heavy, closer to satisfied than not. There\'s nothing to smooth down and nothing to fix, so you keep walking.';
                 },
                 onEnter: function() {
                     // Stat effects — soft success
@@ -208886,6 +208891,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 20);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(18);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -209047,9 +209054,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.thirst = 0;
                     updateStatus();
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_bra_exit_success_m' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_bra_exit_soft_m' : 'exhibition_seduce_bra_exit_success_m' }];
+                }
             },
 
             // END EXHIBITION SEDUCTION SYSTEM — BRANCH A
@@ -209149,6 +209158,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 30);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(25);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -209161,13 +209172,18 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_bra_exit_soft_f: {
                 text: function() {
-                    return 'You slip out first.\n\nThe corridor is empty. Music thumping through the wall.\n\nYou take a breath. The cool hallway sits against the heat still under your skin.\n\nYou roll your shoulders once and walk toward the front door. Through it into the night.';
+                    var cv = getSceneClothingVars();
+                    return 'You slip out of the bathroom first, into the empty corridor, with the bass from the club thumping through the wall.\n\n' +
+                        'Your nipples are still stiff in the cups of your ' + cv.braName + ', and your pussy\'s swollen and slick where her fingers were. The cool air in the hallway makes you shiver.\n\n' +
+                        'You roll your shoulders back and walk out the front door into the night in your underwear, your clit still throbbing with every step.';
                 },
                 onEnter: function() {
                     gameState.arousal = Math.min(100, (gameState.arousal || 0) + 25);
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 20);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(18);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -209335,9 +209351,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.thirst = 0;
                     updateStatus();
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_bra_exit_success_f' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_bra_exit_soft_f' : 'exhibition_seduce_bra_exit_success_f' }];
+                }
             },
 
             // END EXHIBITION SEDUCTION SYSTEM — BRANCH A (FEMALE TRACK)
@@ -209436,6 +209454,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 32);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(28);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -209448,13 +209468,18 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_top_exit_soft_m: {
                 text: function() {
-                    return 'The loading bay lets you back out onto the street.\n\nYou pause at the mouth of it. Pull in one slow breath.\n\nThe warmth under your skin is lower now, softer. A specific kind of satisfaction that doesn\'t fully resolve.\n\nYou start walking.';
+                    var cv = getSceneClothingVars();
+                    return 'The loading bay lets you back out onto the street.\n\n' +
+                        'You pause at the mouth of it and pull in one slow breath. Your tits are still bare, and the cold tightens your nipples into hard, aching points.\n\n' +
+                        'Your pussy\'s wet and sore under your ' + cv.bottomName + ', and the ache down there has gone low and warm, closer to satisfied than not. You start walking.';
                 },
                 onEnter: function() {
                     gameState.arousal = Math.min(100, (gameState.arousal || 0) + 28);
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 22);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(20);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -209623,9 +209648,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.thirst = 0;
                     updateStatus();
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_top_exit_success_m' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_top_exit_soft_m' : 'exhibition_seduce_top_exit_success_m' }];
+                }
             },
 
             // END EXHIBITION SEDUCTION SYSTEM — BRANCH B (MALE TRACK)
@@ -209724,6 +209751,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 32);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(28);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -209736,13 +209765,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_top_exit_soft_f: {
                 text: function() {
-                    return 'You slip back out first.\n\nThe door settles behind you. Cool air, the low hum of the street.\n\nYou roll your shoulders once and go. The warmth under your skin sits specific and low.\n\nYou walk until the stairwell is a block behind you.';
+                    return 'You slip out of the stairwell first, and the door settles shut behind you.\n\n' +
+                        'The street hums low in the cool air. Your bare tits are still flushed from her mouth, the nipples wet and stiff, and your pussy clenches when you remember her tongue on them.\n\n' +
+                        'You roll your shoulders back and go. By the time the stairwell\'s a block behind you, your clit\'s still throbbing.';
                 },
                 onEnter: function() {
                     gameState.arousal = Math.min(100, (gameState.arousal || 0) + 25);
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 20);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(18);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -209878,9 +209911,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     completeSexConsensualFemale({ thrill: 15, time: 20 });
                     gameState.thirst = 0;
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_top_exit_success_f' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_top_exit_soft_f' : 'exhibition_seduce_top_exit_success_f' }];
+                }
             },
 
             // END EXHIBITION SEDUCTION SYSTEM — BRANCH B (FEMALE TRACK)
@@ -209987,6 +210022,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 35);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(30);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -210000,13 +210037,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             exhibition_seduce_btm_exit_soft_m: {
                 text: function() {
                     var cv = getSceneClothingVars();
-                    return 'The stairwell door opens onto cool air.\n\nYou pull your ' + cv.topName + ' back down and stand a moment at the mouth of the structure. The warmth from it sits in specific places.\n\nYou start walking. The street doesn\'t notice you, which right now feels like the right thing.';
+                    return 'The stairwell door opens onto cool air.\n\n' +
+                        'You tug your ' + cv.topName + ' down at the mouth of the parking structure, and it doesn\'t reach far enough to cover anything. Your pussy\'s swollen and slick, and the night air is cold on it.\n\n' +
+                        'You start walking. Nobody on the street looks twice yet, and your clit throbs at the thought of the first one who does.';
                 },
                 onEnter: function() {
                     gameState.arousal = Math.min(100, (gameState.arousal || 0) + 30);
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 24);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(22);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -210180,9 +210221,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.thirst = 0;
                     updateStatus();
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_btm_exit_success_m' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_btm_exit_soft_m' : 'exhibition_seduce_btm_exit_success_m' }];
+                }
             },
 
             // EXHIBITION SEDUCTION SYSTEM — BRANCH C (FEMALE TRACK)
@@ -210280,6 +210323,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 35);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(30);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -210292,14 +210337,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_btm_exit_soft_f: {
                 text: function() {
-                    var cv = getSceneClothingVars();
-                    return 'The alley mouth opens onto the street.\n\nYou step out. The city doesn\'t notice. Your bare legs carry you into the foot traffic and you let it close around you, the warmth of it still sitting just below your hem.';
+                    return 'The alley mouth opens onto the street.\n\n' +
+                        'You step out bare from the waist down, and the city doesn\'t notice yet. Your pussy\'s still slick and swollen from her fingers, and the cold air on it makes your clit throb.\n\n' +
+                        'You let the foot traffic close around you and keep walking, the ache below your hem warm and low, closer to satisfied than not.';
                 },
                 onEnter: function() {
                     gameState.arousal = Math.min(100, (gameState.arousal || 0) + 30);
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 24);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(22);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -210444,9 +210492,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     completeSexConsensualFemale({ thrill: 15, time: 20 });
                     gameState.thirst = 0;
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_btm_exit_success_f' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_btm_exit_soft_f' : 'exhibition_seduce_btm_exit_success_f' }];
+                }
             },
 
             // END EXHIBITION SEDUCTION SYSTEM — BRANCH C
@@ -210546,6 +210596,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 40);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(35);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -210558,13 +210610,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_nkd_exit_soft_m: {
                 text: function() {
-                    return 'The corridor lets you back out into the cold.\n\nYou stand at the building\'s edge a moment. The night smells like exhaust and concrete and the faint trace of what just happened in that corridor.\n\nThe warmth from it hasn\'t settled yet.\n\nYou pull a breath in and walk.';
+                    return 'The corridor lets you back out into the cold, naked.\n\n' +
+                        'You stand at the edge of the building a moment. The night smells like exhaust and concrete and, faintly, like what just happened in that corridor. Goosebumps run over your bare skin, and your nipples tighten in the cold.\n\n' +
+                        'Your pussy\'s still slick and aching, closer to satisfied than not. You pull a breath in and walk.';
                 },
                 onEnter: function() {
                     gameState.arousal = Math.min(100, (gameState.arousal || 0) + 32);
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 22);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(20);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -210732,9 +210788,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.thirst = 0;
                     updateStatus();
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_nkd_exit_success_m' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_nkd_exit_soft_m' : 'exhibition_seduce_nkd_exit_success_m' }];
+                }
             },
 
             // ============================================================
@@ -210829,6 +210887,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 40);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(35);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(30);
                     updateStatus();
@@ -210841,13 +210901,17 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
             exhibition_seduce_nkd_exit_soft_f: {
                 text: function() {
-                    return 'The alley mouth opens onto the street.\n\nYou step into the cold and the city closes around you, indifferent, moving.\n\nThe warmth of her hands takes a few steps to leave your skin.';
+                    return 'The alley mouth opens onto the street, and you step naked into the cold.\n\n' +
+                        'The city closes around you, indifferent and moving. Your nipples go stiff in the night air, and your pussy\'s still swollen and wet from her.\n\n' +
+                        'The warmth of her hands takes a few steps to leave your skin, and your clit throbs the whole way to the corner.';
                 },
                 onEnter: function() {
                     gameState.arousal = Math.min(100, (gameState.arousal || 0) + 32);
                     gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 22);
                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
                     applyExhibitionThrillGain(20);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
                     delete gameState.flags._exhibSeduceResult;
                     advanceTime(25);
                     updateStatus();
@@ -211031,9 +211095,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     completeSexConsensualFemale({ thrill: 15, time: 20 });
                     gameState.thirst = 0;
                 },
-                choices: [
-                    { text: 'Continue.', nextScene: 'exhibition_seduce_nkd_exit_success_f' }
-                ]
+                choices: function() {
+                    // BPE Step 17E: a soft success leaves through the soft exit (as Branch E does)
+                    var r = gameState.flags._exhibSeduceResult;
+                    return [{ text: 'Continue.', nextScene: r && r.tier === 'soft' ? 'exhibition_seduce_nkd_exit_soft_f' : 'exhibition_seduce_nkd_exit_success_f' }];
+                }
             },
 
             // END EXHIBITION SEDUCTION SYSTEM — BRANCH D
