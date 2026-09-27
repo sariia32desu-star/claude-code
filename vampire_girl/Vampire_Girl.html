@@ -25131,11 +25131,215 @@ audioSystem.playSFX('buttonClick');
             });
         }
 
+        // ── BPE Step 11C: state accidents for Bra Exposed and Panties Exposed ──
+        // Opaque pieces only (mesh routes to the sheer pool). Visible state only: a jacket
+        // over the bra or a coat over everything leaves the zone events to fire as normal.
+        // 15% per transition, 60-minute cooldown per state.
+        function _bpeFireAccident(event) {
+            applyExhibitionThrillGain(event.thrill);
+            var _arGain = applyArousal(event.arousal);
+            if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+            gameState.exhibitionStats.exhibitionEventsCompleted = (gameState.exhibitionStats.exhibitionEventsCompleted || 0) + 1;
+            var _ct = gameState.exhibitionismThrill || 0;
+            if (_ct > (gameState.exhibitionStats.peakThrill || 0)) gameState.exhibitionStats.peakThrill = _ct;
+            var statText = '\n\n<span style="color: #ff69b4;">Arousal +' + (_arGain || event.arousal) + '</span>  · <span style="color: #ffaacc;">Exhibition Thrill +' + event.thrill + '</span>';
+            showMessage(event.text + statText, function() { updateStatus(); });
+            return true;
+        }
+
+        function _bpeAccidentPool(state) {
+            var cv = getSceneClothingVars();
+            var _ba = gameState.bodyAppearance || {};
+            var _bs = _ba.breastSize || 'average';
+            var _butt = _ba.buttSize || 'average';
+            var _bt = _ba.bodyType || 'ordinary';
+            var corruption = gameState.corruption || 0;
+            var pool = [];
+
+            if (state === 'bra_exposed') {
+                var bra = cv.braName, bottom = cv.bottomName, style = cv.braStyle;
+                var sporty = style === 'sporty';
+
+                // 1. Strap slip
+                if (!sporty) pool.push(function() {
+                    var open = style === 'corset'
+                        ? 'You bend to fix the buckle on your shoe, and your ' + bra + ' doesn\'t bend with you. The stiff top edge stands off your chest, and one cup gapes wide.'
+                        : 'You swing your bag onto your other shoulder, and the strap of your ' + bra + ' goes with it. It slides down your arm before you can catch it, and the cup peels away from your chest.';
+                    var give = style === 'pushup' ? 'The padding tips forward first, and with nothing behind it holding you up, it rolls right down. '
+                        : style === 'bralette' ? 'The thin cup has nothing in it to hold its shape, so it just folds. '
+                        : style === 'lace' ? 'The lace snags on your nipple for a second, then lets go. '
+                        : '';
+                    var tit = _bs === 'large' ? 'The weight of your tit does the rest, and your whole breast spills out over the top, heavy and bare, your nipple tightening in the open air.'
+                        : _bs === 'small' ? 'There\'s not much to hold it there. It slips off your small tit, and your nipple\'s out in the daylight, stiff and bare.'
+                        : 'Your breast slips free over the top, bare, and your nipple pulls tight the second the air touches it.';
+                    var kr = corruption >= 6001
+                        ? 'You take your time with it. Your nipple\'s still aching from the air, your clit\'s throbbing right along with it, and he can look for as long as he likes. You leave the strap loose. It\'ll slip again.'
+                        : corruption >= 2001
+                        ? 'Your face goes hot. Your nipple\'s so stiff it\'s pressing a point through the cup you just fixed, and your pussy went slick in those two seconds. You walk faster and don\'t touch the strap again in case it happens twice.'
+                        : 'You fold an arm over your chest and keep it there. Your face is burning, your nipple won\'t soften under the cup, and your pussy\'s gone warm and wet without asking you. He saw your bare tit, and so did everyone else on that step.';
+                    return {
+                        text: open + '\n\n' + give + tit + '\n\n' +
+                            'It takes you two full seconds to understand what happened and get a hand over it.\n\n' +
+                            'A man coming out of the bakery with a coffee in each hand stops dead on the step. His eyes are on your bare nipple, and they stay on your chest after you\'ve tugged the cup back into place.\n\n' + kr,
+                        thrill: 10, arousal: 7
+                    };
+                });
+
+                // 2. The clasp gives
+                if (!sporty) pool.push(function() {
+                    var hold = _bs === 'large' ? 'Your forearms are barely enough. Your heavy tits swell out over and under them, bare skin bulging around the cups you\'re pinning in place.'
+                        : _bs === 'small' ? 'The cups slide around on your small chest with nothing to cling to, and you have to press your palms flat to keep them over your nipples.'
+                        : 'Your tits push warm against your forearms, the cups crushed flat over your nipples and nothing else holding them up.';
+                    var back = _bt === 'petite' ? 'your narrow little back'
+                        : _bt === 'athletic' ? 'the lean muscle of your back'
+                        : _bt === 'curvy' ? 'the long dip of your back'
+                        : _bt === 'thick' ? 'the soft curve of your back'
+                        : 'your back';
+                    var wet = cv.commando ? 'your bare pussy slick under your ' + bottom : 'your pussy soaking the crotch of your ' + cv.pantiesName;
+                    var kr = corruption >= 8001
+                        ? 'You stop walking. Then you let go.\n\nThe cups drop and hang off your straps, and your bare tits are out on the sidewalk, nipples stiff and dark in the open air. The man behind you stops laughing. You stand there long enough for him to get a proper look, your clit throbbing, ' + wet + '.\n\nThen you reach back, hook the clasp, and walk on like nothing happened.'
+                        : corruption >= 6001
+                        ? 'You don\'t rush it. You walk the rest of the block with your arms folded over the loose cups and your bare back on show, and you let them follow you. Your nipples rub the inside of the cups with every step and your clit aches. At the corner you reach back and hook it, slowly.'
+                        : corruption >= 2001
+                        ? 'You duck into a doorway and fumble behind your back until the hooks catch. Your hands are shaking. Your nipples are stiff against the cups, your pussy\'s wet, and you can still hear him laughing.'
+                        : 'You back up against the nearest wall and fumble with the clasp, arms still clamped over your chest. It takes three tries. Your face is burning, your nipples ache against the loose cups, and your pussy\'s damp, and somehow that last part is what makes your eyes sting.';
+                    return {
+                        text: 'You\'re halfway down the block when you feel the snap between your shoulder blades.\n\n' +
+                            'The clasp of your ' + bra + ' gives. The band springs open across your back and both cups sag forward off your tits. You slap your arms across your chest and catch them a second before everything falls out.\n\n' +
+                            hold + '\n\n' +
+                            'Behind you there\'s nothing on ' + back + ' from your neck to your ' + bottom + ' but two loose straps, the open band swinging off your shoulders. A couple walking behind you slows down. The woman whispers something, and the man laughs under his breath.\n\n' + kr,
+                        thrill: 12, arousal: 8
+                    };
+                });
+
+                // 3. Sports bra ride-up
+                if (sporty) pool.push(function() {
+                    var stretch = _bt === 'petite' ? 'your whole slight frame stretched long'
+                        : _bt === 'athletic' ? 'every line of your stomach pulled tight'
+                        : _bt === 'curvy' ? 'your waist pulled long and narrow'
+                        : _bt === 'thick' ? 'your soft stomach stretched long'
+                        : 'your stomach stretched long and bare';
+                    var under = _bs === 'large' ? 'The elastic peels up off the heavy undersides of your tits, and the bottom half of both hangs bare below it, squeezed out under the band.'
+                        : _bs === 'small' ? 'On your small chest there\'s nothing to stop it. The band slides up almost to your nipples, and the soft undersides of both tits are out in the sun.'
+                        : 'The bottom curve of both tits slips out under the band, bare, the fabric caught just below your nipples.';
+                    var kr = corruption >= 6001
+                        ? 'You take your time coming down off your toes and leave the band where it is a second longer. His eyes stay on the bare curves under it, and your nipples go hard against the fabric. Your clit\'s throbbing. You tug it down and tell the girl to have fun.'
+                        : corruption >= 2001
+                        ? 'You yank the band down the second your heels hit the pavement. He\'s pretending he didn\'t see. Your nipples are stiff points against the fabric now, and your pussy\'s gone warm and wet over a couple of inches of underboob.'
+                        : 'You drop your arms and drag the band back down, face burning. He mumbles his thanks at the sidewalk. Your nipples are stiff under the fabric and your pussy\'s gone warm and achy, and you walk off fast before he can look up again.';
+                    return {
+                        text: 'A little girl\'s kite string is caught on a branch over the sidewalk, and her dad can\'t reach it. You can.\n\n' +
+                            'You go up on your toes and stretch for it, both arms over your head, ' + stretch + '. Your ' + bra + ' can\'t stretch with you. The band rides up your ribs and stays there.\n\n' +
+                            under + '\n\n' +
+                            'You work the string free and hand it down. The dad looks up to thank you and stops halfway through the word, his eyes level with your chest.\n\n' + kr,
+                        thrill: 8, arousal: 5
+                    };
+                });
+            }
+
+            if (state === 'panties_exposed') {
+                var top = cv.topName, pan = cv.pantiesName, cut = cv.pantiesCut;
+                var thong = cut === 'thong';
+
+                // 1. Ride-up
+                pool.push(function() {
+                    var creep = thong ? 'Your ' + pan + '\'s already all the way between your cheeks, and every step drags it deeper, the string sawing up into the crease of your ass.'
+                        : cut === 'cheeky' ? 'Your ' + pan + ' started out half off your ass. Three blocks later they\'ve crept up into the crease, and both cheeks are almost bare.'
+                        : cut === 'boyshort' ? 'Your ' + pan + ' have been creeping all afternoon. The legs ride up and bunch, and by the third block they\'ve rolled into a wedge between your cheeks.'
+                        : 'Your ' + pan + ' have been creeping up with every step. By the third block they\'re wedged between your cheeks.';
+                    var ass = _butt === 'large' ? 'Your full ass is bare on both sides of the fabric, bouncing with every step below the hem of your ' + top + '.'
+                        : _butt === 'small' ? 'Your tight little ass is bare around the fabric, both cheeks flexing with every step right under the hem of your ' + top + '.'
+                        : 'Both cheeks are bare below the hem of your ' + top + ', rolling with every step you take.';
+                    var front = thong ? ' In front, the string\'s pulled so tight it\'s splitting your pussy lips, and it rubs your clit with every step.' : '';
+                    var fix = thong ? 'You reach back and tug the string, and it snaps right back in. That\'s worse, because now he\'s watched you do it.'
+                        : 'You reach back and hook a finger under the leg band to pull them out. That\'s worse, because now he\'s watched you do it.';
+                    var kr = corruption >= 6001
+                        ? 'You leave ' + (thong ? 'it' : 'them') + ' where ' + (thong ? 'it is' : 'they are') + '. Your ass is bare for the whole street and your pussy\'s soaked through the crotch, the fabric pulled tight against your clit. You slow down so he can keep up.'
+                        : corruption >= 2001
+                        ? 'Your face is burning. You pick ' + (thong ? 'it' : 'them') + ' loose and ' + (thong ? 'it creeps' : 'they creep') + ' straight back, and by the end of the block your pussy\'s so wet the fabric\'s sticking to it. He\'s still behind you.'
+                        : 'You want the sidewalk to swallow you. You pull ' + (thong ? 'it' : 'them') + ' out, and ' + (thong ? 'it creeps' : 'they creep') + ' back, and you pull again. Your ass is bare, your face is on fire, and the fabric rubbing your pussy with every step has you wet and hating it.';
+                    return {
+                        text: creep + '\n\n' + ass + front + '\n\n' +
+                            'Behind you, a guy on a scooter coasts at walking speed instead of passing. When you finally glance back, he\'s looking at your ass.\n\n' +
+                            fix + '\n\n' + kr,
+                        thrill: 10, arousal: 7
+                    };
+                });
+
+                // 2. The wet spot (arousal 50+)
+                if ((gameState.arousal || 0) >= 50) pool.push(function() {
+                    var patch = thong ? 'What there is of your ' + pan + ' in front is sodden, the narrow strip gone dark and stuck to your lips.'
+                        : 'The crotch of your ' + pan + ' is soaked through, a dark patch spreading across the gusset and clinging to your pussy with every step.';
+                    var spot = thong ? 'the soaked strip over your pussy' : 'the dark wet patch between your thighs';
+                    var kr = corruption >= 6001
+                        ? 'You smile at him over your shoulder. Your clit\'s throbbing against the soaked fabric and you can feel fresh wet seeping into it. You don\'t hide it. You let him walk behind you all the way across.'
+                        : corruption >= 2001
+                        ? 'You clamp your thighs together at the top of the stairs, which only presses the wet fabric harder against your pussy. Your clit throbs. He saw exactly how turned on you are, and it\'s making you wetter.'
+                        : 'You press your thighs together and walk fast, face burning, the soaked fabric clinging to your pussy. He knows. A stranger knows how wet you are, and your cunt clenches at the thought, and you hate that too.';
+                    return {
+                        text: 'You\'re halfway up the steps to the pedestrian bridge when you feel how wet you are.\n\n' +
+                            patch + '\n\n' +
+                            'The man climbing behind you has a straight view up at ' + getPantiesExposedAssView() + '. Right at his eye level, there\'s ' + spot + '.\n\n' +
+                            'He slows to your pace for the whole flight. At the top he says it quietly enough that only you hear. "Somebody\'s having a good day."\n\n' + kr,
+                        thrill: 12, arousal: 8
+                    };
+                });
+
+                // 3. Cold bench
+                pool.push(function() {
+                    var seat = thong ? 'With a thong it\'s your bare ass on the metal, the cold biting into both cheeks at once.'
+                        : _butt === 'large' ? 'Your full ass spreads across the metal, and the cold bites through your thin ' + pan + '.'
+                        : _butt === 'small' ? 'Your tight little ass barely warms the metal, and the cold bites through your thin ' + pan + '.'
+                        : 'The cold bites through your thin ' + pan + ' and into your ass.';
+                    var thighs = _bt === 'petite' ? 'your slim thighs'
+                        : _bt === 'athletic' ? 'your lean thighs'
+                        : _bt === 'curvy' ? 'your soft, full thighs'
+                        : _bt === 'thick' ? 'your thick thighs'
+                        : 'your thighs';
+                    var kr = corruption >= 6001
+                        ? 'You leave your knees where they are. The cold metal\'s making your clit ache, his stare\'s making your pussy slick, and when the bus pulls up you\'re the last one to stand.'
+                        : corruption >= 2001
+                        ? 'You snap your knees shut. It\'s too late. He saw the damp patch spreading between your legs, and your pussy clenches against the cold steel.'
+                        : 'Your knees slam together and your hands go flat on your lap. Your face is burning. The cold\'s seeping through the thin fabric into your pussy, you\'re wet, and he\'s still looking at the spot where your knees were.';
+                    return {
+                        text: 'You sit down at the bus stop without thinking.\n\n' +
+                            'The bench is cold steel. The backs of your bare thighs hit it first. ' + seat + ' Then it finds the thin strip of fabric under your pussy, and you gasp.\n\n' +
+                            'Your knees drift apart as you settle, like you\'ve got jeans on. A man on the bench across the stop looks up from his phone and doesn\'t look back down. From where he\'s sitting there\'s a straight view between ' + thighs + ' to the crotch of your ' + pan + ', pressed tight to your pussy.\n\n' + kr,
+                        thrill: 10, arousal: 7
+                    };
+                });
+            }
+
+            return pool;
+        }
+
+        function _checkBpeAccident(districtId) {
+            var state = getVisibleExposureLevel();
+            if (state !== 'bra_exposed' && state !== 'panties_exposed') return false;
+            var cv = getSceneClothingVars();
+            if (state === 'bra_exposed' && cv.braSheer) return false;
+            if (state === 'panties_exposed' && cv.pantiesSheer) return false;
+
+            if (Math.random() > 0.15) return false;
+            var _flag = state === 'bra_exposed' ? '_lastBraAccidentMinute' : '_lastPantiesAccidentMinute';
+            var _nowMin = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+            if ((_nowMin - (gameState.flags[_flag] || 0)) < 60) return false;
+
+            var pool = _bpeAccidentPool(state);
+            if (!pool.length) return false;
+            gameState.flags[_flag] = _nowMin;
+            return _bpeFireAccident(pool[Math.floor(Math.random() * pool.length)]());
+        }
+
         function checkAccidentalExposure(districtId) {
             // Only fires when clothed (not in any exhibition state)
             if (gameState.isNaked || isEffectivelyNaked() || isEffectivelyTopless() || isEffectivelyBottomless()) return false;
             var _uwType = getUnderwearExposureType();
-            if (_uwType) return false; // visible underwear state handled elsewhere
+            if (_uwType === 'both') return false; // Underwear Only handled elsewhere
+            // BPE Step 11A: in Bra Exposed only the hips can have a zone accident, in Panties
+            // Exposed only the chest (the braless/commando checks below already enforce it).
+            // Step 11C: the state's own accidents roll first on their own cooldown.
+            if (_uwType && _checkBpeAccident(districtId)) return true;
 
             // Mesh Step 9: a dressed sheer state opens the gate on its own. A zone that's bare
             // behind mesh belongs to the sheer pool, so the opaque-fabric braless and commando
