@@ -7376,6 +7376,7 @@
                         <div style="margin: 5px 0 5px 0; padding: 6px 10px; background: rgba(60, 20, 40, 0.25); border-left: 3px solid #884466; border-radius: 3px;">
                             <strong style="color: #dd8899; font-size: 13px;"><img src="Images/icons/crime-suspicion.png" class="icon" alt="evidence"> Arrest &amp; Evidence</strong>
                             <ul style="margin: 4px 0 0 15px; padding: 0;">
+                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Police Stops:</strong> every indecent state is on a police clock. Naked: 2 hours. Topless, bottomless, the full sheer set, a sheer bra with nothing over it, or bare behind mesh: 3 hours. Panties Exposed, Underwear Only, braless or commando behind mesh, or a bra soaked through: 4 hours. A dry bra over a bottom is legal and never on the clock. The clock checks when you enter a district street and pauses at home or at Jaewon's. When the officers arrive you choose: <strong>Run</strong> at vampire speed (you get dressed from your backpack, run home, or steal clothes), or <strong>Compel them</strong> to forget (+15 thirst; the clock starts over and you stay as you are).</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ff8899;">Indecent Exposure Evidence:</strong> Walking around exposed in public can generate Evidence Ledger entries. Commercial and downtown districts have a 30% chance per visit (camera evidence, street cams). Residential and park districts have a 15% chance (civilian witnesses). Max one entry per district per day.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Severity Scaling:</strong> Underwear or Panties Exposed = Minor (+1 warrant severity). A dry bra over a bottom leaves no record; soaked through it's Minor, Moderate on a night camera. Topless or Bottomless = Moderate (+2). Naked = Major (+3). Low weight compared to violent crimes, so indecent exposure alone won't drive a warrant, but it adds up. Sheer: framed leaves no record, braless or commando behind mesh is Minor, and bare or any sheer lingerie is Moderate. A night camera after 8 PM bumps a sheer entry up one level, so sheer lingerie can reach Major. Fishnet raises the odds of an entry and semi-sheer lowers them.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #88ccff;">Cruz Awareness:</strong> After 3+ indecent exposure entries, Detective Cruz flags the pattern in her behavioral profile of you. She'll reference it during encounters: blurred camera stills, incident report numbers. It doesn't trigger arrest on its own but it adds a data point to a detective who's already watching you. Sheer entries count toward the pattern, and when most of your file is sheer she says so: "Most of it's technically clothed."</li>
@@ -7649,7 +7650,7 @@
                                 <li style="margin: 3px 0;"><strong style="color: #ff8888;">Cruz:</strong> sheer entries count toward her three-strike pattern. When most of your file is sheer, she says so: "Three stills. Same see-through dress. You know exactly what the cameras see."</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Venues:</strong> framed goes anywhere. Braless behind mesh is turned away at the hospital, library, blood bank, and dojang. Commando or bare only gets into Lucius' Lounge, Hardy Bar, Urban Edge, and the diner. A sheer bra or panties alone gets in nowhere.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Transit:</strong> the bus and Uber refuse a sheer bra or panties with nothing over it (Uber costs 0.2 rating). Bare or commando behind mesh can ride, and the driver reacts when you get out.</li>
-                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Sheer lingerie police:</strong> three hours out in the full sheer set and officers show up, arguing the technicality ("It's see-through, Dave. That's the whole point of it."), then the naked escape.</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Sheer lingerie police:</strong> three hours out in the full sheer set and officers show up, arguing the technicality ("It's see-through, Dave. That's the whole point of it."). Then you choose how it ends (see <strong>Police Stops</strong>).</li>
                             </ul>
                         </div>
 
@@ -7685,7 +7686,7 @@
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Venues:</strong> Bra Exposed gets into Bargain Threads, Urban Edge, the laundromat, the dry cleaners, and Hardy Bar, and into Lucius' Lounge from 6 PM to 6 AM. The diner and convenience store want a shirt; the library, hospital, and blood bank turn you away; so do the Regency, the casino, Noir, and Vajaros Realty. A sports bra gets into the dojang, gym, and stadium, and nowhere upscale. Panties Exposed is turned away everywhere with a door policy, and at Bargain Threads Jack answers the door himself.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Transit:</strong> the bus and Uber take your fare in Bra Exposed, with a line from the driver. Panties Exposed is refused (Uber costs 0.2 rating).</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Evidence and suspicion:</strong> a dry bra leaves no record and adds no suspicion. Panties Exposed logs a Minor entry and adds +2 suspicion on district entry.</li>
-                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Indecency police:</strong> four hours out in Panties Exposed or Underwear Only and officers show up, then the naked escape. The two states share one clock. It checks when you enter a district street, and it pauses while you're at home or at Jaewon's. Sheer lingerie keeps its own three-hour clock.</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Indecency police:</strong> four hours out in Panties Exposed or Underwear Only and officers show up. The two states share one clock. It checks when you enter a district street, and it pauses while you're at home or at Jaewon's. Sheer lingerie keeps its own three-hour clock. See <strong>Police Stops</strong> under Arrest &amp; Evidence for the rest.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #88ccff;">Rain:</strong> a cotton, satin, or lace bra (not a sports bra) soaks see-through at 60% wetness. Then it's indecent: a notice once a day, blocked at every door with a policy, refused on transit, a Minor evidence entry (Moderate on a night camera), +2 suspicion, guaranteed harassment and night assault, and +4 thrill an hour in place of the wet rate.</li>
                             </ul>
                         </div>
@@ -21033,7 +21034,7 @@ audioSystem.playSFX('buttonClick');
             
             if (isNight) {
                 if (corruption >= 6001) {
-                    policeText = 'Blue and red light sweeps across the buildings. The siren blips once, short and sharp.\n\nA cruiser pulls to the curb thirty feet ahead. The spotlight swings toward you and pins you in a white circle, naked, bare feet on asphalt, every detail of your body lit up for the officers inside.\n\nThe driver\'s door opens. A cop steps out. Middle-aged, thick through the shoulders. He takes one look at you and reaches for his radio.\n\n"Dispatch, we\'ve got a 314 on foot. Female, late teens, fully unclothed. Northbound on—"\n\nYou don\'t wait for the street name.\n\n<em>Time to move.</em>';
+                    policeText = 'Blue and red light sweeps across the buildings. The siren blips once, short and sharp.\n\nA cruiser pulls to the curb thirty feet ahead. The spotlight swings toward you and pins you in a white circle, naked, bare feet on asphalt, every detail of your body lit up for the officers inside.\n\nThe driver\'s door opens. A cop steps out. Middle-aged, thick through the shoulders. He takes one look at you and reaches for his radio.\n\n"Dispatch, we\'ve got a 314 on foot. Female, late teens, fully unclothed. Northbound on—"\n\nHis partner comes around the hood, and they both stop ten feet from you.';
                 } else if (corruption >= 2001) {
                     policeText = 'The siren hits you like a slap. Blue and red light floods the street.\n\nA police cruiser rounds the corner and the spotlight finds you immediately. Naked. Exposed. Lit up like a stage performer in front of the whole block.\n\nYour stomach drops.\n\n"Ma\'am! Stop where you are!"\n\nThe officer\'s door opens. Heavy boots on pavement.\n\n<em>Oh god. Oh god, this is actually happening.</em>\n\nYour heart is slamming against your ribs. You take a step backward.';
                 } else {
@@ -21050,7 +21051,7 @@ audioSystem.playSFX('buttonClick');
             }
             
             showMessage(policeText, () => {
-                handleNakedEscape();
+                offerExhibPoliceChoices('naked', 'naked');
             });
         }
         
@@ -22848,22 +22849,22 @@ audioSystem.playSFX('buttonClick');
                     '"I can see your..." He doesn\'t finish. His ears go red.\n\n' +
                     'His partner leans on the car door and doesn\'t bother pretending to look anywhere else. "It\'s see-through, Dave. That\'s the whole point of it."\n\n' +
                     'Your clit throbs. Three hours on the street and this is the first time anyone\'s tried to argue about it.\n\n' +
-                    '"You need to come with us, ma\'am. Indecent exposure."\n\n"I\'m dressed."\n\nHe looks at your nipples again. "Not really."\n\nYou smile at him. Then you\'re gone.';
+                    '"You need to come with us, ma\'am. Indecent exposure."\n\n"I\'m dressed."\n\nHe looks at your nipples again. "Not really."\n\nYou smile at him.';
             } else if (corruption >= 2001) {
                 text = 'A squad car slows beside you and stays there, matching your pace.\n\n' +
                     'The officer in the passenger seat looks at your ' + bra + ', at your nipples showing dark through it, then lower, to your ' + pan + ' and the bare slit behind them. He clears his throat.\n\n' +
                     '"Miss. You can\'t walk around like that."\n\n"I\'m wearing something."\n\n"I can see everything you\'re wearing it over."\n\n' +
-                    'Heat floods your face. Your pussy clenches anyway, and you know he can see that too.\n\nThe door opens. You don\'t wait to hear the rest.';
+                    'Heat floods your face. Your pussy clenches anyway, and you know he can see that too.\n\nThe door opens.';
             } else {
                 text = 'The siren chirps once behind you and your whole body locks.\n\n' +
                     'Two officers get out. The woman takes one look and her mouth goes flat. "Ma\'am. Are you aware we can see through that?"\n\n' +
                     'You look down. Your nipples, dark and stiff behind your ' + bra + '. Your bare slit behind your ' + pan + ', clear as anything in the light.\n\n' +
                     'You\'ve been telling yourself for three hours that it counts as clothes.\n\n"I... it\'s..."\n\n"Indecent exposure. Hands where I can see them."\n\n' +
-                    'Your eyes burn. Your pussy clenches, and that\'s the worst part. You run.';
+                    'Your eyes burn. Your pussy clenches, and that\'s the worst part.';
             }
             gameState.sheerLingerieStartTime = null;
             showMessage(text, function() {
-                handleNakedEscape();
+                offerExhibPoliceChoices('sheer', 'sheer_lingerie');
             });
         }
 
@@ -22873,12 +22874,35 @@ audioSystem.playSFX('buttonClick');
         // clock running. It resets once she's in neither (dressed, Bra Exposed, naked). The full
         // sheer lingerie set keeps its own three-hour clock and isn't counted here.
         // Runs on district street entry. Returns true when the police arrive.
-        function tickIndecencyPolice() {
+        // Exhibition arrests: which indecent state is on the clock, and for how long. Naked has
+        // its own two-hour clock (checkNakedPolice) and the full sheer set its own three
+        // (tickSheerLingeriePolice). Everything else shares this one, and the limit follows the
+        // state she's in when it's checked: topless, bottomless, a mesh bra alone, or bare behind
+        // mesh 3 hours; Panties Exposed, Underwear Only, braless or commando behind mesh, or a
+        // soaked-through bra 4 hours. A dry opaque bra is legal and never on the clock.
+        function getIndecencyClockState() {
+            if (gameState.isNaked) return null;
             var lvl = getVisibleExposureLevel();
-            var eligible = (lvl === 'panties_exposed' || lvl === 'underwear_only') &&
-                !gameState.isNaked && getSheerState().state !== 'sheer_lingerie' &&
-                ((gameState.corruption || 0) >= getExposureLeaveGate() || gameState.flags.clothesDestroyedInCombat);
-            if (!eligible) {
+            var st = getSheerState().state;
+            var c = gameState.corruption || 0;
+            var forced = !!gameState.flags.clothesDestroyedInCombat;
+            if (lvl === 'naked' || st === 'sheer_lingerie') return null;
+            var gateOk = function(g) { return forced || c >= g; };
+            if (lvl === 'topless' || lvl === 'bottomless') return gateOk(getExposureLeaveGate()) ? { state: lvl, limit: 180 } : null;
+            if (lvl === 'panties_exposed' || lvl === 'underwear_only') return gateOk(getExposureLeaveGate()) ? { state: lvl, limit: 240 } : null;
+            if (lvl === 'bra_exposed') {
+                if (st === 'sheer_lingerie_top') return gateOk(getSheerStateGate(st)) ? { state: st, limit: 180 } : null;
+                if (isWetBraThrough()) return { state: 'bra_wet', limit: 240 };
+                return null;
+            }
+            if (st === 'sheer_bare') return gateOk(getSheerStateGate(st)) ? { state: st, limit: 180 } : null;
+            if (st === 'sheer_braless' || st === 'sheer_commando') return gateOk(getSheerStateGate(st)) ? { state: st, limit: 240 } : null;
+            return null;
+        }
+
+        function tickIndecencyPolice() {
+            var cs = getIndecencyClockState();
+            if (!cs) {
                 gameState.indecencyClockStartTime = null;
                 return false;
             }
@@ -22890,19 +22914,64 @@ audioSystem.playSFX('buttonClick');
             }
             var s = gameState.indecencyClockStartTime;
             var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
-            if (nowMin - startMin < 240) return false;
-            handleIndecencyPoliceArrive(lvl);
+            if (nowMin - startMin < cs.limit) return false;
+            handleIndecencyPoliceArrive(cs.state);
             return true;
         }
 
-        // Minutes left on the indecency clock, or null when it isn't running (Step 16B reads this).
+        // Minutes left on the indecency clock, or null when it isn't running (Current Stats reads this).
         function getIndecencyClockRemaining() {
             var s = gameState.indecencyClockStartTime;
-            if (!s) return null;
+            var cs = getIndecencyClockState();
+            if (!s || !cs) return null;
             var t = gameState.time;
             var nowMin = (t.day * 24 * 60) + (t.hour * 60) + (t.minute || 0);
             var startMin = (s.day * 24 * 60) + (s.hour * 60) + (s.minute || 0);
-            return Math.max(0, 240 - (nowMin - startMin));
+            return Math.max(0, cs.limit - (nowMin - startMin));
+        }
+
+        // ── Exhibition arrests: the stop. The arrival plays, then she chooses. ──
+        // clock: 'naked' | 'sheer' | 'indecency'; state: the exact exposure she was stopped in.
+        function offerExhibPoliceChoices(clock, state) {
+            gameState.flags._exhibStop = { clock: clock, state: state };
+            showChoices([
+                { text: 'Run. Vampire speed.', action: function() {
+                    gameState.flags._exhibStop = null;
+                    handleNakedEscape();
+                } },
+                { text: 'Compel them. Make them forget. (+15 Thirst)', action: function() { doExhibPoliceCompel(clock, state); } }
+            ]);
+        }
+
+        var EXHIB_STOP_WEARING = {
+            naked: 'naked', topless: 'topless', bottomless: 'bare from the waist down', underwear_only: 'in your underwear',
+            panties_exposed: 'with your panties on show', sheer_lingerie: 'in your see-through lingerie', sheer_lingerie_top: 'in your see-through bra',
+            sheer_lingerie_bottom: 'in your see-through panties', bra_wet: 'in your soaked-through bra', sheer_bare: 'in mesh and nothing else',
+            sheer_braless: 'braless behind the mesh', sheer_commando: 'bare under the mesh'
+        };
+
+        // Compel: they forget the call and drive off. Costs thirst; the clock starts over.
+        function doExhibPoliceCompel(clock, state) {
+            var c = gameState.corruption || 0;
+            var t = gameState.time;
+            var now = { day: t.day, hour: t.hour, minute: t.minute || 0 };
+            if (clock === 'naked') gameState.nakedStartTime = now;
+            else if (clock === 'sheer') gameState.sheerLingerieStartTime = now;
+            else gameState.indecencyClockStartTime = now;
+            gameState.flags._exhibStop = null;
+            gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 15);
+            advanceTime(5);
+            var w = EXHIB_STOP_WEARING[state] || 'like this';
+            var text = 'You catch his eyes and hold them, and push.\n\n' +
+                'The compulsion slides in smooth. His face goes slack, then puzzled, like he can\'t remember why he stopped the car. You find his partner\'s eyes over the roof and do it again.\n\n' +
+                '"Sorry, ma\'am," he says. "Wrong call." They get back in and pull away from the curb.\n\n';
+            if (c >= 6001) text += 'You\'re still standing on the sidewalk ' + w + ', and your clit throbs. Nobody in that car will ever know they saw you.';
+            else if (c >= 2001) text += 'You\'re still out here ' + w + '. Your heart\'s pounding, and your pussy\'s wet anyway.';
+            else text += 'You\'re still out here ' + w + ', and your hands won\'t stop shaking. Your pussy clenches, and you hate it.';
+            text += '\n\nThe thirst bites behind your sternum, the price of reaching into two heads at once.' +
+                '\n\n<span style="color: #ff6666;">Thirst +15</span>  · <span style="color: #88ccff;">The police clock starts over</span>';
+            updateStatus();
+            showMessage(text, function() { updateStatus(); });
         }
 
         function handleIndecencyPoliceArrive(state) {
@@ -22919,26 +22988,28 @@ audioSystem.playSFX('buttonClick');
                 : bs === 'small' ? 'your small tits and the stiff points of your nipples through your ' + bra
                 : 'your tits pushed up in your ' + bra;
             var chest = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your chest';
-            var text = '';
-            if (state === 'panties_exposed') {
+            var text = getExhibStopArrivalExtra(state);
+            if (text) {
+                // new states: topless, bottomless, mesh and soaked (below)
+            } else if (state === 'panties_exposed' || state === 'sheer_lingerie_bottom') {
                 if (corruption >= 6001) {
                     text = 'The cruiser\'s been rolling along behind you for a block. You know exactly what they\'ve been looking at: ' + ass + ', under the hem of your ' + top + '.\n\n' +
                         'It pulls ahead and stops. The officer gets out, looks at your ' + top + ', then lower, and stays there.\n\n' +
                         '"Ma\'am. Where are your pants?"\n\n' +
                         'You shift your weight onto one hip so he gets a better look at the damp crotch of your ' + pan + '. "I\'m wearing a shirt."\n\n' +
                         'His partner laughs into his radio. Your clit throbs. Four hours on the street, and he\'s the first one who\'s asked.\n\n' +
-                        '"Indecent exposure. Turn around, hands behind your back."\n\n"You\'ve already seen the back."\n\nYou wink at his partner, and then you\'re not there anymore.';
+                        '"Indecent exposure. Turn around, hands behind your back."\n\n"You\'ve already seen the back."\n\nHis partner stops laughing and comes around the car.';
                 } else if (corruption >= 2001) {
                     text = 'A squad car slows beside you and matches your pace. You keep your eyes forward and tug at the hem of your ' + top + '. It doesn\'t reach.\n\n' +
                         'The passenger window comes down. As you step past the car, the officer\'s eyes drop below your hem to ' + ass + '.\n\n' +
                         '"Miss. You can\'t walk around without pants."\n\n"It\'s... it\'s a long shirt."\n\n"It isn\'t."\n\n' +
-                        'Heat floods your face. Your pussy clenches, and the crotch of your ' + pan + ' is damp enough that you\'re sure he can see it.\n\nHis door opens. You\'re already moving.';
+                        'Heat floods your face. Your pussy clenches, and the crotch of your ' + pan + ' is damp enough that you\'re sure he can see it.\n\nHis door opens.';
                 } else {
                     text = 'Blue and red light washes over the sidewalk in front of you. It\'s coming from behind, where it\'s been lighting you up for who knows how long, right on ' + ass + '.\n\n' +
                         'An officer steps out. "Ma\'am. Stop right there."\n\n' +
                         'You stop. Both hands go to the hem of your ' + top + ' and pull it down as far as it goes, which isn\'t far. Below the hem, your ' + pan + ' and your bare thighs are right there for him and everyone on the block.\n\n' +
                         '"I... my clothes got..."\n\n"Indecent exposure. Hands where I can see them."\n\n' +
-                        'Your eyes sting. Your pussy clenches, and you can feel the damp spot spreading in your ' + pan + '. You run.';
+                        'Your eyes sting. Your pussy clenches, and you can feel the damp spot spreading in your ' + pan + '.';
                 }
             } else {
                 if (corruption >= 6001) {
@@ -22946,23 +23017,123 @@ audioSystem.playSFX('buttonClick');
                         'He gets out. His eyes go from your ' + bra + ' to your ' + pan + ' and back up, slow.\n\n' +
                         '"Ma\'am. You\'re in your underwear."\n\n"You noticed."\n\n' +
                         'You turn a slow circle so he gets the back too: ' + ass + '. Your nipples are stiff against the cups, and the crotch of your ' + pan + ' is soaked.\n\n' +
-                        '"Indecent exposure," his partner says, still looking. "You need to come with us."\n\nYou blow him a kiss, and then you\'re a blur at the end of the block.';
+                        '"Indecent exposure," his partner says, still looking. "You need to come with us."';
                 } else if (corruption >= 2001) {
                     text = 'A squad car pulls to the curb ahead of you, and the officer leans out the window before you can turn around.\n\n' +
                         'His eyes go from ' + tits + ' down to your ' + pan + ' and back up. "Miss. What happened to your clothes?"\n\n"Nothing. It\'s... it\'s a look."\n\n"It\'s your underwear."\n\n' +
-                        'Your cheeks burn. Your nipples tighten in the cups while he stares, and your pussy clenches hard.\n\nWhen he reaches for the door handle, you bolt, and the whole block gets a view on your way out: ' + ass + '.';
+                        'Your cheeks burn. Your nipples tighten in the cups while he stares, and your pussy clenches hard.\n\nHe reaches for the door handle. Behind you, people have stopped on the sidewalk to look at ' + ass + '.';
                 } else {
                     text = 'The cruiser pulls to the curb beside you and the window comes down. The officer\'s eyes go from your ' + bra + ' to your ' + pan + ' and back up.\n\n' +
                         '"Miss, you can\'t be out here in your underwear."\n\n' +
                         'Your arms come up over ' + chest + '. Your face is on fire, and your pussy clenches anyway, hard enough that you\'re sure he can tell.\n\n' +
                         '"I know. I know, I\'m sorry, my clothes..."\n\n"Stay right there."\n\n' +
-                        'He opens his door, and you run. As you go, the whole block gets ' + ass + '.';
+                        'He opens his door. A woman at the bus stop behind you has her phone up, pointed at ' + ass + '.';
                 }
             }
             gameState.indecencyClockStartTime = null;
             showMessage(text, function() {
-                handleNakedEscape();
+                offerExhibPoliceChoices('indecency', state);
             });
+        }
+
+        // Arrivals for the states with no text above. '' for Panties Exposed and Underwear Only.
+        function getExhibStopArrivalExtra(state) {
+            var cv = getSceneClothingVars();
+            var ba = gameState.bodyAppearance || {};
+            var bs = ba.breastSize || 'average', butt = ba.buttSize || 'average';
+            var c = gameState.corruption || 0;
+            var top = cv.topName, bottom = cv.bottomName;
+            if (state === 'topless') {
+                var tits = bs === 'large' ? 'Your heavy tits sway with every step, bare, nipples dark and hard.' : bs === 'small' ? 'Your small tits are bare, nipples tight little points in the air.' : 'Your bare tits bounce with every step, nipples hard.';
+                var chest = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your bare tits';
+                if (c >= 6001) return 'The cruiser pulls up beside you at a crawl, and the officer in the passenger seat doesn\'t even pretend to look at your face. ' + tits + '\n\n' +
+                    '"Ma\'am. Where\'s your shirt?"\n\n"Somewhere," you say. You don\'t cross your arms. Your nipples are stiff in the open air, and your pussy\'s wet under your ' + bottom + ' from hours of this.\n\n' +
+                    'Both doors open. "Indecent exposure. Hands where we can see them."';
+                if (c >= 2001) return 'A squad car slides to the curb ahead of you, and the officer\'s out before you can think about turning around.\n\n' +
+                    'His eyes drop straight to your chest. ' + tits + '\n\n"Miss, you can\'t walk around topless."\n\n"I... it\'s legal. Isn\'t it?"\n\n"Not in this city."\n\n' +
+                    'Your face goes hot and your nipples tighten under his stare. Your pussy clenches under your ' + bottom + ', and his partner\'s coming around the hood.';
+                return 'The siren gives one short whoop behind you, and every muscle in your body locks.\n\n' +
+                    'Two officers get out. You fold both arms over ' + chest + ', and it doesn\'t cover much. The older one looks away, and the younger one doesn\'t.\n\n' +
+                    '"Ma\'am. We\'ve had calls about a topless woman on this street."\n\n' +
+                    'Your eyes burn. Your nipples are hard against your forearms and your pussy\'s damp under your ' + bottom + ', and you hate your body for both.\n\n"Stay right where you are."';
+            }
+            if (state === 'bottomless') {
+                var ass = butt === 'large' ? 'your full, bare ass' : butt === 'small' ? 'your tight little bare ass' : 'your bare ass';
+                if (c >= 6001) return 'The cruiser\'s been following you for half a block, and you know what they\'ve had the whole time: ' + ass + ' under the hem of your ' + top + ', swinging with every step.\n\n' +
+                    'It pulls ahead and stops. The officer gets out, and his eyes go straight to your bare pussy.\n\n"Ma\'am. You\'re not wearing anything down there."\n\n"I know."\n\n' +
+                    'You stand with your weight on one hip and let him look. Your clit throbs, and you can feel how wet your lips are in the open air.\n\n"Indecent exposure. Turn around."';
+                if (c >= 2001) return 'A squad car pulls to the curb beside you. You yank the hem of your ' + top + ' down with both hands, and it covers nothing.\n\n' +
+                    'The officer leans out the window. His eyes go from your face to your bare pussy and stay there.\n\n"Miss. Where are your pants?"\n\n"I... they..."\n\n' +
+                    'Heat floods your face. Your pussy clenches, and you know he can see how wet you are. His door opens.';
+                return 'Blue and red light fills the street behind you, and it\'s been lighting up ' + ass + ' for who knows how long.\n\n' +
+                    'An officer steps out. "Ma\'am. Stop right there."\n\n' +
+                    'You press both hands flat over your pussy and turn around. A woman at the bus stop has her phone up, and tears sting your eyes.\n\n' +
+                    '"Indecent exposure. Keep your hands where I can see them."\n\n' +
+                    'You can\'t make them move. Your pussy clenches under your palms, wet, and that\'s the worst part.';
+            }
+            if (state === 'bra_wet') {
+                var bra = cv.braName;
+                var wet = bs === 'large' ? 'The wet cups cling to your heavy tits, and your nipples show dark and hard through them.' : bs === 'small' ? 'The wet cups cling flat to your small tits, nipples stiff and dark through the fabric.' : 'The wet cups cling to your tits, nipples dark and hard through the fabric.';
+                if (c >= 6001) return 'The rain\'s soaked your ' + bra + ' clear through, and the cruiser pulling up beside you has its wipers going and its passenger staring. ' + wet + '\n\n' +
+                    '"Ma\'am. That bra\'s see-through."\n\n"It\'s raining."\n\n"I can see everything."\n\n' +
+                    'You push your wet hair back off your face and let him look. Your clit throbs.\n\n"Indecent exposure," he says, and opens his door.';
+                if (c >= 2001) return 'A squad car pulls up with its wipers going. The officer rolls his window down, and his eyes drop to your chest.\n\n' + wet + '\n\n' +
+                    '"Miss, you need to cover up."\n\n"It\'s just rain. It\'s a normal bra."\n\n"It isn\'t anymore."\n\n' +
+                    'Your cheeks burn and your nipples tighten in the cold, soaked cups. Your pussy clenches. His door opens.';
+                return 'The rain\'s coming down hard when the cruiser pulls to the curb. You don\'t understand why until the officer gets out and looks at your chest.\n\n' +
+                    'You look down. ' + wet + ' Your ' + bra + ' might as well be gone.\n\n"Ma\'am, I need you to stop."\n\n' +
+                    'Your arms come up over your chest, shaking. Your nipples are hard against your wet forearms, and your pussy clenches, and you want to disappear.';
+            }
+            if (state === 'sheer_lingerie_top' || state === 'sheer_bare' || state === 'sheer_braless' || state === 'sheer_commando') {
+                var b = _sheerBodyCtx();
+                var n = b.noun;
+                var nip = b.bs === 'large' ? 'Your heavy tits sit behind the ' + n + ' with nothing hidden, nipples dark and stiff.' : b.bs === 'small' ? 'Your small tits show straight through the ' + n + ', nipples stiff little points.' : 'Your tits show straight through the ' + n + ', nipples dark and stiff.';
+                if (state === 'sheer_lingerie_top') {
+                    if (c >= 6001) return 'The cruiser rolls up, and the officer gets out with his eyes already on your chest. ' + nip + '\n\n' +
+                        '"Ma\'am, is that a bra?"\n\n"It\'s lingerie."\n\n"I can see your nipples."\n\n"That\'s the point of it." Your clit throbs when his ears go red.\n\n' +
+                        'His partner comes around the car. "Indecent exposure. You need to come with us."';
+                    if (c >= 2001) return 'A squad car slows beside you and the passenger window comes down. The officer looks at your ' + b.bra + ', then at the nipples showing dark through it.\n\n' +
+                        '"Miss, that\'s see-through."\n\n"It\'s a bra."\n\n"It\'s a window."\n\n' +
+                        'Your face burns. Your nipples tighten behind the ' + n + ' while he watches, and your pussy clenches under your ' + bottom + '. His door opens.';
+                    return 'The siren chirps once behind you, and you freeze.\n\n' +
+                        'Two officers get out. The woman takes one look at your ' + b.bra + ' and her mouth goes flat. "Ma\'am. Are you aware we can see through that?"\n\n' +
+                        'You look down. ' + nip + ' You cross your arms over them, face on fire, and your pussy clenches anyway.\n\n"Indecent exposure. Hands where I can see them."';
+                }
+                if (state === 'sheer_bare') {
+                    if (c >= 6001) return 'The cruiser pulls up and the officer gets out slow, taking in your ' + b.outfit + ' and everything behind it: ' + b.shows + '.\n\n' +
+                        '"Ma\'am. You\'re naked."\n\n"I\'m dressed."\n\n"I can see your..." He doesn\'t finish.\n\n' +
+                        'Your clit throbs. You turn so he gets the back too, ' + b.ass + ' behind the ' + n + '.\n\n' +
+                        'His partner\'s already out. "Indecent exposure. Hands behind your back."';
+                    if (c >= 2001) return 'A squad car pulls to the curb ahead of you. The officer who gets out looks at your ' + b.outfit + ', then through it, and his jaw works.\n\n' +
+                        '"Miss. That doesn\'t count as clothes."\n\n"It\'s ' + (b.same ? 'a dress' : 'clothes') + '," you say. Your voice cracks on it.\n\n' +
+                        'He can see ' + b.shows + '. Your face burns, and your pussy clenches behind the ' + n + ' where he can watch it happen.\n\n"Stay where you are."';
+                    return 'The siren whoops once behind you. Both officers get out, and in the ' + (isDark() ? 'spotlight' : 'daylight') + ' the ' + n + ' might as well be gone.\n\n' +
+                        'Everything behind it is right there: ' + b.shows + '. You clamp one arm over your chest and one hand over your pussy.\n\n' +
+                        '"Ma\'am! Stop where you are!"\n\n' +
+                        'Your eyes burn. Your nipples are hard against your arm and you\'re wet under your palm, and the officer\'s already walking toward you.';
+                }
+                if (state === 'sheer_braless') {
+                    if (c >= 6001) return 'The cruiser slows beside you, and the officer in the passenger seat looks at your ' + b.top + ' for a long time. ' + nip + '\n\n' +
+                        '"Ma\'am, you\'re not wearing a bra."\n\n"You noticed."\n\n' +
+                        'Your clit throbs. You roll your shoulders back so the ' + n + ' pulls tight across your nipples.\n\n"Indecent exposure," his partner says, getting out. "Come here."';
+                    if (c >= 2001) return 'A squad car pulls to the curb and the officer leans across the seat. His eyes go straight through your ' + b.top + '.\n\n' + nip + '\n\n' +
+                        '"Miss, I can see your chest."\n\n"It\'s a shirt."\n\n"It\'s a net."\n\n' +
+                        'Your face burns, and your nipples tighten against the ' + n + ' while he watches. Your pussy clenches. His door opens.';
+                    return 'Two officers get out of the cruiser, and the woman\'s eyes go to your ' + b.top + ' and stop.\n\n"Ma\'am. Are you aware that\'s see-through?"\n\n' +
+                        'You look down at your own nipples, dark and stiff behind the ' + n + '. It looked different in the mirror. Your arms come up over your chest, and your pussy clenches, and you want to cry.\n\n"Hands where I can see them."';
+                }
+                if (c >= 6001) return 'The cruiser\'s been rolling behind you for a block. When it pulls ahead and stops, the officer gets out looking at your ' + b.bottom + ', and at the bare slit of your pussy behind it.\n\n' +
+                    '"Ma\'am. There\'s nothing under that."\n\n"There\'s me."\n\n' +
+                    'You tip your hips a little. Your clit throbs, and your lips are slick enough to shine through the ' + n + '.\n\n"Indecent exposure. Turn around."';
+                if (c >= 2001) return 'A squad car slides to the curb, and the officer\'s eyes drop straight to your ' + b.bottom + '. You know what they find there: your bare slit, dark behind the ' + n + '.\n\n' +
+                    '"Miss. You need underwear with that."\n\n"It\'s... it\'s how it\'s worn."\n\n' +
+                    'Your face goes hot. Your pussy clenches right where he\'s looking, and he sees it. His door opens.';
+                return 'The siren chirps behind you, and you turn around before you think, which is worse.\n\n' +
+                    'The officer looks at your face, then down, to your bare pussy behind the ' + n + '. You press both hands over the front of your ' + b.bottom + ', and it shows your fingers too.\n\n' +
+                    '"Ma\'am. Indecent exposure. Stay where you are."\n\n' +
+                    'Your eyes burn. Your pussy clenches under your hands, wet, and he\'s already walking toward you.';
+            }
+            return '';
         }
 
         // 4C: venue policy for sheer states that getExposureLevel() calls 'clothed'.
@@ -38053,7 +38224,7 @@ audioSystem.playSFX('buttonClick');
                     '\u2022 Suspicion on district entry: +2<br>' +
                     '\u2022 Venues: turned away at every door with a policy<br>';
             }
-            if (_currExposure === 'panties_exposed' || _currExposure === 'underwear_only') {
+            {
                 var _clockLeft = (typeof getIndecencyClockRemaining === 'function') ? getIndecencyClockRemaining() : null;
                 if (_clockLeft !== null) _bpeLiveHtml += '\u2022 Police clock: <span style="color:#ff8888;">' + Math.floor(_clockLeft / 60) + 'h ' + (_clockLeft % 60) + 'm left</span><br>';
             }
