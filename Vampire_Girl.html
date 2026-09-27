@@ -7356,7 +7356,7 @@
                         <div style="margin: 5px 0 5px 0; padding: 6px 10px; background: rgba(60, 15, 50, 0.25); border-left: 3px solid #aa3366; border-radius: 3px;">
                             <strong style="color: #ff88aa; font-size: 13px;">Exhibition Masturbation</strong>
                             <ul style="margin: 4px 0 0 15px; padding: 0;">
-                                <li style="margin: 3px 0;"><strong style="color: #ff99cc;">Locations:</strong> An alley off a district street and a bench in Riverside Park. Each has unique prose and stat effects. Needs 6001+ corruption, 60+ thrill, and 70+ arousal; what you're wearing shapes the scene.</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ff99cc;">Locations:</strong> An alley off a district street and a bench in Greenbloom Park. Each has unique prose and stat effects. Needs 6001+ corruption, 60+ thrill, and 70+ arousal; what you're wearing shapes the scene.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #b9a3d9;">Sheer:</strong> in a see-through look you rub your clit and nipples through the mesh first, and only get your fingers under it at the edge. Corrupted and DC versions of both, each in the gallery.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #88ccff;">Effects:</strong> Arousal reset, corruption gain, thrill gain, MH scaled by corruption. Each location fires at most once per day. Gallery-eligible.</li>
                             </ul>
@@ -7727,7 +7727,7 @@
                             </div>
                             <ul style="margin: 5px 0 0 15px; padding: 0;">
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Masturbation:</strong> the alley and the park bench each have a Bra Exposed and a Panties Exposed version (Corrupted and DC), with a stranger who stays to watch.</li>
-                                <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Riverside Park:</strong> a dry bra counts as dressed, so the bench and the porta potty work as normal, and you can sleep on a bench when you've got nowhere else to go. A soaked or mesh bra, Panties Exposed, or Underwear Only sends you across the grass to the porta potty first.</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Greenbloom Park:</strong> a dry bra counts as dressed, so the bench and the porta potty work as normal, and you can sleep on a bench when you've got nowhere else to go. A soaked or mesh bra, Panties Exposed, or Underwear Only sends you across the grass to the porta potty first.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Exhibition Seduction:</strong> at 6001+ with 80+ appeal, Panties Exposed takes its own branch: a stranger has been walking behind you for a block. Man or woman, hard or soft success, four ways to be turned down. Mesh panties under a top play it with the mesh lines. Bra Exposed stays on regular seduction with its bonus.</li>
                             </ul>
                         </div>
@@ -26903,7 +26903,7 @@ audioSystem.playSFX('buttonClick');
             return out.length ? out : null;
         }
 
-        // ── BPE Step 12C: Riverside Park for Underwear Only, Bra Exposed and Panties Exposed ──
+        // ── BPE Step 12C: Greenbloom Park for Underwear Only, Bra Exposed and Panties Exposed ──
         // The park level the three park scenes read: the partial states use what strangers can
         // actually see (outerwear hides them), everything else is the raw level as before.
         function getParkExposureLevel() {
@@ -26938,12 +26938,12 @@ audioSystem.playSFX('buttonClick');
                         : 'Your bare stomach catches the light.') +
                         ' A couple on a blanket stop talking to watch you pass.\n\nYou roll your shoulders back for them. Your nipples are hard in the cups, and your clit throbs with every step.';
                 } else if (c >= 2001) {
-                    t = '\n\n' + jog + 'Your ' + bra + ' and your ' + bottom + ', out in Riverside Park. ' +
+                    t = '\n\n' + jog + 'Your ' + bra + ' and your ' + bottom + ', out in Greenbloom Park. ' +
                         (bs === 'large' ? 'Your heavy tits sit high in the cups, and every man on the path clocks them.' : bs === 'small' ? 'Your small tits sit pert in the cups, nipples pressing through.'
                         : 'Your tits sit high in the cups, on show for the whole path.') +
                         ' A guy on a bench lowers his book an inch and doesn\'t raise it again.\n\nIt\'s legal. You keep telling yourself that, and your pussy keeps getting wetter every time somebody looks.';
                 } else {
-                    t = '\n\n' + jog + 'You\'re in your ' + bra + ' and your ' + bottom + ' in the middle of Riverside Park, and it feels like every bench is facing you. A dad pushing a stroller looks at your chest, then very hard at the pond.' +
+                    t = '\n\n' + jog + 'You\'re in your ' + bra + ' and your ' + bottom + ' in the middle of Greenbloom Park, and it feels like every bench is facing you. A dad pushing a stroller looks at your chest, then very hard at the pond.' +
                         '\n\nYou keep your arms folded over the cups. Your face is hot, your nipples are stiff against the lining anyway, and there\'s a damp, needy ache in your pussy you can\'t walk off.';
                 }
                 if (isWetBraThrough()) t += '\n\nThe soaked ' + bra + ' clings see-through to your nipples, and that isn\'t a look anymore.' + porta;
@@ -26962,7 +26962,7 @@ audioSystem.playSFX('buttonClick');
                     return '\n\nYou\'re in your ' + top + ' and your ' + pan + ' in a public park. For the last fifty yards, the path behind you has been getting ' + getPantiesExposedAssView() + '.' +
                         '\n\nA jogger slows to your pace behind you instead of passing. You don\'t look back. Your cheeks are hot, and so is ' + crotch + '.' + porta;
                 }
-                return '\n\nYour ' + top + ' stops at your hips, and below it there\'s nothing but your ' + pan + ' in the middle of Riverside Park.' +
+                return '\n\nYour ' + top + ' stops at your hips, and below it there\'s nothing but your ' + pan + ' in the middle of Greenbloom Park.' +
                     '\n\nBehind you, a woman walking her dog stops dead. You can feel her eyes on ' + getPantiesExposedAssView() + '. You pull your hem down with both hands, and it does nothing.' +
                     '\n\nYour face burns. Your pussy clenches in the crotch anyway, damp and aching.' + porta;
             }
@@ -26970,10 +26970,10 @@ audioSystem.playSFX('buttonClick');
                 if (typeof getSheerState === 'function' && getSheerState().state.indexOf('sheer_lingerie') === 0) return '';
                 var ubra = cv.braName, upan = cv.pantiesName, ucups = cv.braStyle === 'sporty' ? 'fabric' : 'cups';
                 if (c >= 6001) {
-                    return '\n\nYou stroll through Riverside Park in your ' + ubra + ' and ' + upan + ' like it\'s a bikini at the beach. Families pull their kids closer. A jogger nearly trips over the edge of the path.' +
+                    return '\n\nYou stroll through Greenbloom Park in your ' + ubra + ' and ' + upan + ' like it\'s a bikini at the beach. Families pull their kids closer. A jogger nearly trips over the edge of the path.' +
                         '\n\nYou stretch your arms over your head and let them all look. Your nipples are hard against the ' + ucups + ', and the crotch of your ' + upan + ' is soaked.';
                 } else if (c >= 2001) {
-                    return '\n\nBra and panties, out in Riverside Park. Your ' + ubra + ' has ' +
+                    return '\n\nBra and panties, out in Greenbloom Park. Your ' + ubra + ' has ' +
                         (cv.braStyle === 'sporty' ? (bs === 'large' ? 'your heavy tits squashed flat' : bs === 'small' ? 'your small tits hugged flat' : 'your tits squashed flat') : bs === 'large' ? 'your heavy tits spilling over the top' : bs === 'small' ? 'your small tits pushed up' : 'your tits pushed up') +
                         ', and the path behind you gets ' + getPantiesExposedAssView() + '.' +
                         '\n\nA man on a bench stops pretending to read. You walk faster, and the ache in your pussy only gets worse with every step.' + porta;
@@ -58629,7 +58629,7 @@ audioSystem.playSFX('buttonClick');
                         available: true
                     },
                     riverside_park: {
-                        name: "Riverside Park",
+                        name: "Greenbloom Park",
                         icon: '<img src="Images/icons/park-icon.png" class="icon" alt="park">',
                         description: "Quiet public park with benches and trees. A place to rest, relax, or sleep if needed.",
                         scene: "riverside_park",
@@ -146438,7 +146438,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 }
             },
 
-            // ===== RIVERSIDE PARK =====
+            // ===== GREENBLOOM PARK =====
             
             riverside_park: {
                 text: function() {
@@ -146448,7 +146448,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const exposure = getParkExposureLevel(); // Bra/Panties Exposed Step 12C
                     const corruption = gameState.corruption || 0;
                     
-                    let desc = "You're in the Residential District, standing in Riverside Park.\n\n";
+                    let desc = "You're in the Residential District, standing in Greenbloom Park.\n\n";
                     
                     if (timeOfDay === 'morning') {
                         desc += "The morning sun filters through the trees, and the grass is still wet with dew.";
