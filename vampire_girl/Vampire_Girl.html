@@ -13405,6 +13405,10 @@
                 _bpeActionMinutes: {},           // per-verb cooldowns (Step 12)
                 seenFirstBraExposedWalk: false,  // one-time beats (Step 4D)
                 seenFirstPantiesExposedWalk: false,
+                _bpeForcedBraSeen: false,
+                _bpeForcedPanSeen: false,
+                _bpeForcedLostTop: null,
+                _bpeForcedLostBottom: null,
                 _wetBraNoticeDay: 0,             // wet-bra notice, once per day (Step 2D)
                 // ── Mesh & Sheer overhaul flags (Step 21) ──
                 _passiveAccum: {},
@@ -17117,6 +17121,10 @@
                 if (gameState.flags._bpeActionMinutes === undefined) gameState.flags._bpeActionMinutes = {};
                 if (gameState.flags.seenFirstBraExposedWalk === undefined) gameState.flags.seenFirstBraExposedWalk = false;
                 if (gameState.flags.seenFirstPantiesExposedWalk === undefined) gameState.flags.seenFirstPantiesExposedWalk = false;
+                if (gameState.flags._bpeForcedBraSeen === undefined) gameState.flags._bpeForcedBraSeen = false;
+                if (gameState.flags._bpeForcedPanSeen === undefined) gameState.flags._bpeForcedPanSeen = false;
+                if (gameState.flags._bpeForcedLostTop === undefined) gameState.flags._bpeForcedLostTop = null;
+                if (gameState.flags._bpeForcedLostBottom === undefined) gameState.flags._bpeForcedLostBottom = null;
                 if (gameState.flags._wetBraNoticeDay === undefined) gameState.flags._wetBraNoticeDay = 0; // Step 2D
                 if (gameState.flags._jaewonMeshTopReactionDay === undefined) gameState.flags._jaewonMeshTopReactionDay = 0;
                 if (gameState.flags._jaewonMeshTopReactionMin === undefined) gameState.flags._jaewonMeshTopReactionMin = 0;
@@ -23799,6 +23807,32 @@ audioSystem.playSFX('buttonClick');
         // ── 4D: one-time first-walk beats ──
         // The first district entry in each state, in her current voice. Replaces that entry's
         // vignette and response; the entry's stats still apply.
+        // ── BPE Step 15B: forced into a partial state by combat ──
+        // She didn't choose this. Bra Exposed is shot from the front, Panties Exposed from behind.
+        // Three voices: under 2001, 2001-6000, 6001+.
+        function getBpeForcedEntry(type, corruption) {
+            var cv = getSceneClothingVars();
+            var c = corruption || 0;
+            if (type === 'bra_only') {
+                var lostTop = gameState.flags._bpeForcedLostTop || 'top';
+                var cups = cv.braStyle === 'sporty' ? 'the sports bra' : 'the cups';
+                var t = 'The fight took your ' + lostTop + '. You walk out onto the street in your ' + cv.braName + ' and your ' + cv.bottomName + ', with nothing over your chest but ' + cups + '.\n\n';
+                t += 'A man waiting at the crosswalk looks straight at your chest. ' + _seductBraChestLine('his') + '\n\n';
+                if (c < 2001) t += 'You fold your arms over ' + cups + ' and walk fast, face burning. It\'s legal, you keep telling yourself, and you didn\'t even choose it. Your nipples are stiff against your forearm anyway, and your pussy\'s gone slick ' + (cv.commando ? 'under your ' + cv.bottomName : 'in your ' + cv.pantiesName) + '.';
+                else if (c < 6001) t += 'You didn\'t pick this, and you still leave your arms at your sides. Your face burns, and your clit throbs every time another pair of eyes drops to your chest.';
+                else t += 'The fight picked this outfit, and you\'d have picked it yourself. You roll your shoulders back and let ' + cups + ' take every look, and your pussy clenches, wet, under your ' + cv.bottomName + '.';
+                return t;
+            }
+            var lostBottom = gameState.flags._bpeForcedLostBottom || 'skirt';
+            var pan = cv.pantiesName, thong = cv.pantiesCut === 'thong';
+            var p = 'The fight took your ' + lostBottom + '. Your ' + cv.topName + ' stops at your hips, and below it there\'s nothing but your ' + pan + '.\n\n';
+            p += 'Somebody behind you whistles. You don\'t have to turn around to know what they\'re looking at: ' + getPantiesExposedAssView() + '.\n\n';
+            if (c < 2001) p += 'You tug the hem of your ' + cv.topName + ' down with both hands, and it covers nothing. People get arrested for this, and you didn\'t even choose it. Your face burns so hot your eyes water, and your pussy clenches in ' + (thong ? 'the strip of your ' + pan : 'the crotch of your ' + pan) + ' anyway.';
+            else if (c < 6001) p += 'Every step reminds you it\'s a crime, and you keep your hands off your hem. Your pussy\'s getting wet in your ' + pan + ', and you can feel every stare land on your ass.';
+            else p += 'The fight picked this outfit, and you like it more than you should. You let your hips swing for whoever\'s behind you, and your clit throbs with every step.';
+            return p;
+        }
+
         function getBraExposedFirstWalk(corruption) {
             var _ba = gameState.bodyAppearance || {};
             var _bs = _ba.breastSize || 'average';
@@ -23925,14 +23959,21 @@ audioSystem.playSFX('buttonClick');
             // handleSheerDistrictEntry(), which runs right after this in every district.
             if (!_isTopless && !_isBottomless && typeof getSheerState === 'function' && getSheerState().state.indexOf('sheer_lingerie') === 0) return false;
 
+            // Bra/Panties Exposed Step 15B: combat left her in a partial state. The first street entry
+            // gets her forced beat in place of the vignette, skips the cooldown, and leaves the
+            // chosen first walk (Step 4D) for the day she walks out in it on purpose.
+            var _bpeForced = !_isTopless && !_isBottomless && !!gameState.flags.clothesDestroyedInCombat &&
+                ((type === 'bra_only' && !gameState.flags._bpeForcedBraSeen) ||
+                 (type === 'panties_only' && !gameState.flags._bpeForcedPanSeen));
+
             // Bra/Panties Exposed Step 4D: the first walk in each partial state skips the cooldown
-            var _bpeFirstWalk = !_isTopless && !_isBottomless &&
+            var _bpeFirstWalk = !gameState.flags.clothesDestroyedInCombat && !_isTopless && !_isBottomless &&
                 ((type === 'bra_only' && !gameState.flags.seenFirstBraExposedWalk) ||
                  (type === 'panties_only' && !gameState.flags.seenFirstPantiesExposedWalk));
 
             // Global cooldown: 20 game-minutes between any undress-state district reactions
             var _nowMin = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
-            if (!_bpeFirstWalk && (_nowMin - (gameState.flags.lastExhibStateEventMinute || 0)) < 20) return false;
+            if (!_bpeFirstWalk && !_bpeForced && (_nowMin - (gameState.flags.lastExhibStateEventMinute || 0)) < 20) return false;
             gameState.flags.lastExhibStateEventMinute = _nowMin;
 
             const corruption = gameState.corruption || 0;
@@ -24047,7 +24088,12 @@ audioSystem.playSFX('buttonClick');
             
             // Bra/Panties Exposed Step 4A/4D: per-state responses, or the one-time first walk
             if (!_isTopless && !_isBottomless) {
-                if (_bpeFirstWalk && type === 'bra_only') {
+                if (_bpeForced) {
+                    if (type === 'bra_only') gameState.flags._bpeForcedBraSeen = true;
+                    else gameState.flags._bpeForcedPanSeen = true;
+                    npcScene = getBpeForcedEntry(type, corruption);
+                    kelsieResponse = '';
+                } else if (_bpeFirstWalk && type === 'bra_only') {
                     gameState.flags.seenFirstBraExposedWalk = true;
                     npcScene = getBraExposedFirstWalk(corruption);
                     kelsieResponse = '';
@@ -44332,8 +44378,25 @@ audioSystem.playSFX('buttonClick');
                     footer += '\n\n<strong style="color: #ff6644;">Your bottom and underwear have been destroyed. You\'re exposed from the waist down.</strong>';
                     gameState.flags.clothesDestroyedInCombat = true;
                 } else if (isWearingVisibleUnderwear()) {
-                    footer += '\n\n<strong style="color: #ff8844;">Your outer clothes have been destroyed. You\'re down to your underwear.</strong>';
+                    // Bra/Panties Exposed Step 15A: name what's left when only one outer piece went
+                    var _dmgType = getUnderwearExposureType();
+                    var _dmgCv = getSceneClothingVars();
+                    var _dmgLost = function(slots) { var d = damagedItems.find(function(x) { return x.state === 'destroyed' && slots.indexOf(x.slot) !== -1; }); return d ? proseItemName(d.item) : null; };
+                    var _dmgPlural = function(n) { return /(jeans|pants|leggings|shorts|joggers|trousers|slacks|tights)$/i.test(n); };
+                    var _dmgTop = _dmgLost(['top']), _dmgBottom = _dmgLost(['bottom']);
+                    var _dmgMsg = 'Your outer clothes have been destroyed. You\'re down to your underwear.';
+                    if (_dmgType === 'bra_only' && _dmgTop) {
+                        _dmgMsg = 'Your ' + _dmgTop + (_dmgPlural(_dmgTop) ? ' are' : '\'s') + ' torn away. You\'re down to your ' + _dmgCv.braName + ' and your ' + _dmgCv.bottomName + '.';
+                    } else if (_dmgType === 'panties_only' && _dmgBottom) {
+                        _dmgMsg = 'Your ' + _dmgBottom + (_dmgPlural(_dmgBottom) ? ' are' : '\'s') + ' shredded. Your ' + _dmgCv.pantiesName + (_dmgCv.pantiesCut === 'thong' ? ' is' : ' are') + ' all that\'s left below your ' + _dmgCv.topName + '.';
+                    }
+                    footer += '\n\n<strong style="color: #ff8844;">' + _dmgMsg + '</strong>';
                     gameState.flags.clothesDestroyedInCombat = true;
+                    // Step 15B: the next street entry in either partial state gets the forced beat
+                    gameState.flags._bpeForcedBraSeen = false;
+                    gameState.flags._bpeForcedPanSeen = false;
+                    if (_dmgTop) gameState.flags._bpeForcedLostTop = _dmgTop;
+                    if (_dmgBottom) gameState.flags._bpeForcedLostBottom = _dmgBottom;
                 }
                 
                 setTimeout(() => {
