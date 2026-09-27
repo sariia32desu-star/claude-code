@@ -210997,6 +210997,237 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 ]
             },
 
+
+            exhibition_seduce_pan_approach_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    var desc = 'A woman falls into step a few paces behind you, and you catch her in the side mirror of a parked van: late twenties, cropped leather jacket, dark lipstick, a tote bag over one shoulder. Her eyes are fixed a long way below your shoulders.\n\n';
+                    desc += 'You know exactly what she\'s looking at. Below the hem of your ' + x.top + ' it\'s only your ' + x.pan + ', and from where she\'s walking she gets ' + getPantiesExposedAssView() + '.\n\n';
+                    desc += (x.thong ? 'The string shifts between your cheeks with every step, and you can feel her eyes riding it.'
+                        : x.cut === 'cheeky' ? 'Your ' + x.pan + ' creep a little higher with every step, and she\'s watching them go.'
+                        : 'The fabric pulls tight across your ass with every step, and she\'s watching it move.') + ' ' +
+                        (isDark() ? 'A streetlight slides over the backs of your thighs and off again.' : 'The sun is warm on the backs of your bare thighs.') + '\n\n';
+                    desc += _bpeBt5(x.bt, 'You let your slight hips swing for her.', 'You lengthen your stride for her and feel your ass flex with it.',
+                        'You let your hips roll for her, slow.', 'You let your hips sway for her, your thick thighs brushing with every step.',
+                        'You let your hips sway for her.') + ' The crotch of your ' + x.pan + ' is already damp.\n\n';
+                    desc += 'At the crosswalk you stop and look back over your shoulder instead of turning around. She\'s caught mid-stare, and she doesn\'t bother to pretend. She lifts her eyebrows, slow, like you\'ve just proved her point for her.\n\n';
+                    desc += 'You turn all the way around. Her eyes drop to the front of you, to your ' + x.top + ' and ' + (x.thong ? 'the narrow strip of your ' + x.pan : 'your ' + x.pan) + ' below it, and one corner of her mouth goes up.';
+                    return desc;
+                },
+                onEnter: function() {
+                    advanceTime(5);
+                    updateStatus();
+                },
+                choices: [
+                    { text: '<img src="Images/icons/kiss.png" class="icon" alt="seduce"> "Like what you see back there?"', nextScene: 'exhibition_seduce_pan_proposition_f' },
+                    { text: '<img src="Images/icons/kiss.png" class="icon" alt="seduce"> "You\'ve been following my ass for a block."', nextScene: 'exhibition_seduce_pan_proposition_f' },
+                    { text: 'Walk away.', nextScene: 'city_exploration' }
+                ]
+            },
+
+            exhibition_seduce_pan_proposition_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    const result = calculateExhibitionSeductionSuccess();
+                    gameState.flags._exhibSeduceResult = result;
+
+                    if (result.tier === 'hard') {
+                        return '"I was trying to decide if you knew," she says. "You do."\n\n' +
+                            'You hook a thumb in the side of your ' + x.pan + ' and snap it once against your hip. "I know," you say. "And there isn\'t a lot left to get out of."\n\n' +
+                            'Her eyes follow the snap of the ' + (x.thong ? 'string' : 'elastic') + ', then climb to your chest. ' + (x.braless
+                                ? 'Your nipples are pushing through your ' + x.top + ' with nothing under it, and she smiles at them.'
+                                : 'Your nipples are stiff in your bra, printing through your ' + x.top + ', and she smiles at them.') + '\n\n' +
+                            '"Walk with me," she says.';
+                    } else if (result.tier === 'soft') {
+                        return 'She laughs, surprised, and glances at the people waiting for the light like they might have heard you.\n\n' +
+                            '"Is this a thing you do?" she asks, quieter.\n\n' +
+                            '"Sometimes." You tug the hem of your ' + x.top + ' down. It covers nothing, and she watches it cover nothing.\n\n' +
+                            'She bites her lip. "Okay," she says. "Okay, yes. God."';
+                    } else {
+                        setTimeout(function() {
+                            showScene('exhibition_seduce_pan_failure_' + (result.rejectionType || 'dismissive') + '_f');
+                        }, 80);
+                        return 'She looks at you for a moment.';
+                    }
+                },
+                choices: function() {
+                    const result = gameState.flags._exhibSeduceResult;
+                    if (!result) return [{ text: '← Back', nextScene: 'city_exploration' }];
+                    if (result.tier === 'hard') return [{ text: 'Follow her lead.', nextScene: 'exhibition_seduce_pan_success_pivot_f' }];
+                    if (result.tier === 'soft') return [{ text: 'You\'ll take it.', nextScene: 'exhibition_seduce_pan_soft_pivot_f' }];
+                    return [];
+                }
+            },
+
+            exhibition_seduce_pan_success_pivot_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'She walks half a step behind you on purpose, one hand resting on the small of your back, and steers you into a service passage behind a row of shops. It smells like wet cardboard and the bakery vent next door.\n\n' +
+                        'She stops you against the wall face first and presses up behind you. Her hand slides down over ' + (x.butt === 'large' ? 'the full curve of your ass' : x.butt === 'small' ? 'your tight little ass' : 'your ass') + ', ' +
+                        (x.thong ? 'her palm on bare skin on either side of the string.' : x.cut === 'cheeky' ? 'her palm on the bare curves your ' + x.pan + ' leave out.' : 'her palm cupping it through your ' + x.pan + '.') +
+                        ' Her nails drag lightly across your skin.\n\n' +
+                        '"I\'ve wanted to do that for a block and a half," she says into your hair.';
+                },
+                onEnter: function() {
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Let her.', nextScene: 'exhibition_seduce_pan_sex_f' }
+                ]
+            },
+
+            exhibition_seduce_pan_soft_pivot_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'She looks around once, then nods at a gap between two buildings.\n\n"There," she says.\n\n' +
+                        'You go in first. The passage is narrow and cool, a fire door propped open on one side, an air conditioner humming overhead.\n\n' +
+                        'You turn around. She\'s standing close with her hands at her sides, like she doesn\'t know where she\'s allowed to put them.\n\n' +
+                        '"I\'ve never done this with a stranger," she admits.\n\n' +
+                        'You take her hand and put it on ' + (x.butt === 'large' ? 'your full ass' : x.butt === 'small' ? 'your tight little ass' : 'your ass') + ' yourself. ' +
+                        (x.thong ? 'Her fingertips find bare skin beside the string, and her breath catches.' : 'Her fingers curl into it through your ' + x.pan + ', and her breath catches.');
+                },
+                onEnter: function() {
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Keep going.', nextScene: 'exhibition_seduce_pan_sex_f' }
+                ]
+            },
+
+            exhibition_seduce_pan_exit_success_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'The street is louder than you remember when you step back out onto it.\n\n' +
+                        'She left first, lipstick fixed, and she\'s already gone. You got your ' + x.pan + ' back on in the passage, and ' +
+                        (x.thong ? 'the string\'s twisted between your cheeks.' : 'they\'re sitting crooked and damp across your ass.') +
+                        ' You tug the hem of your ' + x.top + ' down over nothing.\n\n' +
+                        'There\'s a smear of dark lipstick on your inner thigh. A guy at the crosswalk stares at your ass as you pass, and your clit throbs like it has something left to give.\n\n' +
+                        'You keep walking.';
+                },
+                onEnter: function() {
+                    var _ar = applyArousal(35);
+                    gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 30);
+                    gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
+                    applyExhibitionThrillGain(25);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
+                    delete gameState.flags._exhibSeduceResult;
+                    advanceTime(30);
+                    updateStatus();
+                    showNotification('Exhibition Seduction complete (+' + _ar + ' Arousal, +30 Corruption, +25 Exhibitionism Thrill)', 'achievement');
+                },
+                choices: [
+                    { text: 'Continue.', nextScene: 'city_exploration' }
+                ]
+            },
+
+            exhibition_seduce_pan_exit_soft_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'You step back out of the passage and stop to breathe.\n\n' +
+                        (x.thong ? 'Your ' + x.pan + ' is back on, the string damp and crooked between your cheeks.' : 'Your ' + x.pan + ' are back on, damp and twisted across your ass.') + '\n\n' +
+                        'The ache between your legs has settled into something warm and loose, closer to satisfied than not. You tug your hem down over nothing it can cover, and walk on.';
+                },
+                onEnter: function() {
+                    var _ar = applyArousal(25);
+                    gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 20);
+                    gameState.thirst = Math.min(100, (gameState.thirst || 0) + 5);
+                    applyExhibitionThrillGain(18);
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    gameState.exhibitionStats.exhibitionSeductionCount = (gameState.exhibitionStats.exhibitionSeductionCount || 0) + 1;
+                    delete gameState.flags._exhibSeduceResult;
+                    advanceTime(25);
+                    updateStatus();
+                    showNotification('Exhibition Seduction complete (+' + _ar + ' Arousal, +20 Corruption)', 'achievement');
+                },
+                choices: [
+                    { text: 'Continue.', nextScene: 'city_exploration' }
+                ]
+            },
+
+            exhibition_seduce_pan_failure_dismissive_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'Her eyes drop to ' + (x.thong ? 'the strip of your ' + x.pan : 'the crotch of your ' + x.pan) + ' and stay there while she answers.\n\n' +
+                        '"Cute," she says. "No, thanks."\n\n' +
+                        'She says it to your crotch, then walks around you like you\'re a puddle on the sidewalk.\n\n' +
+                        'You\'re left at the light with your hem covering nothing. ' + (x.thong || x.cut === 'cheeky' ? 'The breeze finds your bare ass' : 'The breeze finds the backs of your thighs') + ', and your face goes hot.';
+                },
+                onEnter: function() {
+                    applyArousal(8);
+                    gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 8);
+                    delete gameState.flags._exhibSeduceResult;
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Move on.', nextScene: 'city_exploration' }
+                ]
+            },
+
+            exhibition_seduce_pan_failure_apologetic_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'She actually looks sorry.\n\n' +
+                        '"Oh, God. I\'m flattered, I am. I just..." She glances down at your ' + x.pan + ', then away. "I\'m meeting my girlfriend in ten minutes."\n\n' +
+                        '"Have fun," you say.\n\n' +
+                        'You walk away first. ' + (x.braless ? 'Your nipples are stiff under your ' + x.top + ' anyway' : 'Your nipples are stiff in your bra anyway') + ', and you can feel her eyes on your ass all the way to the corner.';
+                },
+                onEnter: function() {
+                    applyArousal(5);
+                    gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 5);
+                    delete gameState.flags._exhibSeduceResult;
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Move on.', nextScene: 'city_exploration' }
+                ]
+            },
+
+            exhibition_seduce_pan_failure_disturbed_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'The interest drains out of her face, and something protective takes its place.\n\n' +
+                        '"Hey. Are you okay?" she asks, low. "Do you need me to call someone?"\n\n' +
+                        'She\'s already pulling a scarf out of her tote bag, like she means to wrap it around your hips for you.\n\n' +
+                        '"I\'m fine," you say. "Really. Forget it."\n\n' +
+                        'She\'s still holding the scarf out when you look back from the end of the block. Your ' + x.top + ' rides up as you turn the corner, and your face stays hot for the whole next street.';
+                },
+                onEnter: function() {
+                    applyArousal(3);
+                    gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 5);
+                    delete gameState.flags._exhibSeduceResult;
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Move on.', nextScene: 'city_exploration' }
+                ]
+            },
+
+            exhibition_seduce_pan_failure_impressed_but_no_f: {
+                text: function() {
+                    var x = _bpeMastPanCtx();
+                    return 'She laughs, delighted. "Oh, you\'re trouble. I can\'t. I\'m already late."\n\n' +
+                        'She walks past you, then turns back and holds up her phone, grinning.\n\n' +
+                        'The camera clicks. She got ' + getPantiesExposedAssView() + '.\n\n' +
+                        '"For later," she says. She winks and walks off.\n\n' +
+                        'Your face burns. Your pussy clenches in your ' + x.pan + ' at the thought of her looking at it later.';
+                },
+                onEnter: function() {
+                    applyArousal(12);
+                    gameState.corruption = Math.min(10000, (gameState.corruption || 0) + 8);
+                    delete gameState.flags._exhibSeduceResult;
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Move on.', nextScene: 'city_exploration' }
+                ]
+            },
         };
 
         // Mesh Step 10: sheer overlays and rewards on the 20 exhibition events
