@@ -8546,6 +8546,12 @@
                     <div class="time-day" style="font-size: 16px; color: #ff8888; margin-bottom: 5px;">Day 1</div>
                     <div class="time-date" style="font-size: 14px; margin-bottom: 3px;">Monday</div>
                     <div class="time-clock" style="font-size: 14px; color: #d4c0e0;">7:21 AM</div>
+                    <div class="time-police" id="time-police" style="display: none; margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255, 120, 120, 0.3); font-size: 13px; color: #ff8888;">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                            <span id="time-police-label">Police arrive in</span>
+                            <span id="time-police-value" style="font-weight: bold; font-variant-numeric: tabular-nums;">0h 00m</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -39077,12 +39083,26 @@ audioSystem.playSFX('buttonClick');
             const isBottomlessPassive = isEffectivelyBottomless();
             // Mesh Overhaul Step 1I: no exposure thrill where nobody can see her.
             const _privateExposure = (typeof isPrivateExposureScene === 'function') && isPrivateExposureScene(currentScene);
-            // BPE Step 17E: the indecency clock pauses where nobody can see her (home, Jaewon's),
-            // so a night in at home doesn't bring the police on her next district entry.
-            if (_privateExposure && gameState.indecencyClockStartTime && minutes > 0) {
-                var _icS = gameState.indecencyClockStartTime;
-                var _icMin = (_icS.day * 24 * 60) + (_icS.hour * 60) + (_icS.minute || 0) + minutes;
-                gameState.indecencyClockStartTime = { day: Math.floor(_icMin / 1440), hour: Math.floor((_icMin % 1440) / 60), minute: _icMin % 60 };
+            // BPE Step 17E: the police clocks (indecency, full sheer set, naked) pause where nobody
+            // can see her (home, Jaewon's), so a night in doesn't bring the police on her next entry.
+            // The clocks start the moment she's out in public in a state on them (not only on a
+            // district entry), and clear as soon as she's in none, so the sidebar timer is honest.
+            (function() {
+                var _pt = gameState.time, _pNow = { day: _pt.day, hour: _pt.hour, minute: _pt.minute || 0 };
+                if (getIndecencyClockState()) { if (!_privateExposure && !gameState.indecencyClockStartTime) gameState.indecencyClockStartTime = _pNow; }
+                else gameState.indecencyClockStartTime = null;
+                var _pSheer = getSheerState().state === 'sheer_lingerie' && !gameState.isNaked &&
+                    ((gameState.corruption || 0) >= getSheerStateGate('sheer_lingerie') || gameState.flags.clothesDestroyedInCombat);
+                if (_pSheer) { if (!_privateExposure && !gameState.sheerLingerieStartTime) gameState.sheerLingerieStartTime = _pNow; }
+                else gameState.sheerLingerieStartTime = null;
+            })();
+            if (_privateExposure && minutes > 0) {
+                ['indecencyClockStartTime', 'sheerLingerieStartTime', 'nakedStartTime'].forEach(function(_icKey) {
+                    var _icS = gameState[_icKey];
+                    if (!_icS) return;
+                    var _icMin = (_icS.day * 24 * 60) + (_icS.hour * 60) + (_icS.minute || 0) + minutes;
+                    gameState[_icKey] = { day: Math.floor(_icMin / 1440), hour: Math.floor((_icMin % 1440) / 60), minute: _icMin % 60 };
+                });
             }
 
             // Braless under clothing (subtle): +1 thrill per hour
@@ -49922,8 +49942,36 @@ audioSystem.playSFX('buttonClick');
                 document.querySelector('.time-clock').textContent = hour + ':' + minute + ' ' + period;
             }
             
+            // Exhibition arrests: the police countdown under the clock
+            updatePoliceTimerDisplay();
+
             // Update weather display whenever time updates
             updateWeatherDisplay();
+        }
+
+        // Minutes until the police arrive, across the three clocks (naked, the full sheer set,
+        // and the shared indecency clock), or null when none is running.
+        function getPoliceClockRemaining() {
+            var t = gameState.time;
+            var nowMin = (t.day * 24 * 60) + (t.hour * 60) + (t.minute || 0);
+            var left = function(st, limit) { return limit - (nowMin - ((st.day * 24 * 60) + (st.hour * 60) + (st.minute || 0))); };
+            var best = null;
+            var take = function(m) { if (m !== null && m !== undefined && !isNaN(m)) best = best === null ? m : Math.min(best, m); };
+            if (gameState.isNaked && gameState.nakedStartTime) take(left(gameState.nakedStartTime, 120));
+            if (gameState.sheerLingerieStartTime && typeof getSheerState === 'function' && getSheerState().state === 'sheer_lingerie') take(left(gameState.sheerLingerieStartTime, 180));
+            if (typeof getIndecencyClockRemaining === 'function') take(getIndecencyClockRemaining());
+            return best === null ? null : Math.max(0, best);
+        }
+
+        function updatePoliceTimerDisplay() {
+            var box = document.getElementById('time-police');
+            if (!box) return;
+            var m = gameState.timeStarted ? getPoliceClockRemaining() : null;
+            if (m === null) { box.style.display = 'none'; return; }
+            box.style.display = 'block';
+            var paused = typeof isPrivateExposureScene === 'function' && isPrivateExposureScene(currentScene);
+            document.getElementById('time-police-label').textContent = paused ? 'Police clock (paused)' : 'Police arrive in';
+            document.getElementById('time-police-value').textContent = m <= 0 ? 'Any moment' : Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm';
         }
         
         function updateWeatherDisplay() {
@@ -212698,6 +212746,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 console.error('Error in showScene exposure check:', e);
                 showSceneInternal(sceneId, part);
             }
+            if (typeof updatePoliceTimerDisplay === 'function') updatePoliceTimerDisplay();
         }
         
         function showSceneInternal(sceneId, part) {
