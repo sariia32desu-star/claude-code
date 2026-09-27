@@ -7376,7 +7376,8 @@
                         <div style="margin: 5px 0 5px 0; padding: 6px 10px; background: rgba(60, 20, 40, 0.25); border-left: 3px solid #884466; border-radius: 3px;">
                             <strong style="color: #dd8899; font-size: 13px;"><img src="Images/icons/crime-suspicion.png" class="icon" alt="evidence"> Arrest &amp; Evidence</strong>
                             <ul style="margin: 4px 0 0 15px; padding: 0;">
-                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Police Stops:</strong> every indecent state is on a police clock. Naked: 2 hours. Topless, bottomless, the full sheer set, a sheer bra with nothing over it, or bare behind mesh: 3 hours. Panties Exposed, Underwear Only, braless or commando behind mesh, or a bra soaked through: 4 hours. A dry bra over a bottom is legal and never on the clock. The clock checks when you enter a district street and pauses at home or at Jaewon's. When the officers arrive you choose: <strong>Run</strong> at vampire speed (you get dressed from your backpack, run home, or steal clothes), or <strong>Compel them</strong> to forget (+15 thirst; the clock starts over and you stay as you are).</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Police Stops:</strong> every indecent state is on a police clock. Naked: 2 hours. Topless, bottomless, the full sheer set, a sheer bra with nothing over it, or bare behind mesh: 3 hours. Panties Exposed, Underwear Only, braless or commando behind mesh, or a bra soaked through: 4 hours. A dry bra over a bottom is legal and never on the clock. The clock checks when you enter a district street and pauses at home or at Jaewon's. When the officers arrive you choose: <strong>Surrender</strong>, <strong>Run</strong> at vampire speed (you get dressed from your backpack, run home, or steal clothes), or <strong>Compel them</strong> to forget (+15 thirst; the clock starts over and you stay as you are).</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Exhibition Arrest:</strong> surrender and you're cuffed, driven to Central Booking, and booked for indecent exposure in whatever you were wearing. Officer Pruitt at the property desk writes it all down, and she remembers you next time. You change into a jumpsuit, get your mugshot and prints, and wait four hours in holding (five on a repeat) while your thirst climbs. Then you're released with a citation and a fine: $200 naked; $150 topless, bottomless, in the full sheer set or bare behind mesh; $100 for the rest. Each earlier exhibition arrest adds half again, up to triple. If you can't cover it, they take what you have. You get your things back, and if you came in naked, topless or bottomless, Pruitt hands you a donated white dress on the way out. The day's exposure evidence is settled by the citation and never becomes a warrant charge. If you already have a warrant, booking finds it, and it becomes a real arrest.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ff8899;">Indecent Exposure Evidence:</strong> Walking around exposed in public can generate Evidence Ledger entries. Commercial and downtown districts have a 30% chance per visit (camera evidence, street cams). Residential and park districts have a 15% chance (civilian witnesses). Max one entry per district per day.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Severity Scaling:</strong> Underwear or Panties Exposed = Minor (+1 warrant severity). A dry bra over a bottom leaves no record; soaked through it's Minor, Moderate on a night camera. Topless or Bottomless = Moderate (+2). Naked = Major (+3). Low weight compared to violent crimes, so indecent exposure alone won't drive a warrant, but it adds up. Sheer: framed leaves no record, braless or commando behind mesh is Minor, and bare or any sheer lingerie is Moderate. A night camera after 8 PM bumps a sheer entry up one level, so sheer lingerie can reach Major. Fishnet raises the odds of an entry and semi-sheer lowers them.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #88ccff;">Cruz Awareness:</strong> After 3+ indecent exposure entries, Detective Cruz flags the pattern in her behavioral profile of you. She'll reference it during encounters: blurred camera stills, incident report numbers. It doesn't trigger arrest on its own but it adds a data point to a detective who's already watching you. Sheer entries count toward the pattern, and when most of your file is sheer she says so: "Most of it's technically clothed."</li>
@@ -13381,6 +13382,7 @@
                 sheerBareMinutesTotal: 0,
                 sheerLingerieMinutesTotal: 0,
                 braExposedMinutesTotal: 0,     // Bra/Panties Exposed Overhaul Step 1H
+                exhibitionArrestCount: 0,      // exhibition arrests (surrendered at a police stop)
                 pantiesExposedMinutesTotal: 0, // Bra/Panties Exposed Overhaul Step 1H
                 npcReactionsTriggered: 0,
                 peakThrill: 0,
@@ -13490,6 +13492,12 @@
                 _bpeForcedLostBottom: null,
                 _jackBraDiscountDay: 0,
                 _jaewonBpeFriendDay: 0,
+                _exhibStop: null,
+                _exhibArrest: null,
+                _exhibArrestWarrant: false,
+                _exhibSavedOutfit: null,
+                _exhibReleaseResult: null,
+                _lastExhibArrestState: null,
                 _wetBraNoticeDay: 0,             // wet-bra notice, once per day (Step 2D)
                 // ── Mesh & Sheer overhaul flags (Step 21) ──
                 _passiveAccum: {},
@@ -17193,6 +17201,7 @@
                 // MIGRATION (Bra Exposed & Panties Exposed Overhaul, Step 1H)
                 // underwearMinutesTotal keeps its value; the new counters start at 0.
                 if (gameState.exhibitionStats.braExposedMinutesTotal === undefined) gameState.exhibitionStats.braExposedMinutesTotal = 0;
+                if (gameState.exhibitionStats.exhibitionArrestCount === undefined) gameState.exhibitionStats.exhibitionArrestCount = 0;
                 if (gameState.exhibitionStats.pantiesExposedMinutesTotal === undefined) gameState.exhibitionStats.pantiesExposedMinutesTotal = 0;
                 if (gameState.indecencyClockStartTime === undefined) gameState.indecencyClockStartTime = null;
                 if (gameState.flags._braExposedReactionIdx === undefined) gameState.flags._braExposedReactionIdx = [];
@@ -17208,6 +17217,8 @@
                 if (gameState.flags._bpeForcedLostBottom === undefined) gameState.flags._bpeForcedLostBottom = null;
                 if (gameState.flags._jackBraDiscountDay === undefined) gameState.flags._jackBraDiscountDay = 0;
                 if (gameState.flags._jaewonBpeFriendDay === undefined) gameState.flags._jaewonBpeFriendDay = 0;
+                ['_exhibStop', '_exhibArrest', '_exhibSavedOutfit', '_exhibReleaseResult', '_lastExhibArrestState'].forEach(function(k) { if (gameState.flags[k] === undefined) gameState.flags[k] = null; });
+                if (gameState.flags._exhibArrestWarrant === undefined) gameState.flags._exhibArrestWarrant = false;
                 // BPE Step 17: the starting Basic White Bra had no fabric, so rain never soaked it through
                 (function() {
                     var _fixBra = function(it) { if (it && it.id === 'basic_white_bra' && !(it.tags || []).some(function(t) { return /^material:/.test(t); })) it.tags = (it.tags || []).concat(['material:cotton']); };
@@ -22935,6 +22946,7 @@ audioSystem.playSFX('buttonClick');
         function offerExhibPoliceChoices(clock, state) {
             gameState.flags._exhibStop = { clock: clock, state: state };
             showChoices([
+                { text: 'Surrender. Hands behind your back.', action: function() { doExhibPoliceSurrender(clock, state); } },
                 { text: 'Run. Vampire speed.', action: function() {
                     gameState.flags._exhibStop = null;
                     handleNakedEscape();
@@ -22972,6 +22984,78 @@ audioSystem.playSFX('buttonClick');
                 '\n\n<span style="color: #ff6666;">Thirst +15</span>  · <span style="color: #88ccff;">The police clock starts over</span>';
             updateStatus();
             showMessage(text, function() { updateStatus(); });
+        }
+
+
+        // ── Exhibition arrests, part 2: surrender, booking, holding, release ──
+        // The stop snapshots what she was wearing: onEnter runs before text() in this engine,
+        // and booking swaps her into the jumpsuit, so every scene reads the snapshot.
+        function _exhibArrestSnapshot(clock, state) {
+            var o = gameState.currentOutfit || {};
+            var cv = getSceneClothingVars();
+            var ba = gameState.bodyAppearance || {};
+            var st = getSheerState();
+            var noun = (typeof getSheerNoun === 'function' && st.state !== 'none') ? getSheerNoun(st) : 'mesh';
+            gameState.flags._exhibArrest = {
+                clock: clock, state: state,
+                top: (o.top || o.dress) ? cv.topName : '', bottom: (o.bottom || o.dress) ? cv.bottomName : '',
+                bra: o.bra ? cv.braName : '', panties: o.panties ? cv.pantiesName : '', dress: !!o.dress,
+                thong: cv.pantiesCut === 'thong', noun: noun,
+                bs: ba.breastSize || 'average', butt: ba.buttSize || 'average', bt: ba.bodyType || 'ordinary'
+            };
+        }
+
+        function _exhibArrestTier() {
+            var c = gameState.corruption || 0;
+            return c >= 6001 ? 'high' : c >= 2001 ? 'mid' : 'low';
+        }
+
+        // Which zones the officers could see, and how
+        function _exhibArrestZones(s) {
+            var chest = { naked: 'bare', topless: 'bare', sheer_bare: 'mesh', sheer_braless: 'mesh', sheer_lingerie: 'mesh', sheer_lingerie_top: 'mesh', bra_wet: 'wet', underwear_only: 'bra' }[s.state] || '';
+            var hips = { naked: 'bare', bottomless: 'bare', sheer_bare: 'mesh', sheer_commando: 'mesh', sheer_lingerie: 'mesh', sheer_lingerie_bottom: 'mesh', underwear_only: 'panties', panties_exposed: 'panties' }[s.state] || '';
+            return { chest: chest, hips: hips };
+        }
+
+        // The list of what she came in wearing, for the property form
+        function _exhibArrestItems(s) {
+            var list = [];
+            if (s.dress) list.push(s.top);
+            else { if (s.top) list.push(s.top); if (s.bottom) list.push(s.bottom); }
+            if (s.bra) list.push(s.bra);
+            if (s.panties) list.push(s.panties);
+            if (!list.length) return '';
+            if (list.length === 1) return 'your ' + list[0];
+            return 'your ' + list.slice(0, -1).join(', your ') + ' and your ' + list[list.length - 1];
+        }
+
+        // Short phrase for Pruitt's comparison on a repeat booking
+        var EXHIB_ARREST_WHAT = {
+            naked: 'no clothes at all', topless: 'your tits', bottomless: 'your bare ass', underwear_only: 'your underwear',
+            panties_exposed: 'your panties', sheer_lingerie: 'the see-through underwear', sheer_lingerie_top: 'a see-through bra',
+            sheer_lingerie_bottom: 'see-through panties', bra_wet: 'a soaked bra', sheer_bare: 'mesh and nothing under it',
+            sheer_braless: 'no bra under mesh', sheer_commando: 'nothing under a mesh skirt'
+        };
+
+        // Fine: naked $200; topless, bottomless, the sheer set, bare behind mesh $150; the rest $100.
+        // Half again for every earlier exhibition arrest, capped at three times.
+        function getExhibArrestFine(state, prior) {
+            var base = state === 'naked' ? 200 : (['topless', 'bottomless', 'sheer_lingerie', 'sheer_bare'].indexOf(state) !== -1 ? 150 : 100);
+            return Math.round(base * Math.min(3, 1 + 0.5 * (prior || 0)));
+        }
+
+        // Release: her own things back, and a donated white dress when she came in with
+        // nothing over her chest or her hips (naked, topless, bottomless).
+        var DONATED_WHITE_DRESS = { id: 'donated_white_dress', name: 'Donated White Dress', category: 'dresses', appeal: 6, price: 0, owned: true, cleanliness: 70, image: 'Images/clothing/donated/white-dress.jpg', tags: ['casual', 'minimalist', 'fit:loose', 'material:cotton'] };
+        function exhibArrestNeedsDress(state) { return state === 'naked' || state === 'topless' || state === 'bottomless'; }
+
+        function doExhibPoliceSurrender(clock, state) {
+            _exhibArrestSnapshot(clock, state);
+            gameState.flags._exhibStop = null;
+            if (clock === 'naked') gameState.nakedStartTime = null;
+            else if (clock === 'sheer') gameState.sheerLingerieStartTime = null;
+            else gameState.indecencyClockStartTime = null;
+            showScene('exhib_arrest_surrender');
         }
 
         function handleIndecencyPoliceArrive(state) {
@@ -38295,7 +38379,8 @@ audioSystem.playSFX('buttonClick');
                 '\u2022 Exhibition events: ' + (_es.exhibitionEventsCompleted || 0) + '<br>' +
                 '\u2022 NPC reactions: ' + (_es.npcReactionsTriggered || 0) + '<br>' +
                 '\u2022 On-stage orgasms: ' + (_es.orgasmsOnStage || 0) + '<br>' +
-                '\u2022 Exhibition seductions: ' + (_es.exhibitionSeductionCount || 0) +
+                '\u2022 Exhibition seductions: ' + (_es.exhibitionSeductionCount || 0) + '<br>' +
+                '\u2022 Exhibition arrests: ' + (_es.exhibitionArrestCount || 0) +
                 '</div></div>';
 
             sections.push({
@@ -56460,6 +56545,9 @@ audioSystem.playSFX('buttonClick');
                 // Prison
                 'prison_jumpsuit': 'Images/clothing/prison/prison-jumpsuit.jpg',
                 'prison_slipons': 'Images/clothing/prison/slip-on-shoes.jpg',
+
+                // Donated (Central Booking release)
+                'donated_white_dress': 'Images/clothing/donated/white-dress.jpg',
                 
                 // Crime gear
                 'ski_mask': 'Images/items/ski-mask.png',
@@ -57484,6 +57572,7 @@ audioSystem.playSFX('buttonClick');
             'jaewon_ankle_boots': 'Tan suede ankle boots with a low stacked heel. Comfortable enough to walk in all day but stylish enough for a date. Well-worn in the best way.',
             'jaewon_block_heels': 'Nude block heel sandals with a single strap across the toes. The thick heel makes them surprisingly walkable. Elegant and practical.',
             'jaewon_white_sneakers': 'Clean white platform sneakers with a chunky sole. They add about an inch of height. The trendy kind that somehow look good with dresses too.',
+            'donated_white_dress': 'A plain white cotton dress from the donation bin at Central Booking. Loose through the body, short sleeves, a round neckline, and a hem that falls just below the knee. It\'s a size too big and it looks like nothing at all, which is the point.',
             'prison_jumpsuit': 'Bright orange prison romper with a front zipper and a stiff collar. Three-quarter sleeves, cuffed at the elbow. Shorts-length legs that hit mid-thigh. An inmate number is stamped across the left chest in blocky black print. It fits tighter than it should. The fabric is stiff polyester blend, industrial laundry detergent baked into every fiber.',
             'prison_slipons': 'Black knit slip-on shoes with a cream sole. Lightweight, laceless, institutional. They fit like socks with a rubber bottom.'
         };
@@ -137541,6 +137630,256 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
 
                     return choices;
+                }
+            },
+
+            // ── Exhibition arrests: surrender ──
+            exhib_arrest_surrender: {
+                text: function() {
+                    var s = gameState.flags._exhibArrest || { state: 'naked', bs: 'average', butt: 'average' };
+                    var z = _exhibArrestZones(s), tier = _exhibArrestTier();
+                    var tits = s.bs === 'large' ? 'your heavy tits' : s.bs === 'small' ? 'your small tits' : 'your tits';
+                    var desc = 'You turn around and put your hands behind your back.\n\n';
+                    var cover = '';
+                    if (z.chest === 'bare') cover += 'With your hands locked behind you, your shoulders pull back and ' + tits + ' push out for the whole street, nipples hard in the air. ';
+                    else if (z.chest === 'mesh') cover += 'With your hands locked behind you, your shoulders pull back, and your nipples show dark through the ' + s.noun + ' for the whole street. ';
+                    else if (z.chest === 'wet') cover += 'With your hands locked behind you, your chest pushes out, and your nipples show dark through the soaked cups of your ' + s.bra + '. ';
+                    desc += 'The cuffs close on your wrists, cold and tight.' + (cover ? ' ' + cover.trim() : '') + '\n\n';
+                    if (z.hips === 'bare') desc += 'Nothing covers your pussy, and you can\'t even press your thighs together without stumbling. The younger officer\'s eyes keep dropping to it while the older one reads you your rights.\n\n';
+                    else if (z.hips === 'mesh') desc += 'Your bare slit shows through the ' + s.noun + ', and the younger officer\'s eyes keep dropping to it while the older one reads you your rights.\n\n';
+                    else if (z.hips === 'panties') desc += 'Your cuffed hands rest right above the waistband of your ' + s.panties + '. The officer walking you to the car gets the whole view from behind, and he takes his time about it.\n\n';
+                    else desc += 'The older one reads you your rights in a flat, bored voice. The younger one isn\'t listening to him. He\'s looking at you.\n\n';
+                    var bareSeat = z.hips === 'bare' || z.hips === 'mesh' || (z.hips === 'panties' && s.thong);
+                    desc += 'He puts a hand on top of your head and folds you into the back seat. ' +
+                        (bareSeat ? 'The vinyl is cold and tacky under your bare ass.' : z.hips === 'panties' ? 'The vinyl is cold against the backs of your thighs.' : 'The vinyl creaks under your ' + (s.bottom || 'clothes') + '.') + '\n\n';
+                    desc += 'The door shuts, and the street noise cuts off. Up front, the radio crackles.\n\n';
+                    desc += '"Dispatch, twenty-two Baker. One in custody, female, indecent exposure. Transporting to Central Booking."\n\n';
+                    desc += 'The officer driving keeps checking his rearview mirror, and he isn\'t looking at the traffic.\n\n';
+                    if (tier === 'low') desc += 'You stare at your knees and try not to cry. Your nipples are hard and your pussy\'s wet, and with your hands behind your back you can\'t even hide that.';
+                    else if (tier === 'mid') desc += 'Your face is on fire. Every time his eyes flick to the mirror, your pussy clenches, and you shift on the seat so he can\'t see how wet you are.';
+                    else desc += 'You meet his eyes in the mirror and hold them until he looks back at the road. Your clit throbs the whole ride.';
+                    return desc;
+                },
+                onEnter: function() {
+                    gameState.flags.policeEncounterToday = true;
+                    gameState.flags.lastPoliceEncounterDay = gameState.time.day;
+                    gameState.flags.policeEncountersTotal = (gameState.flags.policeEncountersTotal || 0) + 1;
+                    advanceTime(20);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Ride in silence.', nextScene: 'exhib_arrest_booking' }
+                ]
+            },
+
+            // ── Exhibition arrests: booking (first time, repeat, or an open warrant) ──
+            exhib_arrest_booking: {
+                text: function() {
+                    var s = gameState.flags._exhibArrest || { state: 'naked', bs: 'average', butt: 'average' };
+                    var tier = _exhibArrestTier();
+                    var prior = (gameState.exhibitionStats && gameState.exhibitionStats.exhibitionArrestCount) || 0;
+                    var tits = s.bs === 'large' ? 'your heavy tits' : s.bs === 'small' ? 'your small tits' : 'your tits';
+                    var items = _exhibArrestItems(s);
+                    var isSheer = /^sheer_/.test(s.state);
+                    var desc = '';
+
+                    if (gameState.flags._exhibArrestWarrant) {
+                        desc += 'Central Booking. The officer at the property desk takes one look at you, sighs, and starts the indecent exposure paperwork.\n\n';
+                        desc += 'Then she runs your prints. The screen thinks about it for a second and goes red.\n\n';
+                        desc += '"Hold on," she says, and picks up the phone. She turns her back to you while she talks, low and fast. The only words you catch are your name and "warrant."\n\n';
+                        desc += 'Two more officers come to the desk. They don\'t look at what you\'re wearing anymore. They look at your hands.\n\n';
+                        desc += 'The indecent exposure charge is the smallest thing on your file now.';
+                        return desc;
+                    }
+
+                    if (prior === 0) {
+                        desc += 'Central Booking is a concrete slab on Fourth Street. They bring you in through the loading dock, and the fluorescent light finds every inch of you before the smell does: disinfectant over stale coffee.\n\n';
+                        desc += 'The officer at the property desk is a heavyset woman with reading glasses on a chain. Her name tag says PRUITT. She looks up, and her pen stops.\n\n';
+                    } else {
+                        desc += 'Same loading dock. Same fluorescent light. Pruitt looks up from the property desk, sees you, and takes her glasses off.\n\n';
+                        if (prior === 1) {
+                            var last = gameState.flags._lastExhibArrestState;
+                            desc += '"Summers." She sighs. "What is it this time?"\n\n';
+                            desc += (last && last !== s.state)
+                                ? 'She looks you over. "Last time it was ' + (EXHIB_ARREST_WHAT[last] || 'this') + '. Now it\'s ' + (EXHIB_ARREST_WHAT[s.state] || 'this') + '. You\'re working your way down a list."\n\n'
+                                : 'She looks you over. "Same as last time. You could at least change it up."\n\n';
+                        } else {
+                            desc += '"Summers." She already has the form out. She fills in the charge before you reach the counter. "Indecent exposure. You know where the curtain is."\n\n';
+                        }
+                    }
+
+                    // The property form
+                    if (s.state === 'naked') desc += 'She writes CLOTHING: NONE in block capitals and underlines it twice.';
+                    else if (s.state === 'topless') desc += 'She writes down ' + items + ', then leaves the line for a top blank. "Shirt?"\n\n"No."\n\nShe writes that down too.';
+                    else if (s.state === 'bottomless') desc += 'She writes down ' + items + ', then leans over the counter to look at your bare pussy, and writes NO PANTS. NO UNDERWEAR.';
+                    else if (s.state === 'bra_wet') desc += 'She lists ' + items + '. Your ' + s.bra + ' is still dripping on her counter.\n\n"It was raining," you say.\n\nShe writes that down too.';
+                    else if (isSheer) desc += 'She lists ' + items + ', then looks at you over her glasses and writes SEE-THROUGH in the margin.';
+                    else if (s.state === 'panties_exposed') desc += 'She lists ' + items + '. "No pants," she says, writing it. "No skirt. Nothing."';
+                    else desc += 'She lists ' + items + ', and then there\'s nothing else to list.';
+                    desc += '\n\n';
+
+                    // The jumpsuit
+                    if (prior >= 2) {
+                        desc += 'Behind the curtain you change into the jumpsuit without being told. The officer watching you yawns.\n\n';
+                    } else {
+                        desc += 'A female officer takes you behind a curtain and hands you an orange jumpsuit. ';
+                        if (s.state === 'naked') desc += 'There\'s nothing to take off. She watches you step into it with ' + tits + ' bare and your pussy right there, and zip it up.\n\n';
+                        else desc += 'She holds out a plastic bag, and ' + items + ' go into it one at a time while she watches.\n\n';
+                    }
+                    if (tier === 'low') desc += 'The stiff fabric scrapes your nipples. You\'re still wet from the street, from the car, from all of it, and you want to disappear.\n\n';
+                    else if (tier === 'mid') desc += 'The polyester scrapes your stiff nipples when you zip it up. Your pussy\'s still slick, and you can feel it against the seam.\n\n';
+                    else desc += 'The jumpsuit hugs tighter than it should. Your nipples press against the polyester, and your pussy\'s slick against the seam. You don\'t mind the fit.\n\n';
+
+                    // Mugshot
+                    if (prior >= 2) desc += 'The camera tech says "Chin up" before you\'re even on the mark. He knows your good side by now.\n\n';
+                    else desc += 'Then the camera. Front, then left side. The flash leaves a green ghost floating in your eyes, and ink rolls your fingertips black one at a time.\n\n';
+                    if (tier === 'low') desc += 'Somewhere in this building there\'s going to be a file with INDECENT EXPOSURE next to your face. You can\'t stop shaking.';
+                    else if (tier === 'mid') desc += 'Your face is burning in the photo. You know it is.';
+                    else desc += 'You don\'t look away from the lens. Your clit throbs, and you wonder who\'s going to look at this picture.';
+                    return desc;
+                },
+                onEnter: function() {
+                    var s = gameState.flags._exhibArrest || {};
+                    // An open warrant turns this into the real arrest (Cruz, the cell, the wall)
+                    gameState.flags._exhibArrestWarrant = !!gameState.flags.warrantIssued;
+                    if (gameState.flags._exhibArrestWarrant) {
+                        gameState.flags.currentlyInCustody = true;
+                        gameState.flags.custodyDay = gameState.time.day;
+                        gameState.flags.custodyProcessed = false;
+                        gameState.flags.custodyInterrogated = false;
+                        gameState.flags.arrestCount = (gameState.flags.arrestCount || 0) + 1;
+                        gameState.flags._exhibArrest = null;
+                        advanceTime(20);
+                        updateStatus();
+                        return;
+                    }
+                    gameState.flags._exhibSavedOutfit = JSON.parse(JSON.stringify(gameState.currentOutfit));
+                    var o = gameState.currentOutfit;
+                    ['bra', 'panties', 'top', 'bottom', 'outerwear', 'headwear', 'neckwear', 'earrings', 'rings', 'eyewear', 'accessories', 'other'].forEach(function(k) { o[k] = null; });
+                    o.dress = { id: 'prison_jumpsuit', name: 'Prison Jumpsuit', category: 'dresses', appeal: 35, cleanliness: 100, image: 'Images/clothing/prison/prison-jumpsuit.jpg', tags: ['casual', 'minimalist', 'fit:loose', 'material:synthetic'] };
+                    o.footwear = { id: 'prison_slipons', name: 'Issued Slip-Ons', appeal: 0, cleanliness: 50, image: 'Images/clothing/prison/slip-on-shoes.jpg', comfort: 3, mobility: 2, terrain: ['street', 'park'], noise: 0, tags: ['casual', 'minimalist', 'fit:loose', 'material:synthetic'] };
+                    gameState.isNaked = false;
+                    advanceTime(60);
+                    updateStatus();
+                },
+                choices: function() {
+                    if (gameState.flags._exhibArrestWarrant) return [{ text: 'Go with them.', nextScene: 'arrest_booking' }];
+                    return [{ text: 'Follow the guard.', nextScene: 'exhib_arrest_cell' }];
+                }
+            },
+
+            // ── Exhibition arrests: the holding cell ──
+            exhib_arrest_cell: {
+                text: function() {
+                    var s = gameState.flags._exhibArrest || { state: 'naked' };
+                    var tier = _exhibArrestTier();
+                    var prior = (gameState.exhibitionStats && gameState.exhibitionStats.exhibitionArrestCount) || 0;
+                    var desc = 'The holding cell is a concrete box with a steel bench bolted to one wall and a toilet with no seat. Three other women are already in it. One\'s asleep, one\'s staring at the ceiling, and one watches you come in.\n\n';
+                    if (prior === 0) {
+                        desc += 'She\'s forty or so, with a fading bruise on one cheekbone and her hair scraped back. "What\'re you in for, sweetheart?"\n\n"Indecent exposure."\n\n';
+                        desc += 'She looks at your jumpsuit like she can see straight through it to whatever was under it. "Yeah? What were you wearing?"\n\n';
+                        if (tier === 'low') desc += 'You don\'t answer. You sit on the far end of the bench with your knees pulled up and your arms around them, and she laughs, not unkindly, and leaves you alone.';
+                        else if (tier === 'mid') desc += '"Not enough," you say. She laughs, loud enough to wake the one who was sleeping, and slides over to make room on the bench.';
+                        else desc += 'You tell her. All of it: ' + (EXHIB_ARREST_WHAT[s.state] || 'what they saw') + ', the street, the cruiser, the mirror. By the end, the one staring at the ceiling is listening too, and your pussy\'s wet again under the jumpsuit.';
+                    } else {
+                        desc += 'The woman with the bruise is in again too. She grins when she sees you. "Well, if it isn\'t the exhibitionist. What was it this time?"\n\n';
+                        desc += '"' + (EXHIB_ARREST_WHAT[s.state] || 'You don\'t want to know').replace(/^your /, 'my ').replace(/^./, function(c) { return c.toUpperCase(); }) + '."\n\n';
+                        if (tier === 'low') desc += 'She whistles low. You sit down on the bench and stare at the floor, face burning, and wait for it to be over.';
+                        else if (tier === 'mid') desc += 'She whistles low and slides over. "One of these days you\'re gonna tell me why."\n\nYou don\'t know why. Your pussy clenches when you think about it, and that\'s as close as you get.';
+                        else desc += 'She whistles low and slides over. "One of these days you\'re gonna tell me why."\n\n"Because they look," you say. Your clit throbs just saying it.';
+                    }
+                    desc += '\n\nThe hours drag. The fluorescent light never changes. Somewhere past the second hour your throat starts to itch, then burn, and every heartbeat in the room gets a little louder.';
+                    if (tier === 'high') desc += '\n\nEvery time a guard walks past the bars, he slows down. You know which ones saw you come in.';
+                    return desc;
+                },
+                onEnter: function() {
+                    var prior = (gameState.exhibitionStats && gameState.exhibitionStats.exhibitionArrestCount) || 0;
+                    advanceTime(prior === 0 ? 240 : 300);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Wait for your name.', nextScene: 'exhib_arrest_release' }
+                ]
+            },
+
+            // ── Exhibition arrests: release ──
+            exhib_arrest_release: {
+                text: function() {
+                    var r = gameState.flags._exhibReleaseResult || {};
+                    var s = gameState.flags._exhibArrest || { state: 'naked' };
+                    var tier = _exhibArrestTier();
+                    var desc = 'A guard calls your name through the bars.\n\n';
+                    desc += 'Pruitt\'s at the property window. She slides a citation across the counter: indecent exposure, and a fine of $' + r.fine + '.\n\n';
+                    desc += r.paid >= r.fine
+                        ? 'You pay it at the window. The clerk counts your money twice and stamps the citation PAID.\n\n'
+                        : 'You empty everything you have onto the counter, $' + r.paid + '. The clerk stamps the rest as a balance and hands you a court date on a slip of paper you already know you\'ll lose.\n\n';
+                    if (r.dress) {
+                        desc += 'Then Pruitt puts your property bag on the counter, reaches underneath, and sets a folded white dress on top of it.\n\n';
+                        desc += '"Donation bin," she says. "We don\'t walk people out the front door like that."\n\n';
+                        desc += 'Behind the curtain you shake it out. Plain white cotton, a little too big, the hem hitting just below your knees. It\'s the most ordinary thing you\'ve ever worn.\n\n';
+                        if (tier === 'low') desc += 'You could cry from how much it covers.';
+                        else if (tier === 'mid') desc += 'It covers everything. Your pussy clenches anyway, remembering the street.';
+                        else desc += 'It covers everything. You already miss the street.';
+                    } else {
+                        desc += 'Pruitt puts your property bag on the counter. Behind the curtain you change back into exactly what you came in wearing.\n\n';
+                        desc += 'She looks at you over her glasses when you come out. "You\'re walking out of here like that?"\n\n';
+                        if (tier === 'low') desc += '"It\'s all I have," you say, and your face burns all the way to the door.';
+                        else if (tier === 'mid') desc += '"It\'s all I have," you say. It isn\'t, quite. Your pussy clenches on your way to the door.';
+                        else desc += '"I came in like this," you say. Your clit throbs, and you don\'t hurry to the door.';
+                    }
+                    desc += '\n\nThe front door lets you out onto Fourth Street.';
+                    return desc;
+                },
+                onEnter: function() {
+                    var s = gameState.flags._exhibArrest || { state: 'naked' };
+                    if (!gameState.exhibitionStats) gameState.exhibitionStats = {};
+                    var prior = gameState.exhibitionStats.exhibitionArrestCount || 0;
+                    var fine = getExhibArrestFine(s.state, prior);
+                    var paid = Math.min(fine, Math.max(0, gameState.money || 0));
+                    gameState.money = Math.max(0, (gameState.money || 0) - paid);
+
+                    // Her own things back; a donated dress when she came in naked, topless or bottomless
+                    if (gameState.flags._exhibSavedOutfit) {
+                        gameState.currentOutfit = JSON.parse(JSON.stringify(gameState.flags._exhibSavedOutfit));
+                        gameState.flags._exhibSavedOutfit = null;
+                    }
+                    var needDress = exhibArrestNeedsDress(s.state);
+                    if (needDress) {
+                        var o = gameState.currentOutfit;
+                        var inv = gameState.inventory.clothing;
+                        ['top', 'bottom', 'dress'].forEach(function(k) { if (o[k]) { inv.push(o[k]); o[k] = null; } });
+                        var have = inv.findIndex(function(it) { return it && it.id === 'donated_white_dress'; });
+                        o.dress = have !== -1 ? inv.splice(have, 1)[0] : JSON.parse(JSON.stringify(DONATED_WHITE_DRESS));
+                        calculateBackpackUsage();
+                    }
+                    gameState.isNaked = false;
+                    gameState.nakedStartTime = null;
+                    gameState.indecencyClockStartTime = null;
+                    gameState.sheerLingerieStartTime = null;
+                    gameState.flags.clothesDestroyedInCombat = false;
+
+                    // The day's exposure evidence is settled by the citation (cited, not a warrant charge)
+                    (gameState.evidenceLedger || []).forEach(function(e) {
+                        if (e.type === 'indecent_exposure' && e.day === gameState.time.day && !e.linkedToKelsie) { e.chargeStatus = 'cited'; e.resolvedByCitation = true; }
+                    });
+
+                    var c = gameState.corruption || 0;
+                    var mh = c >= 6001 ? 2 : c >= 2001 ? -5 : -10;
+                    modifyMentalHealth(mh);
+                    if (c >= 6001) { applyExhibitionThrillGain(15); applyArousal(10); }
+                    gameState.exhibitionStats.exhibitionArrestCount = prior + 1;
+                    gameState.flags._lastExhibArrestState = s.state;
+                    gameState.flags._exhibReleaseResult = { fine: fine, paid: paid, dress: needDress };
+                    advanceTime(20);
+                    updateStatus();
+                    showNotification('Released with a citation (-$' + paid + ', Mental Health ' + (mh > 0 ? '+' : '') + mh + ')');
+                },
+                choices: function() {
+                    return [{ text: 'Walk away from Central Booking.', action: function() {
+                        gameState.flags._exhibArrest = null;
+                        gameState.flags._exhibReleaseResult = null;
+                        showScene('city_exploration');
+                    } }];
                 }
             },
 
