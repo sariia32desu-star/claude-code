@@ -38137,6 +38137,141 @@ audioSystem.playSFX('buttonClick');
         // when Kelsie is visibly exposed. Guaranteed on transition, 15-minute cooldown.
         // 4 exposure states × 3 corruption voices × 4 lines = 48 total.
         var EXHIBITION_AMBIENT_LINES = {
+            // ── Bra Exposed & Panties Exposed Overhaul, Step 5 ──
+            // Six base lines per voice, plus condition variants (variants.<key>.<voice>).
+            // Bra Exposed: commando and sporty add to the base; soaked replaces it (the look
+            // turned indecent). Panties Exposed: braless and thong add to the base.
+            // Tokens: {bra} {panties} {top} {bottom}; {tits}/{Tits} and {ass}/{Ass} are body-branched.
+            // {panties} never stands as a subject (a thong is singular); it's always an object.
+            bra_exposed: {
+                innocent: [
+                    'Every window you pass shows you the same girl: your {bra}, your {bottom}, and a chest that pulls every stare on the block. Your nipples ache in the cups.',
+                    'It\'s legal. You say it in your head every time someone looks at {tits}. Your nipples stiffen in the cups anyway, and your pussy clenches like it didn\'t hear you.',
+                    'A breeze slides over your bare stomach and up under the edge of your {bra}. Your nipples tighten, and your face goes hot all over again.',
+                    'You keep one arm across your chest like you\'re cold. {Tits} press against it, and every step rubs your stiff nipples against the cups.',
+                    'A man holding a door looks at your {bra} instead of your face. You mumble thanks. Your clit throbs all the way down the block.',
+                    'Your shoulders are bare, your stomach\'s bare, and there\'s a bra where your top should be. You feel every inch of that skin, and you\'re damp between your legs.'
+                ],
+                experienced: [
+                    'You catch someone checking out your {bra}, and you let them. {Tits} sit high in the cups, and your pussy gives a slow, warm clench.',
+                    'It\'s a look. You keep telling yourself it\'s a look while your nipples show stiff through the cups and a guy on a bench forgets his sandwich.',
+                    'The sun\'s warm on your bare shoulders. The stares are warmer. Your nipples press into your {bra}, and you\'re slick under your {bottom}.',
+                    'A woman walking toward you glances at your chest and smiles like she approves. Your cheeks go pink, and your clit throbs anyway.',
+                    'Every time you breathe in, {tits} rise in the cups and somebody notices. You start breathing a little deeper on purpose.',
+                    'You adjust a strap and three people watch you do it. Your nipples tighten, and the ache between your legs gets harder to ignore.'
+                ],
+                corrupted: [
+                    'You walk with your shoulders back so {tits} lead the way. Every stare lands on your {bra} first, and your pussy\'s wet from the attention.',
+                    'A car slows beside you, and you roll your shoulders for the driver so {tits} shift in the cups. Your clit throbs.',
+                    'Your {bra}, your {bottom}, and a whole street staring at the part in between. Your nipples ache, and you love it.',
+                    'You stop at a shop window and fix your hair with your arms up, so the cups lift. Behind you in the glass, a man stops too. Your pussy clenches.',
+                    'It\'s perfectly legal to walk around like this, and everyone\'s looking anyway. That\'s the part that gets you wet.',
+                    'You slide a thumb under the band of your {bra} and drag it slowly along your ribs. Three strangers watch. Your nipples are rock hard.'
+                ],
+                variants: {
+                    commando: {
+                        innocent: [
+                            'There\'s nothing under your {bottom} either. Nobody can tell. You can, with every step, and your bare pussy clenches around nothing.',
+                            'Your {bra}\'s on show and your pussy\'s bare under your {bottom}. You feel naked in two places at once, and you\'re wet in one of them.'
+                        ],
+                        experienced: [
+                            'Everyone\'s looking at your {bra}. Nobody knows you\'re bare under your {bottom}. Your pussy clenches around the secret.',
+                            'Your nipples ache in the cups, and under your {bottom} your bare pussy\'s slick enough that you feel it with every step.'
+                        ],
+                        corrupted: [
+                            'They stare at {tits} and have no idea you\'re bare under your {bottom} too. You think about telling one of them. Your clit throbs.',
+                            'Your bra\'s on show and your pussy\'s bare under your {bottom}, and you\'re dripping for both reasons.'
+                        ]
+                    },
+                    soaked: {
+                        innocent: [
+                            'The rain\'s soaked your {bra} through. Your nipples show dark and stiff under the wet fabric, and you can\'t cover both of them and walk at the same time.',
+                            'Your wet {bra} clings to {tits} like paint. Everyone can see your nipples now, and your pussy clenches in the cold.',
+                            'You press both arms over your soaked {bra}. The wet fabric\'s gone see-through, and your nipples are hard against your wrists.'
+                        ],
+                        experienced: [
+                            'Your {bra}\'s soaked see-through, and the look you planned just turned into something else. Your nipples show dark through the wet cups. Your clit throbs.',
+                            'Rain runs down your chest and into your {bra}. Every stranger can see your nipples through it now, and your pussy\'s as wet as your bra.',
+                            'A man stares at your chest and doesn\'t even pretend. Your soaked {bra} shows him everything, stiff nipples and all.'
+                        ],
+                        corrupted: [
+                            'The rain did you a favor. Your {bra}\'s gone see-through, your nipples dark and stiff behind it, and your pussy\'s dripping.',
+                            'You leave your arms at your sides and let the wet cups show the whole street your nipples. Your clit throbs every time someone looks.',
+                            'Soaked through and on show. {Tits} and your stiff nipples are right there behind the wet fabric, and you slow down.'
+                        ]
+                    },
+                    sporty: {
+                        innocent: [
+                            'It\'s a sports bra. People run in these. You keep telling yourself that while a man stares at {tits} in it, and your nipples stiffen.',
+                            'Sweat beads under the band of your {bra}. Your nipples press against the stretchy fabric, and your pussy clenches every time someone looks.'
+                        ],
+                        experienced: [
+                            'It\'s gym wear, and they stare at {tits} in your {bra} anyway. Your nipples show stiff through it.',
+                            'You jog a few steps to make a light and feel {tits} bounce in the sports bra. Half the corner watches. Your clit throbs.'
+                        ],
+                        corrupted: [
+                            'You stretch your arms over your head like you just finished a run. Your {bra} rides up a little, and the whole street gets underboob. You\'re wet.',
+                            'The sports bra flattens nothing. Your nipples poke through it, stiff, and you let everyone see.'
+                        ]
+                    }
+                }
+            },
+            panties_exposed: {
+                innocent: [
+                    'A breeze comes down the street and finds your bare thighs and the thin {panties} between them. Your pussy tightens. You\'re wet, and you\'re sure it shows.',
+                    'You tug at the hem of your {top} again. It still doesn\'t reach. Everyone behind you can see {ass}, and your face won\'t stop burning.',
+                    'Somebody behind you laughs. You don\'t turn around. The crotch of your {panties} goes damp, and you walk faster.',
+                    'You\'re in your underwear from the waist down on a public street. Every step, you feel the air on {ass}, and your clit throbs like it doesn\'t care.',
+                    'A car honks. You jump and press your hands flat over the back of your {panties}. Your hands cover almost nothing, and your pussy clenches anyway.',
+                    'Your bare legs feel a mile long, and the thin crotch of your {panties} is the only thing between your pussy and the street. You\'re damp, and it\'s getting worse.'
+                ],
+                experienced: [
+                    'You can feel eyes on {ass} the whole block. Your {top} ends right where the looking starts. The crotch of your {panties} is getting wet.',
+                    'A guy walking behind you has matched your pace for two blocks. You know exactly what he\'s looking at. Your pussy clenches every time you think about it.',
+                    '<em>This is illegal.</em> You keep walking anyway, bare legs and {panties} under your {top}, and your clit throbs harder with every block.',
+                    'The crotch of your {panties} rubs your clit with every step. People stare at {ass}, and you\'re soaked.',
+                    'You stop at a crosswalk and feel the whole line behind you looking down. Your cheeks burn. Your pussy clenches, slick and warm.',
+                    'A woman mutters "no pants" to her friend as she passes. You hear it. Your nipples tighten, and the damp spot on your {panties} spreads.'
+                ],
+                corrupted: [
+                    'You slow down so the people behind you get more of {ass}. The crotch of your {panties} is soaked through, and you want them to see it.',
+                    'Your {top} rides up an inch with every step. You leave it. Your pussy\'s dripping, and the street\'s full of eyes.',
+                    'A man says something about your ass as he passes. You smile over your shoulder at him, and your clit throbs.',
+                    'Your {top} and your {panties}, and nothing else. Every stare is aimed below your hem. You roll your hips into the next step.',
+                    'You drop your keys on purpose and bend to get them. The whole block gets {ass}, and you\'re wet enough that it shows.',
+                    'The wet spot on your {panties} is dark and obvious. You walk slow and let it be the first thing people see after your ass.'
+                ],
+                variants: {
+                    braless: {
+                        innocent: [
+                            'There\'s no bra under your {top} either. Your nipples show stiff through it in front, and {ass} shows behind. There\'s nowhere safe to put your hands.',
+                            'Your nipples scrape the inside of your {top} with every step, and below the hem there\'s only your {panties}. Your pussy clenches, and you want to disappear.'
+                        ],
+                        experienced: [
+                            'Your nipples poke through your {top} for anyone in front, and {ass} is out for anyone behind. Your clit throbs. There isn\'t a safe angle left.',
+                            'You\'re braless under your {top} and bare-legged below it. Your nipples tighten, and the crotch of your {panties} gets wetter.'
+                        ],
+                        corrupted: [
+                            'Stiff nipples through your {top} in front, {ass} out in back. You\'re on show from every direction, and you\'re dripping.',
+                            'You roll your shoulders so your bare nipples drag across the inside of your {top}. Down below, the crotch of your {panties} is soaked.'
+                        ]
+                    },
+                    thong: {
+                        innocent: [
+                            'Your thong rides up between your cheeks with every step. Your bare ass is cold, and everyone behind you can see all of it. Your clit throbs.',
+                            'You reach back to fix your thong and realize there\'s nothing to fix. That\'s how it\'s supposed to sit. Your face burns, and your pussy clenches.'
+                        ],
+                        experienced: [
+                            'The thong\'s buried between your cheeks, and the cold air\'s on everything else. Your pussy clenches, and you feel the string drag.',
+                            'Every step tugs the thong tighter against your pussy. {Ass} is bare for the whole street, and you\'re slick.'
+                        ],
+                        corrupted: [
+                            'The thong\'s a thin string between your bare cheeks, and that\'s all the street gets to argue about. You walk slow and let it ride. Your clit throbs.',
+                            'You reach back and tug your thong up tighter, right there on the sidewalk. The string presses your clit, and somebody behind you swears.'
+                        ]
+                    }
+                }
+            },
             // Mesh & Sheer Overhaul, Step 7C: sheer lingerie. She's technically dressed.
             // {bra} and {panties} resolve to the worn items.
             sheer_lingerie: {
@@ -38520,7 +38655,8 @@ audioSystem.playSFX('buttonClick');
             if (_arousalAmbientStreets.indexOf(sceneId) === -1) return;
 
             // Check visible exposure (outerwear concealment applies)
-            var _exposure = _bpeShim((typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel()); // BPE shim: Step 5
+            // Bra/Panties Exposed Step 5: bra_exposed and panties_exposed have their own pools now
+            var _exposure = (typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel();
             // Mesh Overhaul Step 7C: sheer lingerie states get their own pools (the top/bottom
             // variants can read 'clothed' by slot, so check them first)
             var _sheerLingState = (typeof getSheerState === 'function') ? getSheerState().state : 'none';
@@ -38547,11 +38683,39 @@ audioSystem.playSFX('buttonClick');
             var _lines = _pool[_voice];
             if (!_lines || _lines.length === 0) return;
 
+            // Bra/Panties Exposed Step 5: condition variants inside the voice. A soaked bra
+            // replaces the base lines; any other active variant gets half the picks.
+            var _cvA = getSceneClothingVars();
+            if (_pool.variants) {
+                var _vKeys = [];
+                var _soaked = _poolKey === 'bra_exposed' && isWetBraThrough();
+                if (_poolKey === 'bra_exposed') {
+                    if (_cvA.commando) _vKeys.push('commando');
+                    if (_cvA.braStyle === 'sporty') _vKeys.push('sporty');
+                } else if (_poolKey === 'panties_exposed') {
+                    if (_cvA.braless) _vKeys.push('braless');
+                    if (_cvA.pantiesCut === 'thong') _vKeys.push('thong');
+                }
+                var _vLines = [];
+                _vKeys.forEach(function(k) { _vLines = _vLines.concat((_pool.variants[k] && _pool.variants[k][_voice]) || []); });
+                if (_soaked) _lines = _pool.variants.soaked[_voice].concat(Math.random() < 0.5 ? _vLines : []);
+                else if (_vLines.length && Math.random() < 0.5) _lines = _vLines;
+            }
+
             // Pick a random line (Mesh Overhaul Step 3C: resolve fabric placeholders)
             var _line = resolveFabricTokens(_lines[Math.floor(Math.random() * _lines.length)], 'panties');
             var _ambO = gameState.currentOutfit || {};
+            // Step 5: {top}/{bottom} and the body tokens {tits}/{ass} (capitalized forms too)
+            var _ambBa = gameState.bodyAppearance || {};
+            var _ambBs = _ambBa.breastSize || 'average', _ambButt = _ambBa.buttSize || 'average';
+            var _ambTits = _ambBs === 'large' ? 'your heavy tits' : _ambBs === 'small' ? 'your small tits' : 'your tits';
+            var _ambAss = _ambButt === 'large' ? 'your full ass' : _ambButt === 'small' ? 'your tight little ass' : 'your ass';
             _line = _line.replace(/\{bra\}/g, _ambO.bra ? proseItemName(_ambO.bra) : 'bra')
-                .replace(/\{panties\}/g, _ambO.panties ? proseItemName(_ambO.panties) : 'panties');
+                .replace(/\{panties\}/g, _ambO.panties ? proseItemName(_ambO.panties) : 'panties')
+                .replace(/\{top\}/g, _cvA.topName)
+                .replace(/\{bottom\}/g, _cvA.bottomName)
+                .replace(/\{tits\}/g, _ambTits).replace(/\{Tits\}/g, capFirst(_ambTits))
+                .replace(/\{ass\}/g, _ambAss).replace(/\{Ass\}/g, capFirst(_ambAss));
 
             // Display with exhibition thrill tier color
             var _thrillColor = getExhibitionThrillTier().color || '#cc88aa';
