@@ -24717,7 +24717,7 @@ audioSystem.playSFX('buttonClick');
         // Experienced is in, Infinity once all three are. Until then the regular choices stay.
         var BPE_EXHIB_TIER_CAP = {
             district_exhibition_panties: Infinity,
-            slums_exhibition_panties: 4001
+            slums_exhibition_panties: 8001
         };
 
         // Bra/Panties Exposed Step 8: at 8001+ she has them tear her panties. onEnter runs before
@@ -50643,7 +50643,7 @@ audioSystem.playSFX('buttonClick');
                     { sceneId: 'slums_exhibition_naked', label: 'Slums — Naked Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_wet_exhibition', label: 'Slums — Wet Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'slums_sheer_exhibition', label: 'Slums: Sheer Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001},{l:'Deeply Corrupted',v:8001}] },
-                    { sceneId: 'slums_exhibition_panties', label: 'Slums: Panties Exposed Exhibition', tiers: [{l:'Innocent',v:0}] },
+                    { sceneId: 'slums_exhibition_panties', label: 'Slums: Panties Exposed Exhibition', tiers: [{l:'Innocent',v:0},{l:'Experienced',v:4001}] },
                     { sceneId: 'sheer_backlight_sex_m', label: 'Discovery: The Backlight (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_backlight_sex_2_m' } },
                     { sceneId: 'sheer_backlight_sex_f', label: 'Discovery: The Backlight (Female)', tiers: [{l:'Deeply Corrupted',v:8001}] },
                     { sceneId: 'sheer_flash_sex_m', label: 'Discovery: The Flash (Male)', tiers: [{l:'Deeply Corrupted',v:8001}], galleryChain: { text: 'Go without', nextScene: 'sheer_flash_sex_2_m' } },
@@ -181227,8 +181227,77 @@ wet_car_slowdown: {
                     desc += '<p>You push yourself up off the curb on legs that barely work and start walking, and every step squeezes more of them out of you into your ' + panWord + '.</p>';
 
                     } else if (corruption < 8001) {
-                    // ══ EXPERIENCED TIER (4001-8000): Step 9, next pass. ══
-                    desc += '<p>This tier isn\'t written yet.</p>';
+                    // ══ EXPERIENCED TIER (4001-8000): conflicted and wet. The leader sits on a stoop
+                    // and pulls her into his lap facing the street. Her knees open over his before she
+                    // decides. Panties down to mid-thigh, she rides him with her knees held together and
+                    // the big one in her mouth while the wiry one films, then finishes into the crotch
+                    // of her panties so she has to pull them back up over it. ══
+
+                    // ── LOCATION & SENSORY GROUNDING (from behind) ──
+                    desc += '<p>The leader\'s hand settles on the back of your neck, heavy and warm. The other two fall in behind you. You walk, and your feet go where his hand says, and you notice you haven\'t tried to stop them.</p>';
+                    desc += '<p>The wiry one has his phone out. You can hear the little chime when he starts recording. ' +
+                        (_butt === 'large' ? 'Your full ass rolls under the hem of your ' + top + ' for his camera' : _butt === 'small' ? 'Your tight little ass flexes under the hem of your ' + top + ' for his camera' : 'Your ass sways under the hem of your ' + top + ' for his camera') + ', ' +
+                        (thong ? 'bare on both sides of your thong' : cut === 'cheeky' ? 'half out of your ' + pan : cut === 'boyshort' ? 'snug in your ' + pan : 'in nothing but your ' + pan) +
+                        ', and you catch your hips swinging wider than they need to.</p>';
+                    desc += '<p>The big one reaches out and cups your ass as he walks. ' +
+                        (_butt === 'large' ? 'His whole hand disappears into the full cheek, and he squeezes like he\'s weighing it.' : _butt === 'small' ? 'His hand swallows your tight little cheek, and he squeezes.' : 'He squeezes, slow, and his thumb slides under the edge of your ' + panWord + '.') +
+                        ' Your pussy clenches so hard your step stutters.</p>';
+                    desc += '<p>A stoop halfway down the block, iron railing, half the spindles kicked out. Two guys on the corner stop talking to watch. A TV flickers blue behind a torn curtain upstairs. Nobody here will ever tell anybody anything.</p>';
+                    desc += '<p>The fight response is in there somewhere. It\'s quieter than the wet ache between your legs, and it gets quieter every time the wiry one\'s phone points your way.</p>';
+
+                    // ── THE STRIP: one move, in his lap ──
+                    desc += '<p>The leader sits down on the stoop steps and pulls you back into his lap, facing the street. ' +
+                        (_bt === 'petite' ? 'You fit on him like a doll, your slight body swallowed by his.' : _bt === 'athletic' ? 'Your legs tense to stand, then give up.' : _bt === 'curvy' ? 'Your soft hips settle into his lap like they belong there.' : _bt === 'thick' ? 'Your thick thighs spread over his, soft and heavy.' : 'You land on his thighs, your back against his chest.') +
+                        ' His knees push yours apart, and yours open wider than his did. You notice. You leave them there.</p>';
+                    desc += '<p>The big one crouches in front of you. Below your waist there\'s nothing to take off but your ' + panWord + ', and he doesn\'t take ' + panIt + ' off. ' +
+                        (thong ? 'He hooks the string and pulls it aside. There\'s hardly anything to move.' : 'He hooks the crotch of your ' + pan + ' and pulls it aside.') +
+                        ' "Look at that," he says to the phone. "Soaked."</p>';
+                    desc += '<p>The leader shoves your ' + top + ' up over your tits from behind. ' +
+                        (_braless
+                            ? (_bs === 'large' ? 'Your heavy tits drop out bare, swaying in the night air, nipples already hard.' : _bs === 'small' ? 'Your small tits are bare, nipples tight little points.' : 'Your tits come out bare, nipples already stiff.')
+                            : 'He tugs your bra cups down under them. ' + (_bs === 'large' ? 'Your heavy tits spill out over the wire, nipples already hard.' : _bs === 'small' ? 'Your small tits sit bare on the shoved-down cups, nipples tight.' : 'Your tits sit bare on the shoved-down cups, nipples stiff.')) +
+                        ' The guys on the corner whistle. Your back arches, and you tell yourself it\'s the cold.</p>';
+
+                    // ── ACT 1: HIS HANDS, IN HIS LAP ──
+                    desc += '<p>The leader\'s hand slides down your stomach and between your spread thighs. Two fingers push into you, slow. "Hhh—" It comes out low and breathy, and it sounds like want.</p>';
+                    desc += '<p>His other hand closes on your bare tit and rolls the nipple. The wiry one steps in close with the phone. You can see yourself on the little screen, legs spread in a stranger\'s lap, and your cunt clenches on his fingers.</p>';
+                    desc += '<p>He curls them forward and works you slow. Your hips roll down onto his hand. You notice them rolling. You let them.</p>';
+                    desc += '<p>His thumb finds your clit and circles it, lazy and firm. The wet sounds of his fingers carry out over the empty street, and one of the guys on the corner laughs. "Hh—hh—fuck—"</p>';
+                    desc += '<p>"She likes the camera," the wiry one says. Your face burns. Your pussy clenches so hard on the leader\'s fingers that he chuckles against your neck.</p>';
+
+                    // ── PANTIES DOWN, ONTO HIM ──
+                    desc += '<p>The leader lifts you by the hips. The big one drags your ' + panWord + ' down to the middle of your thighs, and ' + (thong ? 'it stretches' : 'they stretch') + ' tight between them, holding your knees together. Behind you, a zipper.</p>';
+                    desc += '<p>He lowers you onto his cock. With your knees trapped together you\'re tight around him, and he sinks in slow, inch by thick inch, until you\'re sitting on him to the base. "Ahh—hhnn—"</p>';
+                    desc += '<p>You start moving before he does. Short rolls of your hips, your knees pressed together, grinding down on him in his lap on the open stoop. You tell yourself you\'re trying to get comfortable.</p>';
+
+                    // ── BUILD: RIDING, THE BIG ONE IN HER MOUTH ──
+                    desc += '<p>The big one stands on the step in front of you and opens his jeans. His cock is heavy and thick. He doesn\'t say anything. Your mouth opens anyway, and he pushes in.</p>';
+                    desc += '<p>You ride the leader and suck the big one, and after a while you can\'t tell which one is setting the pace. "Mmf—mmf—" Spit runs off your chin onto your bare tits. ' +
+                        (_butt === 'large' ? 'Your full ass bounces in the leader\'s lap on every drop.' : _butt === 'small' ? 'Your tight little ass grinds into the leader\'s lap on every drop.' : 'Your ass slaps down into the leader\'s lap on every drop.') + '</p>';
+                    desc += '<p>The wiry one crouches low with the phone, right between your trapped knees, filming the leader\'s cock sliding in and out of you. "Look at that," he says. "She\'s dripping on his balls."</p>';
+                    desc += '<p>The shame\'s still there, lodged under your ribs. The heat climbs right past it. You\'re riding him hard now, and the knees pinned together by your ' + panWord + ' only make it tighter.</p>';
+
+                    // ── APPROACH ──
+                    desc += '<p>The leader reaches around and finds your clit again. Two fingers, fast circles. Your whole body seizes around the cock in your mouth. "MMHH—"</p>';
+                    desc += '<p>Your thighs shake against each other. Your cunt starts clenching on the leader in quick, helpless squeezes. You\'re shaking your head around the big one\'s cock and grinding down harder at the same time.</p>';
+
+                    // ── KELSIE'S ORGASM ──
+                    desc += '<p>You cum in his lap on the open stoop with a cock in your mouth. Your cunt seizes around the leader in hard, wrenching spasms, and ' +
+                        (_bt === 'petite' ? 'your small body shudders so hard he has to hold you on him' : _bt === 'athletic' ? 'every muscle in your legs locks, then trembles against the panties holding them' : _bt === 'curvy' ? 'your hips grind down on him in slow, heavy shudders' : _bt === 'thick' ? 'your thick thighs quake against each other in the stretched panties' : 'your whole body shudders in his lap') +
+                        '. "MMNNHH—" It hums around the big one\'s cock.</p>';
+                    desc += '<p>The leader keeps you bouncing through it, slower now, and every drop pulls another shiver out of you. Your pussy flutters around him in weaker and weaker squeezes. On the corner, somebody claps.</p>';
+
+                    // ── THEIR ORGASMS ──
+                    desc += '<p>The leader grips your hips, pulls you down to the base, and cums. His cock kicks inside you in thick surges, and you clench around him through every one without deciding to.</p>';
+                    desc += '<p>The big one holds your head still and cums in your mouth in heavy, bitter spurts. You swallow, then swallow again, and lick your lips.</p>';
+                    desc += '<p>The wiry one hands the phone to the big one. He stands, strokes himself over your lap, and cums straight into the crotch of your ' + panWord + ', stretched there between your knees. Thick and white, soaking into the fabric. "Put ' + (thong ? 'that' : 'those') + ' back on," he says.</p>';
+
+                    // ── AFTERMATH ──
+                    desc += '<p>The leader lifts you off his cock and stands you up on the sidewalk. Your legs shake. Your pussy gives one last lazy clench, and cum runs out of you and down your thigh.</p>';
+                    desc += '<p>You look down at your ' + panWord + ', the crotch full of the wiry one\'s cum. You pull ' + panIt + ' up anyway. ' + (thong ? 'It settles' : 'They settle') + ' warm and wet against your swollen pussy, and your clit throbs at the feel of it. You tug your ' + top + ' back down. It stops at your hips, same as before.</p>';
+                    desc += '<p>The wiry one takes his phone back and grins at the screen. "Good girl," he says. The three of them walk off down the block. The guys on the corner go back to their conversation.</p>';
+                    desc += '<p><em>Your knees opened first. Your hips moved first. You pulled your ' + panWord + ' back up over his cum yourself. Somewhere on that phone, all of it\'s saved.</em></p>';
+                    desc += '<p>You start walking, cum squelching in your ' + panWord + ' with every step, and your pussy clenches when one of the guys on the corner whistles after you.</p>';
                     } else {
                     // ══ DEEPLY CORRUPTED TIER (8001+): Step 9, next pass. ══
                     desc += '<p>This tier isn\'t written yet.</p>';
