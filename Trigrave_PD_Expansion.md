@@ -39,7 +39,7 @@ Same conventions as every prior overhaul: short paragraphs, contractions, escape
 - **Rufus's services are underworld work, never TPD corruption.** His lesser services run through his own criminal connections outside the department. His heaviest services run through the Mothers.
 - **The underworld survives because it's in a league of its own.** The Vajaros cartel, the Boruski Syndicate, and the Mothers have wealth, compartmentalization, and (in the Mothers' case) powers TPD can't answer. TPD arrests their street layer constantly and never reaches the top. Everyone else gets caught.
 - **Crime still happens.** Trigrave has muggers, burglars, and small crews like any city. TPD catches almost all of them, usually fast. The crime-fighting system exists because the streets are live; the arrest blotter exists because TPD is good.
-- **Kelsie's home is Varhall Apartments**, whether she lives alone in her own unit or with Jaewon. Any trace that ends at Varhall points at Kelsie either way. If she lives with Jaewon, Jaewon's in the blast radius.
+- **Kelsie can live anywhere, or nowhere.** Varhall Apartments (her own unit, or with Jaewon), a room at the Timeless Hotel, a room at Oracle Inn, a room at the Lurasi Motel, or the street. Wherever she's staying is where TPD comes for her. The one exception is the Lurasi: TPD stays clear of Rufus and his motel, and it's the one roof in the city they won't go under. If she's homeless, there's no door to knock on, so TPD uses the cameras and takes her on the street. If she lives with Jaewon, Jaewon's in the blast radius.
 
 **Existing systems this overhaul connects to (verified in the current file):**
 
@@ -348,9 +348,9 @@ Leads are seeded at crime time and **develop** on a schedule. A lead adds its st
 | `camera_partial` | 15 | Day 1 | Partial footage, or clear but masked | No | No |
 | `camera_blur` | 4 | Day 1 | Vampire-speed blur (also +supernatural evidence) | No | No |
 | `camera_trace` | 25 | Day 2 | RTCC reconstructs the exit route (Step 6) | Yes | No |
-| `trace_residence` | +25 | Day 2 | The camera trace ends at Varhall | Yes | Yes |
+| `trace_residence` | +25 | Day 2 | The camera trace ends where she's staying (Step 6E; +10 and no name at the Lurasi) | Yes | Yes (No at the Lurasi) |
 | `k9_track` | 15 | Day 0 | Fresh scene (Step 10D) | Yes | No |
-| `k9_residence` | +20 | Day 0 | The track ends at Varhall | Yes | Yes |
+| `k9_residence` | +20 | Day 0 | The track ends where she's staying (Step 6E; +8 and no name at the Lurasi) | Yes | Yes (No at the Lurasi) |
 | `prints_unmatched` | 8 | Day 2 | Ungloved crime, prints not on file | No | Converts (Step 8) |
 | `profile_zero` | 8 | Day 3 | Unsealed bite, Kelsie's saliva recovered (Step 5) | No | Converts (Step 8) |
 | `trace_evidence` | 6 | Day 3 | Hair, fiber, footwear impression | Yes | No |
@@ -420,7 +420,7 @@ Add `'investigation'` and `'dna'` (Step 8) to the `linkCrimeToSuspect` method li
 
 When a case closes on Kelsie, the method that tipped it decides the flavor. `fireIdentificationBeat(entry)` picks the strongest developed lead with `pointsAtKelsie` and queues a notification plus, for serious cases, a one-time street or home beat:
 
-- **`trace_residence` / `k9_residence`:** "A cruiser's parked across from Varhall when you come home. It's still there an hour later."
+- **`trace_residence` / `k9_residence`:** a line keyed to where she's staying. Varhall: "A cruiser's parked across from Varhall when you come home. It's still there an hour later." Timeless Hotel: "There's a man in the lobby who isn't reading his newspaper." Oracle Inn: "An unmarked sedan's backed into the space facing your window." Never at the Lurasi (6E).
 - **`tip_line`:** a news item: "Police credit a tip line call for a break in the [district] [crime] investigation."
 - **`witness_face`:** Tolliver or Osei (by case unit) mentions it in a later Cruz scene: "Your neighbor across the courtyard picked you out of a photo array."
 - **`outfit_match`:** "The jacket. That's what did it."
@@ -582,8 +582,11 @@ function rollCameraTrace(entry, exit) {
     if (s >= 60) chance *= 0.25; else if (s >= 40) chance *= 0.5;
     if (isDark()) chance *= 0.85;
     if (Math.random() >= chance) return null;
-    var reachesHome = (exit === 'walk_home');
-    return { trace: true, residence: reachesHome };
+    // Only a straight walk back leads the cameras to where she sleeps (6E).
+    // Homeless Kelsie has nowhere to lead them.
+    var res = getKelsieResidence();
+    var reachesHome = (exit === 'walk_home') && !res.homeless;
+    return { trace: true, residence: reachesHome ? res.id : null };
 }
 ```
 
@@ -593,8 +596,8 @@ Vampire speed is the one exit that trades one problem for another: the trace alm
 
 Every crime that currently ends with a flat "you leave" gets an exit choice, filtered by stealth. This is where the cover-up becomes a decision:
 
-- **"Walk home."** Always available. Fastest in real terms, and the one that ends a trace at Varhall.
-- **"Go to ground first."** Always available. +30-60 minutes, +3 thirst. Kelsie waits somewhere dark before heading home. Trace ×0.6, and a trace that succeeds ends at the hiding spot.
+- **"Head back to [residence]."** Always available, labeled with wherever she's staying ("Head back to Varhall," "Head back to the Timeless," "Head back to the Lurasi"). Fastest in real terms, and the one that ends a trace at her door. Homeless Kelsie gets **"Walk off into the city"** instead: same speed, no door at the end of it, and a successful trace only adds +10 heat to the district she drifts into.
+- **"Go to ground first."** Always available. +30-60 minutes, +3 thirst. Kelsie waits somewhere dark before moving on. Trace ×0.6, and a trace that succeeds ends at the hiding spot.
 - **"Break the trail."** Stealth 30+. +15 minutes. Doubles back, cuts through a building, changes streets under the camera gaps she read in casing. Trace ×0.4.
 - **"Take the rooftops."** Stealth 35+, not in the Park. +10 minutes. No trace, no K9 track.
 - **"Vampire speed."** Always available. Existing costs. Trace ×0.3, but supernatural evidence.
@@ -619,6 +622,85 @@ The existing "Infiltrate the Surveillance Hub" choice lets Kelsie overwrite 20-3
 >
 > The anchor says police are "following up on a promising lead." You turn the TV off and sit in the dark and listen to your own pulse, which is quieter than it ought to be.
 
+Key the last frame to her residence: "the lobby door of Varhall Apartments," "the revolving door of the Timeless Hotel," "the side entrance of Oracle Inn." At the Lurasi the stills end at the motel's lot, and the anchor says the suspect "entered a Slums address police declined to name."
+
+### 6E. Where the trail ends: Kelsie's residence
+
+Kelsie's a free-roam character. She can hold her own unit at Varhall, share Jaewon's, keep a room at a hotel, or have nothing. Every trace, K9 track, pursuit, and warrant service reads one function:
+
+```javascript
+// Where Kelsie's sleeping right now: wherever she last rested, if she still
+// holds it, otherwise the strongest claim she holds, otherwise the street.
+function getKelsieResidence() {
+    var F = gameState.flags;
+    var R = {
+        varhall:  { id: 'varhall',  label: 'Varhall Apartments', holds: !!(F.hasOwnApartment || F.stayingWithJaewon), withJaewon: !!F.stayingWithJaewon },
+        timeless: { id: 'timeless', label: 'the Timeless Hotel', holds: !!F.hasHotelRoom,      scene: 'luxury_hotel_lobby' },
+        oracle:   { id: 'oracle',   label: 'Oracle Inn',         holds: !!F.hasParkSideRoom,   scene: 'parkside_inn_entrance' },
+        lurasi:   { id: 'lurasi',   label: 'the Lurasi Motel',   holds: !!F.hasCheapMotelRoom, scene: 'cheap_motel_entrance', sanctuary: true }
+    };
+    var last = F.lastRestLocation;   // new: set by every sleep/rest handler at these locations
+    if (last && R[last] && R[last].holds) return R[last];
+    var order = ['varhall', 'timeless', 'oracle', 'lurasi'];
+    for (var i = 0; i < order.length; i++) if (R[order[i]].holds) return R[order[i]];
+    return { id: 'street', label: 'the street', homeless: true };
+}
+```
+
+Set `gameState.flags.lastRestLocation` in every sleep and rest handler at Varhall (both arrangements), the Timeless Hotel, Oracle Inn, and the Lurasi Motel. Clear it when she loses the place (lease terminated, room checked out, eviction).
+
+**How each residence plays against TPD:**
+
+| Residence | Trace / K9 lead | Points at Kelsie | How TPD learns the address | Warrant service |
+|---|---|---|---|---|
+| Varhall, own unit | +25 / +20 | Yes | Trace or K9 ends there; her lease is in her name, so a warrant finds it the day it issues | Yes (10E) |
+| Varhall, with Jaewon | +25 / +20 | Yes | Trace or K9 ends there; Cruz's Jaewon interview (12C) | Yes, and Jaewon's there for it |
+| Timeless Hotel | +25 / +20 | Yes (the desk pulls the key-card log) | Trace or K9; the front desk recognizes her from the bulletin (40% per day she holds the room under a warrant) | Yes. Hotel security hands SWAT a key card |
+| Oracle Inn | +25 / +20 | Yes (guest registry) | Trace or K9; the desk recognizes her (30% per day under a warrant) | Yes |
+| Lurasi Motel | +10 / +8 | No | Never confirmed. TPD won't go in to ask | **Never** |
+| Homeless | None | n/a | There's no address to learn | None. Street takedown instead (6F) |
+
+**Known address.** New flag `gameState.flags.tpdKnownResidence` holds the residence id TPD currently believes is hers. It's set by a developed `trace_residence` or `k9_residence` lead, by a hotel desk recognition, by the warrant itself for her own Varhall lease, by the Jaewon interview, and at booking (the key card or keys in her personal effects). Warrant service (10E) fires only when a warrant's active and `tpdKnownResidence` matches where she's actually staying. When she moves, the known address goes stale until the next trace, track, or desk call finds her again. That's the fugitive loop: every new room buys her time, and every careless walk home spends it.
+
+The existing `hotelsBanned` flag already stops new check-ins under a warrant while letting her keep a room she already holds. The desk-recognition roll is what makes keeping that room a gamble. `rollHotelDeskRecognition()` runs in `onNewDay()` after `enforceSuspicionCap()`: with a warrant active and a room held at the Timeless (40%) or Oracle Inn (30%), a hit sets `tpdKnownResidence` to that hotel. Stealth 50+ halves it (she uses the side entrance and keeps her face down), and the Tier 4 multiplier from 13D stacks on top.
+
+**The Lurasi.** TPD stays clear of Rufus and his motel. That's established, and this overhaul keeps it absolute: no warrant service, no raid, no SWAT, no plainclothes in the lot, and trace or K9 leads that end there never name her. The sanctuary covers the motel and nothing else. The moment she steps out into the Slums, every normal warrant encounter applies (at Slums presence, which keeps them rare). Ambient line for a Lurasi resident under a warrant: "A cruiser idles at the far corner of the block, as close to the Lurasi as TPD ever gets. It's been there since you checked in."
+
+### 6F. Homeless: the street takedown
+
+With no door to knock on, TPD uses the thing Trigrave has everywhere: cameras. While a warrant's active and `getKelsieResidence().homeless` is true, `checkStreetTakedown(district)` runs on district travel, after `checkCruzEncounters()` and before field interviews:
+
+```javascript
+function checkStreetTakedown(district) {
+    var F = gameState.flags;
+    if (!F.warrantIssued || F.currentlyInCustody || F.policeEncounterToday) return false;
+    if (!getKelsieResidence().homeless) return false;
+    var density = DISTRICT_CAMERA_DENSITY[district] || 0.2;
+    // The RTCC runs her face against every live feed; units get vectored in.
+    var chance = density * 0.6 + getTPDPresence(district) / 200;
+    chance *= (1 - getStealthBonus());
+    var sd = gameState.suspicionData || {};
+    if ((sd.facialRecognition || 0) < 50) chance *= 0.6;   // no mugshot-grade face yet
+    if (Math.random() >= Math.min(0.80, chance)) return false;
+    triggerRandomDistrictEvent('tpd_street_takedown', getDistrictReturnScene(district));
+    return true;
+}
+```
+
+With a warrant at Tier 2 (presence +20) and facial recognition 50+, Downtown hits the 80% cap at stealth 1 and runs about 70% at stealth 50. The Slums run about 20% and 14%. A homeless fugitive who stays in the camera-thin districts can last a while. One who wanders Downtown won't.
+
+**`tpd_street_takedown`:** the RTCC gets a hit, and units converge before she's crossed the street. Motor units cut off the corners, two cruisers box the crosswalk, a Kestrel drone drops to rooftop height and hangs there. Choices mirror the arrest tree: surrender, flee (pursuit at `serious` severity; the drone's already on her, so air starts locked unless she's cold), fight, or compel the nearest officers (buys a gap at +20 thirst, compulsion echo). If Cruz has a tactical capture on record, 25% of takedowns are Cruz with the TAD instead (`cruz_tactical_encounter`).
+
+Sample opener:
+
+> The light at Fifth turns red and you stop with everybody else.
+>
+> A motor unit rolls up on your left and doesn't stop at the line. Another comes in from the right. Across the intersection, a cruiser noses into the crosswalk and parks there, blocking it.
+>
+> Something whirs overhead. You look up into the lens of a drone, twenty feet above you, holding perfectly still.
+>
+> "Kelsie Summers." The motor officer's already off his bike. "Hands where I can see them."
+
 ---
 
 ## Step 7: The Homicide Rule
@@ -631,7 +713,7 @@ Unit: Cruz (×1.8), because every kill leaves a bite. Cover-up modifier from Ste
 
 | # | Setup | Leads (after cover-up) | Progress | Outcome |
 |---|---|---|---|---|
-| 1 | Slums, stealth 5, no gloves, direct strike, partial detection, body left, walks home, dry night | witness_desc 8, k9_track + k9_residence 35, prints 8, profile_zero 8, trace 6 = 65 | 117 | **Identified by day 3.** The dog walked her home. |
+| 1 | Slums, stealth 5, no gloves, direct strike, partial detection, body left, walks back to Varhall or a hotel room, dry night | witness_desc 8, k9_track + k9_residence 35, prints 8, profile_zero 8, trace 6 = 65 | 117 | **Identified by day 3.** The dog walked her home. |
 | 2 | Same as #1 with gloves | 57 | 102 | **Identified.** Gloves alone don't save a clumsy killer. |
 | 3 | Same as #2, but raining | k9 gone: 22 | 39 | Stalls. Profile Zero on file. |
 | 4 | Slums, stealth 30, gloves, follow and isolate, clean detection, body well hidden, cleanup | profile_zero 8 | 14 | Stalls. Series grows. |
@@ -640,6 +722,8 @@ Unit: Cruz (×1.8), because every kill leaves a bite. Cover-up modifier from Ste
 | 7 | Downtown, stealth 60, gloves, follow, clean, vampire-speed disposal | Body found 30%: profile_zero 8 | 14 | Stalls, +supernatural evidence. |
 | 8 | Commercial, stealth 45, **no gloves**, clean, hidden, cleanup, rooftops | prints 8, profile_zero 8 | 28 | Stalls. **Time bomb**: the day her prints go on file, this closes. |
 | 9 | Any of #4/#6/#7 after five more kills | +30 series cap | 68 max | Never closes on series alone. Cruz's profile climbs, decoys start (Step 11). |
+
+Rows 1, 2, and 5 assume she walks back to Varhall, the Timeless, or Oracle Inn. If she walks back to the Lurasi, the residence leads drop to +8/+10 with no name, and rows 1 and 2 stall at about 95 and 81 with no lead that names her, so no Person of Interest. That's as close as a case gets without closing: one field interview in the same outfit, or one print going on file, finishes it. If she's homeless, there's no residence lead at all, and the danger moves to the street takedown once a warrant exists.
 
 The design reads cleanly off this table. Gloves protect against the time bomb. Stealth protects against everything that follows her home. Clean detection keeps faces out of it. Rain and patience cover a lot of mistakes. And no amount of care makes the series go away: it keeps Cruz interested, and her interest keeps making the city harder.
 
@@ -847,13 +931,18 @@ function resolvePursuit(ctx) {
     if (ctx.exit === 'break_trail') air *= 0.7;
 
     if (Math.random() >= air) return 'lost';
-    if (ctx.exit === 'walk_home') return 'tracked_home';
+    if (ctx.exit === 'walk_home') {
+        var res = getKelsieResidence();
+        if (res.homeless) return 'tracked_district';   // no door at the end of it
+        if (res.sanctuary) return 'tracked_lurasi';    // they watch her go in, and stop
+        return 'tracked_home';
+    }
     // Tracked to where she stopped. K9 decides the rest.
     return rollK9Corner(ctx) ? 'cornered' : 'tracked_district';
 }
 ```
 
-Before rolling, the pursuit scene offers the exit choices from Step 6B (walk home, go to ground, break the trail, rooftops). Vampire speed's already in use.
+Before rolling, the pursuit scene offers the exit choices from Step 6B (head back to her residence or walk off into the city, go to ground, break the trail, rooftops). Vampire speed's already in use.
 
 ### 10B. Outcomes
 
@@ -861,7 +950,8 @@ Before rolling, the pursuit scene offers the exit choices from Step 6B (walk hom
 |---|---|
 | `lost` | Nothing further. The existing aftermath scene plays. |
 | `tracked_district` | District heat +15. Every open case from today gains +10 progress (`air_track`, points at Kelsie: no). |
-| `tracked_home` | Every open case from today gains `trace_residence` (+25, points at Kelsie). If a warrant's active: SWAT warrant service at Varhall the next morning (10E). |
+| `tracked_home` | Every open case from today gains `trace_residence` (+25, points at Kelsie). `tpdKnownResidence` updates to where she's staying. If a warrant's active: warrant service there the next morning (10E). |
+| `tracked_lurasi` | Raptor One watches her walk into the Lurasi lot and peels off. Every open case from today gains +10 (no name). Nothing else follows. |
 | `cornered` | The K9 team finds her hiding spot: `tpd_k9_corner` scene (flee again at +8 thirst with air still up, compel the handler, or surrender). |
 
 ### 10C. Sample prose
@@ -886,7 +976,7 @@ Cold (thirst 71+):
 
 Officer Brenner and Juno deploy in two situations:
 
-- **At scenes:** murders found within 6 hours, burglaries of occupied homes, and any police assault. Seeds `k9_track` (+15). If the recorded exit was `walk_home`, add `k9_residence` (+20). Rooftop and vampire-speed exits leave no track. Rain (`isRaining`) wipes the track entirely. The cover-up modifier applies.
+- **At scenes:** murders found within 6 hours, burglaries of occupied homes, and any police assault. Seeds `k9_track` (+15). If the recorded exit was `walk_home` and she has a residence, add `k9_residence` (+20, or +8 with no name at the Lurasi). A homeless Kelsie's track just ends wherever she bedded down. Rooftop and vampire-speed exits leave no track. Rain (`isRaining`) wipes the track entirely. The cover-up modifier applies.
 - **In pursuit:** `rollK9Corner(ctx)` fires only for `serious`/`violent` severity, not raining: `0.5 × (1 − getStealthBonus())`, ×0.5 if `go_to_ground`.
 
 Juno can track Kelsie. She doesn't like what she finds at the end. That detail should appear every time, because it's a small supernatural data point TPD writes down:
@@ -901,13 +991,18 @@ Juno can track Kelsie. She doesn't like what she finds at the end. That detail s
 
 Each K9 corner adds +3 supernatural evidence ("K9 refused final approach" in the report).
 
-### 10E. Warrant service at Varhall
+### 10E. Warrant service where she's staying
 
-When a pursuit ends `tracked_home` with a warrant active, or a case identifies Kelsie through `trace_residence` / `k9_residence` with a warrant active, queue `tpd_warrant_service` for the next morning at Varhall. Model it on the existing `drug_raid_home` / `drug_raid_not_home` pair:
+Each morning, if a warrant's active, `tpdKnownResidence` matches `getKelsieResidence().id`, and the residence isn't the Lurasi, queue `tpd_warrant_service` at that location. (A pursuit that ends `tracked_home` sets the known address and queues it for the next morning; at Tier 4 it's the same day.) Model it on the existing `drug_raid_home` / `drug_raid_not_home` pair. The scene branches by residence:
 
-- **Home:** SWAT stack at the door, the Bear parked in the courtyard, Raptor One overhead. Cruz leads it personally if she's had a tactical capture before (TAD in hand). Choices mirror the arrest tree: surrender, flee (through a window, straight into air support), fight (Bear, twelve officers, bodycams everywhere), compel (can't compel the whole stack; buys a head start at +25 thirst).
-- **Not home:** Kelsie comes back to a broken door frame, a search warrant on the counter, and her things bagged.
-- **Living with Jaewon:** Jaewon's home for it, or Jaewon comes home to it. Either way she's detained and interviewed (Step 12D). This should hit hard. It's the cost of being careless while someone else sleeps in the next room.
+- **Varhall, own unit:** SWAT stack at the door, the Bear in the courtyard, Raptor One overhead. Cruz leads it personally if she's had a tactical capture before (TAD in hand). Choices mirror the arrest tree: surrender, flee (through a window, straight into air support), fight (the Bear, twelve officers, bodycams everywhere), compel (can't compel the whole stack; buys a head start at +25 thirst). Not home: she comes back to a broken door frame, a search warrant on the counter, and her things bagged.
+- **Varhall, with Jaewon:** the same raid, with Jaewon home for it or coming home to it. Either way Jaewon's detained and interviewed (Step 12C). This should hit hard. It's the cost of being careless while someone else sleeps in the next room.
+- **Timeless Hotel:** no battering ram. Plainclothes in the lobby, SWAT in the service elevator, hotel security walking them up with a master key card. The first Kelsie hears is the lock clicking green. Flee means a window many floors up or a hallway full of rifles. Not in the room: the manager's cleared her things to a storage room, and `hasHotelRoom` is revoked.
+- **Oracle Inn:** two cruisers in the parking lot, a motor unit at the exit, and a knock from an officer standing to the side of the door frame the way the Academy teaches. Smaller stack, same choices. Not in the room: room revoked, things held at the desk "for the police."
+- **Lurasi Motel:** never. See 6E.
+- **Homeless:** no warrant service. The street takedown (6F) replaces it.
+
+Losing a hotel room to warrant service also clears `lastRestLocation` and `tpdKnownResidence`, and the existing `hotelsBanned` flag keeps her from checking back in. After a raid at Varhall with her own lease, `processPostEscapeConsequences()`'s existing eviction logic takes over.
 
 ---
 
@@ -1092,7 +1187,7 @@ The existing tier effects (blocks) stay. Add what the city *looks* like:
 | 1 | Presence +5. Casing blocks mention "a patrol car that's been past twice." |
 | 2 | Presence +10. Plainclothes in Downtown and Commercial (undercover +3%). Drones in every district with presence 30+. |
 | 3 | Presence +20. Checkpoints on the bridges and the Dockyard gate (vampire-speed travel across them rolls bodycam risk). Raptor One flies every night from 10 PM. |
-| 4 | Presence +35. The Bear staged at district borders. SWAT on standby (warrant service happens the same day when tracked home). Motor units at every major intersection. Lars and Renalds on every channel. |
+| 4 | Presence +35. The Bear staged at district borders. SWAT on standby (warrant service happens the same day when tracked home). Motor units at every major intersection. Hotel desks call in on sight (desk recognition ×1.5). Lars and Renalds on every channel. |
 
 ### 13E. The TPD blotter
 
@@ -1166,6 +1261,7 @@ Every crime system gets its TPD hooks. Most of these are small once Steps 2-11 e
 
 ### 14K. Rufus & the Mothers
 - Existing prices, cooldowns, and effects stay. Cruz's profile gains on Mothers clearings and her paper file (12E) are the only mechanical changes.
+- The Lurasi Motel is sanctuary (6E): no warrant service, no raids, no plainclothes in the lot, and traces or tracks that end there never name her. That's the price of TPD's arrangement with the Slums, and the reason a hunted Kelsie might trade a Timeless suite for a Lurasi room.
 
 ---
 
@@ -1266,6 +1362,7 @@ Add a new top-level **Trigrave PD** section before Crime & Suspicion:
 - HOW TPD WORKS A CASE (units, leads, cold cases, series, identification)
 - PERSON OF INTEREST (the sample, gloves, the time bomb)
 - PURSUIT (air, thermal and thirst, rain, K9, exits)
+- WHERE YOU SLEEP (Varhall, the Timeless, Oracle Inn, the Lurasi's sanctuary, the known-address loop, hotel desks, homeless street takedowns)
 - COVERING YOUR TRACKS (the full stealth table from 4B)
 
 Rewrite in Crime & Suspicion: BASICS (the case vs. the city's temperature), POLICE ENCOUNTERS, DETECTIVE CRUZ (profile, forecast, decoys, the paper file), STRATEGY TIPS, STEALTH BUILDS (The Ghost gains "never becomes a POI"; The Brute gains "the helicopter always finds you warm").
@@ -1273,6 +1370,9 @@ Rewrite in Crime & Suspicion: BASICS (the case vs. the city's temperature), POLI
 New strategy tips, in the guide's existing voice:
 - "Hunt hungry if you plan to run. Raptor One sees a fed vampire from a mile up."
 - "Never walk straight home from anything."
+- "The Lurasi's the one roof TPD won't go under. Every other room in the city is a door they can knock on."
+- "Switching hotels under a warrant buys time. The desk at the next one is already looking at your face."
+- "If you've got no home, you've got no door to kick in, and every camera in the city is looking for you instead. Stay out of Downtown."
 - "Gloves are cheap. A single print is a time bomb."
 - "Rain covers a lot. Dogs can't track through it and drones don't fly in it."
 - "If Cruz hands you a coffee, think about why."
@@ -1314,9 +1414,15 @@ gameState.flags.larsBriefingSeen = false;
 gameState.flags.larsManhuntSeen = false;
 gameState.flags.larsRulesSeen = false;
 
+// Residence (Step 6E-6F)
+gameState.flags.lastRestLocation = '';        // 'varhall' | 'timeless' | 'oracle' | 'lurasi'
+gameState.flags.tpdKnownResidence = '';       // the address TPD believes is hers ('' = none)
+gameState.flags.streetTakedownToday = false;  // reset daily
+
 // Warrant service (Step 10E)
 gameState.flags.warrantServicePending = false;
 gameState.flags.warrantServiceDay = 0;
+gameState.flags.warrantServiceLocation = '';  // residence id the raid was queued for
 
 // Details (Step 11D)
 gameState.flags.pickpocketDetails = {};        // district: expiresDay
@@ -1337,6 +1443,8 @@ gameState.flags.pickpocketDetails = {};        // district: expiresDay
 - If `fingerprintsInSystem` is already true, `eliminationSampleTaken` stays false (she was booked; the sample's moot) and `profileZeroMatched` initializes true only if `mugshotTaken` (a full booking includes a cheek swab going forward; add a line to `arrest_booking` Station Two saying so).
 - Exhibition-only bookings in existing saves (arrest history with only exhibition entries, `fingerprintsInSystem` false) stay as they are. The Step 15C fix applies to future bookings.
 - `DISTRICT_CAMERA_DENSITY` gains `dockyard` and `wendale`; no save data depends on the table.
+- `lastRestLocation` initializes from what she holds (Varhall first, then the Timeless, Oracle Inn, the Lurasi), or '' if she holds nothing.
+- `tpdKnownResidence` initializes to 'varhall' if a warrant's already active and `hasOwnApartment` is true (her lease is in her name). Everyone else starts unknown: an existing fugitive in a hotel room or on the street gets found the new way.
 
 ---
 
@@ -1357,6 +1465,9 @@ gameState.flags.pickpocketDetails = {};        // district: expiresDay
 | `linkSignatureSeries()` | 3G | Bite / mask / MO series across districts |
 | `getCoverUpMult()` | 4A | Stealth-driven soft-lead multiplier |
 | `rollCameraTrace(entry, exit)` | 6A | RTCC route reconstruction |
+| `getKelsieResidence()` | 6E | Where she's staying: Varhall, the Timeless, Oracle Inn, the Lurasi, or the street |
+| `rollHotelDeskRecognition()` | 6E | Daily desk call-in for a room held under a warrant |
+| `checkStreetTakedown(district)` | 6F | Homeless fugitive located through the camera network |
 | `offerCrimeExitChoices(ctx)` | 6B | Walk home / go to ground / break trail / rooftops / speed |
 | `checkPersonOfInterest(entry)` | 8A | POI threshold check |
 | `rollEliminationSample()` | 8B | Daily discard sample roll |
@@ -1385,7 +1496,9 @@ gameState.flags.pickpocketDetails = {};        // district: expiresDay
 | `cruz_echo_pattern` | 9E | One-time | 3+ compulsion echoes with Cruz assigned |
 | Pursuit: air (warm / cold variants) | 10C | Repeatable | Any flee |
 | `tpd_k9_corner` | 10D | Repeatable | K9 finds her hiding spot |
-| `tpd_warrant_service` (home / not home / with Jaewon) | 10E | Repeatable | Tracked home with a warrant active |
+| `tpd_warrant_service` (Varhall own / Varhall with Jaewon / Timeless / Oracle; home and not-home variants) | 10E | Repeatable | Warrant active and TPD knows where she's staying (never the Lurasi) |
+| `tpd_street_takedown` | 6F | Repeatable | Homeless, warrant active, district travel |
+| Lurasi ambient line | 6E | Repeatable | Staying at the Lurasi under a warrant |
 | `hunt_decoy_sting` | 11C | Repeatable | Strike on a decoy |
 | `cruz_coffee` | 12C | Repeatable until sample | POI, no sample |
 | `cruz_diner_visit` | 12C | One-time | POI, diner job, profile 70+ |
@@ -1417,6 +1530,10 @@ gameState.flags.pickpocketDetails = {};        // district: expiresDay
 - **Stealth should be felt, every time.** The first time each Step 4B threshold matters, the prose should show Kelsie doing the professional thing (reading the patrol rhythm, taking the rooftops, washing the wound). Players who invested in stealth should see the investment paying off in the fiction, beyond the numbers.
 
 - **The Slums stay the Slums.** Low presence, low cameras, low suspicion. A body there still gets Homicide and Cruz. The Slums are forgiving to act in and exactly as unforgiving to be careless in. Don't raise the Slums' presence to "fix" this; the investigation engine already does.
+
+- **The Lurasi is absolute.** No system in this doc sends TPD into the Lurasi Motel: no warrant service, no decoys, no plainclothes, no K9 corner, no Cruz scene set inside it. If a new system needs a location, check `getKelsieResidence().sanctuary` first.
+
+- **Residence is free-roam.** Never assume Varhall. Every line that mentions where Kelsie sleeps reads `getKelsieResidence()`, and every scene that raids it branches on the residence id.
 
 - **Don't rewrite the violent hunt system.** It's already overhauled. This doc adds exits, decoys, wash-the-wound, and the new interrupt formula. Everything else in the hunt pipeline (casing, approaches, feeding, tension events, disposal, summary card) stays as implemented.
 
