@@ -22892,8 +22892,52 @@ audioSystem.playSFX('buttonClick');
 
         // Step 2C: venue check for the two partial states, run from showScene before the sheer check.
         // Mesh pieces route to the sheer venue messages.
+        // ── Bra/Panties Exposed Overhaul, Step 6B: Jack at Bargain Threads ──
+        // Panties Exposed: blocked at the door, and Jack says so from the doorway.
+        function getJackPantiesDoorLine() {
+            var cv = getSceneClothingVars();
+            var pan = cv.pantiesName;
+            var ass = getPantiesExposedAssView();
+            var c = gameState.corruption || 0;
+            if (c >= 6001) {
+                return 'Jack\'s in the doorway with his arms folded, and he doesn\'t move to let you in. His eyes are on your ' + pan + '.\n\n' +
+                    '"Can\'t have you in the store like that, sweetheart. Cops." He licks his lips. "Out here, though, you do whatever you want."\n\n' +
+                    'You turn around slowly and give him ' + ass + '. Your clit throbs when he groans.\n\nThen you walk away and leave him standing in the doorway.';
+            } else if (c >= 2001) {
+                return 'Jack sees you coming through the window and gets to the door first. He leans in the doorway, blocking it, and takes a long look at your ' + pan + '.\n\n' +
+                    '"Can\'t let you in like that," he says. "Cops\'d close me down." He grins. "Turn around for me, though. Just once."\n\n' +
+                    'You walk away instead, face burning, pussy slick. He gets the view anyway: ' + ass + '.';
+            }
+            return 'Jack\'s at the door before you are. He props it open with one boot and looks you up and down, slow, stopping at your ' + pan + '.\n\n' +
+                '"Whoa, whoa. Not in here, sweetheart. I got a business license." His eyes stay on your crotch. "Stand right there, though. Take your time."\n\n' +
+                'You back away with your hands over the front of your ' + pan + '. Your pussy clenches, and he watches you go.';
+        }
+
+        // Bra Exposed: Jack leers from the counter and offers a V-neck at half price if she
+        // tries it on in front of him. Once per day. Returns '' when it doesn't apply.
+        var JACK_DISCOUNT_TOP = { id: 'black_vneck', name: 'Black V-Neck Tee', appeal: 7, price: 9, tags: ['casual', 'minimalist', 'fit:loose', 'material:cotton'] };
+        function jackBraDiscountAvailable() {
+            if (getVisibleExposureLevel() !== 'bra_exposed') return false;
+            if (getSceneClothingVars().braSheer) return false;
+            return (gameState.flags._jackBraDiscountDay || 0) !== ((gameState.time && gameState.time.day) || 0);
+        }
+        function getJackBraExposedLine() {
+            if (!jackBraDiscountAvailable()) return '';
+            var cv = getSceneClothingVars();
+            var bs = (gameState.bodyAppearance || {}).breastSize || 'average';
+            var tits = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your tits';
+            var c = gameState.corruption || 0;
+            return '\n\nJack comes out from behind the counter the second he sees your ' + cv.braName + '. His eyes stay on ' + tits + '.\n\n' +
+                '"Tell you what, sweetheart." He pulls a black V-neck off the rack and holds it up against your chest, knuckles grazing the cups. "Nine bucks. Half off if you try it on right here. In front of me."\n\n' +
+                (c >= 6001 ? 'Your nipples stiffen in the cups. You think about it.' : c >= 2001 ? 'Your nipples tighten in the cups under his stare, and your pussy clenches.' : 'Your arms fold over your chest. Your nipples are stiff against them.');
+        }
+
         function getPartialExposureVenueBlockMessage(restriction) {
             var vis = getVisibleExposureLevel();
+            // Step 6B: Jack turns Panties Exposed away himself
+            if (vis === 'panties_exposed' && restriction.redirect === 'outside_bargain_threads' && !getSceneClothingVars().pantiesSheer) {
+                return getJackPantiesDoorLine();
+            }
             if (vis === 'panties_exposed') {
                 return getSheerVenueBlockMessage(restriction) || getExposureBlockMessage(restriction.name);
             }
@@ -29105,10 +29149,89 @@ audioSystem.playSFX('buttonClick');
             } };
         }
 
+        // ── Bra Exposed & Panties Exposed Overhaul, Step 6B: Jaewon ──
+        // Runs ahead of the braless/commando reactions, after the sheer ones (mesh routes there).
+        // Girlfriend: Bra Exposed teases and gets possessive; Panties Exposed goes from alarmed
+        // to aroused with her corruption. Shares the braless/commando cooldown and fire rate.
+        // Below girlfriend: flustered by the bra, begging for pants; once per day.
+        // Returns null when neither state applies, so the braless/commando reactions run.
+        function getJaewonPartialExposureReaction() {
+            var lvl = getExposureLevel();
+            if (lvl !== 'bra_exposed' && lvl !== 'panties_exposed') return null;
+            var cv = getSceneClothingVars();
+            var _ba = gameState.bodyAppearance || {};
+            var _bs = _ba.breastSize || 'average';
+            var _butt = _ba.buttSize || 'average';
+            var bra = cv.braName, bottom = cv.bottomName, top = cv.topName, pan = cv.pantiesName;
+            var thong = cv.pantiesCut === 'thong';
+            var panWord = thong ? 'thong' : pan;
+            var tits = _bs === 'large' ? 'your heavy tits' : _bs === 'small' ? 'your small tits' : 'your tits';
+            var ass = _butt === 'large' ? 'your full ass' : _butt === 'small' ? 'your tight little ass' : 'your ass';
+
+            var isGf = gameState.flags.officialGirlfriends || false;
+            var isAngry = gameState.flags.jaewonAngryUntilDay && gameState.time.day < gameState.flags.jaewonAngryUntilDay;
+            var activity = gameState.flags.jaewonCurrentActivity || '';
+            if (isAngry || activity === 'sleeping' || activity === 'sleeping in' || activity === 'calling her dad') return '';
+
+            var pool;
+            if (!isGf) {
+                var day = gameState.time.day || 0;
+                if ((gameState.flags._jaewonBpeFriendDay || 0) === day) return '';
+                gameState.flags._jaewonBpeFriendDay = day;
+                pool = lvl === 'bra_exposed' ? [
+                    'Jaewon looks up from the couch as you pass and does a double take at your ' + bra + '. "You\'re going out like that?" Her eyes drop to ' + tits + ' and snap back up.\n\n"I mean. It looks good. It\'s very. Okay." She goes red to the ears, and your nipples stiffen in the cups under the look she tried not to give you.',
+                    'Jaewon opens her mouth to say something and forgets what it was. Her eyes are on your ' + bra + '.\n\n"Is that... a top now?" You tell her it is. "Okay," she says faintly, and stares hard at the wall. Your nipples tighten in the cups, and your pussy clenches at how pink her cheeks have gone.'
+                ] : [
+                    'Jaewon sees you heading for the door and physically steps in front of it. "Kelsie. Pants." She points at your ' + pan + ' without looking down. "Please. I\'m begging you. Any pants."\n\nShe won\'t look below your waist, and somehow that makes your pussy clench harder than a stare would.',
+                    'Jaewon comes out of the kitchen, sees your ' + top + ' and your bare legs, and nearly drops her mug. "Where are your pants? You can\'t go out like that. People will see..."\n\nShe waves a hand at ' + ass + ' and turns scarlet. "Please put on pants." The crotch of your ' + pan + ' goes damp.'
+                ];
+                return '\n\n' + pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            if (jaewonMoodBlocksTouch()) return '';
+            var now = (gameState.time.day * 24 * 60) + (gameState.time.hour * 60) + (gameState.time.minute || 0);
+            if ((now - (gameState.flags._lastJaewonBralessReactionMin || 0)) < 120) return '';
+            if (Math.random() > 0.30) return '';
+            gameState.flags._lastJaewonBralessReactionMin = now;
+
+            var jc = (gameState.relationships.jaewon && gameState.relationships.jaewon.corruption) || 0;
+            var tk = _jaewonTierKey(jc);
+            if (lvl === 'bra_exposed') {
+                pool = tk === 'dc' ? [
+                    'Jaewon pins you against the door before you can open it. She drags one cup of your ' + bra + ' down and bites the bare nipple, hard.\n\n"Now go," she breathes, and fixes the cup back over it. "Everyone can stare. Only I get to do that." Your pussy clenches, and your nipple throbs under the cup.',
+                    'Jaewon slides both hands up your ribs and cups ' + tits + ' through your ' + bra + ', squeezing. "Every guy out there\'s going to want these," she says. "Let them want."\n\n' +
+                        (_bs === 'large' ? 'She pushes the cups together, watches your heavy tits swell over the top,' : _bs === 'small' ? 'She thumbs your nipples through the cups until they stand up stiff,' : 'She pushes the cups together, watches your tits swell over the top,') + ' and kisses each one. You\'re wet before she lets go.'
+                ] : tk === 'exp' ? [
+                    'Jaewon catches your wrist before you reach the door and turns you around. Her eyes go over your ' + bra + ' slowly. "You\'re going to let the whole street look at these?"\n\nHer thumb traces the edge of the cup, right over ' + (_bs === 'large' ? 'the heavy swell of your tit' : _bs === 'small' ? 'your small tit' : 'the swell of your tit') + '. "Come back soon. I want them after." Your nipples tighten.',
+                    'Jaewon pulls you into her lap on your way past. "Out in your bra," she says against your neck. "You know what that does to me?"\n\nHer hands slide up your bare stomach and stop just under the cups. Your nipples stiffen, and she laughs, low. "Yeah. You know."'
+                ] : [
+                    'Jaewon hooks a finger through the strap of your ' + bra + ' as you pass and tugs you back. "You\'re wearing this outside?" She\'s smiling, but her eyes are all over ' + tits + '.\n\n"Everybody\'s going to look at you." She lets the strap snap back. "Fine. But they\'re mine." Your nipples stiffen in the cups.',
+                    'Jaewon tilts her head at your ' + bra + ' and your ' + bottom + '. "Bold," she says, and her cheeks go pink.\n\nShe fixes a twisted strap on your shoulder with careful fingers, and her knuckles brush the top of the cup. Your nipple stiffens under it, and she sees.'
+                ];
+            } else {
+                pool = tk === 'dc' ? [
+                    'Jaewon bends you over the back of the couch before you reach the door and pulls the crotch of your ' + pan + ' aside with two fingers. "Soaked already," she says. "You haven\'t even left."\n\nShe lets it snap back over your pussy and smacks ' + ass + '. "Go. Let them look. Come back like this."',
+                    'Jaewon runs her palm over ' + ass + ' as you pass, slow, and hooks a finger in the back of your ' + panWord + ' to tug it tighter.\n\n"There," she says. "Now they\'ll really see." Your clit throbs, and she smiles like she can tell.'
+                ] : tk === 'exp' ? [
+                    'Jaewon opens her mouth to tell you to put pants on. Then you turn around to grab your keys, and she gets ' + ass + ' in your ' + panWord + '.\n\nShe closes her mouth. "Okay," she says, much quieter. "Okay. Just come home in one piece." Her eyes stay on your ass, and your pussy clenches.',
+                    '"You can\'t go out like that." Jaewon\'s already behind you, one hand flat on ' + ass + ', fingers under the edge of your ' + panWord + '.\n\n"Everyone can see this." Her voice drops. "Everyone can see what\'s mine." Your pussy clenches, and her fingers feel it.'
+                ] : [
+                    'Jaewon grabs your arm before you reach the door. "Kelsie. You don\'t have any pants on." Her eyes drop to your ' + pan + ', and she goes red.\n\n"You\'ll get arrested. Or worse. Please, at least a skirt?" Your pussy clenches under her stare, and she notices where she\'s staring and looks away fast.',
+                    'Jaewon stares at your bare legs, then at your ' + pan + ', then at your face. "You\'re not serious." You are.\n\n"Kelsie, people are going to see ' + ass + '." She sounds scared for you, and she keeps looking anyway. The crotch of your ' + pan + ' goes damp.'
+                ];
+            }
+            var counter = gameState.flags._jaewonBralessReactionCounter || 0;
+            gameState.flags._jaewonBralessReactionCounter = counter + 1;
+            return '\n\n' + pool[counter % pool.length];
+        }
+
         function getJaewonBralessCommandoReaction() {
             // Mesh Step 16: mesh (or her own top) gets its own reactions
             var _sheerJ = getJaewonSheerReaction();
             if (_sheerJ !== null) return _sheerJ;
+            // Bra/Panties Exposed Step 6B: the partial states come next
+            var _bpeJ = getJaewonPartialExposureReaction();
+            if (_bpeJ !== null) return _bpeJ;
             var cv = getSceneClothingVars();
             if (!cv.braless && !cv.commando) return '';
 
@@ -40449,15 +40572,30 @@ audioSystem.playSFX('buttonClick');
         function getCruzSheerExposureLine(context) {
             var led = gameState.evidenceLedger || [];
             var total = 0, sheer = 0, cams = 0, look = '';
+            var panEx = 0, panCams = 0; // Bra/Panties Exposed Step 6B
             for (var i = 0; i < led.length; i++) {
                 if (led[i].type !== 'indecent_exposure') continue;
                 total++;
                 if (String(led[i].exposureState || '').indexOf('sheer_') === 0) {
                     sheer++;
                     if (led[i].evidence && led[i].evidence.cameraFootage) { cams++; if (led[i].sheerLook) look = led[i].sheerLook; }
+                } else if (led[i].exposureState === 'panties_exposed') {
+                    panEx++;
+                    if (led[i].evidence && led[i].evidence.cameraFootage) panCams++;
                 }
             }
-            if (!total || sheer * 2 <= total) return '';
+            if (!total) return '';
+            // Step 6B: a file that's mostly Panties Exposed gets its own read
+            if (panEx * 2 > total) {
+                if (context === 'casual') return '"Funny thing, though," she adds. "Most of them, she\'s in a shirt and her underwear. Nothing else." Her eyes stay on your face. She already knows what you had on.\n\n';
+                if (panCams >= 3) {
+                    var pWords = ['Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+                    var pCount = panCams <= 9 ? pWords[panCams - 3] + ' stills.' : 'A whole stack of stills.';
+                    return 'Cruz sees you looking. She taps the top printout. "' + pCount + ' Same shirt, same underwear, no pants. Every one of them shot from behind."\n\nThen she files it under the rest and keeps going.\n\n';
+                }
+                return 'Cruz sees you looking. "Your indecent exposure file is mostly the same outfit," she says. "A shirt, underwear, and a lot of ass."\n\nThen she files it under the rest and keeps going.\n\n';
+            }
+            if (sheer * 2 <= total) return '';
             if (context === 'casual') return '"Funny thing, though," she adds. "Most of them, she\'s technically clothed." Her eyes stay on your face. She already knows what you\'re wearing.\n\n';
             if (cams >= 3) {
                 var words = ['Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
@@ -164950,15 +165088,66 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             bargain_threads_browse: {
                 text: () => 'You move away from Jack. Start browsing the racks.\n\nHe watches. You can feel his eyes.\n\nBut the selection is here. Cheap clothes. Basic stuff. Nothing fancy.\n\n' + (isBeautyObsessed()
                     ? 'But affordable. Nothing here comes close to what\'s in your bag.'
-                    : 'But affordable. And you need something better than ' + (gameState.currentOutfit.dress ? 'this dress' : 'what you\'ve got on') + '.'),
+                    : 'But affordable. And you need something better than ' + (gameState.currentOutfit.dress ? 'this dress' : 'what you\'ve got on') + '.') + getJackBraExposedLine(),
                 onEnter: () => {
                     advanceTime(TIME_COSTS.BROWSE);
                     updateStatus();
                 },
+                choices: () => {
+                    const c = [
+                        { text: '<img src="Images/icons/shopping-bags.png" class="icon" alt="shopping"> Browse the racks', action: () => openShopping('bargain_threads') },
+                        { text: 'Use the changing stall', nextScene: 'bargain_threads_fitting' },
+                        { text: 'Leave the store', nextScene: 'bargain_checkout' }
+                    ];
+                    // Bra/Panties Exposed Step 6B: Jack's "discount"
+                    if (jackBraDiscountAvailable()) {
+                        if ((gameState.money || 0) >= 4.5) {
+                            c.splice(1, 0, { text: 'Try the V-neck on in front of Jack ($4.50)', nextScene: 'jack_bra_exposed_discount' });
+                        } else {
+                            c.splice(1, 0, { text: '<img src="Images/icons/lock.png" class="icon" alt="locked"> Try the V-neck on in front of Jack (need $4.50)', action: () => showMessage('You don\'t have $4.50 on you. Jack shrugs like it\'s your loss and keeps looking at your bra.', () => {}) });
+                        }
+                    }
+                    return c;
+                }
+            },
+
+            // Bra/Panties Exposed Step 6B: she pulls the V-neck on at the counter, in front of Jack.
+            jack_bra_exposed_discount: {
+                text: function() {
+                    var _ba = gameState.bodyAppearance || {};
+                    var _bs = _ba.breastSize || 'average';
+                    var _bt = _ba.bodyType || 'ordinary';
+                    var cv = getSceneClothingVars();
+                    var bra = cv.braName;
+                    var tits = _bs === 'large' ? 'your heavy tits' : _bs === 'small' ? 'your small tits' : 'your tits';
+                    var c = gameState.corruption || 0;
+                    var belly = _bt === 'petite' ? 'down over your slight little stomach' : _bt === 'athletic' ? 'down over the hard line of your stomach' : _bt === 'curvy' ? 'down over your curves' : _bt === 'thick' ? 'down over your soft belly' : 'down over your stomach';
+                    if (c >= 6001) {
+                        return 'You skip the stall. You stand right in front of the counter, V-neck in one hand, and take your time.\n\n' +
+                            'You stretch first, arms high, so ' + tits + ' lift in your ' + bra + '. Jack stops breathing. Then you pull the shirt on, inch by inch, and let the hem catch on your nipples on the way ' + belly + '.\n\n' +
+                            '"Four-fifty," you say, and put the money in his hand. He doesn\'t count it.\n\nYour clit throbs, and you smile at him.';
+                    } else if (c >= 2001) {
+                        return '"Right here," Jack says when you turn toward the stall. He taps the counter. "That\'s the deal."\n\n' +
+                            'You hold his eyes and pull the V-neck on slowly. Arms up, ' + tits + ' rising in the cups, the hem dragging ' + belly + '. His tongue wets his lip.\n\n' +
+                            'Your pussy clenches. You hate that it does.\n\n"Half off," he says, and his voice has gone rough. "Like I said."';
+                    }
+                    return 'Jack leans on the counter and watches you pull the V-neck over your head. He keeps his eyes right on you the whole time.\n\n' +
+                        'For a second the shirt\'s bunched around your face and you\'re blind, arms up, ' + tits + ' lifted in your ' + bra + ' right in front of him. You hear him breathe out.\n\n' +
+                        'You yank it ' + belly + ' fast. Your face is burning, and your nipples are stiff against the cotton.\n\n"Fits great," Jack says. He takes your four-fifty and holds on to your fingers a second too long.';
+                },
+                onEnter: function() {
+                    gameState.flags._jackBraDiscountDay = gameState.time.day || 0;
+                    gameState.money = Math.max(0, (gameState.money || 0) - 4.5);
+                    // The old top (if any) can't exist here; she's in Bra Exposed. Wear the V-neck.
+                    var t = JACK_DISCOUNT_TOP;
+                    gameState.currentOutfit.top = { id: t.id, name: t.name, category: getCategoryFromSlot('top'), appeal: t.appeal, price: t.price, owned: true, bought: true, tags: t.tags.slice() };
+                    if (typeof updateStoreLoyalty === 'function') updateStoreLoyalty('bargain_threads', 4.5);
+                    advanceTime(TIME_COSTS.QUICK_ACTION);
+                    checkAndSetExposureState();
+                    updateStatus();
+                },
                 choices: [
-                    { text: '<img src="Images/icons/shopping-bags.png" class="icon" alt="shopping"> Browse the racks', action: () => openShopping('bargain_threads') },
-                    { text: 'Use the changing stall', nextScene: 'bargain_threads_fitting' },
-                    { text: 'Leave the store', nextScene: 'bargain_checkout' }
+                    { text: 'Get back to browsing', nextScene: 'bargain_threads_browse' }
                 ]
             },
 
