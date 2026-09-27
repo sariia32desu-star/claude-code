@@ -40,14 +40,14 @@ Conventions from every prior overhaul apply: short paragraphs, contractions, esc
 
 ---
 
-## Decisions to Confirm Before Step 1
+## Confirmed Decisions
 
-These are design calls the rest of the doc depends on. Each has a recommendation; confirm or change them before building.
+These design calls were approved before Step 1. The rest of the doc is written to them; build them as stated.
 
-1. **Bus and Uber for Bra Exposed.** The current build refuses both. If Bra Exposed is legal, the recommendation is that both rides take her, with a driver reaction line (the same pattern `getSheerTransitReaction()` uses for bare behind mesh). A mesh bra or a soaked-through bra is still refused. Panties Exposed stays refused.
-2. **Corruption gate for Bra Exposed.** Recommendation: 2001 (Curious) to walk out in it deliberately, matching `sheer_braless`. A sports bra has no gate at all: it's workout clothing. Panties Exposed stays at 6001.
-3. **Police clock for Panties Exposed.** Sheer lingerie gets a three-hour police clock (`tickSheerLingeriePolice()`). Underwear Only has none. Recommendation: give Panties Exposed a four-hour clock (its lower evidence severity buys an extra hour), and flag Underwear Only's missing clock as a follow-up outside this overhaul.
-4. **Thrill rates.** The current build gives both states +2 thrill per hour. Recommendation: Panties Exposed rises to +3 (the same as Underwear Only, since the crotch is what makes both indecent), Bra Exposed stays at +2, and a sports bra drops to +1.
+1. **Bus and Uber for Bra Exposed: approved.** Both rides take her, with a driver reaction line (the same pattern `getSheerTransitReaction()` uses for bare behind mesh). This reverses the refusal the current build applies to Bra Exposed. A mesh bra or a soaked-through bra is still refused. Panties Exposed stays refused.
+2. **Corruption gate for Bra Exposed: approved.** 2001 (Curious) to walk out in it deliberately, matching `sheer_braless`. A sports bra has no gate at all: it's workout clothing. Panties Exposed stays at 6001.
+3. **Police clock for Panties Exposed and Underwear Only: approved.** Sheer lingerie keeps its three-hour clock (`tickSheerLingeriePolice()`). Panties Exposed and Underwear Only share one four-hour indecency clock (their minor evidence severity buys an extra hour over sheer lingerie). Underwear Only had no clock at all, the only gap among the criminal exposure states; this overhaul closes it (Step 2H).
+4. **Thrill rates: approved.** Panties Exposed rises to +3 per hour (the same as Underwear Only, since the crotch is what makes both indecent), Bra Exposed stays at +2, and a sports bra drops to +1.
 
 ---
 
@@ -69,7 +69,7 @@ Line numbers drift. Always re-grep the function name.
 - `checkVisibleUnderwearCorruption()` / `getVisibleUnderwearGate()`: 6001 for any visible underwear, 8001 for the full sheer set; now also covers topless/bottomless with nothing showing.
 - `unequipClothing()`: simulated-outfit undress block below 6001 (only blocks a new exposure).
 - `handleUnderwearDistrictEntry(districtId)`: hard block, then per-type NPC vignette plus Kelsie response. Called from every district street including slums. Suspicion +2 (underwear), +3 (topless), +4 (bottomless). Arousal is added directly to `gameState.arousal`, bypassing `applyArousal()`.
-- `handleSheerDistrictEntry()`, `SHEER_STATE_GATES`, `tickSheerLingeriePolice()` / `handleSheerPoliceArrive()` (three-hour clock, then `handleNakedEscape()`).
+- `handleSheerDistrictEntry()`, `SHEER_STATE_GATES`, `tickSheerLingeriePolice()` / `handleSheerPoliceArrive()` (three-hour clock, then `handleNakedEscape()`). Underwear Only has no police clock; Step 2H adds one it shares with Panties Exposed.
 - `exposureRestrictedBuildings` and `getExposureBlockMessage(buildingName)` (checked in `showScene`); `getSheerVenueBlockMessage()` with `SHEER_BRALESS_BLOCKED_VENUES` and `SHEER_BARE_ALLOWED_VENUES`.
 - `travelToLocation()`: sheer transit reaction, then bus and Uber exposure refusal.
 - `checkExhibitionEvidence(sceneId)`: indecent exposure ledger entries (camera 30% in Commercial/Downtown, witness 15% in Residential/park, none in the slums), severity minor/moderate/major. `getCruzSheerExposureLine()` reads the ledger.
@@ -136,7 +136,7 @@ function getExposureLevel() {
 }
 ```
 
-Reconcile the dress-category quirk: `arePantiesVisible()` counts a top whose `category === 'dress'` as covering the hips. Pick one rule and apply it in `getExposureLevel()`, `isBraVisible()`, and `arePantiesVisible()` alike. Recommendation: a top with `category === 'dress'` covers both zones everywhere.
+Reconcile the dress-category quirk: `arePantiesVisible()` counts a top whose `category === 'dress'` as covering the hips. Pick one rule and apply it in `getExposureLevel()`, `isBraVisible()`, and `arePantiesVisible()` alike. Approved rule: a top with `category === 'dress'` covers both zones everywhere.
 
 ### 1B. Concealment in `getVisibleExposureLevel()`
 
@@ -204,7 +204,7 @@ Promoting the levels changes what 39 call sites receive. Step 1 must leave every
 ```javascript
 gameState.exhibitionStats.braExposedMinutesTotal = 0;
 gameState.exhibitionStats.pantiesExposedMinutesTotal = 0;
-gameState.pantiesExposedStartTime = null;        // police clock (Decision 3)
+gameState.indecencyClockStartTime = null;       // shared Panties Exposed / Underwear Only police clock (Decision 3)
 gameState.flags._braExposedReactionIdx = [];     // vignette de-dupe
 gameState.flags._pantiesExposedReactionIdx = [];
 gameState.flags._lastBraAccidentMinute = 0;
@@ -265,7 +265,7 @@ New: when she's in Bra Exposed with an opaque cotton, satin, or lace bra (not `s
 
 ### 2E. Transit
 
-Per Decision 1. Recommended behavior:
+Per Decision 1 (approved):
 
 | State | Bus | Uber |
 |---|---|---|
@@ -298,9 +298,21 @@ If Bra Exposed rides the bus, `exhibition_bus_trigger` can fire. Give it a Bra E
 | Bra Exposed, soaked through | +2 |
 | Panties Exposed | +2 (same as Underwear Only) |
 
-### 2H. Police clock for Panties Exposed
+### 2H. Indecency clock: Panties Exposed and Underwear Only
 
-Per Decision 3. `tickPantiesExposedPolice()` on the `tickSheerLingeriePolice()` pattern: starts on district entry in Panties Exposed at or above the gate, resets whenever she leaves the state, fires `handlePantiesExposedPoliceArrive()` at 240 minutes. Three corruption voices, the officers noticing her panties first and the wet spot second, then `handleNakedEscape()`. Sample high-voice beat: *"The officer looks at your {top}, then lower, and stays there. 'Ma'am. Where are your pants?' You shift your weight onto one hip so he gets a better look at the damp crotch of your {panties}. 'I'm wearing a shirt.' His partner laughs into his radio."*
+Per Decision 3 (approved). One shared clock covers both states, because to the law they're the same offense: panties on show in public. `tickIndecencyPolice()` on the `tickSheerLingeriePolice()` pattern:
+
+- **Starts** on district street entry in Panties Exposed or Underwear Only, at or above the gate (or with `clothesDestroyedInCombat`), stored in `gameState.indecencyClockStartTime`.
+- **Keeps running** when she moves between the two states (pulling her top off over her panties doesn't reset the clock, and neither does putting it back on).
+- **Resets** when she leaves both states: dressed, Bra Exposed, or any state the naked or sheer lingerie systems own. Naked uses its own two-hour rule; sheer lingerie keeps its own three-hour clock.
+- **Fires** `handleIndecencyPoliceArrive(state)` at 240 minutes, then `handleNakedEscape()`, the same exit the sheer clock uses. Runs from every district street handler, next to `tickSheerLingeriePolice()`.
+
+The arrival scene branches on state, three corruption voices each (six texts):
+
+- **Panties Exposed:** the officers notice her panties first and the wet spot second. Sample high-voice beat: *"The officer looks at your {top}, then lower, and stays there. 'Ma'am. Where are your pants?' You shift your weight onto one hip so he gets a better look at the damp crotch of your {panties}. 'I'm wearing a shirt.' His partner laughs into his radio."*
+- **Underwear Only:** the officers take in the whole set. Sample Innocent beat: *"The cruiser pulls to the curb beside you and the window comes down. The officer's eyes go from your {bra} to your {panties} and back up. 'Miss, you can't be out here in your underwear.' Your arms come up over your chest. Your face is on fire, and your pussy clenches anyway, hard enough that you're sure he can tell."*
+
+BPs: `breastSize` in the Underwear Only texts, `buttSize` and `pantiesCut` in both. The Current Stats card shows time remaining on the clock in either state (Step 16B), and the Tips & Guide documents it (Step 16A).
 
 ### 2I. Appeal penalty suppression
 
@@ -312,7 +324,7 @@ Per Decision 3. `tickPantiesExposedPolice()` on the `tickSheerLingeriePolice()` 
 
 ### 3A. Thrill rates
 
-Per Decision 4. The existing `underwearPartialThrill` accumulator splits into two:
+Per Decision 4 (approved). The existing `underwearPartialThrill` accumulator splits into two:
 
 | State | Thrill / hr | Stacks with |
 |---|---|---|
@@ -542,7 +554,7 @@ Three per state, in the accident pool format (`text`, `thrill`, `arousal`, corru
 
 ### 11D. `exhibition_bus_trigger`
 
-If Decision 1 lets Bra Exposed ride the bus, add a Bra Exposed branch: the crowded aisle, a hand that brushes the cup, a man who stands too close behind her.
+Bra Exposed rides the bus (Decision 1), so add a Bra Exposed branch: the crowded aisle, a hand that brushes the cup, a man who stands too close behind her.
 
 ---
 
@@ -643,7 +655,7 @@ In the exhibitionism entry:
 ### 16B. About Stats & Current Stats
 
 - About Stats Exhibition Thrill: the thrill table rows for both states and the sports bra.
-- Current Stats exhibition card: label (already done), the state's live effects (thrill rate, suspicion, venue status, police clock remaining for Panties Exposed), and the lifetime minutes from 3D.
+- Current Stats exhibition card: label (already done), the state's live effects (thrill rate, suspicion, venue status, indecency clock remaining for Panties Exposed and Underwear Only), and the lifetime minutes from 3D.
 
 ### 16C. Scene Gallery
 
@@ -678,7 +690,8 @@ Every intimate beat: no "core," no "pulse/wave," phonetics spelled out, position
 ### 17E. Balance pass
 
 - Bra Exposed should feel rewarding and safe enough to wear on purpose: small thrill, a seduction edge, most doors open, and a real risk only when it rains.
-- Panties Exposed should feel as dangerous as Underwear Only: daily harassment, guaranteed night assault, evidence, blocked doors, a police clock, and the biggest thrill of the partial states.
+- Panties Exposed should feel as dangerous as Underwear Only: daily harassment, guaranteed night assault, evidence, blocked doors, the shared four-hour indecency clock, and the biggest thrill of the partial states.
+- The indecency clock should land about once per long public outing in either state. If police arrive during ordinary errands, lengthen it; if a player can live in Underwear Only all day without consequence, shorten it.
 - A Kelsie in Bra Exposed with commando under a skirt should read as two layers of exposure stacking, not as a new state.
 - The thong arousal tick shouldn't push arousal into Edged on its own over a normal afternoon.
 - The new verbs' cooldowns shouldn't let thrill farming outpace the Mesh verbs.
@@ -707,9 +720,9 @@ Every intimate beat: no "core," no "pulse/wave," phonetics spelled out, position
 | (rework) `getVisibleUnderwearGate()` | 2A | Per-state gates, sports bra exemption |
 | (new) `getBraExposedVenueBlockMessage()` | 2C | Venue refusals for Bra Exposed |
 | (new) `isWetBraThrough()` | 2D | Soaked opaque bra counts as sheer |
-| (rework) `travelToLocation()` | 2E | Transit per Decision 1 |
+| (rework) `travelToLocation()` | 2E | Transit per Decision 1 (Bra Exposed rides) |
 | (rework) `checkExhibitionEvidence()` | 2F | Panties Exposed and wet-bra entries |
-| (new) `tickPantiesExposedPolice()` / `handlePantiesExposedPoliceArrive()` | 2H | Four-hour clock |
+| (new) `tickIndecencyPolice()` / `handleIndecencyPoliceArrive(state)` | 2H | Shared four-hour clock for Panties Exposed and Underwear Only |
 | (rework) passive thrill block | 3A | Split accumulators, sports bra, wet bra |
 | (rework) `handleUnderwearDistrictEntry()` | 4A | Routes both states to their own functions; `applyArousal()` |
 | (new) `getBraExposedNPCVignette()` / `getBraExposedKelsieResponse()` | 4B, 4D | District entry |
@@ -735,7 +748,7 @@ Every intimate beat: no "core," no "pulse/wave," phonetics spelled out, position
 | Panties Exposed district vignettes (8) + responses (12) | 4C, 4D | Repeatable | District entry, 20-minute cooldown |
 | Ambient lines (2 pools × 3 voices × 6) | 5 | Repeatable | Street scenes, 15-minute cooldown |
 | Wet-bra notification | 2D | Once per day | Opaque bra soaked to 60+ in Bra Exposed |
-| Panties Exposed police arrival (3 voices) | 2H | Repeatable | Four hours in public in the state |
+| Indecency police arrival (2 states × 3 voices) | 2H | Repeatable | Four hours in public in Panties Exposed or Underwear Only |
 | Transit driver lines | 2E | Repeatable | Bus or Uber in Bra Exposed |
 | Harassment openers and gropes (2 states × district and slums) | 7B | Repeatable | Daily harassment |
 | Harassment choice-scene layers (Bra Exposed) | 7D | Repeatable | Bra Exposed harassment choices |
@@ -745,7 +758,7 @@ Every intimate beat: no "core," no "pulse/wave," phonetics spelled out, position
 | Slums pass-out state branches | 10C | Repeatable | Slums pass-out in either state |
 | Layer lines on the 20 exhibition events | 11B | Repeatable | Event fires in either state |
 | Six new accidents | 11C | Repeatable | District transitions |
-| Bus exhibition, Bra Exposed branch | 11D | Repeatable | Bus ride in Bra Exposed (if Decision 1) |
+| Bus exhibition, Bra Exposed branch | 11D | Repeatable | Bus ride in Bra Exposed |
 | Masturbation branches (alley and bench × 2 states) | 12A | Once per day each | Existing gates |
 | Five new verbs | 12B | Cooldown | District streets |
 | Riverside park exposure paragraphs | 12C | Repeatable | Park visit |
