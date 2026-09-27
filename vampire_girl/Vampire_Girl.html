@@ -35170,6 +35170,13 @@ audioSystem.playSFX('buttonClick');
                 baseChance += (_mhSedMods[getMHTierId()] || 0);
             }
             
+            // BPE Step 14A: a bra on show does half the work (a sports bra a little of it).
+            // Opaque only, soaked-through included; the mesh bra belongs to the sheer content.
+            if (typeof getVisibleExposureLevel === 'function' && getVisibleExposureLevel() === 'bra_exposed') {
+                var _sedBra = (gameState.currentOutfit || {}).bra;
+                if (_sedBra && !getMeshProfile(_sedBra)) baseChance += getBraStyle(_sedBra) === 'sporty' ? 0.01 : 0.03;
+            }
+
             baseChance = Math.min(0.95, baseChance); // Cap at 95% with bonuses
             baseChance = Math.max(0.05, baseChance); // Always at least 5% chance
 
@@ -58884,11 +58891,116 @@ audioSystem.playSFX('buttonClick');
         // Mesh Overhaul Step 1B: Exhibition Seduction's hunt scenes are reachable while exposed.
         // Below its 6001 / 80 appeal gate the plain street seduction fires, so the target
         // needs to notice what Kelsie's (not) wearing. Returns '' when she's visibly clothed.
+        // BPE Step 14A/14B: the bra on show, by style and size. `his` is the target's possessive.
+        // touch: the first hand on it (14B); otherwise the first look. Mesh is excluded by the callers.
+        function _seductBraChestLine(his, touch) {
+            var cv = getSceneClothingVars();
+            var bs = (gameState.bodyAppearance || {}).breastSize || 'average';
+            var tits = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your tits';
+            var His = capFirst(his);
+            if (touch) {
+                if (isWetBraThrough()) return 'The wet cup is cold and clinging, and ' + his + ' thumb circles your nipple where it shows dark through the fabric.';
+                switch (cv.braStyle) {
+                    case 'sporty': return His + ' thumb drags over the stretchy fabric, and your nipple\'s already hard under it.';
+                    case 'pushup': return 'The push-up has ' + tits + ' lifted right against ' + his + ' hand, and ' + his + ' thumb sinks into the swell over the cup.';
+                    case 'bralette': return 'The lace of your bralette is thin enough that ' + his + ' thumb finds your nipple straight through it.';
+                    case 'corset': return His + ' fingers trace the swell of ' + tits + ' where the corset pushes them up over the top.';
+                    case 'lace': return His + ' thumb strokes your nipple through the lace, and it stiffens under the pattern.';
+                }
+                return bs === 'large' ? His + ' thumb presses up into the heavy underside of your tit, and it spills over the top of the cup.'
+                    : bs === 'small' ? His + ' thumb slips over the edge of the cup and brushes your stiff nipple.'
+                    : His + ' thumb presses up into the underside of your tit through the cup.';
+            }
+            if (isWetBraThrough()) return 'Your ' + cv.braName + ' is soaked through, and your nipples show dark through the wet cups.';
+            switch (cv.braStyle) {
+                case 'sporty': return bs === 'large' ? 'The stretchy fabric squashes your heavy tits flat, and they still strain against it.' : 'The stretchy fabric hugs you flat, and your nipples still poke through it.';
+                case 'pushup': return 'The push-up lifts ' + tits + ' into two round swells, and ' + his + ' eyes go straight down the line between them.';
+                case 'bralette': return 'The thin lace of your bralette barely holds ' + tits + ', and your nipples show through the pattern.';
+                case 'corset': return 'The corset cinches your waist and pushes ' + tits + ' up high, and ' + his + ' eyes stick on the swell over the top.';
+                case 'lace': return 'The lace cups show the dark of your nipples through the pattern, and ' + his + ' eyes find them.';
+            }
+            return bs === 'large' ? 'Your heavy tits fill the cups and swell over the top, and ' + his + ' eyes stick on the line between them.'
+                : bs === 'small' ? 'The cups sit neat on your small tits, and ' + his + ' eyes stay there anyway, like there\'s more to find.'
+                : 'The cups hold your tits up on show, and ' + his + ' eyes stick on the line between them.';
+        }
+
+        // True when an opaque bra is what strangers see (soaked-through included).
+        function _seductBraOnShow() {
+            if (typeof getVisibleExposureLevel !== 'function' || getVisibleExposureLevel() !== 'bra_exposed') return false;
+            return !getSceneClothingVars().braSheer;
+        }
+        function _seductPantiesOnShow() {
+            if (typeof getVisibleExposureLevel !== 'function' || getVisibleExposureLevel() !== 'panties_exposed') return false;
+            return !getSceneClothingVars().pantiesSheer;
+        }
+
+        // 14B: the regular street seduction, once the target says yes. The shared sex scenes after
+        // it never name her clothes, so the bra or the panties get their moment here, at first touch.
+        function _seductUnderwearBeat(g) {
+            var cv = getSceneClothingVars();
+            var f = g === 'she';
+            var his = f ? 'her' : 'his', He = f ? 'She' : 'He';
+            if (_seductBraOnShow()) {
+                if (f) return 'She hooks a finger under the strap of your ' + cv.braName + ' and runs it down to the cup, like she\'s checking the fit. ' + _seductBraChestLine(his, true) + ' Your clit throbs when she lets the strap snap back against your skin.';
+                var at = cv.braStyle === 'sporty' ? 'under the band of your ' + cv.braName : cv.braStyle === 'corset' ? 'against the boning of your ' + cv.braName : 'under the cup of your ' + cv.braName;
+                return 'There\'s no top to get a hand under, so his hand lands on your bare waist and slides up your ribs until his fingers rest ' + at + '. ' + _seductBraChestLine(his, true) + ' Your pussy clenches, and you let him touch.';
+            }
+            if (_seductPantiesOnShow()) {
+                var butt = (gameState.bodyAppearance || {}).buttSize || 'average';
+                var ass = butt === 'large' ? 'the full curve of your ass' : butt === 'small' ? 'your tight little ass' : 'your ass';
+                var HisF = f ? 'Her' : 'His';
+                var cut = cv.pantiesCut === 'thong' ? HisF + ' fingers brush bare skin on either side of the thong.'
+                    : cv.pantiesCut === 'cheeky' ? HisF + ' fingers find the place where your cheeks spill out of your ' + cv.pantiesName + '.'
+                    : He + ' squeezes once through your ' + cv.pantiesName + ', testing.';
+                return f ? 'Her hand finds the small of your back and drifts down over ' + ass + '. ' + cut + ' "Bold," she murmurs, and your pussy clenches in the crotch.'
+                    : 'His hand drops to the small of your back and slides lower, over ' + ass + '. ' + cut + ' Your clit throbs, and you let him keep his hand there.';
+            }
+            return '';
+        }
+
+        // BPE Step 14A: Lucius' first look, per state. '' hands back to the scene's own lines
+        // (topless, bottomless, naked, and anything with mesh on show).
+        function getLuciusSeduceExposureLine(g) {
+            var ex = (typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel();
+            var cv = getSceneClothingVars();
+            var f = g === 'she';
+            if (ex === 'bra_exposed' && _seductBraOnShow()) return f
+                ? 'Her eyes drop to your ' + cv.braName + ', and she smiles into her glass. "Brave," she says. "Most girls in here hide behind a blazer."\n\n' + _seductBraChestLine('her') + ' Your clit throbs while she looks.'
+                : 'His eyes go to your ' + cv.braName + ' and stay a second longer than a gentleman\'s would. "No top at Lucius\'," he says. "They let you in like that?"\n\n"After six they do." ' + _seductBraChestLine('his') + ' Your pussy clenches under the stare.';
+            if (ex === 'panties_exposed' && _seductPantiesOnShow()) return f
+                ? 'Her eyes drop to your ' + cv.pantiesName + ' under the hem of your ' + cv.topName + ', and her mouth falls open. Then she laughs. "How did you get in here like that?"\n\nYour pussy clenches in the crotch while she looks.'
+                : 'His eyes drop below the hem of your ' + cv.topName + ' to your ' + cv.pantiesName + ', then flick to the door like he\'s wondering how you got past it. "That\'s... a choice."\n\nYour clit throbs while he stares.';
+            if (ex === 'underwear_only' && !cv.braSheer && !cv.pantiesSheer) return f
+                ? 'Her eyebrows go up. You\'re at the bar in your bra and panties, and half the room has noticed. "Bold choice," she says. "I like it."\n\nYour pussy clenches in your ' + cv.pantiesName + ' when her eyes drop to ' + (cv.pantiesCut === 'thong' ? 'it' : 'them') + '.'
+                : 'His eyes widen. You\'re at the bar of Lucius\' in your bra and panties, and he can\'t decide where to look first. "That\'s... quite an outfit."\n\nYour nipples stiffen in the cups while his eyes make up their mind.';
+            return '';
+        }
+
         function _seductExposureLine(g) {
-            var ex = _bpeShim((typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel()); // BPE shim: Step 14A
+            var ex = (typeof getVisibleExposureLevel === 'function') ? getVisibleExposureLevel() : getExposureLevel();
             var His = g === 'she' ? 'Her' : 'His';
             var he = g === 'she' ? 'she' : 'he';
             var He = g === 'she' ? 'She' : 'He';
+            // BPE Step 14A: the partial states (opaque only; mesh stays with the sheer content)
+            if (ex === 'bra_exposed') {
+                if (!_seductBraOnShow()) return '';
+                var cvB = getSceneClothingVars();
+                var his = g === 'she' ? 'her' : 'his';
+                if (isWetBraThrough()) return His + ' eyes drop to your chest and stay there. ' + _seductBraChestLine(his) + ' ' + He + ' doesn\'t even pretend to look at your face, and your pussy clenches while ' + he + ' stares.';
+                var v = Math.random() < 0.5;
+                if (g === 'she') return v
+                    ? 'She takes in your ' + cvB.braName + ' and your ' + cvB.bottomName + ' and nothing else, and one eyebrow goes up. ' + _seductBraChestLine(his) + ' Your pussy clenches while she looks.'
+                    : 'Her eyes do a slow lap of your chest before they come back to your face. No top, only your ' + cvB.braName + ', and she reads it like a choice you made. ' + _seductBraChestLine(his) + ' Your clit throbs when she smiles.';
+                return v
+                    ? 'His eyes drop to your chest, and whatever he meant to say next doesn\'t come. No top, only your ' + cvB.braName + ' and your ' + cvB.bottomName + ', and he takes his time with the cups. ' + _seductBraChestLine(his) + ' Your pussy clenches under the stare.'
+                    : 'He catches himself staring at your ' + cvB.braName + ' and drags his eyes back up, and a second later they drop right back down. ' + _seductBraChestLine(his) + ' Your pussy\'s wet before he says another word.';
+            }
+            if (ex === 'panties_exposed') {
+                if (!_seductPantiesOnShow()) return '';
+                var cvP = getSceneClothingVars(), panIt = cvP.pantiesCut === 'thong' ? 'it' : 'them';
+                if (g === 'she') return 'Her eyes drop below the hem of your ' + cvP.topName + ' to your ' + cvP.pantiesName + ' and widen. She glances past your hip like she wants to see the back too, and your pussy clenches in the crotch.';
+                return 'His eyes drop below the hem of your ' + cvP.topName + ' and stick on your ' + cvP.pantiesName + ', out here on the street with nothing over ' + panIt + '. He leans a little when you shift your weight, trying to see the back, and your clit throbs.';
+            }
             if (ex === 'underwear_only') return His + ' eyes drop before ' + he + ' says anything else. Bra and panties, nothing over them, out here on the street. Your nipples tighten in the cups while ' + he + ' looks.';
             if (ex === 'topless') return His + ' eyes land on your bare tits before they ever reach your face. Your nipples stiffen in the open air while ' + he + ' stares.';
             if (ex === 'bottomless') return His + ' eyes drop straight to your bare pussy and stay there. Your clit throbs under the look.';
@@ -73943,7 +74055,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const result = gameState.tempSeductionResult;
                     
                     if (result && result.success) {
-                        return '"Could be better," you say with a smile. "Want to make it interesting?"\n\nHis eyes light up. "Yeah? What did you have in mind?"\n\nYou step closer, close enough that ' + heightDescriptor('he') + '. "I know a place. Quiet. Private."\n\nHe grins. "I like the sound of that."\n\nHook. Line. Sinker.\n\n"Follow me."\n\nYou lead him down a side street. Darker. More isolated.\n\nPerfect for feeding.';
+                        return _insertSheerParagraph('"Could be better," you say with a smile. "Want to make it interesting?"\n\nHis eyes light up. "Yeah? What did you have in mind?"\n\nYou step closer, close enough that ' + heightDescriptor('he') + '. "I know a place. Quiet. Private."\n\nHe grins. "I like the sound of that."\n\nHook. Line. Sinker.\n\n"Follow me."\n\nYou lead him down a side street. Darker. More isolated.\n\nPerfect for feeding.', _seductUnderwearBeat('he'), /close enough that/);
                     } else {
                         if (result) {
                             setTimeout(() => showScene('street_man_rejection_' + result.rejectionType), 100);
@@ -73983,7 +74095,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const result = gameState.tempSeductionResult;
                     
                     if (result && result.success) {
-                        return '"Want to get out of here?" you ask directly.\n\nHe doesn\'t hesitate. "Hell yeah. Your place or mine?"\n\n"Somewhere private. Come on."\n\nYou take his hand and draw him in close, close enough that ' + heightDescriptor('he') + '. Lead him away from the club.\n\nDown a side street. Into the shadows.\n\nHe\'s eager. Excited. Doesn\'t suspect anything.';
+                        return _insertSheerParagraph('"Want to get out of here?" you ask directly.\n\nHe doesn\'t hesitate. "Hell yeah. Your place or mine?"\n\n"Somewhere private. Come on."\n\nYou take his hand and draw him in close, close enough that ' + heightDescriptor('he') + '. Lead him away from the club.\n\nDown a side street. Into the shadows.\n\nHe\'s eager. Excited. Doesn\'t suspect anything.', _seductUnderwearBeat('he'), /close enough that/);
                     } else {
                         if (result) {
                             setTimeout(() => showScene('street_man_rejection_' + result.rejectionType), 100);
@@ -74046,7 +74158,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const result = gameState.tempSeductionResult;
                     
                     if (result && result.success) {
-                        return '"Want to have some fun with me?" you ask, voice low and inviting.\n\nShe bites her lip. "What kind of fun?"\n\n"The best kind. Private. Exciting."\n\nShe glances at her phone. "My ride\'s still ten minutes away..."\n\n"Forget the ride. Come with me."\n\nShe hesitates. Then nods. "Okay. Why not?"\n\nYou take her hand and draw her in close, close enough that ' + heightDescriptor('she') + '. Lead her away.\n\nInto the shadows. Perfect.';
+                        return _insertSheerParagraph('"Want to have some fun with me?" you ask, voice low and inviting.\n\nShe bites her lip. "What kind of fun?"\n\n"The best kind. Private. Exciting."\n\nShe glances at her phone. "My ride\'s still ten minutes away..."\n\n"Forget the ride. Come with me."\n\nShe hesitates. Then nods. "Okay. Why not?"\n\nYou take her hand and draw her in close, close enough that ' + heightDescriptor('she') + '. Lead her away.\n\nInto the shadows. Perfect.', _seductUnderwearBeat('she'), /close enough that/);
                     } else {
                         if (result) {
                             setTimeout(() => showScene('street_woman_rejection_' + result.rejectionType), 100);
@@ -74086,7 +74198,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const result = gameState.tempSeductionResult;
                     
                     if (result && result.success) {
-                        return '"Come with me," you say. "I\'ll show you."\n\nShe looks intrigued. "Show me what?"\n\n"Something you\'ll never forget."\n\nThat gets her attention. "Okay. Lead the way."\n\nShe steps in, close enough that ' + heightDescriptor('she') + '.\n\nYou walk together. Away from the bar. Into quieter streets.\n\nShe\'s excited. Curious. Vulnerable.\n\nPerfect prey.';
+                        return _insertSheerParagraph('"Come with me," you say. "I\'ll show you."\n\nShe looks intrigued. "Show me what?"\n\n"Something you\'ll never forget."\n\nThat gets her attention. "Okay. Lead the way."\n\nShe steps in, close enough that ' + heightDescriptor('she') + '.\n\nYou walk together. Away from the bar. Into quieter streets.\n\nShe\'s excited. Curious. Vulnerable.\n\nPerfect prey.', _seductUnderwearBeat('she'), /close enough that/);
                     } else {
                         if (result) {
                             setTimeout(() => showScene('street_woman_rejection_' + result.rejectionType), 100);
@@ -74236,7 +74348,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // React to outfit (slots are objects; read .name safely)
                     const dressName = (outfit.dress && outfit.dress.name) || '';
                     const topName = (outfit.top && outfit.top.name) || '';
-                    if (isWearingVisibleUnderwear() || isEffectivelyNaked()) {
+                    var _lucLine = getLuciusSeduceExposureLine('he');
+                    if (_lucLine) {
+                        text += '\n\n' + _lucLine;
+                    } else if (isWearingVisibleUnderwear() || isEffectivelyNaked()) {
                         text += '\n\nHis eyes widen. "That\'s... quite an outfit."\n\nYou\'re practically naked. Bold move.';
                     } else if (dressName.includes("Little Black")) {
                         text += '\n\n"Nice dress," he says approvingly. "Classic."';
@@ -153942,7 +154057,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     // React to outfit (slots are objects; read .name safely)
                     const dressName = (outfit.dress && outfit.dress.name) || '';
                     const topName = (outfit.top && outfit.top.name) || '';
-                    if (isWearingVisibleUnderwear() || isEffectivelyNaked()) {
+                    var _lucLine = getLuciusSeduceExposureLine('she');
+                    if (_lucLine) {
+                        text += '\n\n' + _lucLine;
+                    } else if (isWearingVisibleUnderwear() || isEffectivelyNaked()) {
                         text += '\n\nHer eyebrows raise. "Bold choice. I like it."\n\nYou\'re practically naked. It\'s working.';
                     } else if (dressName.includes("Little Black")) {
                         text += '\n\n"Nice dress," she says. "I almost wore the same one."';
