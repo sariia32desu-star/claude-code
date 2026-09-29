@@ -7651,7 +7651,7 @@
                                 <li style="margin: 3px 0;"><strong style="color: #ff8888;">Cruz:</strong> sheer entries count toward her three-strike pattern. When most of your file is sheer, she says so: "Three stills. Same see-through dress. You know exactly what the cameras see."</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Venues:</strong> framed goes anywhere. Braless behind mesh is turned away at the hospital, library, blood bank, and dojang. Commando or bare only gets into Lucius' Lounge, Hardy Bar, Urban Edge, and the diner. A sheer bra or panties alone gets in nowhere.</li>
                                 <li style="margin: 3px 0;"><strong style="color: #ffdd88;">Transit:</strong> the bus and Uber refuse a sheer bra or panties with nothing over it (Uber costs 0.2 rating). Bare or commando behind mesh can ride, and the driver reacts when you get out.</li>
-                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Sheer lingerie police:</strong> three hours out in the full sheer set and officers show up, arguing the technicality ("It's see-through, Dave. That's the whole point of it."). Then you choose how it ends (see <strong>Police Stops</strong>).</li>
+                                <li style="margin: 3px 0;"><strong style="color: #ff3377;">Sheer lingerie police:</strong> three hours out in the full sheer set and officers show up with a gray blanket and a citation: under the city code, see-through lingerie is not clothes. Then you choose how it ends (see <strong>Police Stops</strong>).</li>
                             </ul>
                         </div>
 
@@ -8068,7 +8068,7 @@
                             <li style="margin: 3px 0; margin-left: 10px;">Both options are available from the "Deal with the footage problem" choice on district streets at night.</li>
                             <li style="margin: 5px 0;"><strong style="color: #e8b86d;">Rufus's Network</strong> (Lurasi Motel, Slums)</li>
                             <li style="margin: 3px 0; margin-left: 10px;">At 30+ suspicion with non-Angelic karma, you can approach Rufus at the Lurasi Motel and tell him you know what the motel really is. This permanently unlocks his underworld services:</li>
-                            <li style="margin: 3px 0; margin-left: 20px;"><strong style="color: #cc6666;">Lose the Paperwork</strong> ($500, 5-day cooldown): Misfiled evidence, broken chain of custody. Reduces evidence level by 20 and city suspicion by 10.</li>
+                            <li style="margin: 3px 0; margin-left: 20px;"><strong style="color: #cc6666;">Lose the Paperwork</strong> ($500, 5-day cooldown): A contract-lab courier on Rufus's payroll breaks the chain of custody on the evidence. Nobody at TPD is involved. Reduces evidence level by 20 and city suspicion by 10.</li>
                             <li style="margin: 3px 0; margin-left: 20px;"><strong style="color: #cc6666;">Handle the Witnesses</strong> ($800, 7-day cooldown): Doubt-seeding visits to witnesses. Reduces witness reports, witness quality, and evidence level. Most expensive because it requires a personal touch.</li>
                             <li style="margin: 3px 0; margin-left: 20px;"><strong style="color: #cc6666;">Cool a District</strong> ($300, 3-day cooldown): A diversionary crime spree in another part of the city. Zeroes out the target district's heat entirely.</li>
                             <li style="margin: 3px 0; margin-left: 20px;"><strong style="color: #cc6666;">Scrub the Digital Trail</strong> ($600, 5-day cooldown): International DMCA takedowns and algorithmic flagging. Reduces camera footage by 15 and social media heat by 10.</li>
@@ -8168,7 +8168,7 @@
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">Base capture chance:</strong> 3% per day, increased by wanted tier (+2% each), district heat, and servant notoriety. Scouted districts reduce this by 30%.</li>
                             <li style="margin: 3px 0;"><strong style="color: #cc6666;">While captured:</strong> Supernatural evidence accumulates at +3/day. Cops notice injuries healing, strength that shouldn't exist, eyes that catch light wrong. Every day costs you.</li>
                             <li style="margin: 3px 0;"><strong style="color: #4CAF50;">Wait it out</strong> (free, 3&ndash;7 days) &mdash; They break out on their own. +20 notoriety, +20 supernatural evidence from the escape itself.</li>
-                            <li style="margin: 3px 0;"><strong style="color: #4CAF50;">Rufus</strong> ($1,500) &mdash; Clean release. Evidence goes missing, arresting officer gets reassigned. +10 notoriety, 2-day task cooldown.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #4CAF50;">Rufus</strong> ($1,500) &mdash; Clean release. Rufus calls in a favor with the Mothers. Nobody at the precinct remembers the arrest, and the paperwork follows them. +10 notoriety, 2-day task cooldown.</li>
                             <li style="margin: 3px 0;"><strong style="color: #4CAF50;">Break them out</strong> (nighttime only, 30 min) &mdash; You go to the precinct yourself. +15 notoriety, +12 camera footage, bodycam risk. Fast, but loud.</li>
                         </ul>
 
@@ -8227,7 +8227,7 @@
                             <li style="margin: 3px 0;">Until the mayor legalizes your activity (Tier 4), police may confront you during crime-fighting.</li>
                             <li style="margin: 3px 0;"><strong style="color: #d4a0ff;">Surrender</strong> &mdash; time-consuming but builds respect. Officers let you go.</li>
                             <li style="margin: 3px 0;"><strong style="color: #d4a0ff;">Fly away</strong> &mdash; fast, but generates footage and vigilante suspicion.</li>
-                            <li style="margin: 3px 0;"><strong style="color: #d4a0ff;">Moral challenge</strong> (Tier 2+) &mdash; best outcome. The victim speaks for you. Officers look the other way.</li>
+                            <li style="margin: 3px 0;"><strong style="color: #d4a0ff;">Moral challenge</strong> (Tier 2+) &mdash; best outcome. The victim speaks for you on camera. Officers document it and release you on the spot.</li>
                         </ul>
 
                         <li style="margin: 5px 0; border-top: 1px solid #333; padding-top: 5px; list-style: none;"><strong style="color: #c084fc; font-size: 13px;">AERIAL PATROL &amp; DISASTERS</strong></li>
@@ -21024,25 +21024,27 @@ audioSystem.playSFX('buttonClick');
         }
         
         function handlePoliceArrive() {
+            // Trigrave PD Step 15A: officers keep their eyes on her face, speak by the book, and
+            // bring the gray blanket every cruiser carries. The heat stays in her head and the street.
             const corruption = gameState.corruption || 0;
             const isNight = isDark();
             let policeText = '';
             
             if (isNight) {
                 if (corruption >= 6001) {
-                    policeText = 'Blue and red light sweeps across the buildings. The siren blips once, short and sharp.\n\nA cruiser pulls to the curb thirty feet ahead. The spotlight swings toward you and pins you in a white circle, naked, bare feet on asphalt, every detail of your body lit up for the officers inside.\n\nThe driver\'s door opens. A cop steps out. Middle-aged, thick through the shoulders. He takes one look at you and reaches for his radio.\n\n"Dispatch, we\'ve got a 314 on foot. Female, late teens, fully unclothed. Northbound on—"\n\nHis partner comes around the hood, and they both stop ten feet from you.';
+                    policeText = 'Blue and red light sweeps across the buildings, and the siren blips once, short and sharp.\n\nA cruiser pulls to the curb thirty feet ahead. The spotlight swings toward you and pins you in a white circle, naked, bare feet on asphalt, every inch of your body lit up for the whole block.\n\nThe officer who steps out is middle-aged and thick through the shoulders. He keeps his eyes on your face while he reaches for his radio.\n\n"Twenty-two Baker, I\'m out with one female on foot, unclothed. Requesting a—"\n\nHis partner comes around the hood with a folded gray blanket in her hands, and they both stop ten feet from you. Your nipples are hard in the spotlight and your clit throbs, and neither of them looks anywhere but your eyes.';
                 } else if (corruption >= 2001) {
-                    policeText = 'The siren hits you like a slap. Blue and red light floods the street.\n\nA police cruiser rounds the corner and the spotlight finds you immediately. Naked. Exposed. Lit up like a stage performer in front of the whole block.\n\nYour stomach drops.\n\n"Ma\'am! Stop where you are!"\n\nThe officer\'s door opens. Heavy boots on pavement.\n\n<em>Oh god. Oh god, this is actually happening.</em>\n\nYour heart is slamming against your ribs. You take a step backward.';
+                    policeText = 'The siren hits you like a slap, and blue and red light floods the street.\n\nA police cruiser rounds the corner, and the spotlight finds you immediately, naked and lit up like a stage performer in front of the whole block.\n\nYour stomach drops.\n\n"Ma\'am! Stop where you are!"\n\nThe officer\'s door opens, and heavy boots hit the pavement.\n\n<em>Oh god. Oh god, this is actually happening.</em>\n\nYour heart is slamming against your ribs. You take a step backward.';
                 } else {
-                    policeText = 'The sirens come from two directions at once.\n\nBlue and red light turns the street into a carnival. A cruiser pulls up on your left. Another rolls in from behind. The spotlight catches you mid-stride and you freeze, arms clamped across your chest, every inch of your bare body visible to the officers and anyone else watching.\n\n"DO NOT MOVE!"\n\nThe voice comes through the loudspeaker, distorted and enormous. Your knees buckle. Tears blur the flashing lights.\n\nA car door opens. Footsteps. Someone is walking toward you.\n\n<em>I can\'t get arrested. I can\'t. They\'ll find out what I am.</em>';
+                    policeText = 'The sirens come from two directions at once.\n\nBlue and red light turns the street into a carnival. A cruiser pulls up on your left, and another rolls in from behind. The spotlight catches you mid-stride and you freeze, arms clamped across your chest, every inch of your bare body visible to anyone watching.\n\n"Ma\'am, stay where you are. We\'re going to get you covered."\n\nThe voice comes through the loudspeaker, distorted and enormous. Your knees buckle, and tears blur the flashing lights.\n\nA car door opens. Someone\'s walking toward you with a gray blanket held out in front of them.\n\n<em>I can\'t get arrested. I can\'t. They\'ll find out what I am.</em>';
                 }
             } else {
                 if (corruption >= 6001) {
-                    policeText = 'You hear the siren before you see the car. A single whoop, then the cruiser pulls around the corner and parks at the curb ahead of you.\n\nThe officer who steps out is young. Maybe twenty-six. He adjusts his belt, looks at you, and does a visible double take.\n\nHe recovers fast. Professional training kicking in. He keys his shoulder radio.\n\n"Unit fourteen, I\'ve got a, uh, a female individual. Indecent exposure. She\'s just... she\'s walking."\n\nHe looks at you again. You can see his ears turning red from here.\n\n<em>Cute. But I don\'t have time for this.</em>';
+                    policeText = 'You hear the siren before you see the car. A single whoop, and then the cruiser pulls around the corner and parks at the curb ahead of you.\n\nThe officer who steps out is young, maybe twenty-six. He takes you in with one look, brings his eyes up to your face, and keeps them there.\n\nHe keys his shoulder radio. "Fourteen-Adam, I\'m out with one female on foot, unclothed. Requesting a female officer to the scene."\n\nThen he pops the trunk and comes back with a folded gray blanket, holding it out at arm\'s length.\n\n<em>Cute. But I don\'t have time for this.</em>';
                 } else if (corruption >= 2001) {
-                    policeText = 'A squad car pulls up alongside you. The window is already down. The officer inside leans across the passenger seat.\n\n"Miss? Miss, can you stop for a second?"\n\nYou stop. You don\'t have a choice. His partner is already out of the car, coming around the front, one hand resting near his belt.\n\nThey\'re both looking at you. Trying not to look at specific parts of you and failing.\n\n"We got a call," the first one says. "Several calls, actually. About a young woman walking around without, uh..." He gestures vaguely at the concept of clothing.\n\nYour face is on fire.';
+                    policeText = 'A squad car pulls up alongside you. The window\'s already down, and the officer inside leans across the passenger seat.\n\n"Miss? Miss, I need you to stop for a second."\n\nYou stop. You don\'t have a choice. His partner\'s already out of the car and coming around the front, one hand resting near his belt.\n\nThey\'re both looking at your face, carefully and only at your face, which somehow makes it worse.\n\n"We got a call," the first one says. "Several calls, actually, about a young woman walking around without clothes." He holds a folded gray blanket out through the window. "Put this on, please."\n\nYour face is on fire.';
                 } else {
-                    policeText = 'The squad car appears from nowhere. Siren off, just the lights, cycling blue and red across the storefronts.\n\nIt pulls to the curb ten feet from you. Both doors open at the same time.\n\nTwo officers. The one on the left is a woman, short hair, expression locked down tight. The one on the right is older, gray at the temples, and he looks tired.\n\n"Ma\'am." The woman\'s voice is flat and controlled. "We need you to stop walking."\n\nYou stop. You\'re shaking so hard your teeth chatter. Your arms are crossed over your chest, fingers digging into your own shoulders.\n\nThe older cop pulls a blanket from the trunk. Standard issue, thin gray wool. He holds it out at arm\'s length without getting closer.\n\n"Take this," he says quietly. "Then we need to talk."\n\nYour throat is so tight you can barely swallow. You take the blanket and wrap it around yourself with fumbling hands. The wool is scratchy and smells like a car trunk and it\'s the best thing you\'ve ever felt.';
+                    policeText = 'The squad car appears from nowhere, siren off, just the lights cycling blue and red across the storefronts.\n\nIt pulls to the curb ten feet from you, and both doors open at the same time.\n\nTwo officers. The one on the left is a woman with short hair, her expression locked down tight. The one on the right is older, gray at the temples, and he looks tired.\n\n"Ma\'am." The woman\'s voice is flat and controlled. "We need you to stop walking."\n\nYou stop. You\'re shaking so hard your teeth chatter, and your arms are crossed over your chest with your fingers digging into your own shoulders.\n\nThe older cop pulls a blanket from the trunk, standard issue, thin gray wool. He holds it out at arm\'s length without getting closer.\n\n"Take this," he says quietly. "Then we need to talk."\n\nYour throat\'s so tight you can barely swallow. You take the blanket and wrap it around yourself with fumbling hands. The wool is scratchy and smells like a car trunk, and it\'s the best thing you\'ve ever felt.';
                 }
             }
             
@@ -22845,22 +22847,20 @@ audioSystem.playSFX('buttonClick');
             var pan = o.panties ? proseItemName(o.panties) : 'panties';
             var text = '';
             if (corruption >= 6001) {
-                text = 'The cruiser pulls up and the officer gets out with his notepad already open. He looks at you anyway. Your nipples dark behind your ' + bra + '. The bare slit of your pussy behind your ' + pan + '.\n\n' +
-                    '"Ma\'am, is that..." He stops and tries again. "Is that underwear?"\n\n"Lingerie."\n\n' +
-                    '"I can see your..." He doesn\'t finish. His ears go red.\n\n' +
-                    'His partner leans on the car door and doesn\'t bother pretending to look anywhere else. "It\'s see-through, Dave. That\'s the whole point of it."\n\n' +
-                    'Your clit throbs. Three hours on the street and this is the first time anyone\'s tried to argue about it.\n\n' +
-                    '"You need to come with us, ma\'am. Indecent exposure."\n\n"I\'m dressed."\n\nHe looks at your nipples again. "Not really."\n\nYou smile at him.';
+                text = 'The cruiser pulls up, and the officer gets out with his notepad already open. His eyes stay on your face, even with your nipples dark behind your ' + bra + ' and the bare slit of your pussy showing through your ' + pan + '.\n\n' +
+                    '"Ma\'am, I\'m going to need you to cover up. That\'s see-through."\n\n"It\'s lingerie."\n\n' +
+                    '"Yes, ma\'am." He writes it down. His partner comes around the car with a folded gray blanket and holds it out without a word.\n\n' +
+                    'Your clit throbs. Three hours on the street, the whole block\'s seen everything, and these two are the only people who haven\'t looked.\n\n' +
+                    '"Indecent exposure, ma\'am. You\'re going to need to come with us."\n\n"I\'m dressed."\n\n"Not under the city code." He waits, patient.\n\nYou smile at him anyway.';
             } else if (corruption >= 2001) {
-                text = 'A squad car slows beside you and stays there, matching your pace.\n\n' +
-                    'The officer in the passenger seat looks at your ' + bra + ', at your nipples showing dark through it, then lower, to your ' + pan + ' and the bare slit behind them. He clears his throat.\n\n' +
-                    '"Miss. You can\'t walk around like that."\n\n"I\'m wearing something."\n\n"I can see everything you\'re wearing it over."\n\n' +
-                    'Heat floods your face. Your pussy clenches anyway, and you know he can see that too.\n\nThe door opens.';
+                text = 'A squad car pulls up beside you. The officer in the passenger seat keeps his eyes on your face, which makes him the only person on the block who isn\'t looking at your nipples dark through your ' + bra + ', or the bare slit behind your ' + pan + '.\n\n' +
+                    '"Miss, that\'s see-through, and you can\'t walk around in it."\n\n"I\'m wearing something."\n\n"Yes, ma\'am, and it\'s see-through." He says it evenly, like he\'s reading it off a card.\n\n' +
+                    'Heat floods your face. Your pussy clenches anyway, and every person watching from the sidewalk can see it.\n\nThe door opens.';
             } else {
                 text = 'The siren chirps once behind you and your whole body locks.\n\n' +
                     'Two officers get out. The woman takes one look and her mouth goes flat. "Ma\'am. Are you aware we can see through that?"\n\n' +
-                    'You look down. Your nipples, dark and stiff behind your ' + bra + '. Your bare slit behind your ' + pan + ', clear as anything in the light.\n\n' +
-                    'You\'ve been telling yourself for three hours that it counts as clothes.\n\n"I... it\'s..."\n\n"Indecent exposure. Hands where I can see them."\n\n' +
+                    'You look down. Your nipples are dark and stiff behind your ' + bra + ', and your bare slit shows through your ' + pan + ', clear as anything in the light.\n\n' +
+                    'You\'ve been telling yourself for three hours that it counts as clothes.\n\n"I... it\'s..."\n\n"Indecent exposure. Hands where I can see them." Her partner\'s already coming around the car with a gray blanket.\n\n' +
                     'Your eyes burn. Your pussy clenches, and that\'s the worst part.';
             }
             gameState.sheerLingerieStartTime = null;
@@ -23070,41 +23070,41 @@ audioSystem.playSFX('buttonClick');
                 // new states: topless, bottomless, mesh and soaked (below)
             } else if (state === 'panties_exposed' || state === 'sheer_lingerie_bottom') {
                 if (corruption >= 6001) {
-                    text = 'The cruiser\'s been rolling along behind you for a block. You know exactly what they\'ve been looking at: ' + ass + ', under the hem of your ' + top + '.\n\n' +
-                        'It pulls ahead and stops. The officer gets out, looks at your ' + top + ', then lower, and stays there.\n\n' +
-                        '"Ma\'am. Where are your pants?"\n\n' +
-                        'You shift your weight onto one hip so he gets a better look at the damp crotch of your ' + pan + '. "I\'m wearing a shirt."\n\n' +
-                        'His partner laughs into his radio. Your clit throbs. Four hours on the street, and he\'s the first one who\'s asked.\n\n' +
-                        '"Indecent exposure. Turn around, hands behind your back."\n\n"You\'ve already seen the back."\n\nHis partner stops laughing and comes around the car.';
+                    text = 'The cruiser\'s been rolling along behind you for a block, and so has half the sidewalk. You know exactly what they\'ve all been looking at: ' + ass + ', under the hem of your ' + top + '.\n\n' +
+                        'The car pulls ahead and stops. The officer gets out and keeps his eyes on your face.\n\n' +
+                        '"Ma\'am, I\'m going to need you to stop. Where are your pants?"\n\n' +
+                        'You shift your weight onto one hip, and the damp crotch of your ' + pan + ' is right there for anybody who wants it. "I\'m wearing a shirt."\n\n' +
+                        '"It doesn\'t cover enough, ma\'am." His partner calls it in over the radio, calm and flat. Your clit throbs. Four hours on the street, and he\'s the first one who\'s asked.\n\n' +
+                        '"Indecent exposure. Turn around, hands behind your back, please."\n\n"You\'ve already seen the back."\n\n"Turn around, ma\'am." He hasn\'t looked anywhere but your face, and he isn\'t going to.';
                 } else if (corruption >= 2001) {
-                    text = 'A squad car slows beside you and matches your pace. You keep your eyes forward and tug at the hem of your ' + top + '. It doesn\'t reach.\n\n' +
-                        'The passenger window comes down. As you step past the car, the officer\'s eyes drop below your hem to ' + ass + '.\n\n' +
-                        '"Miss. You can\'t walk around without pants."\n\n"It\'s... it\'s a long shirt."\n\n"It isn\'t."\n\n' +
-                        'Heat floods your face. Your pussy clenches, and the crotch of your ' + pan + ' is damp enough that you\'re sure he can see it.\n\nHis door opens.';
+                    text = 'A squad car slows beside you and matches your pace. You keep your eyes forward and tug at the hem of your ' + top + ', and it doesn\'t reach.\n\n' +
+                        'The passenger window comes down. The officer looks at your face and nowhere else.\n\n' +
+                        '"Miss. You can\'t walk around without pants. We\'ve had a call."\n\n"It\'s... it\'s a long shirt."\n\n"No, ma\'am, it isn\'t." He reaches back and comes up with a folded gray blanket.\n\n' +
+                        'Heat floods your face. Your pussy clenches, and the crotch of your ' + pan + ' is damp enough that you\'re sure the people behind you can see it.\n\nHis door opens.';
                 } else {
                     text = 'Blue and red light washes over the sidewalk in front of you. It\'s coming from behind, where it\'s been lighting you up for who knows how long, right on ' + ass + '.\n\n' +
                         'An officer steps out. "Ma\'am. Stop right there."\n\n' +
-                        'You stop. Both hands go to the hem of your ' + top + ' and pull it down as far as it goes, which isn\'t far. Below the hem, your ' + pan + ' and your bare thighs are right there for him and everyone on the block.\n\n' +
-                        '"I... my clothes got..."\n\n"Indecent exposure. Hands where I can see them."\n\n' +
+                        'You stop. Both hands go to the hem of your ' + top + ' and pull it down as far as it goes, which isn\'t far. Below the hem, your ' + pan + ' and your bare thighs are right there for everyone on the block.\n\n' +
+                        '"I... my clothes got..."\n\n"I understand, ma\'am. We\'ll get you something to cover up. Hands where I can see them, please."\n\n' +
                         'Your eyes sting. Your pussy clenches, and you can feel the damp spot spreading in your ' + pan + '.';
                 }
             } else {
                 if (corruption >= 6001) {
-                    text = 'The cruiser takes its time pulling up. The officer behind the wheel has been driving at walking speed for half a block, looking at ' + tits + '.\n\n' +
-                        'He gets out. His eyes go from your ' + bra + ' to your ' + pan + ' and back up, slow.\n\n' +
-                        '"Ma\'am. You\'re in your underwear."\n\n"You noticed."\n\n' +
-                        'You turn a slow circle so he gets the back too: ' + ass + '. Your nipples are stiff against the cups, and the crotch of your ' + pan + ' is soaked.\n\n' +
-                        '"Indecent exposure," his partner says, still looking. "You need to come with us."';
+                    text = 'The cruiser pulls up at an easy pace, and half the sidewalk slows down with it to look at ' + tits + '.\n\n' +
+                        'The officer gets out and keeps his eyes on yours all through his walk over, like that\'s a skill he practiced. It probably is.\n\n' +
+                        '"Ma\'am. You\'re in your underwear on a public street."\n\n"You noticed."\n\n' +
+                        '"Yes, ma\'am." You turn a slow circle anyway so the street gets the back too: ' + ass + '. Your nipples are stiff against the cups, and the crotch of your ' + pan + ' is soaked. He doesn\'t follow the turn.\n\n' +
+                        '"Indecent exposure," his partner says, holding out a folded gray blanket. "You need to come with us."';
                 } else if (corruption >= 2001) {
                     text = 'A squad car pulls to the curb ahead of you, and the officer leans out the window before you can turn around.\n\n' +
-                        'His eyes go from ' + tits + ' down to your ' + pan + ' and back up. "Miss. What happened to your clothes?"\n\n"Nothing. It\'s... it\'s a look."\n\n"It\'s your underwear."\n\n' +
-                        'Your cheeks burn. Your nipples tighten in the cups while he stares, and your pussy clenches hard.\n\nHe reaches for the door handle. Behind you, people have stopped on the sidewalk to look at ' + ass + '.';
+                        'He looks at your face. "Miss. What happened to your clothes?"\n\n"Nothing. It\'s... it\'s a look."\n\n"It\'s your underwear, ma\'am."\n\n' +
+                        'Your cheeks burn. Your nipples tighten in the cups of your ' + bra + ', and your pussy clenches hard.\n\nHe reaches for the door handle. Behind you, people have stopped on the sidewalk to look at ' + ass + '.';
                 } else {
-                    text = 'The cruiser pulls to the curb beside you and the window comes down. The officer\'s eyes go from your ' + bra + ' to your ' + pan + ' and back up.\n\n' +
+                    text = 'The cruiser pulls to the curb beside you and the window comes down. The officer keeps his eyes on your face.\n\n' +
                         '"Miss, you can\'t be out here in your underwear."\n\n' +
-                        'Your arms come up over ' + chest + '. Your face is on fire, and your pussy clenches anyway, hard enough that you\'re sure he can tell.\n\n' +
-                        '"I know. I know, I\'m sorry, my clothes..."\n\n"Stay right there."\n\n' +
-                        'He opens his door. A woman at the bus stop behind you has her phone up, pointed at ' + ass + '.';
+                        'Your arms come up over ' + chest + '. Your face is on fire, and your pussy clenches anyway, hard enough that you\'re sure the whole block can tell.\n\n' +
+                        '"I know. I know, I\'m sorry, my clothes..."\n\n"Stay right there, please."\n\n' +
+                        'He opens his door with a folded gray blanket in his hand. A woman at the bus stop behind you has her phone up, pointed at ' + ass + '.';
                 }
             }
             gameState.indecencyClockStartTime = null;
@@ -23115,6 +23115,7 @@ audioSystem.playSFX('buttonClick');
 
         // Arrivals for the states with no text above. '' for Panties Exposed and Underwear Only.
         function getExhibStopArrivalExtra(state) {
+            // Trigrave PD Step 15A: the officers look at her face; the street looks at everything else
             var cv = getSceneClothingVars();
             var ba = gameState.bodyAppearance || {};
             var bs = ba.breastSize || 'average', butt = ba.buttSize || 'average';
@@ -23123,41 +23124,41 @@ audioSystem.playSFX('buttonClick');
             if (state === 'topless') {
                 var tits = bs === 'large' ? 'Your heavy tits sway with every step, bare, nipples dark and hard.' : bs === 'small' ? 'Your small tits are bare, nipples tight little points in the air.' : 'Your bare tits bounce with every step, nipples hard.';
                 var chest = bs === 'large' ? 'your heavy tits' : bs === 'small' ? 'your small tits' : 'your bare tits';
-                if (c >= 6001) return 'The cruiser pulls up beside you at a crawl, and the officer in the passenger seat doesn\'t even pretend to look at your face. ' + tits + '\n\n' +
+                if (c >= 6001) return 'The cruiser pulls up beside you at a crawl, and the officer in the passenger seat looks you in the eye and keeps looking there. ' + tits + '\n\n' +
                     '"Ma\'am. Where\'s your shirt?"\n\n"Somewhere," you say. You don\'t cross your arms. Your nipples are stiff in the open air, and your pussy\'s wet under your ' + bottom + ' from hours of this.\n\n' +
-                    'Both doors open. "Indecent exposure. Hands where we can see them."';
+                    'Both doors open, and one of them has a folded gray blanket. "Indecent exposure. Hands where we can see them, please."';
                 if (c >= 2001) return 'A squad car slides to the curb ahead of you, and the officer\'s out before you can think about turning around.\n\n' +
-                    'His eyes drop straight to your chest. ' + tits + '\n\n"Miss, you can\'t walk around topless."\n\n"I... it\'s legal. Isn\'t it?"\n\n"Not in this city."\n\n' +
-                    'Your face goes hot and your nipples tighten under his stare. Your pussy clenches under your ' + bottom + ', and his partner\'s coming around the hood.';
+                    'He looks at your face and nowhere else, which leaves the whole sidewalk to look at the rest. ' + tits + '\n\n"Miss, you can\'t walk around topless."\n\n"I... it\'s legal. Isn\'t it?"\n\n"Not in this city, ma\'am."\n\n' +
+                    'Your face goes hot and your nipples tighten in the air. Your pussy clenches under your ' + bottom + ', and his partner\'s coming around the hood with a gray blanket.';
                 return 'The siren gives one short whoop behind you, and every muscle in your body locks.\n\n' +
-                    'Two officers get out. You fold both arms over ' + chest + ', and it doesn\'t cover much. The older one looks away, and the younger one doesn\'t.\n\n' +
+                    'Two officers get out. You fold both arms over ' + chest + ', and it doesn\'t cover much. They both keep their eyes on your face, and the younger one\'s already unfolding a gray blanket from the trunk.\n\n' +
                     '"Ma\'am. We\'ve had calls about a topless woman on this street."\n\n' +
                     'Your eyes burn. Your nipples are hard against your forearms and your pussy\'s damp under your ' + bottom + ', and you hate your body for both.\n\n"Stay right where you are."';
             }
             if (state === 'bottomless') {
                 var ass = butt === 'large' ? 'your full, bare ass' : butt === 'small' ? 'your tight little bare ass' : 'your bare ass';
-                if (c >= 6001) return 'The cruiser\'s been following you for half a block, and you know what they\'ve had the whole time: ' + ass + ' under the hem of your ' + top + ', swinging with every step.\n\n' +
-                    'It pulls ahead and stops. The officer gets out, and his eyes go straight to your bare pussy.\n\n"Ma\'am. You\'re not wearing anything down there."\n\n"I know."\n\n' +
-                    'You stand with your weight on one hip and let him look. Your clit throbs, and you can feel how wet your lips are in the open air.\n\n"Indecent exposure. Turn around."';
+                if (c >= 6001) return 'The cruiser\'s been following you for half a block, and so has everyone behind you on the sidewalk, watching ' + ass + ' under the hem of your ' + top + ', swinging with every step.\n\n' +
+                    'It pulls ahead and stops. The officer gets out with a folded gray blanket already in his hand, and he keeps his eyes on yours all through his walk over, like that\'s a skill he practiced. It probably is.\n\n"Ma\'am. You\'re not wearing anything below the waist."\n\n"I know."\n\n' +
+                    'You stand with your weight on one hip. Your clit throbs, and you can feel how wet your lips are in the open air, and he still hasn\'t looked down.\n\n"Indecent exposure. Turn around, please."';
                 if (c >= 2001) return 'A squad car pulls to the curb beside you. You yank the hem of your ' + top + ' down with both hands, and it covers nothing.\n\n' +
-                    'The officer leans out the window. His eyes go from your face to your bare pussy and stay there.\n\n"Miss. Where are your pants?"\n\n"I... they..."\n\n' +
-                    'Heat floods your face. Your pussy clenches, and you know he can see how wet you are. His door opens.';
+                    'The officer leans out the window. His eyes stay on your face, which is somehow worse.\n\n"Miss. Where are your pants?"\n\n"I... they..."\n\n' +
+                    'Heat floods your face. Your pussy clenches, and you know the man at the crosswalk can see how wet you are. His door opens, and there\'s a gray blanket in his hand.';
                 return 'Blue and red light fills the street behind you, and it\'s been lighting up ' + ass + ' for who knows how long.\n\n' +
                     'An officer steps out. "Ma\'am. Stop right there."\n\n' +
                     'You press both hands flat over your pussy and turn around. A woman at the bus stop has her phone up, and tears sting your eyes.\n\n' +
-                    '"Indecent exposure. Keep your hands where I can see them."\n\n' +
+                    '"Indecent exposure. Keep your hands where I can see them. We\'ll get you covered."\n\n' +
                     'You can\'t make them move. Your pussy clenches under your palms, wet, and that\'s the worst part.';
             }
             if (state === 'bra_wet') {
                 var bra = cv.braName;
                 var wet = bs === 'large' ? 'The wet cups cling to your heavy tits, and your nipples show dark and hard through them.' : bs === 'small' ? 'The wet cups cling flat to your small tits, nipples stiff and dark through the fabric.' : 'The wet cups cling to your tits, nipples dark and hard through the fabric.';
-                if (c >= 6001) return 'The rain\'s soaked your ' + bra + ' clear through, and the cruiser pulling up beside you has its wipers going and its passenger staring. ' + wet + '\n\n' +
-                    '"Ma\'am. That bra\'s see-through."\n\n"It\'s raining."\n\n"I can see everything."\n\n' +
-                    'You push your wet hair back off your face and let him look. Your clit throbs.\n\n"Indecent exposure," he says, and opens his door.';
-                if (c >= 2001) return 'A squad car pulls up with its wipers going. The officer rolls his window down, and his eyes drop to your chest.\n\n' + wet + '\n\n' +
-                    '"Miss, you need to cover up."\n\n"It\'s just rain. It\'s a normal bra."\n\n"It isn\'t anymore."\n\n' +
+                if (c >= 6001) return 'The rain\'s soaked your ' + bra + ' clear through, and the cruiser pulling up beside you has its wipers going. ' + wet + '\n\n' +
+                    '"Ma\'am," the officer says, looking at your face. "That bra\'s see-through when it\'s wet."\n\n"It\'s raining."\n\n"Yes, ma\'am. I still need you to cover up."\n\n' +
+                    'You push your wet hair back off your face and let the street look. Your clit throbs.\n\n"Indecent exposure," he says, and opens his door with a folded blanket in his hand.';
+                if (c >= 2001) return 'A squad car pulls up with its wipers going. The officer rolls his window down and keeps his eyes on yours.\n\n' + wet + ' You can feel it without looking.\n\n' +
+                    '"Miss, you need to cover up."\n\n"It\'s just rain. It\'s a normal bra."\n\n"It isn\'t anymore, ma\'am."\n\n' +
                     'Your cheeks burn and your nipples tighten in the cold, soaked cups. Your pussy clenches. His door opens.';
-                return 'The rain\'s coming down hard when the cruiser pulls to the curb. You don\'t understand why until the officer gets out and looks at your chest.\n\n' +
+                return 'The rain\'s coming down hard when the cruiser pulls to the curb. You don\'t understand why until the officer gets out, holds out a folded gray blanket, and keeps his eyes very carefully on your face.\n\n' +
                     'You look down. ' + wet + ' Your ' + bra + ' might as well be gone.\n\n"Ma\'am, I need you to stop."\n\n' +
                     'Your arms come up over your chest, shaking. Your nipples are hard against your wet forearms, and your pussy clenches, and you want to disappear.';
             }
@@ -23166,47 +23167,47 @@ audioSystem.playSFX('buttonClick');
                 var n = b.noun;
                 var nip = b.bs === 'large' ? 'Your heavy tits sit behind the ' + n + ' with nothing hidden, nipples dark and stiff.' : b.bs === 'small' ? 'Your small tits show straight through the ' + n + ', nipples stiff little points.' : 'Your tits show straight through the ' + n + ', nipples dark and stiff.';
                 if (state === 'sheer_lingerie_top') {
-                    if (c >= 6001) return 'The cruiser rolls up, and the officer gets out with his eyes already on your chest. ' + nip + '\n\n' +
-                        '"Ma\'am, is that a bra?"\n\n"It\'s lingerie."\n\n"I can see your nipples."\n\n"That\'s the point of it." Your clit throbs when his ears go red.\n\n' +
+                    if (c >= 6001) return 'The cruiser rolls up, and the officer gets out with his eyes on your face. ' + nip + '\n\n' +
+                        '"Ma\'am, is that a bra?"\n\n"It\'s lingerie."\n\n"It\'s see-through, ma\'am."\n\n"That\'s the point of it." Your clit throbs, and he doesn\'t react at all.\n\n' +
                         'His partner comes around the car. "Indecent exposure. You need to come with us."';
-                    if (c >= 2001) return 'A squad car slows beside you and the passenger window comes down. The officer looks at your ' + b.bra + ', then at the nipples showing dark through it.\n\n' +
-                        '"Miss, that\'s see-through."\n\n"It\'s a bra."\n\n"It\'s a window."\n\n' +
-                        'Your face burns. Your nipples tighten behind the ' + n + ' while he watches, and your pussy clenches under your ' + bottom + '. His door opens.';
+                    if (c >= 2001) return 'A squad car slows beside you and the passenger window comes down. The officer looks at your face, and only your face.\n\n' +
+                        '"Miss, that\'s see-through."\n\n"It\'s a bra."\n\n"Yes, ma\'am. A see-through one."\n\n' +
+                        'Your face burns. Your nipples tighten behind the ' + n + ', and your pussy clenches under your ' + bottom + '. His door opens.';
                     return 'The siren chirps once behind you, and you freeze.\n\n' +
                         'Two officers get out. The woman takes one look at your ' + b.bra + ' and her mouth goes flat. "Ma\'am. Are you aware we can see through that?"\n\n' +
                         'You look down. ' + nip + ' You cross your arms over them, face on fire, and your pussy clenches anyway.\n\n"Indecent exposure. Hands where I can see them."';
                 }
                 if (state === 'sheer_bare') {
-                    if (c >= 6001) return 'The cruiser pulls up and the officer gets out slow, taking in your ' + b.outfit + ' and everything behind it: ' + b.shows + '.\n\n' +
-                        '"Ma\'am. You\'re naked."\n\n"I\'m dressed."\n\n"I can see your..." He doesn\'t finish.\n\n' +
-                        'Your clit throbs. You turn so he gets the back too, ' + b.ass + ' behind the ' + n + '.\n\n' +
-                        'His partner\'s already out. "Indecent exposure. Hands behind your back."';
-                    if (c >= 2001) return 'A squad car pulls to the curb ahead of you. The officer who gets out looks at your ' + b.outfit + ', then through it, and his jaw works.\n\n' +
+                    if (c >= 6001) return 'The cruiser pulls up, and the officer gets out and takes in your ' + b.outfit + ' in one glance before bringing his eyes straight back up to yours. Everyone else on the block is looking at what\'s behind it: ' + b.shows + '.\n\n' +
+                        '"Ma\'am. That doesn\'t cover anything."\n\n"I\'m dressed."\n\n"Not under the city code."\n\n' +
+                        'Your clit throbs. You turn anyway, so the street gets the back too, ' + b.ass + ' behind the ' + n + '.\n\n' +
+                        'His partner\'s already out with a gray blanket. "Indecent exposure. Hands behind your back, please."';
+                    if (c >= 2001) return 'A squad car pulls to the curb ahead of you. The officer who gets out looks at your ' + b.outfit + ' once, then at your face, and keeps his eyes there.\n\n' +
                         '"Miss. That doesn\'t count as clothes."\n\n"It\'s ' + (b.same ? 'a dress' : 'clothes') + '," you say. Your voice cracks on it.\n\n' +
-                        'He can see ' + b.shows + '. Your face burns, and your pussy clenches behind the ' + n + ' where he can watch it happen.\n\n"Stay where you are."';
+                        'Everybody on the sidewalk can see ' + b.shows + '. Your face burns, and your pussy clenches behind the ' + n + ' where they can watch it happen.\n\n"Stay where you are, please."';
                     return 'The siren whoops once behind you. Both officers get out, and in the ' + (isDark() ? 'spotlight' : 'daylight') + ' the ' + n + ' might as well be gone.\n\n' +
                         'Everything behind it is right there: ' + b.shows + '. You clamp one arm over your chest and one hand over your pussy.\n\n' +
                         '"Ma\'am! Stop where you are!"\n\n' +
-                        'Your eyes burn. Your nipples are hard against your arm and you\'re wet under your palm, and the officer\'s already walking toward you.';
+                        'Your eyes burn. Your nipples are hard against your arm and you\'re wet under your palm, and the officer\'s already walking toward you with a gray blanket.';
                 }
                 if (state === 'sheer_braless') {
-                    if (c >= 6001) return 'The cruiser slows beside you, and the officer in the passenger seat looks at your ' + b.top + ' for a long time. ' + nip + '\n\n' +
-                        '"Ma\'am, you\'re not wearing a bra."\n\n"You noticed."\n\n' +
-                        'Your clit throbs. You roll your shoulders back so the ' + n + ' pulls tight across your nipples.\n\n"Indecent exposure," his partner says, getting out. "Come here."';
-                    if (c >= 2001) return 'A squad car pulls to the curb and the officer leans across the seat. His eyes go straight through your ' + b.top + '.\n\n' + nip + '\n\n' +
-                        '"Miss, I can see your chest."\n\n"It\'s a shirt."\n\n"It\'s a net."\n\n' +
-                        'Your face burns, and your nipples tighten against the ' + n + ' while he watches. Your pussy clenches. His door opens.';
-                    return 'Two officers get out of the cruiser, and the woman\'s eyes go to your ' + b.top + ' and stop.\n\n"Ma\'am. Are you aware that\'s see-through?"\n\n' +
+                    if (c >= 6001) return 'The cruiser slows beside you, and the officer in the passenger seat looks at your face while he talks. ' + nip + '\n\n' +
+                        '"Ma\'am, that top\'s see-through."\n\n"You noticed."\n\n' +
+                        '"Yes, ma\'am." Your clit throbs. You roll your shoulders back so the ' + n + ' pulls tight across your nipples, and he doesn\'t look down.\n\n"Indecent exposure," his partner says, getting out. "Come with us, please."';
+                    if (c >= 2001) return 'A squad car pulls to the curb and the officer leans across the seat. He keeps his eyes on your face.\n\n' + nip + '\n\n' +
+                        '"Miss, that top\'s see-through."\n\n"It\'s a shirt."\n\n"Yes, ma\'am. A see-through one."\n\n' +
+                        'Your face burns, and your nipples tighten against the ' + n + '. Your pussy clenches. His door opens.';
+                    return 'Two officers get out of the cruiser. The woman looks at your ' + b.top + ' once, then at your face.\n\n"Ma\'am. Are you aware that\'s see-through?"\n\n' +
                         'You look down at your own nipples, dark and stiff behind the ' + n + '. It looked different in the mirror. Your arms come up over your chest, and your pussy clenches, and you want to cry.\n\n"Hands where I can see them."';
                 }
-                if (c >= 6001) return 'The cruiser\'s been rolling behind you for a block. When it pulls ahead and stops, the officer gets out looking at your ' + b.bottom + ', and at the bare slit of your pussy behind it.\n\n' +
+                if (c >= 6001) return 'The cruiser\'s been rolling behind you for a block. When it pulls ahead and stops, the officer gets out with his eyes on your face. Everyone who\'s walked behind you for the last block has seen your ' + b.bottom + ', and the bare slit of your pussy behind it.\n\n' +
                     '"Ma\'am. There\'s nothing under that."\n\n"There\'s me."\n\n' +
-                    'You tip your hips a little. Your clit throbs, and your lips are slick enough to shine through the ' + n + '.\n\n"Indecent exposure. Turn around."';
-                if (c >= 2001) return 'A squad car slides to the curb, and the officer\'s eyes drop straight to your ' + b.bottom + '. You know what they find there: your bare slit, dark behind the ' + n + '.\n\n' +
-                    '"Miss. You need underwear with that."\n\n"It\'s... it\'s how it\'s worn."\n\n' +
-                    'Your face goes hot. Your pussy clenches right where he\'s looking, and he sees it. His door opens.';
+                    'You tip your hips a little. Your clit throbs, and your lips are slick enough to shine through the ' + n + '. He writes something down.\n\n"Indecent exposure. Turn around, please."';
+                if (c >= 2001) return 'A squad car slides to the curb, and the officer looks at your face and keeps looking there. You know what everybody else has been finding: your bare slit, dark behind the ' + n + ' of your ' + b.bottom + '.\n\n' +
+                    '"Miss. That needs something under it."\n\n"It\'s... it\'s how it\'s worn."\n\n' +
+                    'Your face goes hot. Your pussy clenches anyway. His door opens.';
                 return 'The siren chirps behind you, and you turn around before you think, which is worse.\n\n' +
-                    'The officer looks at your face, then down, to your bare pussy behind the ' + n + '. You press both hands over the front of your ' + b.bottom + ', and it shows your fingers too.\n\n' +
+                    'The officer looks at your face and keeps looking there, and somehow you\'re sure he already knows. You press both hands over the front of your ' + b.bottom + ', and it shows your fingers too.\n\n' +
                     '"Ma\'am. Indecent exposure. Stay where you are."\n\n' +
                     'Your eyes burn. Your pussy clenches under your hands, wet, and he\'s already walking toward you.';
             }
@@ -115205,6 +115206,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         text += '"I understand."\n\n';
                         text += 'He studies you. Takes his time with it. The victim is still talking. His partner is already calling it in.\n\n';
                         text += '"I\'m going to let you go with a warning tonight. But if we keep getting reports of a young woman putting people in the hospital, this conversation changes."\n\n';
+                        text += 'He taps the camera clipped to his vest. "It\'s all on here, and it\'s all going in my report."\n\n';
                         text += 'He tears a page from his notepad. Folds it.\n\n';
                         text += '"Stay safe, ma\'am. And call 911 next time."';
                     } else if (warnings === 1) {
@@ -115215,8 +115217,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     } else {
                         text += '"We\'ve had enough of these reports. You know that."\n\nHe doesn\'t sound angry. He sounds tired. Worn down from writing reports about things he can\'t explain.\n\n';
                         text += '"I\'m not going to argue with you about whether these people deserve it," he says. "They probably do. But we have a process. And you\'re not part of it."\n\n';
-                        text += 'He looks at his partner. Back at you.\n\n';
-                        text += '"Go. Before I change my mind about the paperwork."';
+                        text += 'He looks at his partner, then back at you.\n\n';
+                        text += '"You\'re going in the report, same as last time, and the victim\'s statement goes in with you." He clicks his pen. "You\'re free to go. A detective\'ll be in touch."';
                     }
                     
                     return text;
@@ -115440,15 +115442,15 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         text += '"She saved me, okay? She saved my life. I don\'t care what the law says about it, she SAVED me\u2014"\n\n';
                     }
                     
-                    text += 'The officers stand in the specific silence of people who know what their orders are and also know what they just watched.\n\n';
+                    text += 'The officers let her talk. The senior one turns so his bodycam has her face, and his partner pulls the ID out of the criminal\'s wallet and reads the name into his radio.\n\n';
                     
                     text += 'The younger officer looks at his partner. His partner doesn\'t look back. He\'s watching you.\n\n';
                     
-                    text += 'The senior officer keys his radio. "Dispatch. Vigilante contact. Scene is..." He pauses. Looks at the victim. Looks at the criminal. Looks at you. "...secure. No action taken. Suspect departed."\n\n';
+                    text += 'The senior officer keys his radio. "Dispatch. Vigilante contact, scene secure. Victim statement\'s on my camera. I\'m releasing the subject pending Detective Bureau follow-up."\n\n';
                     
                     text += 'He lets go of the radio.\n\n';
                     
-                    text += '"Get out of here, ' + name + '. Before my captain hears this."\n\n';
+                    text += '"Victim statement\'s on my camera." He clicks his pen. "You\'re free to go, ' + name + '. A detective\'ll want to talk to you. I\'d take the call."\n\n';
                     
                     text += 'He said your name. He knows your name.\n\n';
                     
@@ -115456,7 +115458,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     text += 'The senior officer watches you until you\'re a shape against the skyline. Then he turns back to the scene. Takes his notepad out. Clicks his pen.\n\n';
                     
-                    text += 'He writes: <em>Subject departed. No pursuit recommended.</em>';
+                    text += 'He writes: <em>Victim statement recorded. Subject released on scene pending Detective Bureau follow-up.</em>';
                     
                     return text;
                 },
@@ -141312,19 +141314,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     else if (z.chest === 'mesh') cover += 'With your hands locked behind you, your shoulders pull back, and your nipples show dark through the ' + s.noun + ' for the whole street. ';
                     else if (z.chest === 'wet') cover += 'With your hands locked behind you, your chest pushes out, and your nipples show dark through the soaked cups of your ' + s.bra + '. ';
                     desc += 'The cuffs close on your wrists, cold and tight.' + (cover ? ' ' + cover.trim() : '') + '\n\n';
-                    if (z.hips === 'bare') desc += 'Nothing covers your pussy, and you can\'t even press your thighs together without stumbling. The younger officer\'s eyes keep dropping to it while the older one reads you your rights.\n\n';
-                    else if (z.hips === 'mesh') desc += 'Your bare slit shows through the ' + s.noun + ', and the younger officer\'s eyes keep dropping to it while the older one reads you your rights.\n\n';
-                    else if (z.hips === 'panties') desc += 'Your cuffed hands rest right above the waistband of your ' + s.panties + '. The officer walking you to the car gets the whole view from behind, and he takes his time about it.\n\n';
-                    else desc += 'The older one reads you your rights in a flat, bored voice. The younger one isn\'t listening to him. He\'s looking at you.\n\n';
+                    // Trigrave PD Step 15A: the blanket, and the officers' eyes on her face
+                    if (z.hips === 'bare') desc += 'Nothing covers your pussy, and you can\'t even press your thighs together without stumbling. The people on the sidewalk get every second of it until the younger officer wraps a gray blanket around you from behind, snug under your arms, while the older one reads you your rights.\n\n';
+                    else if (z.hips === 'mesh') desc += 'Your bare slit shows through the ' + s.noun + ' for the whole street until the younger officer wraps a gray blanket around you from behind, while the older one reads you your rights.\n\n';
+                    else if (z.hips === 'panties') desc += 'Your cuffed hands rest right above the waistband of your ' + s.panties + '. The officer walking you to the car keeps his eyes on the back of your head, and the people behind you on the sidewalk don\'t bother.\n\n';
+                    else if (z.chest) desc += 'The younger officer drapes a gray blanket over your shoulders and holds it closed at your collarbone while the older one reads you your rights in a flat, even voice.\n\n';
+                    else desc += 'The older one reads you your rights in a flat, even voice. The younger one keeps his eyes on your face and a hand on your elbow.\n\n';
                     var bareSeat = z.hips === 'bare' || z.hips === 'mesh' || (z.hips === 'panties' && s.thong);
                     desc += 'He puts a hand on top of your head and folds you into the back seat. ' +
                         (bareSeat ? 'The vinyl is cold and tacky under your bare ass.' : z.hips === 'panties' ? 'The vinyl is cold against the backs of your thighs.' : 'The vinyl creaks under your ' + (s.bottom || 'clothes') + '.') + '\n\n';
                     desc += 'The door shuts, and the street noise cuts off. Up front, the radio crackles.\n\n';
                     desc += '"Dispatch, twenty-two Baker. One in custody, female, indecent exposure. Transporting to Central Booking."\n\n';
-                    desc += 'The officer driving keeps checking his rearview mirror, and he isn\'t looking at the traffic.\n\n';
+                    desc += 'The officer driving checks his mirrors at every corner, and every time he\'s looking at the traffic.\n\n';
                     if (tier === 'low') desc += 'You stare at your knees and try not to cry. Your nipples are hard and your pussy\'s wet, and with your hands behind your back you can\'t even hide that.';
-                    else if (tier === 'mid') desc += 'Your face is on fire. Every time his eyes flick to the mirror, your pussy clenches, and you shift on the seat so he can\'t see how wet you are.';
-                    else desc += 'You meet his eyes in the mirror and hold them until he looks back at the road. Your clit throbs the whole ride.';
+                    else if (tier === 'mid') desc += 'Your face is on fire. Every time the car stops at a light, somebody on the sidewalk bends to look in the back window, and your pussy clenches.';
+                    else desc += 'You catch his eyes in the mirror once. He looks back at the road like you\'re any other passenger, and your clit throbs the whole ride anyway.';
                     return desc;
                 },
                 onEnter: function() {
@@ -141378,7 +141382,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     // The property form
                     if (s.state === 'naked') desc += 'She writes CLOTHING: NONE in block capitals and underlines it twice.';
                     else if (s.state === 'topless') desc += 'She writes down ' + items + ', then leaves the line for a top blank. "Shirt?"\n\n"No."\n\nShe writes that down too.';
-                    else if (s.state === 'bottomless') desc += 'She writes down ' + items + ', then leans over the counter to look at your bare pussy, and writes NO PANTS. NO UNDERWEAR.';
+                    else if (s.state === 'bottomless') desc += 'She writes down ' + items + ', looks at you over her glasses, and writes NO PANTS. NO UNDERWEAR.';
                     else if (s.state === 'bra_wet') desc += 'She lists ' + items + '. Your ' + s.bra + ' is still dripping on her counter.\n\n"It was raining," you say.\n\nShe writes that down too.';
                     else if (isSheer) desc += 'She lists ' + items + ', then looks at you over her glasses and writes SEE-THROUGH in the margin.';
                     else if (s.state === 'panties_exposed') desc += 'She lists ' + items + '. "No pants," she says, writing it. "No skirt. Nothing."';
@@ -141390,7 +141394,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += 'Behind the curtain you change into the jumpsuit without being told. The officer watching you yawns.\n\n';
                     } else {
                         desc += 'A female officer takes you behind a curtain and hands you an orange jumpsuit. ';
-                        if (s.state === 'naked') desc += 'There\'s nothing to take off. She watches you step into it with ' + tits + ' bare and your pussy right there, and zip it up.\n\n';
+                        if (s.state === 'naked') desc += 'There\'s nothing to take off. She keeps her eyes on her clipboard while you step into it, ' + tits + ' bare and your pussy right there, and zip it up.\n\n';
                         else desc += 'She holds out a plastic bag, and ' + items + ' go into it one at a time while she watches.\n\n';
                     }
                     if (tier === 'low') desc += 'The stiff fabric scrapes your nipples. You\'re still wet from the street, from the car, from all of it, and you want to disappear.\n\n';
@@ -141399,7 +141403,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Mugshot
                     if (prior >= 2) desc += 'The camera tech says "Chin up" before you\'re even on the mark. He knows your good side by now.\n\n';
-                    else desc += 'Then the camera. Front, then left side. The flash leaves a green ghost floating in your eyes, and ink rolls your fingertips black one at a time.\n\n';
+                    else desc += 'Then Station Two. Ten fingers, ten scans. The technician doesn\'t care what you came in wearing.\n\nThen the camera, front and left side, and the flash leaves a green ghost floating in your eyes.\n\n';
                     if (tier === 'low') desc += 'Somewhere in this building there\'s going to be a file with INDECENT EXPOSURE next to your face. You can\'t stop shaking.';
                     else if (tier === 'mid') desc += 'Your face is burning in the photo. You know it is.';
                     else desc += 'You don\'t look away from the lens. Your clit throbs, and you wonder who\'s going to look at this picture.';
@@ -141427,6 +141431,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     o.dress = { id: 'prison_jumpsuit', name: 'Prison Jumpsuit', category: 'dresses', appeal: 35, cleanliness: 100, image: 'Images/clothing/prison/prison-jumpsuit.jpg', tags: ['casual', 'minimalist', 'fit:loose', 'material:synthetic'] };
                     o.footwear = { id: 'prison_slipons', name: 'Issued Slip-Ons', appeal: 0, cleanliness: 50, image: 'Images/clothing/prison/slip-on-shoes.jpg', comfort: 3, mobility: 2, terrain: ['street', 'park'], noise: 0, tags: ['casual', 'minimalist', 'fit:loose', 'material:synthetic'] };
                     gameState.isNaked = false;
+                    // Trigrave PD Step 15C: a booking is a booking. Prints and a mugshot go on file.
+                    var _hadPrints = !!gameState.flags.fingerprintsInSystem;
+                    gameState.flags.fingerprintsInSystem = true;
+                    gameState.flags.mugshotTaken = true;
+                    if (typeof processPendingForensics === 'function') processPendingForensics();
+                    if (typeof convertForensicMatches === 'function') convertForensicMatches();
+                    if (!_hadPrints) showNotification('<img src="Images/icons/suspicion-icon.png" class="icon" alt="suspicion"> Your fingerprints are on file.');
                     advanceTime(60);
                     updateStatus();
                 },
@@ -152320,7 +152331,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
             },
 
             rufus_service_paperwork: {
-                text: 'Rufus pulls the burner out from under the counter and dials a number from memory.\n\n"It\'s me." He doesn\'t look at you while he talks. "The active case, 14th precinct. Yeah, that one." He listens for a while. "The physical evidence log. Move it. I don\'t care where. Filing error. Happens all the time."\n\nHe hangs up and slides the phone back under the counter.\n\n"When the chain of custody breaks, the case gets weaker. It\'ll still be there, just harder to build." He folds his arms. "My guy\'s a filing clerk. Nineteen years at that precinct. He knows where every cabinet leads and which ones nobody checks."\n\nHe holds his hand out through the slot. "Five hundred."\n\nYou pay him. He doesn\'t count it, and you get the feeling he can tell from the weight.\n\n"Give it two days," he says. "You\'ll feel the difference."',
+                text: 'Rufus pulls the burner out from under the counter and dials a number from memory.\n\n"It\'s me." He doesn\'t look at you while he talks. "The samples on that active case go out to the contract lab Tuesday. Yeah, that one." He listens for a while. "Tuesday\'s cooler has a bad seal. Things like that happen."\n\nHe hangs up and slides the phone back under the counter.\n\n"When the chain of custody breaks, the case gets weaker. It\'ll still be there, just harder to build." He folds his arms. "My guy drives for the contract lab, nineteen years on the same route. TPD trusts the cooler, and the cooler\'s his."\n\nHe holds his hand out through the slot. "Five hundred."\n\nYou pay him. He doesn\'t count it, and you get the feeling he can tell from the weight.\n\n"Give it two days," he says. "You\'ll feel the difference."',
                 onEnter: () => {
                     gameState.money -= 500;
                     gameState.suspicionData.evidenceLevel = Math.max(0, (gameState.suspicionData.evidenceLevel || 0) - 20);
@@ -152337,7 +152348,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
 
             rufus_service_witnesses: {
                 text: function() {
-                    let desc = 'Rufus leans back in his chair until it creaks.\n\n"Witnesses are easy. People don\'t want to remember bad things. You just have to give them permission to forget."\n\nHe pulls out a folder, actual paper, and you catch names, addresses, and the edge of a police report you have no idea how he got.\n\n"My guys visit them at home. Friendly, conversational. They bring up the case and let the doubt in sideways. \'Are you sure it was that night?\' \'The lighting was bad, right?\' \'You\'d been drinking.\'"\n\nHe closes the folder.\n\n"Nobody gets hurt or threatened. They just get less certain, and uncertain witnesses fall apart on a stand."\n\n"Nobody gets hurt," you repeat, and you can\'t keep the doubt out of your voice. "You\'re a werewolf."\n\n"And you\'re a vampire who hasn\'t eaten anybody in my lobby. We both have manners." He holds out his hand. "Eight hundred. These things take a personal touch."';
+                    let desc = 'Rufus leans back in his chair until it creaks.\n\n"Witnesses are easy. People don\'t want to remember bad things. You just have to give them permission to forget."\n\nHe pulls out a folder, actual paper, and you catch names, addresses, and the edge of a court filing anybody could have pulled from the clerk\'s office.\n\n"My guys visit them at home. Friendly, conversational. They bring up the case and let the doubt in sideways. \'Are you sure it was that night?\' \'The lighting was bad, right?\' \'You\'d been drinking.\'"\n\nHe closes the folder.\n\n"Nobody gets hurt or threatened. They just get less certain, and uncertain witnesses fall apart on a stand."\n\n"Nobody gets hurt," you repeat, and you can\'t keep the doubt out of your voice. "You\'re a werewolf."\n\n"And you\'re a vampire who hasn\'t eaten anybody in my lobby. We both have manners." He holds out his hand. "Eight hundred. These things take a personal touch."';
 
                     return desc;
                 },
@@ -152426,10 +152437,10 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     const stats = gameState.flags.servantCrimeStats;
                     const taskForce = stats && stats.gangTaskForceFormed;
 
-                    let desc = 'Rufus pulls out two phones: the burner, and a matte black one with no case that you haven\'t seen before.\n\nHe dials the first and waits for someone to pick up.\n\n"The linked cases from this week. The ones flagged as coordinated." He turns away and drops his voice, which is pointless, since you can hear both ends of the call. "Reclassify them. Split the files across precincts. Different dates, different case numbers. Make it look like whoever connected them was reaching."\n\nHe hangs up and dials the second.\n\n"The physical linkage report, the one cross-referencing suspect descriptions." He listens. "It goes missing tonight. Interdepartmental transfer that never arrived." He listens again. "You\'ve done it before."\n\nHe pockets both phones and turns back to you. "Five thousand."\n\nYou pay. He folds the bills without counting them.\n\n';
+                    let desc = 'Rufus pulls out two phones: the burner, and a matte black one with no case that you haven\'t seen before.\n\nThe black one only has one number in it. He dials it and waits a long time for someone to pick up.\n\n"It\'s Rufus. I\'d like to call in a favor with the Mothers." He turns away and drops his voice, which is pointless, since you can hear both ends of the call.\n\nThe voice on the other end is a woman\'s, and she doesn\'t say anything at all. "The analysts at Fourth Street who linked those cases this week. I need them to stop seeing the pattern."\n\nHe listens, says "Thank you" like he means it, and hangs up.\n\n"Nobody at TPD gets paid, and nobody gets turned," he says. "They just wake up tomorrow and can\'t remember why they thought those cases went together. The files are still there. The people who could explain them aren\'t."\n\nHe pockets the phone and turns back to you. "Five thousand."\n\nYou pay. He folds the bills without counting them.\n\n';
 
                     if (taskForce) {
-                        desc += '"I also called a journalist I know. Freelancer, works the crime beat. She\'ll run a piece next week about the task force chasing shadows, with anonymous sources inside the department picking apart the pattern analysis. That\'ll slow them down."\n\n';
+                        desc += '"I also called a journalist I know. Freelancer, works the crime beat. She\'ll run a piece next week about the task force chasing shadows, with a retired FBI profiler on the record picking apart the pattern analysis. That\'ll slow them down."\n\n';
                     } else {
                         desc += '"I also put a thread up on one of those true crime boards. A detailed breakdown of why the Trigrave crime wave is really a handful of separate operations with different signatures. The armchair detectives\'ll run with it and muddy the water for the real ones."\n\n';
                     }
@@ -152454,6 +152465,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                     });
 
                     gameState.flags.rufusLastCrewCleanDay = gameState.time.day;
+                    if (typeof onMothersClearing === 'function') onMothersClearing();   // Trigrave PD Step 15D
                     recalcServantHeatMultiplier();
                     calculateWantedTier();
                     advanceTime(15);
@@ -152468,7 +152480,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     var desc = '';
 
-                    desc += '"A warrant." Rufus turns the word over like he\'s tasting it, rolling it across his tongue, hunting for the note that tells him what he\'s working with.\n\n"That\'s a different problem than evidence. Evidence is paperwork, and paperwork gets lost." He leans back, and the chair springs creak. "A warrant\'s a machine. Once it\'s in the system, the system runs it. Patrol officers check plates and scan faces and file reports, and nobody has to tell them to."\n\nHe folds his arms and studies you. "But machines have people in them. And people have prices."\n\nHe pulls the burner out from under the counter and dials.\n\nThe first call is short, twelve seconds of a name and a case number. The second runs a full minute. You can hear the voice on the other end, tinny and careful, someone talking in a room they aren\'t sure is private. Rufus says "yeah" twice and "the Summers warrant" once, then hangs up.\n\nHearing your own name come out of his mouth, filed next to a case number, drops your stomach into your shoes.\n\nThe third call is forty seconds of numbers. Dollar amounts, routing codes, a language with no nouns in it.\n\nHe sets the phone down.\n\n"Something like this normally runs twenty, twenty-five thousand." He lets the number sit in the room. "My contact at the DA\'s office won\'t get out of bed for less. He\'s got a pension to protect, a boat payment, and a wife who asks where the money comes from, with a practiced answer ready for when she does."\n\nHe leans forward, and his eyes hold yours with something that looks a lot like respect.\n\n"Five thousand. For you." He taps the counter once. "You walk into my lobby, and I don\'t have to explain what the world is to you. You\'re the real thing, Kelsie, and the real thing is rare. I look after rare things."\n\n"Is that a werewolf thing?" It comes out smaller than you meant it to. "Collecting strays?"\n\n"It\'s a me thing." He holds his hand out through the slot. "My guy reclassifies the warrant as an administrative error. It takes a week to propagate. During that week, patrol gets a \'do not detain\' override on your name, so your encounters drop to almost nothing. After seven days, it\'s gone from the database."\n\nHe pulls his hand back and lays it flat on the counter.\n\n"The charges get suspended. They go in a file under a case number nobody pulls up unless somebody pushes." You can see on his face he already knows the answer to the next part. "Is anybody pushing?"\n\nCruz.\n\nThe answer sits in your chest like a stone. Cruz is pushing, and she\'ll always push. A warrant vanishing from a database won\'t touch the folder on her desk, the photos on her evidence board, or the composite sketch she carries in her blazer pocket.\n\nRufus watches your face and breathes out through his nose.\n\n"Yeah. I figured." One shoulder lifts. "My guy handles the system. Your detective\'s something you\'ll have to handle yourself."\n\n"Five thousand. We have a deal?"';
+                    desc += '"A warrant." Rufus turns the word over like he\'s tasting it, rolling it across his tongue, hunting for the note that tells him what he\'s working with.\n\n"That\'s a different problem than evidence. Evidence is paperwork, and paperwork gets lost." He leans back, and the chair springs creak. "A warrant\'s a machine. Once it\'s in the system, the system runs it. Patrol officers check plates and scan faces and file reports, and nobody has to tell them to."\n\nHe folds his arms and studies you. "But machines have people in them. And people have prices."\n\nHe pulls the burner out from under the counter and dials.\n\nThe first call is short, twelve seconds of a name and a case number. The second runs a full minute. You can hear the voice on the other end, tinny and careful, someone talking in a room they aren\'t sure is private. Rufus says "yeah" twice and "the Summers warrant" once, then hangs up.\n\nHearing your own name come out of his mouth, filed next to a case number, drops your stomach into your shoes.\n\nThe third call is forty seconds of numbers. Dollar amounts, routing codes, a language with no nouns in it.\n\nHe sets the phone down.\n\n"Something like this normally runs twenty, twenty-five thousand." He lets the number sit in the room.\n\n"My contact at the DA\'s office won\'t get out of bed for less. He\'s got a pension to protect, a boat payment, and a wife who asks where the money comes from, with a practiced answer ready for when she does."\n\nHe leans forward, and his eyes hold yours with something that looks a lot like respect.\n\n"Five thousand. For you." He taps the counter once. "You walk into my lobby, and I don\'t have to explain what the world is to you. You\'re the real thing, Kelsie, and the real thing is rare. I look after rare things."\n\n"Is that a werewolf thing?" It comes out smaller than you meant it to. "Collecting strays?"\n\n"It\'s a me thing." He holds his hand out through the slot.\n\n"My guy at the DA\'s office reclassifies the warrant as an administrative error. It takes a week to propagate.\n\n"During that week it shows up on every patrol laptop as under review, and nobody at TPD serves a warrant under review, so your encounters drop to almost nothing. After seven days, it\'s gone from the database."\n\nHe pulls his hand back and lays it flat on the counter.\n\n"The charges get suspended. They go in a file under a case number nobody pulls up unless somebody pushes." You can see on his face he already knows the answer to the next part. "Is anybody pushing?"\n\nCruz.\n\nThe answer sits in your chest like a stone. Cruz is pushing, and she\'ll always push. A warrant vanishing from a database won\'t touch the folder on her desk, the photos on her evidence board, or the composite sketch she carries in her blazer pocket.\n\nRufus watches your face and breathes out through his nose.\n\n"Yeah. I figured." One shoulder lifts. "My guy handles the DA\'s paperwork. Your detective\'s something you\'ll have to handle yourself."\n\n"Five thousand. We have a deal?"';
 
                     return desc;
                 },
@@ -152494,7 +152506,7 @@ You straighten, wipe your hand on the inside of his jacket pocket, and walk out 
                 text: function() {
                     var desc = '';
 
-                    desc += 'You count five thousand dollars through the slot. He takes it without counting, folds it once, and tucks it into his breast pocket.\n\n"Seven days," he says. "You\'ll feel it before you see it. Fewer cruisers slowing down, fewer officers looking twice. The system backing off you like a tide going out."\n\nHe picks up his book and finds his page.\n\n"Stay out of trouble for the week. Don\'t give them a reason to flag the override. My guy\'s good, but he\'s not bulletproof." He glances at you over the top of the page. "Neither are you. Even with the fangs."\n\n"Thanks, Rufus." You mean it more than you expected to.\n\nHe turns a page. "Go on. Get out of my lobby."';
+                    desc += 'You count five thousand dollars through the slot. He takes it without counting, folds it once, and tucks it into his breast pocket.\n\n"Seven days," he says. "You\'ll feel it before you see it. Fewer cruisers slowing down, fewer officers looking twice. The system backing off you like a tide going out."\n\nHe picks up his book and finds his page.\n\n"Stay out of trouble for the week. Don\'t give anybody a reason to pull the file back out. My guy\'s good, but he\'s not bulletproof." He glances at you over the top of the page. "Neither are you. Even with the fangs."\n\n"Thanks, Rufus." You mean it more than you expected to.\n\nHe turns a page. "Go on. Get out of my lobby."';
 
                     return desc;
                 },
@@ -212502,7 +212514,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     const possessive = captive.gender === 'male' ? 'his' : 'her';
                     const object = captive.gender === 'male' ? 'him' : 'her';
 
-                    let desc = 'You call Rufus. He picks up on the second ring.\n\n"Vampire," he says, by way of hello.\n\n"One of mine got picked up. Name\'s ' + name + '."\n\nRufus exhales through his nose. "What precinct?"\n\n"Does it matter?"\n\n"It matters for the price. Fifteen hundred, and ' + pronoun + '\'ll be out by tomorrow morning. Evidence goes missing, the arresting officer gets a month of traffic duty. Clean."\n\nYou wire the money.\n\n"Two days," Rufus says. "Give me two days before you send ' + object + ' back out. My guy at the precinct needs the heat to die down."\n\n"Thanks, Rufus."\n\n"You paid. That\'s thanks enough." The line goes dead.';
+                    let desc = 'You call Rufus. He picks up on the second ring.\n\n"Vampire," he says, by way of hello.\n\n"One of mine got picked up. Name\'s ' + name + '."\n\nRufus exhales through his nose. "What precinct?"\n\n"Does it matter?"\n\n"It matters for the price. Fifteen hundred, and ' + pronoun + '\'ll be out by tomorrow morning. I call in a favor with the Mothers. Nobody at the precinct remembers the arrest, and the paperwork follows them."\n\nYou wire the money.\n\n"Two days," Rufus says. "Give me two days before you send ' + object + ' back out. A cell that empties itself makes people nervous, even when they can\'t remember why."\n\n"Thanks, Rufus."\n\n"You paid. That\'s thanks enough." The line goes dead.';
 
                     return desc;
                 },
@@ -212517,6 +212529,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
                     // 2-day cooldown
                     captive.rufusCooldownUntil = gameState.time.day + 2;
+                    if (typeof onMothersClearing === 'function') onMothersClearing();   // Trigrave PD Step 15D: a Mothers service
 
                     const stats = gameState.flags.servantCrimeStats;
                     stats.servantsCapturedActive = Math.max(0, stats.servantsCapturedActive - 1);
@@ -212532,7 +212545,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                         suspicionAdded: 5,
                         closeCalls: 0,
                         cameraSpotted: false,
-                        footnote: 'Rufus pulled strings. Back in ' + (captive.rufusCooldownUntil - gameState.time.day) + ' days.'
+                        footnote: 'The Mothers cleaned it up. Back in ' + (captive.rufusCooldownUntil - gameState.time.day) + ' days.'
                     };
 
                     recalcServantHeatMultiplier();
