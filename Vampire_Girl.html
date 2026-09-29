@@ -32758,6 +32758,7 @@ audioSystem.playSFX('buttonClick');
                         // Vampire speed travel: camera footage accumulation
                         // City cameras capture a blur moving at impossible speed
                         const destDistrict = location.districtId || 'downtown';
+                        rollCheckpointCrossing(gameState.currentDistrictId, destDistrict);   // Trigrave PD Step 13D
                         const camDensity = DISTRICT_CAMERA_DENSITY[destDistrict] || 0;
                         if (Math.random() < camDensity * 0.6) {
                             if (!gameState.suspicionData) gameState.suspicionData = {};
@@ -33984,7 +33985,16 @@ audioSystem.playSFX('buttonClick');
             if (!band) return '';
             var lines = isDark() ? band.night : band.day;
             if (!lines || !lines.length) return '';
-            return '\n\n' + lines[Math.floor(Math.random() * lines.length)];
+            // Step 13D: drone lines only where drones are flying
+            if (!tpdDronesOver(district)) {
+                var grounded = lines.filter(function(l) { return !/Kestrel|drone/.test(l); });
+                if (grounded.length) lines = grounded;
+            }
+            var out = '\n\n' + lines[Math.floor(Math.random() * lines.length)];
+            var tierLine = getTPDTierAmbientLine(district);
+            if (tierLine && Math.random() < 0.6) out += '\n\n' + tierLine;
+            else if (Math.random() < 0.15) out += '\n\nA TV in a shop window is running the local news with the sound off. The crawl across the bottom reads: <em>' + getTPDBlotterLine() + '</em>';
+            return out;
         }
 
         // ── Suspicion cap (heat follows the case) ──
@@ -36096,6 +36106,7 @@ audioSystem.playSFX('buttonClick');
                 var g = groups[key];
                 var min = (key === 'bite' || key === 'mask') ? 2 : 3;
                 if (g.length < min) continue;
+                if (g.length >= 3 && !gameState.flags.larsBriefingSeen) gameState.flags.larsBriefingPending = true;   // Step 13A
                 for (var j = 0; j < g.length; j++) {
                     var m = membership[g[j].id] || (membership[g[j].id] = { entry: g[j], keys: {}, others: {} });
                     m.keys[key] = true;
@@ -36325,13 +36336,12 @@ audioSystem.playSFX('buttonClick');
             return m;
         }
 
-        // Whether Kestrel drones are flying over a district right now. Downtown always has them;
-        // at Wanted Tier 2+ they fly anywhere presence is 30+; a saturated district always has them.
+        // Whether Kestrel drones are flying over a district right now (Step 13D). Downtown
+        // always has them; at Wanted Tier 2+ they fly anywhere presence is 30+.
         function tpdDronesOver(district) {
             if (district === 'downtown') return true;
             var tier = (gameState.suspicionData || {}).wantedTier || 0;
-            var p = getTPDPresence(district);
-            return p >= 75 || (tier >= 2 && p >= 30);
+            return tier >= 2 && getTPDPresence(district) >= 30;
         }
 
         function tpdNumberWord(n) {
@@ -36371,6 +36381,10 @@ audioSystem.playSFX('buttonClick');
                 ]
             };
             parts.push(pick(bandLines[band]));
+            // Step 13D: Wanted Tier 1+ puts an extra car on her block
+            if (((gameState.suspicionData || {}).wantedTier || 0) >= 1) {
+                parts.push('There\'s a patrol car that\'s been past twice now, and it slowed down the second time.');
+            }
 
             // 25+: patrol rhythm
             if (stealth >= 25) {
@@ -36666,6 +36680,14 @@ audioSystem.playSFX('buttonClick');
                 showScene(_ws === 'home' ? 'tpd_warrant_service' : 'tpd_warrant_service_not_home');
                 return true;
             }
+            // Trigrave PD Step 13A: Lars on the TV where she's staying
+            var _larsId = TPD_HOME_SCENES[sceneId] && TPD_HOME_SCENES[sceneId] === getKelsieResidence().id ? getPendingLarsNews() : '';
+            if (_larsId) {
+                gameState.flags._larsVenue = 'home';
+                gameState.flags.randEventReturn = sceneId;
+                showScene(_larsId);
+                return true;
+            }
             var beats = gameState.flags.tpdHomeBeats;
             if (beats && beats.length && TPD_HOME_SCENES[sceneId]) {
                 for (var i = 0; i < beats.length; i++) {
@@ -36909,6 +36931,8 @@ audioSystem.playSFX('buttonClick');
             var c = 0.03 * p * 2;
             if (districtHasActiveSeries(district, crimeType)) c += 0.10;   // a detail's been assigned
             if ((gameState.flags.cruzProfile || 0) >= 50 && crimeType === 'violent_hunt') c += 0.06;
+            // Step 13D: Tier 2+ puts plainclothes in Downtown and the Commercial District
+            if (((gameState.suspicionData || {}).wantedTier || 0) >= 2 && (district === 'downtown' || district === 'commercial')) c += 0.03;
             // 11D: a pickpocket detail works the street crimes on its block
             if ((crimeType === 'pickpocketing' || crimeType === 'mugging') && isPickpocketDetailActive(district)) c += 0.10;
             return Math.min(0.30, c);
@@ -37087,6 +37111,7 @@ audioSystem.playSFX('buttonClick');
         function checkCruzBureauBeats(district) {
             var F = gameState.flags;
             var today = gameState.time.day || 0;
+            if (checkLarsNews(district)) return true;   // Step 13A
             if (F.currentlyInCustody || F.cruzSpottedToday) return false;
             if (F.cruzPaperFilePending && !F.cruzPaperFileSeen) {
                 triggerRandomDistrictEvent('cruz_paper_file', getDistrictReturnScene(district));
@@ -37127,6 +37152,113 @@ audioSystem.playSFX('buttonClick');
             t._arrivalRolled = true;
             if (F.cruzForecastDistrict !== env.district || F.cruzForecastDay !== gameState.time.day) return false;
             return Math.random() < 0.10;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ── LARS, RENALDS, AND A CITY THAT SHOWS ITS POLICE (Step 13) ──
+        // ══════════════════════════════════════════════════════════
+
+        // 13E: background noise that tells the player ordinary criminals get caught fast
+        var TPD_BLOTTER_LINES = [
+            'TPD arrests two men thirty-eight minutes after a jewelry store smash-and-grab on Fifth. Both were identified through store cameras and a K9 track.',
+            'A Commercial District burglary suspect was arrested at home the next morning. Police say he left a single print on a window latch.',
+            'Three arrested in a Residential car-theft ring. Detective Andre Tolliver credits residents\' doorbell cameras.',
+            'A man who fled a traffic stop on foot was located by drone in under four minutes.',
+            'An armed robbery suspect surrendered to SWAT after a two-hour standoff in Wendale. No one was injured.',
+            'A pickpocketing crew was dismantled after a week-long plainclothes operation Downtown.',
+            'Police seize a Boruski weapons shipment at the Dockyard. No arrests were made above the level of the drivers.',
+            'A hit-and-run driver was identified from a partial plate and arrested at work the same afternoon.',
+            'Two teenagers who spray-painted a Wendale overpass were identified from a single frame of traffic camera footage. Their parents drove them to the precinct.',
+            'A counterfeit ring passing fake twenties at Commercial District stores was shut down after one cashier flagged one bill. Four arrests.',
+            'A man breaking into cars along the river path was tracked to his apartment by K9 Officer Dale Brenner and his partner, Juno.',
+            'A mugging suspect was arrested on a city bus eleven minutes after the call. The victim\'s description matched him down to his shoelaces.',
+            'A Medical District pharmacy burglar was arrested in the parking garage across the street. Police say he never made it to his car.',
+            'Chief Hugo Lars reports the department closed more than a thousand cases this year, the highest clearance rate in the country.',
+            'An arson suspect was identified from a receipt for lighter fluid and arrested within the day.',
+            'Raptor One assisted in the arrest of three men fleeing a warehouse break-in at the Dockyard. All three were found hiding under the same truck.',
+            'Vajaros street dealers arrested in a Slums sweep made bail within the hour. Their attorney declined to say who was paying him.',
+            'A Fitness District gym manager charged with embezzlement turned himself in after detectives called his lawyer.',
+            'The TPD Academy graduated its newest class this week. Chief Lars noted that fewer than one in five recruits made it to the end.',
+            'A man who pulled a knife on a bus driver was disarmed by two officers and in custody within a minute. The bus finished its route.',
+            'Officers recovered a stolen van within the hour using the city\'s plate-reader network. The thief was still inside it.',
+            'A carjacking suspect who ran into Riverside Park was found by a Kestrel drone\'s thermal camera, hiding in a drainage culvert.'
+        ];
+        function getTPDBlotterLine() {
+            return TPD_BLOTTER_LINES[Math.floor(Math.random() * TPD_BLOTTER_LINES.length)];
+        }
+
+        // Dispatch chatter for police encounters (the blotter, as it happens)
+        var TPD_RADIO_LINES = [
+            '"Twelve-David, suspect in custody on Fifth. Show us clear."',
+            '"All units, the vehicle from the Ninth Street call has been located. Units on scene."',
+            '"Four-Adam, I\'ll be out on a traffic stop, Third and Market."',
+            '"K9 One. Track ended at a residence on Elm. We\'re holding the door for the warrant."',
+            '"Dispatch, Kestrel Six is back on its lane. Nothing further."',
+            '"Seven-Charlie, one in custody. Requesting a transport to Fourth Street."'
+        ];
+        function getTPDRadioLine() {
+            return TPD_RADIO_LINES[Math.floor(Math.random() * TPD_RADIO_LINES.length)];
+        }
+
+        // 13D: what each Wanted Tier looks like on the street, over the band line
+        function getTPDTierAmbientLine(district) {
+            var tier = (gameState.suspicionData || {}).wantedTier || 0;
+            if (tier < 3) return '';
+            var h = gameState.time.hour;
+            var pool = [];
+            if (h >= 22 || h < 6) pool.push('Raptor One passes overhead, low enough to rattle the windows, and its rotor noise rolls across the rooftops long after it\'s gone.');
+            if (district === 'park') pool.push('There\'s a checkpoint on the bridge over the river now: two cruisers angled across one lane and officers walking the line of cars with flashlights.');
+            if (district === 'dockyard') pool.push('The Dockyard gate has a checkpoint on it now, and every driver in line is getting a face compared against something on a tablet.');
+            if (tier >= 4) {
+                pool.push('The Bear\'s parked at the district line, a tracked armored truck the size of a city bus, with two SWAT officers in full kit leaning against it.');
+                pool.push('There\'s a motor unit at every major intersection. The riders stand beside their bikes and read faces as they go by.');
+                pool.push('Every TV in every shop window is showing the same thing: Chief Lars at a podium, and Mayor Renalds a step behind him.');
+            }
+            if (!pool.length) return '';
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // 13D (Tier 3+): vampire speed across a river bridge or through the Dockyard gate
+        // runs past a checkpoint, and checkpoints wear bodycams
+        function rollCheckpointCrossing(fromDistrict, toDistrict) {
+            var tier = (gameState.suspicionData || {}).wantedTier || 0;
+            if (tier < 3 || !fromDistrict || fromDistrict === toDistrict) return;
+            var cross = (fromDistrict === 'park' || toDistrict === 'park') ? 'bridge' : (fromDistrict === 'dockyard' || toDistrict === 'dockyard') ? 'gate' : '';
+            if (!cross) return;
+            if (Math.random() >= 0.4 * (1 - getStealthBonus())) return;
+            var sd = gameState.suspicionData || (gameState.suspicionData = {});
+            sd.bodycamIncidents = (sd.bodycamIncidents || 0) + 1;
+            sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 5);
+            showNotification('<em>A checkpoint officer\'s bodycam caught something crossing the ' + (cross === 'bridge' ? 'river bridge' : 'Dockyard gate') + ' at a speed nobody at Fourth Street will be able to explain.</em>');
+        }
+
+        // 13A: Lars on the news. Plays on a shop-window TV during district travel, or on the
+        // TV wherever she's staying, whichever she reaches first.
+        function getPendingLarsNews() {
+            var F = gameState.flags;
+            if (F.currentlyInCustody) return '';
+            if (F.larsManhuntPending && !F.larsManhuntSeen) return 'tpd_lars_manhunt_address';
+            if (F.larsBriefingPending && !F.larsBriefingSeen) return 'tpd_lars_briefing';
+            return '';
+        }
+        function checkLarsNews(district) {
+            var id = getPendingLarsNews();
+            if (!id) return false;
+            gameState.flags._larsVenue = 'window';
+            triggerRandomDistrictEvent(id, getDistrictReturnScene(district));
+            return true;
+        }
+        function getLarsVenueIntro() {
+            var F = gameState.flags;
+            if (F._larsVenue !== 'home') {
+                return 'The TV in the appliance store window on the corner is tuned to the news, and a few people have stopped on the sidewalk to watch it. The caption across the bottom reads TPD CHIEF HUGO LARS.';
+            }
+            var res = getKelsieResidence();
+            if (res.id === 'varhall' && res.withJaewon) return 'Jaewon\'s got the news on when you come in. She looks up at you, then back at the screen, and she doesn\'t change the channel.';
+            if (res.id === 'varhall') return 'You switch on the TV for the noise and land in the middle of a live press conference from Fourth Street.';
+            if (res.id === 'timeless') return 'The TV above the lobby bar has been turned up, and the handful of guests at the bar have gone quiet to watch it.';
+            if (res.id === 'oracle') return 'The little TV behind the front desk at Oracle Inn is showing the news, and the desk clerk has turned it up.';
+            return 'The TV behind the plexiglass in the Lurasi lobby is showing the news with the sound turned low.';
         }
 
         // ══════════════════════════════════════════════════════════
@@ -116199,7 +116331,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             text += '"I think so," ' + pronounLower + ' says. "I think I\'m okay." ' + pronoun + '\'s voice breaks on the last word. "Thank you."';
                         }
                     }
-                    
+
+                    // Trigrave PD Step 13B: working like the chief's people work
+                    if (gameState.flags.larsRulesSeen && gameState.flags.heroSuitEquipped) {
+                        text += '\n\nA cruiser pulls to the curb a few minutes later. You give your statement on the spot, step back, and let the officers work the scene, and the older one shakes your hand before you go.';
+                    }
+
                     return text;
                 },
                 onEnter: () => {
@@ -116207,6 +116344,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (!gameState.flags['crimeSeenOnce_' + _ct]) gameState.flags['crimeSeenOnce_' + _ct] = true;
                     
                     modifyHeroReputation(3, 'witness');
+                    // Trigrave PD Step 13B: TPD commends cooperation
+                    if (gameState.flags.larsRulesSeen && gameState.flags.heroSuitEquipped) {
+                        modifyHeroReputation(2, 'cooperation');
+                        showNotification('<img src="Images/icons/sparkle.png" class="icon" alt="sparkle"> TPD commends cooperation. +2 Hero Rep.');
+                    }
                     applyHeroActionMH(5);
                     modifyKarma(5);
                     gameState.flags.suitedWitnessCount = (gameState.flags.suitedWitnessCount || 0) + 1;
@@ -116828,6 +116970,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     text += 'You\'re at a food cart buying a hot dog when you notice. The vendor\'s phone. The TV in the laundromat across the street. A tablet propped in a car dashboard at the red light. Every screen.\n\n';
                     text += 'City Hall. The wide steps. A podium bristling with microphones. Camera flashes popping like white lightning against the limestone facade.\n\n';
                     text += 'Mayor Maxine Renalds walks to the podium.\n\n';
+                    text += 'Chief Hugo Lars takes his place a step behind her in a pressed uniform, silent, with his hands folded in front of him.\n\n';
                     text += 'She\'s shorter than you expected. Mid-fifties. Silver-streaked black hair cut sharp at the jaw. Gray suit, no jewelry, flat shoes. She moves like someone who stopped caring about how she looked in front of cameras around the same time she started winning elections.\n\n';
                     text += 'The crowd noise drops. She adjusts the microphone. Doesn\'t clear her throat. Doesn\'t shuffle papers. She just starts.\n\n';
                     text += '"I\'m going to keep this brief because the person I\'m talking to probably doesn\'t have a lot of patience for speeches."\n\n';
@@ -116898,6 +117041,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     text += '"I didn\'t think you would." Her mouth twitches. "You don\'t seem like someone who does what she\'s told."\n\n';
                     text += '"I don\'t."\n\n';
                     text += '"Good. Neither do I." She turns to the podium. Pulls the microphone closer. "Ladies and gentlemen. ' + name + '."\n\n';
+                    text += 'Behind her, Chief Hugo Lars stands with his hands folded and his uniform pressed, and he doesn\'t clap.\n\n';
                     text += 'The roar comes back. It fills the plaza. It echoes off the buildings. It rises past the rooftops and keeps going.\n\n';
                     text += 'You stand beside the mayor on the steps of City Hall and ten thousand people are screaming your name and it\'s the loudest thing you\'ve ever heard and it\'s the quietest you\'ve ever felt.\n\n';
                     
@@ -117083,6 +117227,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 choices: function() {
                     const choices = [];
+                    // Trigrave PD Step 13B: the chief comes by on the first visit after legalization
+                    if (gameState.flags.heroLegalizedByMayor && !gameState.flags.larsRulesSeen) {
+                        return [{ text: 'Someone knocks on the open door.', nextScene: 'hero_lars_rules' }];
+                    }
                     const lastPay = gameState.flags.mayorLastPaymentDay || 0;
                     const daysSincePay = gameState.time.day - lastPay;
                     
@@ -117107,6 +117255,37 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 }
             },
             
+            // ── Trigrave PD Step 13B: the chief's rules of engagement ──
+            hero_lars_rules: {
+                text: function() {
+                    const name = gameState.flags.heroName || 'Demigirl';
+                    let text = 'Someone knocks twice on the open door.\n\n';
+                    text += 'The man in the doorway is tall and gray at the temples, in a TPD uniform pressed sharp enough to cut. He moves like his joints hurt, and he\'s decided that\'s nobody\'s business.\n\n';
+                    text += '"Chief," Maxine says. "Good timing. ' + name + ', this is Hugo Lars. He runs my police department."\n\n';
+                    text += '"Ma\'am." He nods to Maxine, then to you, and stays standing with a single sheet of paper in one hand.\n\n';
+                    text += '"The mayor made you legal," Lars says. "That was her call, and she\'s usually right."\n\n';
+                    text += 'He sets the page on the desk and slides it across to you.\n\n';
+                    text += '"Now you\'re working in my city. So you\'ll work like my people work."\n\n';
+                    text += 'It\'s one page, typed, four lines long. <em>Every suspect goes to TPD. Give a statement on scene. Leave the evidence where it fell. Stay out of any building TPD has secured.</em>\n\n';
+                    text += '"My officers finish eighteen months of academy before they arrest anyone," he says. "You get one page. I\'d read it twice."\n\n';
+                    text += 'Maxine\'s watching over her reading glasses, and she hasn\'t said a word. She\'s letting him have this.\n\n';
+                    text += '"Hand my officers the people you catch, and we\'ll make sure they stay caught," Lars says. "The department will thank you for it, in public, every time." He nods to the mayor. "Ma\'am."\n\n';
+                    text += 'He leaves the door open behind him.';
+                    return text;
+                },
+                onEnter: () => {
+                    gameState.flags.larsRulesSeen = true;
+                    advanceTime(10);
+                    updateStatus();
+                },
+                choices: function() {
+                    return [
+                        { text: '<img src="Images/icons/hero-chat.png" class="icon" alt="chat"> Fold the page away. Talk to Maxine.', nextScene: 'mayors_office_chat' },
+                        { text: '<img src="Images/icons/world-map.png" class="icon" alt="map"> Leave', action: () => openMap() }
+                    ];
+                }
+            },
+
             mayors_office_payment: {
                 text: function() {
                     let text = 'Maxine opens her desk drawer. Pulls out an envelope. Slides it across.\n\n';
@@ -123948,6 +124127,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const jaewonInfo = getJaewonLocationText();
                     if (jaewonInfo) {
                         desc += '\n\n' + (jaewonInfo);
+                    }
+
+                    // Trigrave PD Step 13E: the city's police blotter, off Jaewon's phone
+                    if (typeof isJaewonHome === 'function' && isJaewonHome() && Math.random() < 0.2) {
+                        desc += '\n\nJaewon\'s scrolling her phone. "Listen to this," she says, and reads it off the screen: "' + getTPDBlotterLine() + '"';
                     }
                     
                     // Erotic Overhaul Step 1B: Passing behavior in hallway
@@ -140305,6 +140489,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += '\n\n"You look an awful lot like a sketch we got handed at roll call," she says, without any heat in it.';
                     }
                     desc += '\n\nShe asks where you\'re headed, and whether you\'ve got some identification on you.';
+                    // Trigrave PD Step 13E: the city keeps working around the stop
+                    if (Math.random() < 0.5) desc += '\n\nHer shoulder radio murmurs while she waits for your answer: ' + getTPDRadioLine();
                     return desc;
                 },
                 onEnter: function() {
@@ -140739,6 +140925,64 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 choices: function() {
                     return [{ text: 'Watch her go.', action: function() { showScene(gameState.flags.randEventReturn || 'city_exploration'); } }];
+                }
+            },
+
+            // ── Trigrave PD Step 13A: the chief goes on television ──
+            tpd_lars_briefing: {
+                text: function() {
+                    var today = gameState.time.day || 0;
+                    var ledger = gameState.evidenceLedger || [];
+                    var attacks = ledger.filter(function(e) { return (e.type === 'assault' || e.type === 'murder' || e.type === 'police_assault') && today - e.day <= 30; }).length;
+                    var dead = ledger.filter(function(e) { return e.type === 'murder' && e.bodyDiscovered && today - e.day <= 30; }).length;
+                    attacks = Math.max(attacks, dead, 1);
+                    var num = function(n) { var w = n <= 19 ? tpdNumberWord(n) : String(n); return w; };
+                    var Num = function(n) { var w = num(n); return w.charAt(0).toUpperCase() + w.slice(1); };
+                    var desc = getLarsVenueIntro() + '\n\n';
+                    desc += 'The chief of police is tall and gray at the temples, in a uniform pressed sharp enough to cut. He moves like his joints hurt, and he\'s decided that\'s nobody\'s business.\n\n';
+                    desc += 'He stands beside the podium with his hands folded in front of him, and the room goes quiet without anyone asking it to.\n\n';
+                    var deaths = dead === 0 ? 'All of them lived. That\'s luck, and luck runs out.' : dead === 1 ? 'One of them died.' : Num(dead) + ' of them died.';
+                    desc += '"' + Num(attacks) + (attacks === 1 ? ' person has' : ' people have') + ' been attacked in this city in the last thirty days," Hugo Lars says. "' + deaths + ' I want to speak to the person responsible."\n\n';
+                    desc += 'He looks straight into the camera, dead center' + (gameState.flags.gabriellaCruzAssigned ? ', just like Cruz.' : ', and holds it there.') + '\n\n';
+                    desc += '"My department\'s closed eleven hundred cases this year. Yours is going to be one of them. When that happens, I\'d prefer you were alive for it."\n\n';
+                    desc += 'Then he nods once to the room and walks off, and the station cuts to the weather.';
+                    return desc;
+                },
+                onEnter: function() {
+                    gameState.flags.larsBriefingSeen = true;
+                    gameState.flags.larsBriefingPending = false;
+                    modifyMentalHealth(-3);
+                    advanceTime(5);
+                    updateStatus();
+                },
+                choices: function() {
+                    return [{ text: 'Keep going.', action: function() { showScene(gameState.flags.randEventReturn || 'city_exploration'); } }];
+                }
+            },
+
+            // ── Trigrave PD Step 13A/13C: Tier 4, the manhunt ──
+            tpd_lars_manhunt_address: {
+                text: function() {
+                    var desc = getLarsVenueIntro() + '\n\n';
+                    desc += 'This time there\'s a podium, and the chief uses it. Mayor Maxine Renalds stands a step behind him and to his left in a gray suit, with her hands clasped in front of her.\n\n';
+                    desc += '"As of tonight, the Trigrave Police Department is conducting a manhunt," Hugo Lars says, in the same level voice he uses for everything. "Raptor One will fly every night until it ends. Armored units are staged at every district line. There are checkpoints on the bridges and at the Dockyard gate."\n\n';
+                    desc += '"If you live in this city, you\'ll see a great deal more of us for a while. I apologize for the inconvenience. It won\'t last long."\n\n';
+                    desc += 'He looks into the camera. "To the person we\'re looking for: you can walk into any precinct, at any hour, and you\'ll be treated fairly. That offer has an expiration date."\n\n';
+                    desc += 'The mayor steps up to the microphone after him. "This department has my full support and every resource this city can give it," Maxine Renalds says.\n\n';
+                    desc += 'That\'s all she says.';
+                    return desc;
+                },
+                onEnter: function() {
+                    gameState.flags.larsManhuntSeen = true;
+                    gameState.flags.larsManhuntPending = false;
+                    gameState.flags.larsBriefingPending = false;   // the manhunt covers it
+                    gameState.flags.larsBriefingSeen = true;
+                    modifyMentalHealth(-5);
+                    advanceTime(5);
+                    updateStatus();
+                },
+                choices: function() {
+                    return [{ text: 'Keep going.', action: function() { showScene(gameState.flags.randEventReturn || 'city_exploration'); } }];
                 }
             },
 
@@ -225770,6 +226014,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             tier = Math.min(tier, getSuspicionTierFor(getSuspicionCap()));
 
             sd.wantedTier = tier;
+            // Trigrave PD Step 13A: the chief goes on television
+            if (tier >= 3 && !gameState.flags.larsBriefingSeen) gameState.flags.larsBriefingPending = true;
+            if (tier >= 4 && !gameState.flags.larsManhuntSeen) gameState.flags.larsManhuntPending = true;
             gameState.flags.violentHuntsBlocked = (tier >= 4);
             // A timed block (post-escape patrol surge) outlasts the tier check until it expires.
             var timedBlock = (gameState.flags.crimeBlockedUntilDay || 0) > (gameState.time.day || 0);
