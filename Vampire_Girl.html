@@ -36645,6 +36645,7 @@ audioSystem.playSFX('buttonClick');
         function isCrimeExitDestination(sceneId) {
             if (!sceneId) return false;
             if (sceneId === 'city_exploration' || sceneId === 'hunting_options' || sceneId === 'riverside_park') return true;
+            if (sceneId === 'outside_blood_bank') return true;   // Step 14D: walking out of the blood bank
             return /_district_street$/.test(sceneId);
         }
 
@@ -51069,7 +51070,7 @@ audioSystem.playSFX('buttonClick');
                             const cityWide = gameState.flags.scoutedCityWideDay === gameState.time.day || gameState.flags.scoutedCityWideDay === gameState.time.day - 1;
                             const scoutMod = (districtScouted || cityWide) ? 0.7 : 1.0;
                             const captureChance = Math.min(0.30,
-                                (captureBase + tierBonus + heatBonus + notorietyBonus) * riskMult * scoutMod);
+                                (captureBase + tierBonus + heatBonus + notorietyBonus) * riskMult * scoutMod * (getTPDPresence(district) / 40));   // Trigrave PD Step 14H
 
                             if (Math.random() < captureChance) {
                                 handleServantCapture(captive, district);
@@ -57866,6 +57867,18 @@ audioSystem.playSFX('buttonClick');
                 gameState.flags.burglaryRingCamera = Math.random() < 0.65;
                 gameState.flags.burglaryInteriorCameras = Math.random() < 0.40;
             }
+            // Trigrave PD Step 14B: monitored alarms (30% of houses, 5% in the Slums)
+            gameState.flags.burglaryAlarm = Math.random() < (district === 'slums' ? 0.05 : 0.30);
+        }
+
+        // 14B: the door or window opens and the panel calls it in. The clock is how many
+        // rooms she can search before TPD's at the door.
+        function tripBurglaryAlarm() {
+            var F = gameState.flags;
+            if (!F.burglaryAlarm || F.burglaryAlarmBypassed || F.burglaryAlarmTripped) return;
+            var d = F.burglaryLocation === 'slums' ? 'slums' : 'residential';
+            F.burglaryAlarmTripped = true;
+            F.burglaryAlarmRooms = Math.max(1, Math.round((1 - getTPDPresence(d) / 100) * 5));
         }
 
         // Reset all per-burglary tracking flags for a fresh run
@@ -57888,6 +57901,11 @@ audioSystem.playSFX('buttonClick');
             gameState.flags.burglaryChildAwake = false;
             gameState.flags.burglaryChildEncountered = false;
             gameState.flags.burglaryConfronted = false;
+            gameState.flags.burglaryAlarm = false;
+            gameState.flags.burglaryAlarmBypassed = false;
+            gameState.flags.burglaryAlarmTripped = false;
+            gameState.flags.burglaryAlarmRooms = 0;
+            gameState.flags._burglaryAlarmOutcome = '';
         }
 
         // ── BURGLARY: ROOM & LOOT GENERATION ─────────────────────
@@ -108656,10 +108674,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     desc += 'The back wall explodes inward. Flashbangs. Three of them. The world goes white and your ears ring like church bells.\n\n';
                     desc += '"TRIGRAVE PD SWAT! EVERYONE ON THE GROUND! ON THE GROUND NOW!"\n\n';
                     desc += 'Armored officers pour through the breach. Helmets, tactical vests, assault rifles. Twenty of them. Thirty. They keep coming.\n\n';
+                    desc += 'Overhead, Raptor One hammers past low enough to shake dust off the rafters, and its searchlight comes through the skylights in hard white bars.\n\n';
                     desc += 'The Vajaros guards ahead of you open fire. At you. At the SWAT team. At everything. The building becomes a kill box.\n\n';
                     desc += 'You\'re in the middle.\n\n';
                     desc += 'Cartel gunmen ahead. SWAT behind. Crossfire ripping through the walls around you. Plaster and concrete dust filling the air.\n\n';
-                    desc += 'Through the smoke, past the SWAT line, standing behind an armored vehicle with a radio in her hand:\n\n';
+                    desc += 'Through the smoke, past the SWAT line, standing beside the Bear with a radio in her hand:\n\n';
                     desc += 'Cruz.\n\n';
                     desc += 'She came with an army this time.';
 
@@ -111479,11 +111498,18 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var karma = gameState.karma || 0;
                     var desc = '';
 
-                    desc += 'You hear them before you see them. Boots on the stairwell, radio chatter through the wall, a dog barking, sharp and trained.\n\n';
+                    desc += 'You hear them before you see them: boots on the stairwell, radio chatter through the wall, and a dog barking, sharp and trained.\n\n';
+
+                    // Trigrave PD Step 14F: Burning heat gets SWAT; Nuclear brings the Bear
+                    if (getDrugHeatLevel().tier === 'nuclear') {
+                        desc += 'Out on the street, something heavy idles at the curb, loud enough to rattle the windows in their frames. You know the sound from the news. It\'s the Bear.\n\n';
+                    }
 
                     desc += 'Then the door comes off its hinges.\n\n';
 
-                    desc += 'Officers pour in, six, eight, more behind them. Tactical gear, rifles up, flashlights cutting into every corner of your apartment. A K9 handler with a German shepherd straining at the leash. The dog\'s already found the scent.\n\n';
+                    desc += 'SWAT comes through it in a column, six of them and more behind, in helmets and plate carriers with rifles up, and their flashlights hit every corner of your apartment in the same second.\n\n';
+
+                    desc += 'Officer Dale Brenner comes in behind them with Juno, a Belgian Malinois straining at her lead, and Juno\'s already found the scent.\n\n';
 
                     desc += '"POLICE! DON\'T MOVE!"\n\n';
 
@@ -115786,7 +115812,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         text += 'There.\n\n';
                         text += 'Three blocks east. An alley between a laundromat and a pawn shop. Two heartbeats. One of them is racing. The other is steady, controlled. Predator and prey.\n\n';
                         text += 'A voice. Cracking. Pleading.\n\n';
-                        text += 'You move.';
+                        // Trigrave PD Step 14I: somebody already called it in
+                        var _tpdMins = Math.max(1, Math.round((100 - getTPDPresence(district)) / 12));
+                        gameState.flags._heroTPDMinutes = _tpdMins;
+                        text += 'Somewhere to the south, a siren starts up. TPD\'s maybe ' + tpdNumberWord(_tpdMins) + ' minute' + (_tpdMins === 1 ? '' : 's') + ' out.';
                     } else {
                         // Suited fan encounter chance (tier 3+, 25%)
                         const tier = gameState.flags.heroReputationTier || 0;
@@ -115826,7 +115855,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         gameState.flags.crimeVictimGender = Math.random() < femaleWeight ? 'woman' : 'man';
                         
                         return [
-                            { text: '<img src="Images/icons/hero-intervene.png" class="icon" alt="go"> Move in.', nextScene: 'hero_crime_intervene' }
+                            { text: '<img src="Images/icons/hero-intervene.png" class="icon" alt="go"> Move in.', nextScene: 'hero_crime_intervene' },
+                            { text: '<img src="Images/icons/hero-patrol.png" class="icon" alt="wait"> Hang back and let TPD take it.', action: function() {
+                                var m = gameState.flags._heroTPDMinutes || 3;
+                                advanceTime(m + 5);
+                                updateStatus();
+                                showMessage('You hold your position and listen.\n\nThe cruiser gets there in ' + tpdNumberWord(m) + ' minute' + (m === 1 ? '' : 's') + '. Two officers go into the alley with their flashlights up, and one of them is calling it in before the car\'s finished rolling. A minute later the second heartbeat is in handcuffs, and the first one is slowing down.\n\nThey handled it without you.', function() { showScene('hero_patrol_hub'); });
+                            }}
                         ];
                     }
                     if (gameState.flags._suitedFanEncounter) {
@@ -122126,6 +122161,15 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += '\n\nThe doorbell cam hangs dead. You already took care of it.';
                     }
 
+                    // ── Monitored alarm (Trigrave PD Step 14B: stealth 30+ spots the panel) ──
+                    if (gameState.flags.burglaryAlarm && (gameState.stealth || 1) >= 30) {
+                        if (gameState.flags.burglaryAlarmBypassed) {
+                            desc += '\n\nThe alarm panel inside the door is dark. You took care of it.';
+                        } else {
+                            desc += '\n\nThere\'s a keypad glowing through the glass by the front door, and a monitoring company\'s sticker in the corner of the window. The alarm\'s real, and it reports to somebody.';
+                        }
+                    }
+
                     // ── Unmasked awareness beat ──
                     if (gameState.flags.crimeUnmasked) {
                         if (karma <= -1000) {
@@ -122218,6 +122262,21 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         });
                     }
 
+                    // Alarm bypass (Trigrave PD Step 14B: stealth 45+)
+                    if (gameState.flags.burglaryAlarm && !gameState.flags.burglaryAlarmBypassed && (gameState.stealth || 1) >= 45) {
+                        choices.push({
+                            text: '<img src="Images/icons/stealth.png" class="icon" alt="stealth"> Bypass the alarm panel (+5 min)',
+                            action: function() {
+                                gameState.flags.burglaryAlarmBypassed = true;
+                                gainStealth(4, 'alarm bypassed');
+                                advanceTime(5);
+                                updateStatus();
+                                showNotification('<img src="Images/icons/stealth.png" class="icon" alt="stealth"> You pop the siding off the junction box and loop the sensor line. The panel never knows the door opened.');
+                                showScene('house_burglary_start');
+                            }
+                        });
+                    }
+
                     // Lockpick entry
                     if (lockpicks > 0) {
                         choices.push({
@@ -122292,6 +122351,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     
                     gameState.flags.burglaryUsedLockpick = true;
                     gameState.flags.burglaryEntryMethod = 'lockpick';
+                    tripBurglaryAlarm();   // Trigrave PD Step 14B
                     gameState.flags.burglaryWindowBroken = false;
                     advanceTime(5);
                     updateStatus();
@@ -122307,6 +122367,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.burglaryUsedLockpick = false;
                     gameState.flags.burglaryEntryMethod = 'window';
                     gameState.flags.burglaryWindowBroken = true;
+                    tripBurglaryAlarm();   // Trigrave PD Step 14B
 
                     // Window break may wake sleeping occupants (+20% alert chance)
                     if (gameState.flags.burglaryOccupantPresent && !gameState.flags.burglaryOccupantAwake) {
@@ -122339,6 +122400,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 onEnter: function() {
                     gameState.flags.burglaryEntryMethod = 'speed';
                     gameState.flags.burglaryWindowBroken = false;
+                    tripBurglaryAlarm();   // Trigrave PD Step 14B
                     gameState.flags.burglaryUsedLockpick = false;
                     gameState.flags.burglaryUsedVampireSpeed = true;
 
@@ -122378,6 +122440,15 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     // Room header
                     desc += '<strong>' + getRoomLabel(roomType) + '</strong> (Room ' + (idx + 1) + ' of ' + rooms.length + ')\n\n';
+
+                    // Trigrave PD Step 14B: the alarm's clock
+                    if (gameState.flags.burglaryAlarmTripped) {
+                        var _alarmLeft = Math.max(0, (gameState.flags.burglaryAlarmRooms || 1) - (idx + 1));
+                        if (idx === 0) desc += 'By the front door, the alarm panel chirps twice and goes quiet. Quiet means monitored: a dispatcher\'s screen somewhere just lit up with this address.\n\n';
+                        if ((gameState.stealth || 1) >= 30) {
+                            desc += '<span style="color:#ff8888;">' + (_alarmLeft === 0 ? 'This is the last room you\'ve got before TPD\'s at the door.' : 'You\'ve got maybe ' + tpdNumberWord(_alarmLeft) + ' more room' + (_alarmLeft === 1 ? '' : 's') + ' before TPD\'s at the door.') + '</span>\n\n';
+                        }
+                    }
 
                     // Footwear awareness (14C)
                     var _fw = getFootwearStats();
@@ -122611,6 +122682,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         choices.push({
                             text: '<img src="Images/icons/derelict-house.png" class="icon" alt="room"> Search the ' + getRoomLabel(nextRoom).toLowerCase() + ' (push your luck)',
                             action: function() {
+                                // Trigrave PD Step 14B: past the clock, TPD gets there first
+                                if (gameState.flags.burglaryAlarmTripped && ((gameState.flags.burglaryRoomIndex || 0) + 1) >= (gameState.flags.burglaryAlarmRooms || 1)) {
+                                    showScene('house_burglary_alarm_response');
+                                    return;
+                                }
                                 gameState.flags.burglaryRoomIndex = (gameState.flags.burglaryRoomIndex || 0) + 1;
                                 // Dog encounter intercept (triggers once, on room 2+)
                                 if (gameState.flags.burglaryHasDog && !gameState.flags.burglaryDogTriggered && (gameState.flags.burglaryRoomIndex || 0) >= 1) {
@@ -123163,7 +123239,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     var wasOccupied = gameState.flags.burglaryOccupantPresent;
                     var desc = '';
 
-                    if (alerted) {
+                    if (gameState.flags._burglaryAlarmOutcome === 'fled') {
+                        desc += 'You go out the back door at vampire speed, and the yard, the fence, and the next two streets all smear past in the same second. Behind you, a flashlight beam hits the empty kitchen, and somebody shouts it into a radio.';
+                    } else if (gameState.flags._burglaryAlarmOutcome === 'compelled') {
+                        desc += 'The officers walk the house room by room, call it a false alarm on the radio, and leave. You wait for their car to pull away, then slip out the back with the bag over your shoulder.';
+                    } else if (alerted) {
                         if (gameState.flags.crimeUnmasked) {
                             desc += 'You hear footsteps. A light flicks on somewhere down the hall.\n\nYou don\'t wait. You\'re out the back door before they reach the room, bag over your shoulder.\n\nThey got a look at you. Maybe just a glimpse. Maybe more.\n\nYour pulse hammers. Close one.';
                         } else {
@@ -123279,6 +123359,14 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             });
                         }
                     }
+                    // Trigrave PD Step 14B: the alarm response saw her go, or saw nothing they remember
+                    if (gameState.flags._burglaryAlarmOutcome === 'fled') {
+                        witnesses.push({ type: 'cop', faceSeen: false, description: 'Alarm response. Suspect left at inhuman speed.' });
+                        var _asd = gameState.suspicionData || (gameState.suspicionData = {});
+                        _asd.supernaturalEvidence = Math.min(100, (_asd.supernaturalEvidence || 0) + 5);
+                    } else if (gameState.flags._burglaryAlarmOutcome === 'compelled') {
+                        witnesses.push({ type: 'cop', faceSeen: true, compelled: true, description: 'Alarm response. Officers cleared the house.' });
+                    }
                     // Alerted but not confronted: heard something, didn't see anyone
                     if (alerted && !confronted && occupantPresent && !usedCompulsion) {
                         witnesses.push({
@@ -123299,7 +123387,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         });
                     }
 
-                    createLedgerEntry({
+                    var _burgId = createLedgerEntry({
                         type: 'burglary',
                         district: location === 'slums' ? 'slums' : 'residential',
                         masked: isMasked,
@@ -123319,6 +123407,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         // Additional cameras
                         additionalCameras: additionalCams
                     });
+                    // Trigrave PD Step 14B: an alarm call puts officers and a dog on the scent within minutes
+                    if (gameState.flags.burglaryAlarmTripped) { var _burgE = getLedgerEntry(_burgId); if (_burgE) _burgE.k9Fresh = true; }
 
                     // ── Karma ──
                     gameState.karma = karma - 12;
@@ -123369,8 +123459,105 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             gameState.flags.seenGhostBurglary = true;
                             delete gameState.flags.seenGhostBurglaryPending;
                         }
+                        // Trigrave PD Step 14B: running from the alarm response means a pursuit
+                        if (gameState.flags._burglaryAlarmOutcome === 'fled') {
+                            gameState.flags._burglaryAlarmOutcome = '';
+                            startPursuit({ district: gameState.flags.burglaryLocation === 'slums' ? 'slums' : 'residential', severity: 'serious', next: 'city_exploration' });
+                            showScene('tpd_pursuit');
+                            return;
+                        }
+                        gameState.flags._burglaryAlarmOutcome = '';
                         showScene('city_exploration');
                     }}
+                ]
+            },
+
+            // ── Trigrave PD Step 14B: the alarm response ──
+            house_burglary_alarm_response: {
+                text: function() {
+                    var desc = 'You\'re at the door to the next room when light sweeps across the ceiling through the front windows, blue and then red.\n\n';
+                    desc += '"TPD! Police officers! Anyone in the house, announce yourself!"\n\n';
+                    desc += 'Two sets of boots come in through the door you opened, one flashlight each, clearing the house room by room in a pattern they\'ve run a thousand times.\n\n';
+                    desc += 'They\'ll reach you in about ten seconds.';
+                    return desc;
+                },
+                onEnter: function() {
+                    gameState.flags.policeEncounterToday = true;
+                    gameState.flags.lastPoliceEncounterDay = gameState.time.day;
+                    advanceTime(1);
+                    updateStatus();
+                },
+                choices: function() {
+                    var F = gameState.flags;
+                    var district = F.burglaryLocation === 'slums' ? 'slums' : 'residential';
+                    return [
+                        { text: 'Out the back. Vampire speed.', action: function() {
+                            F._burglaryAlarmOutcome = 'fled';
+                            gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 10);
+                            var sd = gameState.suspicionData || (gameState.suspicionData = {});
+                            sd.bodycamIncidents = (sd.bodycamIncidents || 0) + 1;
+                            updateStatus();
+                            showScene('house_burglary_exit');
+                        }},
+                        { text: 'Compel them when they find you.', action: function() {
+                            F._burglaryAlarmOutcome = 'compelled';
+                            recordCompulsionEcho(district);
+                            gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 10);
+                            advanceTime(10);
+                            updateStatus();
+                            showMessage('The flashlight finds you in the hallway, and you catch the eyes behind it before the officer can say a word. "The house is empty. The alarm glitched. Go tell your partner."\n\n'
+                                + 'He lowers the light and walks away. His partner hears it on the radio and doesn\'t argue.\n\n'
+                                + 'Somewhere at Fourth Street, a false-alarm report is going to have ten minutes in it that neither of them can account for.', function() { showScene('house_burglary_exit'); });
+                        }},
+                        { text: 'Put the bag down. Hands up.', nextScene: 'house_burglary_alarm_surrender' }
+                    ];
+                }
+            },
+
+            house_burglary_alarm_surrender: {
+                text: function() {
+                    var desc = 'You set the bag on the floor and put your hands up where the flashlight can find them.\n\n';
+                    desc += 'The first officer stops in the doorway, weapon low and steady, and talks you down onto your knees in a calm, even voice. His partner cuffs you and reads you your rights while the first one keeps the light on your hands.\n\n';
+                    desc += 'They walk you out through the front door. Across the street, a neighbor in a bathrobe is standing on her porch, filming the whole thing on her phone.';
+                    return desc;
+                },
+                onEnter: function() {
+                    var F = gameState.flags;
+                    var district = F.burglaryLocation === 'slums' ? 'slums' : 'residential';
+                    var masked = !F.crimeUnmasked;
+                    var id = createLedgerEntry({
+                        type: 'burglary', district: district, masked: masked, maskSignature: masked && hasSkiMask(),
+                        witnessEvidence: true, cameraEvidence: true, fingerprintsLeft: !hasLeatherGloves(),
+                        witnesses: [{ type: 'cop', faceSeen: true, description: 'Alarm response, arrested inside the house' }],
+                        cameraType: 'bodycam', cameraQuality: 'clear'
+                    });
+                    linkCrimeToSuspect(id, 'caught_in_act');
+                    // The haul goes back to the house
+                    gameState.money = Math.max(0, (gameState.money || 0) - (F.burglaryTotalCash || 0));
+                    (F.burglaryLootCollected || []).forEach(function(itemId) {
+                        var inv = (gameState.inventory && gameState.inventory.stolenItems) || [];
+                        for (var i = inv.length - 1; i >= 0; i--) { if (inv[i] && (inv[i].id === itemId || inv[i] === itemId)) { inv.splice(i, 1); break; } }
+                    });
+                    if (typeof calculateBackpackUsage === 'function') calculateBackpackUsage();
+                    unequipCrimeMask();
+                    delete F.burglaryRoomList;
+                    delete F.burglaryCurrentRoomLoot;
+                    delete F.crimeUnmasked;
+                    F.burglaryLootCollected = [];
+                    F.burglaryTotalCash = 0;
+                    F.policeEncountersTotal = (F.policeEncountersTotal || 0) + 1;
+                    F.currentlyInCustody = true;
+                    F.custodyDay = gameState.time.day;
+                    F.custodyProcessed = false;
+                    F.custodyInterrogated = false;
+                    F.arrestCount = (F.arrestCount || 0) + 1;
+                    calculateWantedTier();
+                    modifyMentalHealth(-10);
+                    advanceTime(20);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Ride in silence.', nextScene: 'arrest_booking' }
                 ]
             },
 
@@ -144632,6 +144819,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     desc += 'The article loads with a photo of a press conference. Podium, badges, grim faces behind a wall of microphones. Chief Hugo Lars stands beside the podium instead of behind it, hands folded, reading from nothing.\n\n';
                     desc += 'You scroll.\n\n';
                     desc += 'Composite sketches. Three of them. Different faces, different builds, but the same flat police-artist quality that makes everyone look like a mannequin. You recognize your servants behind the bland pencil lines.\n\n';
+                    desc += 'A second photo shows a woman at a wall of monitors with a headset around her neck. The caption names her as Detective Lena Varga of the Real-Time Crime Center, "who pulled the footage that tied the cases together."\n\n';
                     desc += '"...an organized criminal enterprise operating across multiple districts. The suspects are believed to operate in coordinated teams, striking businesses and individuals with what one officer described as military-level precision..."\n\n';
                     desc += 'Your phone buzzes again. Social media. Someone\'s already posted the sketches with a caption in all caps. Two hundred shares in an hour.\n\n';
                     desc += 'You pocket your phone.\n\n';
@@ -146846,7 +147034,10 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     var pool;
                     if (detection.outcome === 'full') {
-                        pool = ['witness', 'patrol', 'companion'];
+                        pool = ['witness', 'companion'];
+                        // Trigrave PD Step 14E: the heavier the police presence, the likelier the patrol
+                        var _patrolWeight = Math.max(1, Math.round(getTPDPresence(env.district || gameState.currentDistrictId) / 25));
+                        for (var _pw = 0; _pw < _patrolWeight; _pw++) pool.push('patrol');
                     } else {
                         pool = ['dog', 'headlights', 'phone', 'passerby'];
                         if (isNight) pool.push('streetlight');
@@ -212237,7 +212428,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
 
                         // Calculate capture chance for this district
                         const captureBase = pending === 'counter_surveillance' ? 0.015 : (pending === 'scouting' ? 0 : 0.03);
-                        const captureChance = Math.min(30, Math.round((captureBase + wantedTier * 0.02 + heat / 400 + (captive.notoriety || 0) / 500) * risk * 100));
+                        const captureChance = Math.min(30, Math.round((captureBase + wantedTier * 0.02 + heat / 400 + (captive.notoriety || 0) / 500) * risk * (getTPDPresence(d) / 40) * 100));   // Trigrave PD Step 14H
                         const heatColor = heat >= 60 ? '#ff6b8a' : heat >= 30 ? '#ffcc66' : '#6bffa0';
                         const capColor = captureChance >= 15 ? '#ff6b8a' : captureChance >= 8 ? '#ffcc66' : '#6bffa0';
 
@@ -226360,15 +226551,8 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 : timeOfDay === 'morning' ? -15 : 0;
             env.footTraffic = Math.max(5, (trafficBase[district] || 30) + todMod);
 
-            // Patrol chance: district base + suspicion escalation
-            var patrolBase = {
-                downtown: 0.25, commercial: 0.15, medical: 0.12,
-                residential: 0.08, wendale: 0.06, fitness: 0.05,
-                park: 0.04, slums: 0.02, dockyard: 0.01
-            };
-            env.patrolChance = patrolBase[district] || 0.05;
-            if ((gameState.citySuspicion || 0) >= 40) env.patrolChance += 0.10;
-            if ((gameState.citySuspicion || 0) >= 60) env.patrolChance += 0.15;
+            // Patrol chance (Trigrave PD Step 14E): TPD presence, not suspicion
+            env.patrolChance = getTPDPresence(district) / 280;
 
             gameState.flags._huntEnvironment = env;
             return env;
