@@ -15045,18 +15045,9 @@
             if (standing < -30) rivalChance = 25;
             if (gameState.drugSupplier === 'vajaros') rivalChance = Math.max(0, rivalChance - 10); // cartel protection
             
-            // Undercover cop / bad buyer chance
-            var badBuyerBase = 5;
-            if (rep >= 30) badBuyerBase -= 2;
-            if ((gameState.stealth || 0) >= 20) badBuyerBase -= 1;
-            if ((gameState.karma || 0) <= -1000) badBuyerBase -= 1;
-            if (timeOfDay === 'night') badBuyerBase -= 1;
-            // Heat tier adds undercover probability
-            if (heatLevel.tier === 'warm')    badBuyerBase += 2;
-            if (heatLevel.tier === 'hot')     badBuyerBase += 5;
-            if (heatLevel.tier === 'burning') badBuyerBase += 8;
-            if (heatLevel.tier === 'nuclear') badBuyerBase += 12;
-            badBuyerBase = Math.max(1, badBuyerBase);
+            // Undercover cop / bad buyer chance (Trigrave PD Step 11D: same odds checkUndercoverCop rolls)
+            var _riskDistrict = (TERRITORY_DATA[locationId] && TERRITORY_DATA[locationId].district) || 'slums';
+            var badBuyerBase = getNarcoticsUndercoverPct(_riskDistrict, timeOfDay);
             
             return {
                 policeChance: policeChance,
@@ -15533,21 +15524,9 @@
             return 'The deal\'s done. Money in your pocket. Product in theirs. You scan the block. Already looking for the next one.';
         }
         
-        // Check if buyer is an undercover cop
-        function checkUndercoverCop() {
-            var chance = 5;
-            if ((gameState.drugReputation || 0) >= 30) chance -= 2;
-            if ((gameState.stealth || 0) >= 20) chance -= 1;
-            if ((gameState.karma || 0) <= -1000) chance -= 1;
-            var timeOfDay = getTimeOfDay();
-            if (timeOfDay === 'night') chance -= 1;
-            var heatLevel = getDrugHeatLevel();
-            if (heatLevel.tier === 'warm') chance += 2;
-            if (heatLevel.tier === 'hot') chance += 5;
-            if (heatLevel.tier === 'burning') chance += 8;
-            if (heatLevel.tier === 'nuclear') chance += 12;
-            chance = Math.max(1, chance);
-            return Math.random() * 100 < chance;
+        // Check if buyer is an undercover cop (Trigrave PD Step 11D: presence plus drug heat)
+        function checkUndercoverCop(district) {
+            return Math.random() * 100 < getNarcoticsUndercoverPct(district || 'slums', getTimeOfDay());
         }
         
         // Vajaros card phone call (mirrors callJaewonCard)
@@ -34934,7 +34913,7 @@ audioSystem.playSFX('buttonClick');
             // ── Primary: Ledger-driven warrant ──
             // Charges suspended by a Rufus clearance don't count toward a new warrant
             var linkedCount = 0, highest = 'none';
-            var _order = ['police_killing', 'murder', 'police_assault', 'escape', 'mugging', 'assault', 'burglary', 'fleeing', 'blood_theft', 'pickpocketing', 'indecent_exposure'];
+            var _order = ['police_killing', 'murder', 'police_assault', 'escape', 'mugging', 'assault', 'burglary', 'drug_sale', 'fleeing', 'blood_theft', 'pickpocketing', 'bribery_attempt', 'indecent_exposure'];
             (gameState.evidenceLedger || []).forEach(function(e) {
                 if (!e.linkedToKelsie || e.warrantCleared) return;
                 linkedCount++;
@@ -35497,7 +35476,8 @@ audioSystem.playSFX('buttonClick');
                 'police_killing': 'Murder of Law Enforcement',
                 'assault': 'Aggravated Assault',
                 'indecent_exposure': 'Indecent Exposure',
-                'bribery_attempt': 'Attempted Bribery of an Officer'
+                'bribery_attempt': 'Attempted Bribery of an Officer',
+                'drug_sale': 'Sale of a Controlled Substance'
             };
             return labels[crimeType] || 'Criminal Activity';
         }
@@ -35589,6 +35569,9 @@ audioSystem.playSFX('buttonClick');
                         break;
                     case 'pickpocketing':
                         severity += 1;
+                        break;
+                    case 'drug_sale':
+                        severity += 3;
                         break;
                     case 'blood_theft':
                         severity += 2;
@@ -35827,7 +35810,8 @@ audioSystem.playSFX('buttonClick');
         var TPD_CASE_NOUNS = {
             murder: 'homicide', burglary: 'burglary', pickpocketing: 'pickpocketing', mugging: 'robbery',
             blood_theft: 'hospital theft', fleeing: 'pursuit', escape: 'escape', police_assault: 'officer assault',
-            police_killing: 'officer killing', assault: 'assault', indecent_exposure: 'indecency', bribery_attempt: 'bribery'
+            police_killing: 'officer killing', assault: 'assault', indecent_exposure: 'indecency', bribery_attempt: 'bribery',
+            drug_sale: 'narcotics'
         };
         function getTPDCaseName(entry) {
             var d = TPD_DISTRICT_NAMES[entry.district] || 'city';
@@ -36380,6 +36364,11 @@ audioSystem.playSFX('buttonClick');
                 }
             }
 
+            // 20+: a plainclothes detail on the block (Step 11D)
+            if (stealth >= 20 && isPickpocketDetailActive(district)) {
+                parts.push('A woman on the bench across the street hasn\'t turned a page in ten minutes, and the guy at the bus shelter has let three buses go. Somebody put a plainclothes detail on this block.');
+            }
+
             // 50+: Cruz's forecast (Step 12 sets it)
             var F = gameState.flags || {};
             if (stealth >= 50 && F.cruzForecastDistrict === district && F.cruzForecastDay === gameState.time.day) {
@@ -36516,7 +36505,7 @@ audioSystem.playSFX('buttonClick');
         // leaves. Walking into her own residence counts as walking home. Pending exits expire
         // after four hours.
         // Pickpocketing already ends with a walk into the crowd, and it's a patrol report either way
-        var TPD_NO_EXIT_TYPES = { fleeing: true, escape: true, indecent_exposure: true, bribery_attempt: true, pickpocketing: true };
+        var TPD_NO_EXIT_TYPES = { fleeing: true, escape: true, indecent_exposure: true, bribery_attempt: true, pickpocketing: true, drug_sale: true };
         function tpdNowMinutes() {
             var t = gameState.time;
             return (t.day || 0) * 1440 + (t.hour || 0) * 60 + (t.minute || 0);
@@ -36621,6 +36610,11 @@ audioSystem.playSFX('buttonClick');
         // showScene hook: crime exits and home beats. Returns true when it took over navigation.
         function tpdSceneIntercept(sceneId) {
             if (sceneId === 'crime_exit_choice' || sceneId === 'tpd_warrant_service' || sceneId === 'tpd_warrant_service_not_home') return false;
+            // Trigrave PD Step 11C: every approach ends in ambush_strike, and a decoy springs the trap there
+            if (sceneId === 'ambush_strike' && gameState.flags._huntTarget && gameState.flags._huntTarget.isDecoy) {
+                showScene('hunt_decoy_sting');
+                return true;
+            }
             var pend = getExitPendingEntries();
             if (pend.length) {
                 if (gameState.flags.currentlyInCustody) {
@@ -36872,6 +36866,127 @@ audioSystem.playSFX('buttonClick');
         }
 
         // ══════════════════════════════════════════════════════════
+        // ── UNDERCOVER & DECOY OPERATIONS (Step 11) ──────────────
+        // ══════════════════════════════════════════════════════════
+        // The Special Investigations Section puts plainclothes officers where crime's
+        // happening: marks for muggers and pickpockets, buyers for dealers, and decoys for
+        // whatever's biting people. Stealth 20+ spots them; stealth 40+ reads a decoy cold.
+
+        // 11A: odds that the person she's about to target is TPD. At baseline that's about
+        // 1% in the Slums and 4% Downtown; an assigned detail or Cruz's attention raises it.
+        function getUndercoverChance(district, crimeType) {
+            var p = getTPDPresence(district) / 100;
+            var c = 0.03 * p * 2;
+            if (districtHasActiveSeries(district, crimeType)) c += 0.10;   // a detail's been assigned
+            if ((gameState.flags.cruzProfile || 0) >= 50 && crimeType === 'violent_hunt') c += 0.06;
+            // 11D: a pickpocket detail works the street crimes on its block
+            if ((crimeType === 'pickpocketing' || crimeType === 'mugging') && isPickpocketDetailActive(district)) c += 0.10;
+            return Math.min(0.30, c);
+        }
+
+        // 11B: a bite series (two or more Profile Zero cases still open) or a Cruz profile of
+        // 50+ puts decoys on the street
+        function huntDecoysDeployed() {
+            if ((gameState.flags.cruzProfile || 0) >= 50) return true;
+            var n = 0;
+            (gameState.evidenceLedger || []).forEach(function(e) {
+                if (!e.linkedToKelsie && e.investigation && e.investigation.status !== 'identified' && caseHasLead(e, 'profile_zero')) n++;
+            });
+            return n >= 2;
+        }
+
+        // 11B: dresses a hunt target as a decoy officer. Hunts only run on district streets,
+        // so a decoy never works the Lurasi.
+        function makeHuntDecoy(target) {
+            target.isDecoy = true;
+            target.decoyCover = Math.random() < 0.6 ? 'drunk' : 'lost';
+            target.awareness = target.decoyCover === 'drunk' ? 'drunk' : 'distracted';
+            target.isolation = 'secluded';   // bait gets set where it's easy to take
+            target.walksToSeclusion = true;
+            var drunk = ['weaving along the curb with a bottle in a paper bag', 'leaning on a parking meter, trying to get a key into a car that isn\'t his',
+                         'stumbling out of a doorway, talking loud into a phone'];
+            var lost = ['turning in slow circles at the corner, squinting at a map on a phone', 'standing at the mouth of an alley, reading the street signs twice'];
+            target.behavior = (target.decoyCover === 'drunk' ? drunk : lost)[Math.floor(Math.random() * (target.decoyCover === 'drunk' ? drunk.length : lost.length))];
+            if (target.gender === 'female') target.behavior = target.behavior.replace('isn\'t his', 'isn\'t hers');
+            return target;
+        }
+
+        // 11B: the casing read on a decoy. Below stealth 20 she's hunting blind.
+        function getDecoyCasingTell(target, stealth) {
+            if (!target || !target.isDecoy || stealth < 20) return '';
+            var isMale = target.gender === 'male';
+            var p = isMale ? 'He' : 'She', pl = isMale ? 'he' : 'she', pos = isMale ? 'his' : 'her';
+            var drunk = target.decoyCover === 'drunk';
+            if (stealth >= 40) {
+                return drunk
+                    ? p + '\'s weaving, and every time ' + pl + ' stumbles ' + pl + ' ends up facing the alley. Nobody\'s that unlucky. ' + p + '\'s bait.'
+                    : p + ' keeps checking the map, and every time ' + pl + ' looks up ' + pos + ' eyes go to the alley instead of the street signs. Nobody\'s that lost. ' + p + '\'s bait.';
+            }
+            return drunk
+                ? p + '\'s drunk, sure. ' + p + ' plants ' + pos + ' feet shoulder-width every time ' + pl + ' stops, though, and drunks don\'t do that.'
+                : p + '\'s lost, sure. For someone lost, though, ' + pl + ' hasn\'t looked at a single street sign.';
+        }
+
+        // 11D: 3+ pickpocketing cases in one district inside a week puts a plainclothes
+        // detail on it for ten days
+        function isPickpocketDetailActive(district) {
+            var d = gameState.flags.pickpocketDetails || {};
+            return !!(d[district] && d[district] >= (gameState.time.day || 0));
+        }
+        function checkPickpocketDetail(district) {
+            var F = gameState.flags;
+            var today = gameState.time.day || 0;
+            if (TPD_BASE_PRESENCE[district] == null || isPickpocketDetailActive(district)) return;   // street blocks only
+            var n = (gameState.evidenceLedger || []).filter(function(e) {
+                return e.type === 'pickpocketing' && e.district === district && today - e.day <= 6;
+            }).length;
+            if (n < 3) return;
+            if (!F.pickpocketDetails) F.pickpocketDetails = {};
+            F.pickpocketDetails[district] = today + 10;
+        }
+
+        // 11D: narcotics. Undercover buys come out of getUndercoverChance, plus what the drug
+        // heat tells the Bureau. Returns a percentage.
+        function getNarcoticsUndercoverPct(district, timeOfDay) {
+            var chance = getUndercoverChance(district, 'drug_deal') * 100;
+            var tier = getDrugHeatLevel().tier;
+            if (tier === 'warm') chance += 2;
+            if (tier === 'hot') chance += 5;
+            if (tier === 'burning') chance += 8;
+            if (tier === 'nuclear') chance += 12;
+            if ((gameState.drugReputation || 0) >= 30) chance -= 2;
+            if ((gameState.karma || 0) <= -1000) chance -= 1;
+            if (timeOfDay === 'night') chance -= 1;
+            return Math.max(1, chance);
+        }
+
+        // Burning+ heat: narcotics has enough on the corner to arrest on the buy.
+        // Below that, the buyer walks and the case waits for the warrant.
+        function narcoticsBustsOnBuy() {
+            var tier = getDrugHeatLevel().tier;
+            return tier === 'burning' || tier === 'nuclear';
+        }
+
+        // 11D: a controlled purchase. The product and the marked cash go into evidence, the
+        // wire camera has her face, and every earlier buy still open joins the same file.
+        function logControlledBuy(district, bulk) {
+            var today = gameState.time.day || 0;
+            var id = createLedgerEntry({
+                type: 'drug_sale', district: district, witnessEvidence: true, cameraEvidence: true,
+                witnesses: [{ type: 'cop', faceSeen: true, description: bulk ? 'Undercover narcotics officer, bulk controlled purchase' : 'Undercover narcotics officer, controlled purchase' }],
+                cameraType: 'wire_cam', cameraQuality: 'clear', description: 'Controlled purchase'
+            });
+            var entry = getLedgerEntry(id);
+            (gameState.evidenceLedger || []).forEach(function(e) {
+                if (e === entry || e.type !== 'drug_sale' || e.linkedToKelsie || today - e.day > 30) return;
+                if (!e.investigation || e.investigation.status === 'identified') return;
+                bumpCaseProgress(e, 25, true);
+                bumpCaseProgress(entry, 25, true);
+            });
+            return id;
+        }
+
+        // ══════════════════════════════════════════════════════════
         // ── PURSUIT: MOTORS, AIR SUPPORT, AND K9 (Step 10) ───────
         // ══════════════════════════════════════════════════════════
         // Vampire speed wins every footrace in Trigrave. TPD has everything that doesn't need
@@ -37105,7 +37220,7 @@ audioSystem.playSFX('buttonClick');
         function getHighestSeverityCrime() {
             if (!gameState.evidenceLedger) return 'none';
 
-            var severityOrder = ['police_killing', 'murder', 'police_assault', 'escape', 'mugging', 'assault', 'burglary', 'fleeing', 'blood_theft', 'pickpocketing'];
+            var severityOrder = ['police_killing', 'murder', 'police_assault', 'escape', 'mugging', 'assault', 'burglary', 'drug_sale', 'fleeing', 'blood_theft', 'pickpocketing', 'bribery_attempt'];
 
             for (var s = 0; s < severityOrder.length; s++) {
                 for (var i = 0; i < gameState.evidenceLedger.length; i++) {
@@ -75072,9 +75187,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const summaryPool = riskSummaries[riskLevel];
                     desc += summaryPool[Math.floor(Math.random() * summaryPool.length)];
 
-                    // ── Cop warning (subtle, if target is a cop) ──
-                    if (target.isCop) {
-                        desc += '\n\nSomething about this one. He stands too square for a guy killing time, and his eyes sweep the crowd in a pattern. Could be military, could be law enforcement. Could be nothing.\n\nBut your gut says walk away.';
+                    // ── Cop read (Trigrave PD Step 11A: stealth 20+ spots plainclothes; below that, nothing) ──
+                    if (target.isCop && stealthLvl >= 20) {
+                        if (target.isPlainclothes) {
+                            desc += '\n\nYou look twice. His coffee\'s been full since you got here, and every time the light changes he lets it change without him. There\'s a clear wire tucked behind his ear.\n\nHe\'s plainclothes, and that wallet\'s bait.';
+                        } else {
+                            desc += '\n\nYou look twice. He stands too square for a guy killing time, and his eyes run the crowd in a grid, doorways first and then hands. His jacket\'s cut loose on the right side, over the hip.\n\nThat\'s a cop, on duty or off, and his pocket\'s a TPD pocket.';
+                        }
                     }
 
                     // ── Livestreamer warning ──
@@ -75151,6 +75270,14 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const roll = Math.random() * 100;
                     gameState.flags.pickpocketDetected = roll < detectionChance;
                     gameState.flags.pickpocketDetectionRoll = Math.round(detectionChance);
+
+                    // Trigrave PD Step 11D: a plainclothes detail on the block watches every lift
+                    gameState.flags._ppDetailSpotted = false;
+                    if (!gameState.flags.pickpocketDetected && !target.isCop && isPickpocketDetailActive(district) &&
+                        Math.random() < 0.25 * (1 - getStealthBonus())) {
+                        gameState.flags.pickpocketDetected = true;
+                        gameState.flags._ppDetailSpotted = true;
+                    }
 
                     advanceTime(5);
                     updateStatus();
@@ -75232,10 +75359,16 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += 'You keep walking. Steady pace.\n\n';
                         desc += 'Then you hear it.\n\n';
 
-                        if (target.isCop) {
-                            desc += '"Hey." The voice is flat. Controlled. "Stop right there."\n\n';
-                            desc += 'You glance back. He\'s already facing you. Badge in hand. His posture\'s shifted from civilian to something trained and rigid.\n\n';
-                            desc += 'Off-duty cop. Your gut was right.';
+                        if (gameState.flags._ppDetailSpotted) {
+                            desc += 'A hand closes on your elbow, light and firm.\n\n';
+                            desc += '"TPD, ma\'am." A woman in a rain jacket you walked past a minute ago is holding a badge low against her hip, where the crowd can\'t see it. "I watched you take that wallet."\n\n';
+                            desc += 'Her partner\'s already stepping in on your other side. They\'ve been working this block all week, and you walked right past both of them.';
+                        } else if (target.isCop) {
+                            desc += '"Hey." The voice is flat and controlled. "Stop right there."\n\n';
+                            desc += 'You glance back. He\'s already facing you with a badge in his hand, and his posture\'s shifted from civilian to something trained and rigid.\n\n';
+                            desc += (gameState.stealth || 1) >= 20
+                                ? (target.isPlainclothes ? 'You read him right, plainclothes and all, and lifted it anyway.' : 'You read him right as a cop and lifted it anyway.')
+                                : (target.isPlainclothes ? 'He\'s plainclothes, and he looked like anybody.' : 'He\'s an off-duty cop, and he looked like anybody.');
                         } else {
                             const detectionLines = {
                                 tourist: '"Excuse me? Excuse me!" The tourist pats his pockets. Once. Twice. His face changes. "My wallet. Hey! HEY!"',
@@ -75265,8 +75398,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         return [
                             { text: 'Keep walking.', nextScene: 'street_pickpocket_clean' }
                         ];
-                    } else if (target && target.isCop && hasWarrant) {
-                        // Cop + active warrant = arrest attempt
+                    } else if (gameState.flags._ppDetailSpotted || (target && target.isCop && hasWarrant)) {
+                        // Cop + active warrant = arrest attempt; a detail arrests on the lift (Step 11D)
                         return [
                             { text: 'Turn around.', nextScene: 'street_pickpocket_cop_arrest' }
                         ];
@@ -75818,6 +75951,20 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     let desc = '';
 
+                    // Trigrave PD Step 11D: the plainclothes detail made the lift
+                    if (gameState.flags._ppDetailSpotted) {
+                        const _ppDist = gameState.flags.pickpocketDistrict || gameState.currentDistrictId;
+                        desc += 'You stop. She keeps her hand on your elbow, and her partner takes a spot on your other side, near enough to block the sidewalk without making a show of it.\n\n';
+                        desc += '"Plainclothes detail, ' + (TPD_DISTRICT_NAMES[_ppDist] || 'TPD') + '," she says quietly, holding the badge where you can read it. "We\'ve had a run of lifts on this block, and you\'re the first one we\'ve watched happen."\n\n';
+                        desc += '"I\'m going to ask you to keep your hands where I can see them. You\'re under arrest for theft."\n\n';
+                        if (gameState.flags.warrantIssued || gameState.flags.wantedFugitive) {
+                            desc += 'Her partner looks at your face, then down at his phone, then at your face again. "Sarge," he says. "Check the bulletin. That\'s her."';
+                        } else {
+                            desc += 'Her voice is friendly. Her other hand\'s resting on her hip, an inch from the radio, and it stays there.';
+                        }
+                        return desc;
+                    }
+
                     desc += 'You stop. Turn.\n\n';
                     desc += 'The badge is already out. Chest height, angled so it catches the light. He closes the distance with the steady, unhurried stride of a man who\'s done this a thousand times.\n\n';
                     desc += '"Stay right there."\n\n';
@@ -75839,8 +75986,63 @@ He'll remember every second of the sex. The bite's already gone from him, like i
 
                     return desc;
                 },
+                choices: function() {
+                    const district = gameState.flags.pickpocketDistrict || gameState.currentDistrictId;
+                    const choices = [
+                        { text: '<img src="Images/icons/eye.png" class="icon"> Run. Now.', nextScene: 'street_pickpocket_cop_arrest_flee' }
+                    ];
+                    // Compulsion works on any officer (Trigrave PD canon)
+                    if (gameState.flags.illusionUnlocked) {
+                        choices.push({ text: 'Compel them.', action: function() {
+                            recordCompulsionEcho(district);
+                            gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 10);
+                            gameState.flags._ppDetailSpotted = false;
+                            updateStatus();
+                            showMessage('You find the officer\'s eyes and push, soft and steady. "You made a mistake. I\'m nobody, and you\'ve got a block to watch."\n\n'
+                                + 'The badge lowers. The officer blinks at you like you\'re a stranger who wandered too close, then turns back to the street.\n\n'
+                                + 'You walk away with the wallet still in your jacket. Somewhere in tonight\'s report there\'ll be a few minutes nobody can account for, and TPD reads its reports.',
+                                function() { showScene(getPickpocketReturnScene(district)); });
+                        }});
+                    }
+                    choices.push({ text: 'Keep your hands where they can see them.', nextScene: 'street_pickpocket_cop_surrender' });
+                    return choices;
+                }
+            },
+
+            // Trigrave PD Step 11D: caught with the wallet on her
+            street_pickpocket_cop_surrender: {
+                text: function() {
+                    let desc = 'You keep your hands where they can see them.\n\n';
+                    desc += 'The cuffs go on right there on the sidewalk, quick and quiet, and the wallet comes out of your jacket and into a clear evidence bag. An officer reads you your rights in a low, even voice while the crowd flows around the three of you.\n\n';
+                    desc += 'An unmarked car pulls to the curb. They put you in the back with a hand on top of your head, and nobody says anything else on the ride to Fourth Street.';
+                    return desc;
+                },
+                onEnter: function() {
+                    const F = gameState.flags;
+                    const district = F.pickpocketDistrict || gameState.currentDistrictId;
+                    gameState.money = Math.max(0, (gameState.money || 0) - (F.lastPickpocketPayout || 0));   // the wallet goes back
+                    const id = createLedgerEntry({
+                        type: 'pickpocketing', district: district, witnessEvidence: true, cameraEvidence: false,
+                        witnesses: [{ type: 'cop', faceSeen: true, description: 'Officer witnessed the theft' }]
+                    });
+                    linkCrimeToSuspect(id, 'caught_in_act');
+                    checkPickpocketDetail(district);
+                    F._ppDetailSpotted = false;
+                    F.policeEncounterToday = true;
+                    F.lastPoliceEncounterDay = gameState.time.day;
+                    F.policeEncountersTotal = (F.policeEncountersTotal || 0) + 1;
+                    F.currentlyInCustody = true;
+                    F.custodyDay = gameState.time.day;
+                    F.custodyProcessed = false;
+                    F.custodyInterrogated = false;
+                    F.arrestCount = (F.arrestCount || 0) + 1;
+                    calculateWantedTier();
+                    modifyMentalHealth(-8);
+                    advanceTime(20);
+                    updateStatus();
+                },
                 choices: [
-                    { text: '<img src="Images/icons/eye.png" class="icon"> Run. Now.', nextScene: 'street_pickpocket_cop_arrest_flee' }
+                    { text: 'Ride in silence.', nextScene: 'arrest_booking' }
                 ]
             },
 
@@ -75866,6 +76068,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     gameState.flags.lastPoliceEncounterDay = gameState.time.day;
 
                     gameState.flags.pickpocketFleeCount = (gameState.flags.pickpocketFleeCount || 0) + 1;
+                    startPursuit({ district: district, severity: 'minor', next: getPickpocketReturnScene(district) });   // Trigrave PD Step 11D
 
                     // Clean up
                     delete gameState.flags.pickpocketDenyAttempted;
@@ -75879,6 +76082,15 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const karma = gameState.karma || 0;
 
                     let desc = '';
+
+                    // Trigrave PD Step 11D: running from the detail
+                    if (gameState.flags._ppDetailSpotted) {
+                        desc += 'You move.\n\n';
+                        desc += 'The world stops. The officer\'s hand is still closed around the air where your elbow was, and her partner\'s halfway through reaching for his radio. The crowd around them hangs in place like a photograph.\n\n';
+                        desc += 'You walk, then run. The world snaps back three blocks later, and behind you a siren winds up, then another.\n\n';
+                        desc += 'They had your face from two feet away, and they\'ve been watching this block all week. Whatever you look like, it\'s going into a plainclothes report tonight, along with a line about how fast you left.';
+                        return desc;
+                    }
 
                     desc += 'You move.\n\n';
                     desc += 'The world stops. The cop freezes mid-word, phone pressed to his ear, mouth open around a syllable he\'ll never finish. The pedestrians around him crystallize into a photograph.\n\n';
@@ -75908,9 +76120,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     return desc;
                 },
                 choices: function() {
-                    const district = gameState.flags.pickpocketDistrict || gameState.currentDistrictId;
                     return [
-                        { text: 'Keep running.', nextScene: getPickpocketReturnScene(district) }
+                        { text: 'Keep running.', action: function() { gameState.flags._ppDetailSpotted = false; showScene('tpd_pursuit'); } }
                     ];
                 }
             },
@@ -109722,7 +109933,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         gameState.flags._firstDealIntercept = false;
                         gameState.flags._noBuyer = false;
                         var buyer = generateDrugBuyer(district, timeOfDay);
-                        buyer.isUndercover = checkUndercoverCop();
+                        var _ucDistrict = (tData && tData.district) || district;
+                        buyer.isUndercover = checkUndercoverCop(_ucDistrict);
+                        buyer.bustOnBuy = buyer.isUndercover && narcoticsBustsOnBuy();   // Step 11D: buy-walk or buy-bust
                         // Repeat customer check
                         var repeats = gameState.drugRepeatCustomers || [];
                         if (repeats.length > 0 && Math.random() < 0.25) {
@@ -109740,6 +109953,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                             buyer.repeatName = repeatC.nickname;
                             buyer.addictionStage = addiction.stage;
                             buyer._repeatCustomerObj = repeatC;
+                            buyer.isUndercover = false;   // a regular's a regular
+                            buyer.bustOnBuy = false;
                         }
                         gameState.flags._currentBuyer = buyer;
                     }
@@ -109808,6 +110023,11 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         desc += buyer.he + '\'s got that look. Restless. Checking the street. ' + buyer.he + ' catches your eye and holds it a second too long.\n\n';
                     }
                     
+                    // Trigrave PD Step 11D: stealth 20+ reads an undercover buyer
+                    if (buyer.isUndercover && (gameState.stealth || 1) >= 20) {
+                        desc += '<span style="color:#5aaa8a;">You listen to ' + buyer.him + ' ask. ' + buyer.he + ' knows the price. Nobody who needs it this bad knows the price.</span>\n\n';
+                    }
+
                     // Assessment at rep 20+
                     if (rep >= 20) {
                         if (buyer.buyerType === 'desperate') {
@@ -110172,7 +110392,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         action: function() {
                             gameState.flags._dealQty = sellQty;
                             gameState.flags._dealPrice = price;
-                            if (buyer.isUndercover) {
+                            if (buyer.bustOnBuy) {
                                 showScene('drug_deal_undercover');
                             } else {
                                 showScene('drug_deal_handoff');
@@ -110195,7 +110415,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                                     gameState.flags._dealQty = sellQty;
                                     gameState.flags._dealPrice = betterPrice;
                                     gameState.flags._dealNegotiated = true;
-                                    if (buyer.isUndercover) {
+                                    if (buyer.bustOnBuy) {
                                         showScene('drug_deal_undercover');
                                     } else {
                                         showScene('drug_deal_handoff');
@@ -110273,6 +110493,9 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (patrolChance > 0 && Math.random() * 100 < patrolChance) {
                         gameState.flags._patrolEncounter = true;
                     }
+
+                    // Trigrave PD Step 11D: a buy-walk. The buyer was narcotics, and the case waits for the warrant.
+                    if (buyer && buyer.isUndercover) logControlledBuy(_dealDistrict, false);
                     
                     // Territory tracking
                     gameState.flags._territoryReadyToClaim = false;
@@ -110340,7 +110563,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (buyer.isRepeat) {
                         desc += 'Smooth. ' + buyer.he + ' knows the drill. Money in, product out. ' + buyer.he + ' nods and walks.\n\n';
                     } else if (clean) {
-                        desc += 'Quick and smooth. You palm the ' + drug.name.toLowerCase() + ' to ' + buyer.him + '. ' + buyer.he + ' palms the cash to you. Two seconds, no eye contact, no witnesses.\n\n';
+                        desc += 'Quick and smooth. You palm the ' + drug.name.toLowerCase() + ' to ' + buyer.him + ' and ' + buyer.he.toLowerCase() + ' palms the cash to you, two seconds without a word or a look between you.\n\n';
                     } else {
                         desc += 'The handoff\'s sloppy. A woman across the street looks over. A car slows. You finish the exchange and pocket the money fast, but it wasn\'t invisible.\n\n';
                         desc += '<span style="color: #ffcc44;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Witnesses saw the deal. Drug heat increased.</span>\n\n';
@@ -110392,7 +110615,12 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                         ];
                         desc += marcoWatch[Math.floor(Math.random() * marcoWatch.length)];
                     }
-                    
+
+                    // Trigrave PD Step 11D: stealth 40+ catches it as he leaves
+                    if (buyer.isUndercover && (gameState.stealth || 1) >= 40) {
+                        desc += '\n\n<span style="color:#5aaa8a;">' + buyer.he + ' walks off toward the bus stop and doesn\'t get on the bus. A gray sedan pulls away from the curb half a block down, and ' + buyer.he.toLowerCase() + '\'s in the passenger seat. That was a controlled buy.</span>';
+                    }
+
                     return desc;
                 },
                 choices: function() {
@@ -110427,49 +110655,68 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 }
             },
 
+            // Trigrave PD Step 11D: the buy-bust. At Burning+ heat, narcotics arrests on the buy.
             drug_deal_undercover: {
                 onEnter: function() {
+                    var territory = gameState.flags._dealTerritory || '';
+                    gameState.flags._bustDistrict = (territory && TERRITORY_DATA[territory] && TERRITORY_DATA[territory].district) || 'slums';
+                    gameState.flags.policeEncounterToday = true;
+                    gameState.flags.lastPoliceEncounterDay = gameState.time.day;
                     advanceTime(2);
                     updateStatus();
                 },
                 text: function() {
                     var buyer = gameState.flags._currentBuyer;
                     var desc = 'You reach for the product. ' + buyer.he + ' reaches for ' + buyer.his + ' waistband.\n\n';
-                    desc += buyer.he + ' pulls a badge.\n\n';
-                    desc += '"Police. Don\'t move."\n\n';
-                    desc += 'Your stomach drops through the pavement. ' + buyer.he + '\'s a cop. Undercover. The badge catches the streetlight and the word TRIGRAVE flashes across it.\n\n';
-                    desc += buyer.he + '\'s got one hand on the badge and the other reaching for cuffs.\n\n';
+                    desc += buyer.he + ' comes up with a badge, and ' + buyer.his + ' voice drops into something flat and trained. "Police. Don\'t move."\n\n';
+                    desc += 'Your stomach drops through the pavement. The badge catches the streetlight, TRIGRAVE stamped across the top, and somewhere behind you an engine turns over.\n\n';
+                    desc += buyer.he + '\'s got the badge in one hand and the other reaching for cuffs. The wire camera on ' + buyer.his + ' jacket has been rolling since ' + buyer.he.toLowerCase() + ' walked up.\n\n';
                     desc += 'You\'ve got about two seconds.';
                     return desc;
                 },
                 choices: function() {
                     var choices = [];
-                    
+                    var district = gameState.flags._bustDistrict || 'slums';
+                    // The buy's on camera either way: that's the case
+                    var logBust = function(compelled) {
+                        createLedgerEntry({
+                            type: 'drug_sale', district: district, witnessEvidence: !compelled, cameraEvidence: true,
+                            witnesses: [{ type: 'cop', faceSeen: true, compelled: !!compelled, description: 'Undercover narcotics officer, buy-bust' }],
+                            cameraType: 'wire_cam', cameraQuality: 'clear', description: 'Buy-bust'
+                        });
+                    };
+
                     choices.push({
                         text: '<img src="Images/icons/hero-sparkle.png" class="icon" alt="run"> Vampire speed. Run.',
                         action: function() {
+                            logBust(false);
+                            var sd = gameState.suspicionData || (gameState.suspicionData = {});
+                            sd.bodycamIncidents = (sd.bodycamIncidents || 0) + 1;
                             gameState.thirst = Math.min(100, (gameState.thirst || 0) + 15);
                             modifyDrugHeat(8);
                             modifyDrugReputation(-3);
                             modifyCitySuspicion(5);
+                            calculateWantedTier();
                             updateStatus();
-                            showMessage('You blur. The cop\'s hand closes on empty air. You\'re three blocks away before his radio crackles.\n\nYour thirst spikes. Supernatural speed burns blood fast. But you\'re free.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +8. City suspicion +5. Thirst +15. Drug rep -3.</span>', function() { showScene('slums_district_street'); });
+                            startPursuit({ district: district, severity: 'serious', next: 'slums_district_street' });
+                            showMessage('You blur, and the cop\'s hand closes on empty air. You\'re three blocks away before his radio crackles, with the thirst spiking hard behind your ribs.\n\nThe cover car\'s already moving, and the wire camera has your face.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +8. City suspicion +5. Thirst +15. Drug rep -3.</span>', function() { showScene('tpd_pursuit'); });
                         }
                     });
-                    
+
                     choices.push({
                         text: '<img src="Images/icons/eye.png" class="icon" alt="compel"> Compel. Make ' + (gameState.flags._currentBuyer || {}).him + ' forget.',
                         action: function() {
-                            recordCompulsionEcho(gameState.currentDistrictId || 'slums');   // Trigrave PD Step 9E: he's an officer
+                            logBust(true);
+                            recordCompulsionEcho(district);   // Trigrave PD Step 9E: he's an officer
                             gameState.thirst = Math.min(100, (gameState.thirst || 0) + 20);
                             modifyDrugHeat(3);
                             modifyDrugReputation(-3);
                             updateStatus();
                             var buyer = gameState.flags._currentBuyer;
-                            showMessage('Your eyes lock onto ' + buyer.his + '. The vampiric compulsion floods out.\n\n"You didn\'t see anything. There was no one here. Walk back to your car and forget this block."\n\n' + buyer.he + ' blinks. ' + buyer.his.charAt(0).toUpperCase() + buyer.his.slice(1) + ' pupils dilate. The badge lowers. ' + buyer.he + ' turns and walks away, steady and blank.\n\nIf ' + buyer.he.toLowerCase() + ' was wearing a wire, someone heard that. If not, you just erased a cop.\n\n<span style="color: #ffcc44;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +3. Thirst +20.</span>', function() { showScene('slums_district_street'); });
+                            showMessage('Your eyes lock onto ' + buyer.his + ', and the compulsion floods out.\n\n"You didn\'t see anything. There was no one here. Walk back to your car and forget this block."\n\n' + buyer.he + ' blinks, and ' + buyer.his + ' pupils go wide. The badge lowers, and ' + buyer.he.toLowerCase() + ' turns and walks away, steady and blank.\n\nThe wire camera on ' + buyer.his + ' jacket kept rolling. Somebody\'s going to watch an officer walk away from an arrest for no reason at all.\n\n<span style="color: #ffcc44;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +3. Thirst +20.</span>', function() { showScene('slums_district_street'); });
                         }
                     });
-                    
+
                     return choices;
                 }
             },
@@ -110558,6 +110805,13 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 onEnter: function() {
                     advanceTime(30);
                     checkAndSetExposureState();
+                    // Trigrave PD Step 11D: the undercover roll happens when he walks up, so stealth 20+ can read him
+                    var _bd = gameState.currentDistrictId || 'slums';
+                    if (!TPD_BASE_PRESENCE[_bd]) _bd = 'slums';
+                    var ucChance = getNarcoticsUndercoverPct(_bd, getTimeOfDay()) + 3;   // bulk buyers draw more attention
+                    if (gameState.drugSupplier === 'vajaros') ucChance -= 3;
+                    gameState.flags._bulkDistrict = _bd;
+                    gameState.flags._bulkUndercover = Math.random() * 100 < ucChance;
                     updateStatus();
                 },
                 text: function() {
@@ -110578,9 +110832,14 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     if (isVajaros) {
                         desc += 'He\'s been vetted. Tino checked him out before you got here. That doesn\'t make your hands shake less.';
                     } else {
-                        desc += 'You don\'t know this man. You don\'t know if he\'s a cop, a rival, or just some guy with money and a habit. Your fangs ache behind your lips.';
+                        desc += 'You don\'t know this man. He could be a cop, a rival, or just some guy with money and a habit, and your fangs ache behind your lips.';
                     }
-                    
+
+                    // Trigrave PD Step 11D: stealth 20+ reads him
+                    if (gameState.flags._bulkUndercover && (gameState.stealth || 1) >= 20) {
+                        desc += '\n\n<span style="color:#5aaa8a;">He knows the price to the dollar, and he\'s standing in the one spot on this level the stairwell camera covers. Nobody buying this much wants to be on film.</span>';
+                    }
+
                     return desc;
                 },
                 choices: function() {
@@ -110593,25 +110852,31 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     choices.push({
                         text: '<img src="Images/icons/drug-deal.png" class="icon" alt="deal"> Make the exchange',
                         action: function() {
-                            // Check for undercover (higher base chance for bulk)
-                            var ucChance = 8;
-                            var heatLevel = getDrugHeatLevel();
-                            if (heatLevel.tier === 'warm') ucChance += 3;
-                            if (heatLevel.tier === 'hot') ucChance += 6;
-                            if (heatLevel.tier === 'burning') ucChance += 10;
-                            if (heatLevel.tier === 'nuclear') ucChance += 15;
-                            if (gameState.drugSupplier === 'vajaros') ucChance -= 3;
-                            
-                            if (Math.random() * 100 < ucChance) {
+                            // Undercover (rolled on arrival, Trigrave PD Step 11D): buy-bust at Burning+, buy-walk below
+                            var _bulkUC = !!gameState.flags._bulkUndercover;
+                            var _bulkDist = gameState.flags._bulkDistrict || 'slums';
+                            gameState.flags._bulkUndercover = false;
+                            if (_bulkUC && !narcoticsBustsOnBuy()) logControlledBuy(_bulkDist, true);
+
+                            if (_bulkUC && narcoticsBustsOnBuy()) {
                                 // Undercover bust on bulk deal
+                                createLedgerEntry({
+                                    type: 'drug_sale', district: _bulkDist, witnessEvidence: true, cameraEvidence: true,
+                                    witnesses: [{ type: 'cop', faceSeen: true, description: 'Undercover narcotics officer, bulk buy-bust' }],
+                                    cameraType: 'wire_cam', cameraQuality: 'clear', description: 'Bulk buy-bust'
+                                });
+                                gameState.flags.policeEncounterToday = true;
+                                gameState.flags.lastPoliceEncounterDay = gameState.time.day;
+                                startPursuit({ district: _bulkDist, severity: 'serious', next: 'slums_district_street' });
                                 modifyDrugHeat(15);
                                 modifyCitySuspicion(8);
                                 updateStatus();
-                                showMessage('He reaches for the bag. You reach for the product.\n\nThen his other hand goes to his belt. Badge. Radio.\n\n"Police! Don\'t—"\n\nYou\'re already running. Vampire speed. The product\'s still in your bag. The cash stays on the ground. You clear the garage in three seconds.\n\nBulk bust. They\'ll have your description. Maybe your face.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +15. City suspicion +8. Thirst +15.</span>', function() {
+                                showMessage('He reaches for the bag and you reach for the product. Then his other hand goes to his belt, and it comes back with a badge and a radio.\n\n"Police! Don\'t—"\n\nYou\'re already running at vampire speed, the product still in your bag and the cash left on the concrete. You clear the garage in three seconds.\n\nIt was a bust, and the wire camera on his shirt had your face the whole time.\n\n<span style="color: #ff4444;"><img src="Images/icons/drug-heat.png" class="icon" alt="heat"> Drug heat +15. City suspicion +8. Thirst +15.</span>', function() {
                                     gameState.thirst = Math.min(100, (gameState.thirst || 0) + 15);
                                     modifyDrugReputation(-3);
+                                    calculateWantedTier();
                                     updateStatus();
-                                    showScene('slums_district_street');
+                                    showScene('tpd_pursuit');
                                 });
                             } else {
                                 // Clean bulk deal
@@ -120431,8 +120696,8 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const cameraSpotted = Math.random() < (DISTRICT_CAMERA_DENSITY[location] || 0);
                     gameState.flags.muggingCameraSpotted = cameraSpotted;
                     
-                    // Undercover cop check (tier 2+, 10% chance)
-                    const isUndercover = tier >= 2 && Math.random() < 0.10;
+                    // Undercover cop check (Trigrave PD Step 11A: presence, series, and details)
+                    const isUndercover = Math.random() < getUndercoverChance(location, 'mugging');
                     gameState.flags.muggingTargetCop = isUndercover;
                     
                     let desc = 'You slow your pace. Scan the block.\n\n';
@@ -120463,30 +120728,31 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     const _tpdCasingM = getTPDCasingBlock(location, stealthLvl);
                     if (_tpdCasingM) desc += _tpdCasingM + '\n\n';
 
-                    // Target read
-                    if (isUndercover) {
-                        desc += 'You pick out a target. Alone, walking steady, hands in jacket pockets. Something about the posture reads wrong. Too aware. Eyes moving in a pattern that\'s trained, scanning rooflines and doorways.\n\nCould be nothing. Could be someone who\'s paid to walk like that.';
+                    // Target read. Stealth 20+ reads plainclothes (Trigrave PD Step 11A);
+                    // below that, the undercover looks like anybody else.
+                    const targets = {
+                        slums: 'Someone shuffles past. Head down, shoulders hunched. Easy.',
+                        residential: 'A jogger rounds the corner, earbuds in, phone strapped to one arm. Distracted.',
+                        commercial: 'Someone steps out of a store with a shopping bag and their wallet still in hand. Distracted. Loaded.',
+                        downtown: 'A suit walks past, eyes on a phone screen, briefcase swinging loose. Oblivious.'
+                    };
+                    if (isUndercover && stealthLvl >= 20) {
+                        desc += 'You pick out a target, then look twice. He\'s alone and walking steady with his hands in his jacket pockets, playing bored, while his eyes run the rooflines and doorways in a grid.\n\nNobody walks a block like that unless somebody\'s paying them to. Plainclothes, and he\'s waiting for somebody like you.';
                     } else {
-                        const targets = {
-                            slums: 'Someone shuffles past. Head down, shoulders hunched. Easy.',
-                            residential: 'A jogger rounds the corner, earbuds in, phone strapped to one arm. Distracted.',
-                            commercial: 'Someone steps out of a store with a shopping bag and their wallet still in hand. Distracted. Loaded.',
-                            downtown: 'A suit walks past, eyes on a phone screen, briefcase swinging loose. Oblivious.'
-                        };
                         desc += (targets[location] || targets.commercial);
+                    }
 
                     // ── Unmasked awareness ──
                     if (!hasSkiMask()) {
                         if (cameraSpotted) {
-                            desc += '\n\nThat camera\'s going to get your face. No mask, no hood, nothing between you and the lens. Whatever you do next, the footage is admissible.';
+                            desc += '\n\nThat camera\'s going to get your face. There\'s nothing between you and the lens, and whatever you do next, the footage is admissible.';
                         } else {
-                            desc += '\n\nYour face is bare. Whoever you hit is going to describe you to police. Height, hair, eyes, everything.';
+                            desc += '\n\nYour face is bare, and whoever you hit is going to describe you to police right down to your height, hair, and eyes.';
                         }
                     } else if (gameState.flags.maskCompromised) {
-                        desc += '\n\nThe mask will hide your face. But the emblem\'s compromised. Every crime you pull with it adds to a charge sheet that already has your name on it.';
+                        desc += '\n\nThe mask will hide your face, but the emblem\'s compromised. Every crime you pull with it adds to a charge sheet that already has your name on it.';
                     }
-                    }
-                    
+
                     return desc;
                 },
                 onEnter: () => {
@@ -120546,6 +120812,7 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                     }
                     
                     choices.push({
+                        text: '<img src="Images/icons/door.png" class="icon" alt="leave"> Walk away.',
                         action: function() {
                             delete gameState.flags.muggingCameraSpotted;
                             delete gameState.flags.muggingTargetCop;
@@ -145640,6 +145907,154 @@ He'll remember every second of the sex. The bite's already gone from him, like i
                 },
                 choices: [
                     { text: 'Drop', nextScene: 'ambush_strike' }
+                ]
+            },
+
+            // ── Trigrave PD Step 11C: the decoy sting ──
+            // The easy mark was an officer with a vest, a bodycam, and a panic button. The cover
+            // team's about twenty seconds out.
+            hunt_decoy_sting: {
+                onEnter: function() {
+                    var F = gameState.flags;
+                    var t = F._huntTarget || {};
+                    var district = (F._huntEnvironment && F._huntEnvironment.district) || gameState.currentDistrictId || 'commercial';
+                    setViolentHuntCooldown(district);
+                    F._decoySting = { district: district, gender: t.gender || 'male', cover: t.decoyCover || 'drunk', masked: !!F._huntWearingMask };
+                    F.policeEncounterToday = true;
+                    F.lastPoliceEncounterDay = gameState.time.day;
+                    F.policeEncountersTotal = (F.policeEncountersTotal || 0) + 1;
+                    F.decoyStingsTotal = (F.decoyStingsTotal || 0) + 1;
+                    modifyCitySuspicion(8, 'assault', district, 'cop');
+                    advanceTime(1);
+                    updateStatus();
+                },
+                text: function() {
+                    var S = gameState.flags._decoySting || { gender: 'male', cover: 'drunk' };
+                    var isMale = S.gender === 'male';
+                    var p = isMale ? 'He' : 'She', pl = isMale ? 'he' : 'she', obj = isMale ? 'him' : 'her', pos = isMale ? 'his' : 'her';
+                    var desc = 'Your hand closes on ' + pos + ' collar and ' + pl + ' moves before you do.\n\n';
+                    desc += p + ' twists inside your grip, fast and trained, and something clicks in ' + pos + ' fist. Somewhere down the block a car door opens, then three more.\n\n';
+                    desc += '"TPD!" ' + pl + ' shouts, right into your face. "Down! Get down!"\n\n';
+                    desc += (S.cover === 'drunk' ? 'The drunk\'s gone. ' : 'The lost tourist\'s gone. ') + p + ' was never there.\n\n';
+                    desc += 'Your knuckles found the hard edge of a vest under ' + pos + ' shirt, and the thing in ' + pos + ' fist is a panic button with a red light blinking on it. The cover team\'s feet are already hitting pavement, maybe twenty seconds out.\n\n';
+                    if (S.masked) {
+                        desc += 'There\'s a bodycam clipped to the strap of the vest. All it\'s getting is black fabric and your eyes.\n\n';
+                    } else {
+                        desc += 'There\'s a bodycam clipped to the strap of the vest, and it\'s getting your face from a foot away.\n\n';
+                    }
+                    if ((gameState.karma || 0) <= -1000) {
+                        desc += (isMale ? 'His' : 'Her') + ' pulse is right there under your thumb, hammering hard, and twenty seconds is a long time.';
+                    } else {
+                        desc += 'You\'ve got maybe twenty seconds to decide what happens next.';
+                    }
+                    return desc;
+                },
+                choices: function() {
+                    var F = gameState.flags;
+                    var S = F._decoySting || { district: 'commercial', gender: 'male', masked: false };
+                    var isMale = S.gender === 'male';
+                    var p = isMale ? 'He' : 'She', pl = isMale ? 'he' : 'she', obj = isMale ? 'him' : 'her', pos = isMale ? 'his' : 'her';
+                    var next = getDistrictReturnScene(S.district);
+                    // What the decoy's file holds: an assault on an officer, worked by Cruz
+                    var logSting = function(opts) {
+                        return createLedgerEntry({
+                            type: 'police_assault', district: S.district, masked: S.masked, maskSignature: S.masked,
+                            witnessEvidence: !opts.compelled, cameraEvidence: false, supernaturalEvidence: !!opts.speed,
+                            biteMarks: !!opts.bite, profileZeroChance: opts.bite ? 1 : 0,
+                            witnesses: [{ type: 'cop', faceSeen: !S.masked, compelled: !!opts.compelled, description: 'Decoy officer, grabbed during a street operation' }],
+                            description: 'Assault on a decoy officer'
+                        });
+                    };
+                    var seenSpeed = function() {
+                        var sd = gameState.suspicionData || (gameState.suspicionData = {});
+                        sd.bodycamIncidents = (sd.bodycamIncidents || 0) + 1;
+                        sd.supernaturalEvidence = Math.min(100, (sd.supernaturalEvidence || 0) + 10);
+                    };
+                    var done = function() { F._huntTarget = null; F._decoySting = null; calculateWantedTier(); updateStatus(); };
+                    var choices = [];
+
+                    choices.push({ text: 'Run. Vampire speed.', action: function() {
+                        logSting({ speed: true });
+                        seenSpeed();
+                        gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 10);
+                        done();
+                        startPursuit({ district: S.district, severity: 'violent', next: next });
+                        showMessage('You shove ' + obj + ' off and go. The street smears around you, and behind you ' + pl + '\'s already on the radio, calm and fast, calling your direction of travel before you reach the corner.\n\n'
+                            + (S.masked ? p + ' never saw your face, just the mask, your eyes, and how fast you left.' : p + ' had your face at arm\'s length for three full seconds, and so did the camera on ' + pos + ' chest.'),
+                            function() { showScene('tpd_pursuit'); });
+                    }});
+
+                    if (F.illusionUnlocked) {
+                        choices.push({ text: 'Compel ' + obj + '. Buy ten seconds.', action: function() {
+                            logSting({ compelled: true });
+                            recordCompulsionEcho(S.district);
+                            gameState.thirst = Math.min(getThirstCap(), (gameState.thirst || 0) + 10);
+                            done();
+                            startPursuit({ district: S.district, severity: 'violent', next: next, headStart: true });
+                            showMessage('You catch ' + pos + ' eyes and push. "You grabbed the wrong girl. There\'s nobody here. Stand still and count to ten."\n\n'
+                                + p + ' lets go of the panic button. ' + p + ' stands in the middle of the sidewalk and starts counting under ' + pos + ' breath while the cover team\'s footsteps come around the corner.\n\n'
+                                + 'You\'re gone by four. The camera on ' + pos + ' chest caught ten seconds of an officer counting to nobody, and somebody at Fourth Street is going to watch that footage very closely.',
+                                function() { showScene('tpd_pursuit'); });
+                        }});
+                    }
+
+                    if ((gameState.karma || 0) <= -1000) {
+                        choices.push({ text: 'Feed anyway.', action: function() {
+                            logSting({ bite: true, speed: true });
+                            seenSpeed();
+                            gameState.thirst = Math.max(0, (gameState.thirst || 0) - 15);
+                            modifyKarma(-20);
+                            done();
+                            startPursuit({ district: S.district, severity: 'violent', next: next, droneLocked: true });
+                            showMessage('You don\'t let go. You drive ' + obj + ' into the wall and bite down through the collar of ' + pos + ' shirt, and ' + pos + ' blood hits your tongue hot and fast, sharp with adrenaline.\n\n'
+                                + 'You get four swallows. When you lift your head, the cover team\'s on the corner with three weapons up, and the officer\'s sliding down the brick with both hands clamped over ' + pos + ' throat.\n\n'
+                                + 'The wound\'s still open. You didn\'t give it time to close, and there\'s a drone already hanging over the street.',
+                                function() { showScene('tpd_pursuit'); });
+                        }});
+                    }
+
+                    choices.push({ text: 'Get down.', nextScene: 'hunt_decoy_surrender' });
+                    return choices;
+                }
+            },
+
+            hunt_decoy_surrender: {
+                text: function() {
+                    var S = gameState.flags._decoyStingDone || { gender: 'male' };
+                    var isMale = S.gender === 'male';
+                    var p = isMale ? 'He' : 'She', pos = isMale ? 'his' : 'her';
+                    var desc = 'You let go and get down on the sidewalk, palms flat on the concrete.\n\n';
+                    desc += 'The cover team\'s on you in seconds. A knee settles into the small of your back, careful and heavy, and somebody reads you your rights while the cuffs go on, steady and unhurried.\n\n';
+                    desc += '"Decoy\'s secure," a woman says into her radio. "Suspect\'s in custody. No injuries."\n\n';
+                    desc += 'The officer you grabbed is sitting on the curb with ' + pos + ' vest pulled open, breathing hard. ' + p + '\'s already walking ' + pos + ' sergeant through it one step at a time, so every second of it goes into the report.\n\n';
+                    desc += 'They put you in the back of an unmarked car. Before the door shuts you hear the sergeant on the radio, asking dispatch to wake up the Detective Bureau.';
+                    return desc;
+                },
+                onEnter: function() {
+                    var F = gameState.flags;
+                    var S = F._decoySting || { district: gameState.currentDistrictId || 'commercial', gender: 'male', masked: false };
+                    F._decoyStingDone = S;
+                    var id = createLedgerEntry({
+                        type: 'police_assault', district: S.district, masked: S.masked, maskSignature: S.masked,
+                        witnessEvidence: true, cameraEvidence: true,
+                        witnesses: [{ type: 'cop', faceSeen: true, description: 'Decoy officer and cover team' }],
+                        cameraType: 'bodycam', cameraQuality: 'clear', description: 'Assault on a decoy officer'
+                    });
+                    linkCrimeToSuspect(id, 'caught_in_act');
+                    F._huntTarget = null;
+                    F._decoySting = null;
+                    F.currentlyInCustody = true;
+                    F.custodyDay = gameState.time.day;
+                    F.custodyProcessed = false;
+                    F.custodyInterrogated = false;
+                    F.arrestCount = (F.arrestCount || 0) + 1;
+                    calculateWantedTier();
+                    modifyMentalHealth(-10);
+                    advanceTime(20);
+                    updateStatus();
+                },
+                choices: [
+                    { text: 'Ride in silence.', nextScene: 'arrest_booking' }
                 ]
             },
 
@@ -225274,6 +225689,11 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     : 'average';
             }
 
+            // Trigrave PD Step 11B: once decoys are deployed, the easy mark might be an officer
+            if (huntDecoysDeployed() && Math.random() < getUndercoverChance(district, 'violent_hunt')) {
+                makeHuntDecoy(target);
+            }
+
             // Store in gameState for downstream scenes
             gameState.flags._huntTarget = target;
             gameState.flags.ambushVictimGender = target.gender;
@@ -225778,8 +226198,9 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             }
 
             // === Block 5: Target vulnerability read (stealth 20+) ===
+            // A decoy's read replaces it (Trigrave PD Step 11B)
             if (stealth >= 20) {
-                text += getCasingVulnerabilityBlock(target);
+                text += target.isDecoy ? getDecoyCasingTell(target, stealth) : getCasingVulnerabilityBlock(target);
                 text += '\n\n';
             }
 
@@ -226724,6 +227145,13 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             ]
         };
 
+        // What an officer looks like to someone who can't read him (Trigrave PD Step 11A)
+        const PICKPOCKET_COP_COVERS = [
+            'He\'s waiting at the crosswalk with a paper coffee cup and his jacket hanging open. The square of a wallet shows through the back pocket of his jeans.',
+            'He\'s reading the menu taped to a restaurant window with his hands in his jacket pockets. His wallet\'s riding high in his back pocket.',
+            'He\'s leaning on a bike rack and thumbing through his phone, a gym bag at his feet. There\'s a wallet in his back pocket, half out.'
+        ];
+
         // District payout tables: [minBase, maxBase, minBonus, maxBonus, nightBonus]
         const PICKPOCKET_PAYOUTS = {
             commercial:  [20, 40, 0, 20, 10],
@@ -226761,10 +227189,22 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                     target = pool.find(t => t.type === 'livestreamer');
                 }
             }
+            // Trigrave PD Step 11A: plainclothes marks on any street block
+            let plainclothes = false;
+            if (!target && TPD_BASE_PRESENCE[district] != null && Math.random() < getUndercoverChance(district, 'pickpocketing')) {
+                target = PICKPOCKET_TARGETS.commercial.find(t => t.type === 'cop');
+                plainclothes = true;
+            }
             if (!target) {
                 // Pick from regular targets (exclude cop and livestreamer)
                 const regular = pool.filter(t => t.type !== 'cop' && t.type !== 'livestreamer');
                 target = regular[Math.floor(Math.random() * regular.length)];
+            }
+
+            // An officer looks like anybody until stealth 20+ reads him (the casing tell)
+            let targetDesc = target.description;
+            if (target.type === 'cop') {
+                targetDesc = PICKPOCKET_COP_COVERS[Math.floor(Math.random() * PICKPOCKET_COP_COVERS.length)];
             }
 
             // Calculate payout
@@ -226777,13 +227217,14 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             return {
                 type: target.type,
                 gender: target.gender || 'male',
-                name: target.name,
-                description: target.description,
+                name: plainclothes ? 'Plainclothes officer' : target.name,
+                description: targetDesc,
                 payout: rawPayout,
                 detectionMod: target.detectionMod,
                 charismaThreshold: target.charismaThreshold,
                 strengthThreshold: target.strengthThreshold,
                 isCop: target.type === 'cop',
+                isPlainclothes: plainclothes,
                 isLivestreamer: !!target.isLivestreamer
             };
         }
@@ -226961,7 +227402,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
             // ── Evidence Ledger: Create pickpocketing entry ──
             var target = gameState.flags.currentPickpocketTarget;
             var targetType = target ? target.type : 'civilian';
-            var isCopTarget = target ? target.isCop : false;
+            var isCopTarget = (target ? target.isCop : false) || !!gameState.flags._ppDetailSpotted;
             var isLivestreamer = (targetType === 'livestreamer');
 
             // Determine witness profile from outcome
@@ -227008,6 +227449,7 @@ You press your hand to ${name}'s stomach and feel the last of it go quiet under 
                 // Livestreamer: treated as camera evidence too
                 supernaturalEvidence: (outcome === 'detected_flee')
             });
+            checkPickpocketDetail(district);   // Trigrave PD Step 11D
         }
 
         // Trigrave PD Step 2D: police arrival during a mugging runs through TPD presence
